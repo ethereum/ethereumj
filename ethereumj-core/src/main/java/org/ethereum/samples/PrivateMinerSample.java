@@ -23,7 +23,7 @@ import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.mine.EthashMinerListener;
+import org.ethereum.mine.EthashListener;
 import org.ethereum.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.context.annotation.Bean;
@@ -86,7 +86,7 @@ public class PrivateMinerSample {
     /**
      * Miner bean, which just start a miner upon creation and prints miner events
      */
-    static class MinerNode extends BasicSample implements EthashMinerListener {
+    static class MinerNode extends BasicSample implements EthashListener {
         public MinerNode() {
             // peers need different loggers
             super("sampleMiner");
@@ -101,12 +101,12 @@ public class PrivateMinerSample {
         }
 
         @Override
-        public void onDatasetUpdate(EthashMinerListener.DatasetStatus minerStatus) {
+        public void onDatasetUpdate(EthashListener.DatasetStatus minerStatus) {
             logger.info("Miner status updated: {}", minerStatus);
-            if (minerStatus.equals(EthashMinerListener.DatasetStatus.FULL_DATASET_GENERATE_START)) {
+            if (minerStatus.equals(EthashListener.DatasetStatus.FULL_DATASET_GENERATE_START)) {
                 logger.info("Generating Full Dataset (may take up to 10 min if not cached)...");
             }
-            if (minerStatus.equals(EthashMinerListener.DatasetStatus.DATASET_GENERATED)) {
+            if (minerStatus.equals(EthashListener.DatasetStatus.DATASET_GENERATED)) {
                 logger.info("Full dataset generated (loaded).");
             }
         }

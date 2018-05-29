@@ -20,7 +20,7 @@ package org.ethereum.mine;
 /**
  * {@link MinerListener} designed for use with {@link EthashMiner}
  */
-public interface EthashMinerListener extends MinerListener {
+public interface EthashListener extends MinerListener {
 
     enum DatasetStatus {
         /**

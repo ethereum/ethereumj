@@ -37,7 +37,7 @@ public class EthashMiner implements MinerIfc {
 
     private int cpuThreads;
     private boolean fullMining = true;
-    private Set<EthashMinerListener> listeners = new CopyOnWriteArraySet<>();
+    private Set<EthashListener> listeners = new CopyOnWriteArraySet<>();
 
     public EthashMiner(SystemProperties config) {
         this.config = config;
@@ -61,24 +61,11 @@ public class EthashMiner implements MinerIfc {
      * Listeners changes affects only future {@link #mine(Block)} and
      * {@link #validate(BlockHeader)} calls
      */
-    public void setListeners(Collection<EthashMinerListener> listeners) {
+    public void setListeners(Collection<MinerListener> listeners) {
         this.listeners.clear();
-        this.listeners.addAll(listeners);
-    }
-
-    /**
-     * Listeners changes affects only future {@link #mine(Block)} and
-     * {@link #validate(BlockHeader)} calls
-     */
-    public boolean addListener(EthashMinerListener listener) {
-        return listeners.add(listener);
-    }
-
-    /**
-     * Listeners changes affects only future {@link #mine(Block)} and
-     * {@link #validate(BlockHeader)} calls
-     */
-    public boolean removeListener(EthashMinerListener listener){
-        return listeners.remove(listener);
+        listeners.stream()
+                .filter(listener -> listener instanceof EthashListener)
+                .map(listener -> (EthashListener) listener)
+                .forEach(this.listeners::add);
     }
 }

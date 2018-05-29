@@ -38,7 +38,6 @@ import org.springframework.stereotype.Component;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.stream.Collectors;
 
 import static java.lang.Math.max;
 
@@ -267,11 +266,7 @@ public class BlockMiner {
                         .getConfigForBlock(miningBlock.getNumber())
                         .getMineAlgorithm(config);
                 if (localMiner instanceof EthashMiner) {
-                    Set<EthashMinerListener> ethashMinerListeners = listeners.stream()
-                            .filter(listener -> listener instanceof EthashMinerListener)
-                            .map(listener -> (EthashMinerListener) listener)
-                            .collect(Collectors.toSet());
-                    ((EthashMiner) localMiner).setListeners(ethashMinerListeners);
+                    ((EthashMiner) localMiner).setListeners(listeners);
                 }
                 currentMiningTasks.add(localMiner.mine(cloneBlock(miningBlock)));
             }
