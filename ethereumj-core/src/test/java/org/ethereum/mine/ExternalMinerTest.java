@@ -43,6 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.Resource;
 import java.math.BigInteger;
+import java.util.Collection;
 
 import static java.util.Collections.*;
 import static org.hamcrest.CoreMatchers.*;
@@ -107,6 +108,9 @@ public class ExternalMinerTest {
             public boolean validate(BlockHeader blockHeader) {
                 return true;
             }
+
+            @Override
+            public void setListeners(Collection<MinerListener> listeners) {}
         });
         Block b = bc.getBlockchain().createNewBlock(startBestBlock, EMPTY_LIST, EMPTY_LIST);
         Ethash.getForBlock(SystemProperties.getDefault(), b.getNumber()).mineLight(b).get();
