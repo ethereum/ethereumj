@@ -430,7 +430,7 @@ public class Channel {
 
         if (inetSocketAddress != null ? !inetSocketAddress.equals(channel.inetSocketAddress) : channel.inetSocketAddress != null) return false;
         if (node != null ? !node.equals(channel.node) : channel.node != null) return false;
-        return this == channel;
+        return false;
     }
 
     @Override
