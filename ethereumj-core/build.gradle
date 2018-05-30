@@ -368,7 +368,7 @@ def prepareGithubTests() {
     def repoPath = System.getProperty("GitHubTests.testPath")
     if (repoPath != null && System.getProperty("GitHubTests.commit") != null) {
         def commit = System.getProperty("GitHubTests.commit")
-        println "Tests: Checking out Tests repo at " + repoPath + " to commit #" + commit
+        println "Tests: Checking out Tests repo to " + repoPath + " on commit #" + commit
         def testsRepo = Grgit.open(dir: repoPath)
         testsRepo.checkout(branch: commit)
     }
