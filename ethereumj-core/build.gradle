@@ -17,6 +17,7 @@ plugins {
     id 'jacoco'
     id 'com.github.kt3k.coveralls' version '2.6.3'
     id 'com.jfrog.bintray' version '1.0'
+    id 'org.ajoberstar.grgit' version '2.2.0' apply false
 }
 
 apply plugin: 'propdeps-maven'
@@ -86,7 +87,13 @@ test {
         logger.lifecycle("Running test: ${descriptor}")
     }
 
-    jvmArgs '-Xss8m', '-Xmx3G'
+    jvmArgs = ["-Xss8m", "-Xmx3G"]
+
+    // If Github commit key is provided, following method will prepare Github Tests repo
+    prepareGithubTests()
+    if (System.getProperty("GitHubTests.testPath") != null) {
+        jvmArgs.add('-DGitHubTests.testPath' + '=' + System.getProperty("GitHubTests.testPath"))
+    }
 
     testLogging {
         events "failed"
@@ -356,3 +363,13 @@ def gitCurBranch() {
     return process.text.trim()
 }
 
+import org.ajoberstar.grgit.Grgit
+def prepareGithubTests() {
+    def repoPath = System.getProperty("GitHubTests.testPath")
+    if (repoPath != null && System.getProperty("GitHubTests.commit") != null) {
+        def commit = System.getProperty("GitHubTests.commit")
+        println "Tests: Checking out Tests repo at " + repoPath + " to commit #" + commit
+        def testsRepo = Grgit.open(dir: repoPath)
+        testsRepo.checkout(branch: commit)
+    }
+}
