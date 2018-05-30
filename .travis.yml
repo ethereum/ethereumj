@@ -14,7 +14,6 @@ script:
 cache:
   directories:
     - $HOME/.gradle
-    - $HOME/.tests-cache
 
 notifications:
   irc:
@@ -44,6 +43,6 @@ notifications:
 # http://www.gradle.org/docs/current/userguide/tutorial_this_and_that.html#sec:gradle_properties_and_system_properties
 env:
   global:
-    - JAVA_OPTS="-XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -DGitHubTests.testPath=$HOME/.tests-cache"
+    - JAVA_OPTS="-XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled"
     - secure: "OlSe9DlT1D/b/ru3uO1m8nwevaDhH9XGmAfJ/2U69eBwRtg/aLEF9ZpULrMNTDR8XbNT6uuZsvvRby5HOKPRRkOqnWIY8He2hRpw0IYDONfRfKXIcr4WuJM3N98mQ9RYoNcV9LbHoXFQtfc7oUIp5o7WsCx5Pd/Ygyz4ZVNBc5g="
     - secure: "Y5L4DJXonAavfoUAMgM+RUTVYfyT5YkB8yBp8oUTK6RMCUrSTXB2Kpa8fvP8gvPXIXpIQgxa+bn/85wSrFAm8I9e4zXYO/1h4TPsbXrE1KB3aIXlg96wr1WRg+YyWed1VOtrCDZhO0K9l2fEG4ktysv+vtSaDxRVjtnFX+0Xymk="
