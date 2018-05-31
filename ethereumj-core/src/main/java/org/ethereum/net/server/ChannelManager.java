@@ -207,7 +207,8 @@ public class ChannelManager {
      */
     public boolean isAddressInQueue(InetAddress peerAddr) {
         for (Channel peer: newPeers) {
-            if (peer.getInetSocketAddress().getAddress().getHostAddress().equals(peerAddr.getHostAddress())) {
+            if (peer.getInetSocketAddress() != null &&
+                    peer.getInetSocketAddress().getAddress().getHostAddress().equals(peerAddr.getHostAddress())) {
                 return true;
             }
         }

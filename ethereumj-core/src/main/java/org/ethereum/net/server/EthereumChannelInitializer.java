@@ -67,6 +67,7 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
             }
 
             final Channel channel = ctx.getBean(Channel.class);
+            channel.setInetSocketAddress(ch.remoteAddress());
             channel.init(ch.pipeline(), remoteId, peerDiscoveryMode, channelManager);
 
             if(!peerDiscoveryMode) {
