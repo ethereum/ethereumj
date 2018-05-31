@@ -8,6 +8,7 @@ buildscript {
     dependencies {
         classpath 'io.spring.gradle:propdeps-plugin:0.0.9.RELEASE'
         classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:3.0.1'
+        classpath 'com.typesafe:config:1.2.1'
     }
 }
 
@@ -79,8 +80,12 @@ task tckRun(type:JavaExec){
     classpath = sourceSets.test.runtimeClasspath
 }
 
-
-
+/**
+ * Runs all tests
+ * EthereumJ also runs common Ethereum clients tests
+ * See {@link #prepareGithubTests()} if you want to use local repo
+ * instead of downloading tests during test execution
+ */
 test {
 
     beforeTest { descriptor ->
@@ -89,8 +94,8 @@ test {
 
     jvmArgs = ["-Xss8m", "-Xmx3G"]
 
-    // If Github commit key is provided, following method will prepare Github Tests repo
     prepareGithubTests()
+    // If Github tests directory is provided, it's passed to test runner
     if (System.getProperty("GitHubTests.testPath") != null) {
         jvmArgs.add('-DGitHubTests.testPath' + '=' + System.getProperty("GitHubTests.testPath"))
     }
@@ -363,12 +368,63 @@ def gitCurBranch() {
     return process.text.trim()
 }
 
+/**
+ * This method is used to prepare local Ethereum Github tests for EthereumJ tests
+ *
+ * These tests  are designed for all Ethereum clients and
+ * maintained by Ethereum Foundation/Community.
+ * EthereumJ executes all of them but by default downloads every
+ * single file using internet connection.
+ * Alternatively you could use local repo to run tests from it.
+ *
+ * Common usage:
+ * 1) Local run:
+ *  a. Clone Ethereum tests repo (https://github.com/ethereum/tests)
+ *    to some local directory
+ *  b. Create `test-user.conf` file in test resources directory.
+ *    This file is under `.gitignore`, so it's your local file only.
+ *    You could override any EthereumJ configuration in it, but
+ *    for using local Ethereum tests repo you need following line:
+ *    GitHubTests.testPath=/some/path/with/Ethereum/tests/repo
+ *  c. Run `./gradlew test` task.
+ * 2) CI run:
+ *  a. Clone Ethereum tests repo (https://github.com/ethereum/tests)
+ *    to some local directory
+ *  b. Run `test` task with following parameter:
+ *    -DGitHubTests.testPath=/some/path/with/Ethereum/tests/repo
+ *
+ * In both cases this method will get commit hash from
+ * `src/test/resources/github-tests.prop` and checkout local repo
+ * to specific commit. So, EthereumJ tests will run common
+ * Ethereum client tests using local copy of repository.
+ *
+ * Repo with tests is changed often and EthereumJ is guaranteed
+ * to pass only tests from specific commit.
+ */
 import org.ajoberstar.grgit.Grgit
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 def prepareGithubTests() {
-    def repoPath = System.getProperty("GitHubTests.testPath")
-    if (repoPath != null && System.getProperty("GitHubTests.commit") != null) {
-        def commit = System.getProperty("GitHubTests.commit")
-        println "Tests: Checking out Tests repo to " + repoPath + " on commit #" + commit
+    String testsPathKey = "GitHubTests.testPath"
+    String testsCommitKey = "GitHubTests.commit"
+    String testUserConf = "ethereumj-core/src/test/resources/test-user.conf"
+    String githubTestsProp = "ethereumj-core/src/test/resources/github-tests.prop"
+    def repoPath = System.getProperty(testsPathKey)
+    if (repoPath == null) {
+        try {
+            Config userTest = ConfigFactory.parseFile(new File(testUserConf))
+            repoPath = userTest.getString(testsPathKey)
+        } catch (Exception ex) {}
+    }
+    if (repoPath == null) return
+    def commit = System.getProperty(testsCommitKey)
+    if (commit == null) {
+        Properties testProp = new Properties();
+        testProp.load(new File(githubTestsProp).newDataInputStream());
+        commit = testProp.getProperty(testsCommitKey)
+    }
+    if (repoPath != null && commit != null) {
+        println "Tests: Checking out Ethereum Tests repo at " + repoPath + " to commit #" + commit
         def testsRepo = Grgit.open(dir: repoPath)
         testsRepo.checkout(branch: commit)
     }
