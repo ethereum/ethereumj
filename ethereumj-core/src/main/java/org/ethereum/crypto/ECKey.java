@@ -104,7 +104,7 @@ import static org.ethereum.util.ByteUtil.toHexString;
  * signature and want to find out who signed it, rather than requiring the user to provide the expected identity.</p>
  *
  * This code is borrowed from the bitcoinj project and altered to fit Ethereum.<br>
- * See <a href="https://github.com/bitcoinj/bitcoinj/blob/master/core/src/main/java/com/google/bitcoin/core/ECKey.java">
+ * See <a href="https://github.com/bitcoinj/bitcoinj/blob/df9f5a479d28c84161de88165917a5cffcba08ca/core/src/main/java/org/bitcoinj/core/ECKey.java">
  * bitcoinj on GitHub</a>.
  */
 public class ECKey implements Serializable {
