@@ -40,7 +40,6 @@ import java.security.SecureRandom;
 import java.security.Security;
 import java.security.SignatureException;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -208,7 +207,7 @@ public class ECKeyTest {
         BigInteger r = new BigInteger("28157690258821599598544026901946453245423343069728565040002908283498585537001");
         BigInteger s = new BigInteger("30212485197630673222315826773656074299979444367665131281281249560925428307087");
         ECDSASignature sig = ECDSASignature.fromComponents(r.toByteArray(), s.toByteArray(), (byte) 28);
-        key.verify(HashUtil.sha3(exampleMessage.getBytes()), sig);
+        assertFalse(key.verify(HashUtil.sha3(exampleMessage.getBytes()), sig));
     }
 
     @Test
