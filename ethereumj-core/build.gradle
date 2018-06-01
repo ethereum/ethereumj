@@ -425,7 +425,16 @@ def prepareGithubTests() {
     }
     if (repoPath != null && commit != null) {
         println "Tests: Checking out Ethereum Tests repo at " + repoPath + " to commit #" + commit
-        def testsRepo = Grgit.open(dir: repoPath)
-        testsRepo.checkout(branch: commit)
+        try {
+            def testsRepo = Grgit.open(dir: repoPath)
+            testsRepo.fetch()
+            testsRepo.checkout(branch: commit)
+        } catch (Exception ex) {
+            println "Error occurs while trying to checkout local Ethereum tests repo to specific commit"
+            println "Either remove " + testsPathKey + " property to use remote repo in tests or fix the issue"
+            println "Error: "
+            println ex
+            throw ex
+        }
     }
 }
