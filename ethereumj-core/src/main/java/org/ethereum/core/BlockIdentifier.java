@@ -21,7 +21,6 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 
 import static org.ethereum.util.ByteUtil.byteArrayToLong;
 import static org.ethereum.util.ByteUtil.toHexString;
