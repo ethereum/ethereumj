@@ -4,11 +4,14 @@ dist: trusty
 language: java
 jdk: oraclejdk8
 
+before_script:
+  - cd $HOME && mkdir tests  && cd tests && git clone https://github.com/ethereum/tests.git . && cd $TRAVIS_BUILD_DIR
+
 # publish snapshots to https://oss.jfrog.org/libs-snapshot/org/ethereum/ethereumj-core
 # publish releases to http://jcenter.bintray.com/org/ethereum/ethereumj-core
 # publish coverage to https://coveralls.io/r/ethereum/ethereumj
 script:
-  - ./gradlew clean build publish jacocoTestReport coveralls --stacktrace --info
+  - ./gradlew clean build publish jacocoTestReport coveralls $TESTS_OPTS --stacktrace --info
 
 
 cache:
@@ -44,5 +47,6 @@ notifications:
 env:
   global:
     - JAVA_OPTS="-XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled"
+    - TESTS_OPTS="-DGitHubTests.testPath=$HOME/tests"
     - secure: "OlSe9DlT1D/b/ru3uO1m8nwevaDhH9XGmAfJ/2U69eBwRtg/aLEF9ZpULrMNTDR8XbNT6uuZsvvRby5HOKPRRkOqnWIY8He2hRpw0IYDONfRfKXIcr4WuJM3N98mQ9RYoNcV9LbHoXFQtfc7oUIp5o7WsCx5Pd/Ygyz4ZVNBc5g="
     - secure: "Y5L4DJXonAavfoUAMgM+RUTVYfyT5YkB8yBp8oUTK6RMCUrSTXB2Kpa8fvP8gvPXIXpIQgxa+bn/85wSrFAm8I9e4zXYO/1h4TPsbXrE1KB3aIXlg96wr1WRg+YyWed1VOtrCDZhO0K9l2fEG4ktysv+vtSaDxRVjtnFX+0Xymk="
