@@ -20,6 +20,7 @@ package org.ethereum.sync;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.ethereum.core.*;
 import org.ethereum.net.server.Channel;
@@ -196,7 +197,7 @@ public abstract class BlockDownloader {
                                         logger.debug("{}: Error receiving headers. Dropping the peer.", name, t);
                                         any.getEthHandler().dropConnection();
                                     }
-                                });
+                                }, MoreExecutors.directExecutor());
                                 it.remove();
                                 reqHeadersCounter++;
                             }
@@ -252,6 +253,7 @@ public abstract class BlockDownloader {
                 if (blocksToAsk >= MAX_IN_REQUEST) {
 //                    SyncQueueIfc.BlocksRequest bReq = syncQueue.requestBlocks(maxBlocks);
 
+                    boolean fewHeadersReqMode = false;
                     if (bReqs.size() == 1 && bReqs.get(0).getBlockHeaders().size() <= 3) {
                         // new blocks are better to request from the header senders first
                         // to get more chances to receive block body promptly
@@ -261,7 +263,9 @@ public abstract class BlockDownloader {
                                 ListenableFuture<List<Block>> futureBlocks =
                                         channel.getEthHandler().sendGetBlockBodies(singletonList(blockHeaderWrapper));
                                 if (futureBlocks != null) {
-                                    Futures.addCallback(futureBlocks, new BlocksCallback(channel));
+                                    Futures.addCallback(futureBlocks, new BlocksCallback(channel),
+                                            MoreExecutors.directExecutor());
+                                    fewHeadersReqMode = true;
                                 }
                             }
                         }
@@ -285,12 +289,21 @@ public abstract class BlockDownloader {
                                     any.getEthHandler().sendGetBlockBodies(blocksRequest.getBlockHeaders());
                             blocksRequested += blocksRequest.getBlockHeaders().size();
                             if (futureBlocks != null) {
-                                Futures.addCallback(futureBlocks, new BlocksCallback(any));
+                                Futures.addCallback(futureBlocks, new BlocksCallback(any),
+                                        MoreExecutors.directExecutor());
                                 reqBlocksCounter++;
                                 it.remove();
                             }
                         }
                     }
+
+                    // Case when we have requested few headers and was not able
+                    // to remove request from the list in above cycle because
+                    // there were no idle peers or whatever
+                    if (fewHeadersReqMode && !bReqs.isEmpty()) {
+                        bReqs.clear();
+                    }
+
                     receivedBlocksLatch = new CountDownLatch(max(reqBlocksCounter - 2, 1));
                     receivedBlocksLatch.await(1000, TimeUnit.MILLISECONDS);
                 } else {
