@@ -296,7 +296,7 @@ public class SyncManager extends BlockDownloader {
                     if (wrapper.isNewBlock() && !syncDone) {
                         makeSyncDone();
                     }
-                    if (config.makeDoneByTimeout() >= 0) {
+                    if (config.makeDoneByTimeout() >= 0 && !syncDone) {
                         this.lastSyncAction = LocalDateTime.now();
                     }
                 }
