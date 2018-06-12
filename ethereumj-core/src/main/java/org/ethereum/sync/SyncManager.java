@@ -108,7 +108,7 @@ public class SyncManager extends BlockDownloader {
     private long importStart;
     private EthereumListener.SyncState syncDoneType = EthereumListener.SyncState.COMPLETE;
     private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
-    private LocalDateTime lastSyncAction;
+    private LocalDateTime initRegularTime;
 
     private AtomicInteger blocksInMem = new AtomicInteger(0);
 
@@ -171,14 +171,16 @@ public class SyncManager extends BlockDownloader {
 
         if (config.makeDoneByTimeout() >= 0) {
             logger.info("Custom long sync done timeout set to {} second(s)", config.makeDoneByTimeout());
-            this.lastSyncAction = LocalDateTime.now();
+            this.initRegularTime = LocalDateTime.now();
             ScheduledExecutorService shortSyncAwait = Executors.newSingleThreadScheduledExecutor();
             shortSyncAwait.scheduleAtFixedRate(() -> {
                 try {
-                    if (LocalDateTime.now().minusSeconds(config.makeDoneByTimeout()).isAfter(lastSyncAction) &&
+                    if (LocalDateTime.now().minusSeconds(config.makeDoneByTimeout()).isAfter(initRegularTime) &&
                             getLastKnownBlockNumber() == blockchain.getBestBlock().getNumber()) {
                         logger.info("Sync done triggered by timeout");
                         makeSyncDone();
+                        shortSyncAwait.shutdown();
+                    } else if (syncDone) {
                         shortSyncAwait.shutdown();
                     }
                 } catch (Exception e) {
@@ -295,9 +297,6 @@ public class SyncManager extends BlockDownloader {
 
                     if (wrapper.isNewBlock() && !syncDone) {
                         makeSyncDone();
-                    }
-                    if (config.makeDoneByTimeout() >= 0 && !syncDone) {
-                        this.lastSyncAction = LocalDateTime.now();
                     }
                 }
 
