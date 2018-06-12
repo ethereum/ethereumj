@@ -85,7 +85,7 @@ public class Utils {
         long hour = min / 60;
         if (min < 24 * 60) return hour + "h" + (min % 60) + "m";
         long day = hour / 24;
-        return day + "d" + (day % 24) + "h";
+        return day + "d" + (hour % 24) + "h";
     }
 
     public static ImageIcon getImageIcon(String resource) {

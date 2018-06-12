@@ -108,5 +108,6 @@ public class UtilsTest {
     @Test
     public void testLongToTimePeriod() {
         assertEquals("2.99s", Utils.longToTimePeriod(3000 - 12));
+        assertEquals("1d21h", Utils.longToTimePeriod(45L * 3600 * 1000));
     }
 }
