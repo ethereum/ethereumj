@@ -826,6 +826,12 @@ public class SystemProperties {
     }
 
     @ValidateMe
+    public int makeDoneByTimeout() {
+        return config.getInt("sync.makeDoneByTimeout");
+    }
+
+
+    @ValidateMe
     public boolean isPublicHomeNode() { return config.getBoolean("peer.discovery.public.home.node");}
 
     @ValidateMe

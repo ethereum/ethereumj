@@ -34,6 +34,7 @@ import org.springframework.stereotype.Component;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -107,6 +108,7 @@ public class SyncManager extends BlockDownloader {
     private long importStart;
     private EthereumListener.SyncState syncDoneType = EthereumListener.SyncState.COMPLETE;
     private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
+    private LocalDateTime initRegularTime;
 
     private AtomicInteger blocksInMem = new AtomicInteger(0);
 
@@ -166,6 +168,26 @@ public class SyncManager extends BlockDownloader {
 
         syncQueueThread = new Thread (queueProducer, "SyncQueueThread");
         syncQueueThread.start();
+
+        if (config.makeDoneByTimeout() >= 0) {
+            logger.info("Custom long sync done timeout set to {} second(s)", config.makeDoneByTimeout());
+            this.initRegularTime = LocalDateTime.now();
+            ScheduledExecutorService shortSyncAwait = Executors.newSingleThreadScheduledExecutor();
+            shortSyncAwait.scheduleAtFixedRate(() -> {
+                try {
+                    if (LocalDateTime.now().minusSeconds(config.makeDoneByTimeout()).isAfter(initRegularTime) &&
+                            getLastKnownBlockNumber() == blockchain.getBestBlock().getNumber()) {
+                        logger.info("Sync done triggered by timeout");
+                        makeSyncDone();
+                        shortSyncAwait.shutdown();
+                    } else if (syncDone) {
+                        shortSyncAwait.shutdown();
+                    }
+                } catch (Exception e) {
+                    logger.error("Unexpected", e);
+                }
+            }, 0, 10, TimeUnit.SECONDS);
+        }
     }
 
     public SyncStatus getSyncStatus() {
