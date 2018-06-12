@@ -106,8 +106,8 @@ public class PrivateMinerSample {
             if (minerStatus.equals(EthashListener.DatasetStatus.FULL_DATASET_GENERATE_START)) {
                 logger.info("Generating Full Dataset (may take up to 10 min if not cached)...");
             }
-            if (minerStatus.equals(EthashListener.DatasetStatus.DATASET_GENERATED)) {
-                logger.info("Full dataset generated (loaded).");
+            if (minerStatus.equals(DatasetStatus.FULL_DATASET_GENERATED)) {
+                logger.info("Full dataset generated.");
             }
         }
 

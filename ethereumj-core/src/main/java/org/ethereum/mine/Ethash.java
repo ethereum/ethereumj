@@ -38,9 +38,16 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.mine.EthashListener.DatasetStatus.DATASET_GENERATED;
+import static org.ethereum.mine.EthashListener.DatasetStatus.DATASET_READY;
+import static org.ethereum.mine.EthashListener.DatasetStatus.DATASET_PREPARE;
+import static org.ethereum.mine.EthashListener.DatasetStatus.FULL_DATASET_GENERATED;
 import static org.ethereum.mine.EthashListener.DatasetStatus.FULL_DATASET_GENERATE_START;
+import static org.ethereum.mine.EthashListener.DatasetStatus.FULL_DATASET_LOADED;
+import static org.ethereum.mine.EthashListener.DatasetStatus.FULL_DATASET_LOAD_START;
+import static org.ethereum.mine.EthashListener.DatasetStatus.LIGHT_DATASET_GENERATED;
 import static org.ethereum.mine.EthashListener.DatasetStatus.LIGHT_DATASET_GENERATE_START;
+import static org.ethereum.mine.EthashListener.DatasetStatus.LIGHT_DATASET_LOADED;
+import static org.ethereum.mine.EthashListener.DatasetStatus.LIGHT_DATASET_LOAD_START;
 import static org.ethereum.util.ByteUtil.longToBytes;
 import static org.ethereum.mine.MinerIfc.MiningResult;
 
@@ -106,26 +113,28 @@ public class Ethash {
     }
 
     public int[] getCacheLight() {
-        return getCacheLight(true);
+        fireDatatasetStatusUpdate(DATASET_PREPARE);
+        int[] res = getCacheLightImpl();
+        fireDatatasetStatusUpdate(DATASET_READY);
+        return res;
     }
 
     /**
      * Checks whether light DAG is already generated and loads it
      * from cache, otherwise generates it
-     *
-     * @param fireFinished whether to fire {@link EthashListener.DatasetStatus#DATASET_GENERATED}
-     *                     after light DAG generation is finished
      * @return  Light DAG
      */
-    private synchronized int[] getCacheLight(boolean fireFinished) {
+    private synchronized int[] getCacheLightImpl() {
         if (cacheLight == null) {
             File file = new File(config.ethashDir(), "mine-dag-light.dat");
             if (fileCacheEnabled && file.canRead()) {
+                fireDatatasetStatusUpdate(LIGHT_DATASET_LOAD_START);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     logger.info("Loading light dataset from " + file.getAbsolutePath());
                     long bNum = ois.readLong();
                     if (bNum == blockNumber) {
                         cacheLight = (int[]) ois.readObject();
+                        fireDatatasetStatusUpdate(LIGHT_DATASET_LOADED);
                         logger.info("Dataset loaded.");
                     } else {
                         logger.info("Dataset block number miss: " + bNum + " != " + blockNumber);
@@ -152,24 +161,25 @@ public class Ethash {
                         throw new RuntimeException(e);
                     }
                 }
-                if (fireFinished) {
-                    fireDatatasetStatusUpdate(DATASET_GENERATED);
-                }
+                fireDatatasetStatusUpdate(LIGHT_DATASET_GENERATED);
             }
         }
         return cacheLight;
     }
 
     public synchronized int[] getFullDataset() {
+        fireDatatasetStatusUpdate(DATASET_PREPARE);
         if (fullData == null) {
             File file = new File(config.ethashDir(), "mine-dag.dat");
             if (fileCacheEnabled && file.canRead()) {
+                fireDatatasetStatusUpdate(FULL_DATASET_LOAD_START);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     logger.info("Loading dataset from " + file.getAbsolutePath());
                     long bNum = ois.readLong();
                     if (bNum == blockNumber) {
                         fullData = (int[]) ois.readObject();
                         logger.info("Dataset loaded.");
+                        fireDatatasetStatusUpdate(FULL_DATASET_LOADED);
                     } else {
                         logger.info("Dataset block number miss: " + bNum + " != " + blockNumber);
                     }
@@ -181,8 +191,8 @@ public class Ethash {
             if (fullData == null){
 
                 logger.info("Calculating full dataset...");
-                int[] cacheLight = getCacheLight(false);
                 fireDatatasetStatusUpdate(FULL_DATASET_GENERATE_START);
+                int[] cacheLight = getCacheLightImpl();
                 fullData = getEthashAlgo().calcDataset(getFullSize(), cacheLight);
                 logger.info("Full dataset calculated.");
 
@@ -196,9 +206,10 @@ public class Ethash {
                         throw new RuntimeException(e);
                     }
                 }
-                fireDatatasetStatusUpdate(DATASET_GENERATED);
+                fireDatatasetStatusUpdate(FULL_DATASET_GENERATED);
             }
         }
+        fireDatatasetStatusUpdate(DATASET_READY);
         return fullData;
     }
 
