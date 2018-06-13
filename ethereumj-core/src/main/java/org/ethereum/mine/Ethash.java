@@ -112,11 +112,14 @@ public class Ethash {
         }
     }
 
-    public int[] getCacheLight() {
-        fireDatatasetStatusUpdate(DATASET_PREPARE);
-        int[] res = getCacheLightImpl();
-        fireDatatasetStatusUpdate(DATASET_READY);
-        return res;
+    public synchronized int[] getCacheLight() {
+        if (cacheLight == null) {
+            fireDatatasetStatusUpdate(DATASET_PREPARE);
+            getCacheLightImpl();
+            fireDatatasetStatusUpdate(DATASET_READY);
+        }
+
+        return cacheLight;
     }
 
     /**
@@ -168,8 +171,8 @@ public class Ethash {
     }
 
     public synchronized int[] getFullDataset() {
-        fireDatatasetStatusUpdate(DATASET_PREPARE);
         if (fullData == null) {
+            fireDatatasetStatusUpdate(DATASET_PREPARE);
             File file = new File(config.ethashDir(), "mine-dag.dat");
             if (fileCacheEnabled && file.canRead()) {
                 fireDatatasetStatusUpdate(FULL_DATASET_LOAD_START);
@@ -208,8 +211,8 @@ public class Ethash {
                 }
                 fireDatatasetStatusUpdate(FULL_DATASET_GENERATED);
             }
+            fireDatatasetStatusUpdate(DATASET_READY);
         }
-        fireDatatasetStatusUpdate(DATASET_READY);
         return fullData;
     }
 
