@@ -65,14 +65,19 @@ public class NodeFilter {
         }
 
         public boolean accept(InetAddress nodeAddr) {
+            if (hostIpPattern == null) return true;
             String ip = nodeAddr.getHostAddress();
             return hostIpPattern != null && ip.startsWith(hostIpPattern);
         }
 
         public boolean accept(Node node) {
             try {
-                return (nodeId == null || Arrays.equals(node.getId(), nodeId))
-                        && (hostIpPattern == null || accept(InetAddress.getByName(node.getHost())));
+                boolean shouldAcceptNodeId = nodeId == null || Arrays.equals(node.getId(), nodeId);
+                if (!shouldAcceptNodeId) {
+                    return false;
+                }
+                InetAddress nodeAddress = InetAddress.getByName(node.getHost());
+                return (hostIpPattern == null || accept(nodeAddress));
             } catch (UnknownHostException e) {
                 return false;
             }
