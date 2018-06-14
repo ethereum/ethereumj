@@ -15,23 +15,30 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.config.net;
-
-import org.ethereum.config.blockchain.*;
+package org.ethereum.erp;
 
 /**
- * Created by Anton Nashatyrev on 25.02.2016.
+ * This class maps directly to the SCO file format.
  */
-public class MainNetConfig extends BaseNetConfig {
-    public static final MainNetConfig INSTANCE = new MainNetConfig();
+public class RawStateChangeObject {
+    public String erpId;
+    public long targetBlock;
+    public RawMetadata metadata;
+    public RawStateChangeAction[] actions;
 
-    public MainNetConfig() {
-        add(0, new FrontierConfig());
-        add(1_150_000, new HomesteadConfig());
-        add(1_920_000, new DaoHFConfig());
-        add(2_463_000, new Eip150HFConfig(new DaoHFConfig()));
-        add(2_675_000, new Eip160HFConfig(new DaoHFConfig()));
-        add(4_370_000, new ByzantiumConfig(new DaoHFConfig()));
-        add(6_000_000, new ErpConfig());
+    public static class RawStateChangeAction {
+        public String type;
+        public String fromAddress;
+        public String toAddress;
+        public String valueInWei;
+        public String code;
+        public String expectedCodeHash;
+    }
+
+    public static class RawMetadata {
+        public long sourceBlock;
+        public String version;
     }
 }
+
+

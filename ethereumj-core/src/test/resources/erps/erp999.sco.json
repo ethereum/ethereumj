@@ -1,0 +1,22 @@
+{
+  "erpId": "erp-999",
+  "targetBlock": 5000000,
+  "metadata": {
+    "sourceBlock": 4000000,
+    "version": "1.3.0"
+  },
+  "actions": [
+    {
+      "type": "weiTransfer",
+      "fromAddress": "0x11113D9F938E13CD947EC05ABC7FE734DF8DD826",
+      "toAddress": "0x22228AEE95F38490E9769C39B2773ED763D9CD5F",
+      "valueInWei": 1234
+    },
+    {
+      "type": "storeCode",
+      "toAddress": "0x33338AEE95F38490E9769C39B2773ED763D9CD5E",
+      "expectedCodeHash": "0xF38490",
+      "code": "0xdeadbeef"
+    }
+  ]
+}
