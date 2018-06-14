@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
+import java.util.concurrent.*;
 
 import org.apache.commons.collections4.map.LRUMap;
 import org.ethereum.config.CommonConfig;
@@ -94,7 +95,13 @@ public class PendingStateImpl implements PendingState {
 
 //    private Repository repository;
 
-    private final List<PendingTransaction> pendingTransactions = new ArrayList<>();
+    // private final List<PendingTransaction> pendingTransactions = new ArrayList<>();
+    /* For development purposes capacity is hardcoded. 
+     * We can change this to some more suitable way and to some other capacity is this is not optimal 
+     */
+
+    private int capacity = 100;
+    private LinkedBlockingDeque<PendingTransaction> pendingTransactions = new LinkedBlockingDeque<>(capacity);
 
     // to filter out the transactions we have already processed
     // transactions could be sent by peers even if they were already included into blocks
@@ -228,7 +235,7 @@ public class PendingStateImpl implements PendingState {
         if (!txReceipt.isValid()) {
             fireTxUpdate(txReceipt, DROPPED, getBestBlock());
         } else {
-            pendingTransactions.add(new PendingTransaction(tx, getBestBlock().getNumber()));
+            pendingTransactions.offer(new PendingTransaction(tx, getBestBlock().getNumber()));
             fireTxUpdate(txReceipt, NEW_PENDING, getBestBlock());
         }
         return txReceipt.isValid();
@@ -293,7 +300,15 @@ public class PendingStateImpl implements PendingState {
                     logger.trace("Returning transaction back to pending: " + tx);
                     blockTxs.add(new PendingTransaction(tx, commonAncestor.getNumber()));
                 }
-                pendingTransactions.addAll(0, blockTxs);
+                for (PendingTransaction tx : blockTxs) {
+                    try {
+                        pendingTransactions.put(tx);
+                    } catch (InterruptedException ex){
+                        ex.printStackTrace();
+                    } catch (NullPointerException ex){
+                        ex.printStackTrace();
+                    }
+                }
                 rollback = blockchain.getBlockByHash(rollback.getParentHash());
             }
 
