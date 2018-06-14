@@ -525,6 +525,10 @@ public class RLP {
             length += bt << shift;
             pow--;
         }
+
+        // check that length is in payload bounds
+        verifyLength(length, msgData.length - pos - lengthOfLength);
+
         return length;
     }
 
@@ -580,10 +584,8 @@ public class RLP {
                         throw new RuntimeException("Short list has been encoded as long list");
                     }
 
-                    // check payload bounds
-                    if (length > msgData.length - pos - lengthOfLength) {
-                        throw new RuntimeException("Parsed data lays outside of RLP length boundaries");
-                    }
+                    // check that length is in payload bounds
+                    verifyLength(length, msgData.length - pos - lengthOfLength);
 
                     byte[] rlpData = new byte[lengthOfLength + length + 1];
                     System.arraycopy(msgData, pos, rlpData, 0, lengthOfLength
@@ -633,10 +635,8 @@ public class RLP {
                         throw new RuntimeException("Short item has been encoded as long item");
                     }
 
-                    // check payload bounds
-                    if (length > msgData.length - pos - lengthOfLength) {
-                        throw new RuntimeException("Parsed data lays outside of RLP length boundaries");
-                    }
+                    // check that length is in payload bounds
+                    verifyLength(length, msgData.length - pos - lengthOfLength);
 
                     // now we can parse an item for data[1]..data[length]
                     byte[] item = new byte[length];
@@ -695,6 +695,19 @@ public class RLP {
     }
 
     /**
+     * Compares supplied length information with maximum possible
+     * @param suppliedLength    Length info from header
+     * @param availableLength   Length of remaining object
+     * @throws RuntimeException if supplied length is bigger than available
+     */
+    private static void verifyLength(int suppliedLength, int availableLength) {
+        if (suppliedLength > availableLength) {
+            throw new RuntimeException(String.format("Length parsed from RLP (%s bytes) is greater " +
+                            "than possible size of data (%s bytes)", suppliedLength, availableLength));
+        }
+    }
+
+    /**
      * Reads any RLP encoded byte-array and returns all objects as byte-array or list of byte-arrays
      *
      * @param data RLP encoded byte-array
@@ -716,6 +729,8 @@ public class RLP {
         } else if (prefix < OFFSET_SHORT_LIST) {  // [0xb8, 0xbf]
             int lenlen = prefix - OFFSET_LONG_ITEM; // length of length the encoded bytes
             int lenbytes = byteArrayToInt(copyOfRange(data, pos + 1, pos + 1 + lenlen)); // length of encoded bytes
+            // check that length is in payload bounds
+            verifyLength(lenbytes, data.length - pos - 1 - lenlen);
             return new DecodeResult(pos + 1 + lenlen + lenbytes, copyOfRange(data, pos + 1 + lenlen, pos + 1 + lenlen
                     + lenbytes));
         } else if (prefix <= OFFSET_LONG_LIST) {  // [0xc0, 0xf7]
@@ -805,6 +820,8 @@ public class RLP {
             } else if (prefix < OFFSET_SHORT_LIST) {  // [0xb8, 0xbf]
                 int lenlen = prefix - OFFSET_LONG_ITEM; // length of length the encoded bytes
                 int lenbytes = byteArrayToInt(copyOfRange(data, pos + 1, pos + 1 + lenlen)); // length of encoded bytes
+                // check that length is in payload bounds
+                verifyLength(lenbytes, data.length - pos - 1 - lenlen);
                 ret.add(pos + 1 + lenlen, lenbytes, false);
                 pos += 1 + lenlen + lenbytes;
             } else if (prefix <= OFFSET_LONG_LIST) {  // [0xc0, 0xf7]
@@ -814,6 +831,8 @@ public class RLP {
             } else if (prefix <= 0xFF) {  // [0xf8, 0xff]
                 int lenlen = prefix - OFFSET_LONG_LIST; // length of length the encoded list
                 int lenlist = byteArrayToInt(copyOfRange(data, pos + 1, pos + 1 + lenlen)); // length of encoded bytes
+                // check that length is in payload bounds
+                verifyLength(lenlist, data.length - pos - 1 - lenlen);
                 ret.add(pos + 1 + lenlen, lenlist, true);
                 pos += 1 + lenlen + lenlist; // start at position of first element in list
             } else {
@@ -825,6 +844,9 @@ public class RLP {
 
 
     private static DecodeResult decodeList(byte[] data, int pos, int prevPos, int len) {
+        // check that length is in payload bounds
+        verifyLength(len, data.length - pos);
+
         List<Object> slice = new ArrayList<>();
         for (int i = 0; i < len; ) {
             // Get the next item in the data list and append it

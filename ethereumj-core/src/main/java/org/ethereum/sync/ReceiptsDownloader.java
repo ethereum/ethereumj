@@ -24,7 +24,6 @@ import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.IndexedBlockStore;
@@ -35,7 +34,6 @@ import org.ethereum.util.FastByteComparisons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -71,9 +69,6 @@ public class ReceiptsDownloader {
     @Autowired
     TransactionStore txStore;
 
-    @Autowired @Qualifier("headerSource")
-    DataSourceArray<BlockHeader> headerStore;
-
     long fromBlock, toBlock;
     LinkedHashMap<ByteArrayWrapper, QueuedBlock> queuedBlocks = new LinkedHashMap<>();
     AtomicInteger blocksInMem = new AtomicInteger(0);
@@ -101,7 +96,7 @@ public class ReceiptsDownloader {
     private synchronized List<byte[]> getHashesForRequest(int maxSize) {
         List<byte[]> ret = new ArrayList<>();
         for (; fromBlock < toBlock && maxSize > 0; fromBlock++) {
-            BlockHeader header = headerStore.get((int) fromBlock);
+            BlockHeader header = blockStore.getChainBlockByNumber(fromBlock).getHeader();
 
             // Skipping download for blocks with no transactions
             if (FastByteComparisons.equal(header.getReceiptsRoot(), HashUtil.EMPTY_TRIE_HASH)) {

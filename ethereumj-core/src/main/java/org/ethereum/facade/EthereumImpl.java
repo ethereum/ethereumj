@@ -56,8 +56,11 @@ import org.springframework.util.concurrent.FutureAdapter;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * @author Roman Mandeleil
@@ -112,7 +115,7 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
         this.config = config;
         System.out.println();
         this.compositeEthereumListener.addListener(gasPriceTracker);
-        gLogger.info("EthereumJ node started: enode://" + Hex.toHexString(config.nodeId()) + "@" + config.externalIp() + ":" + config.listenPort());
+        gLogger.info("EthereumJ node started: enode://" + toHexString(config.nodeId()) + "@" + config.externalIp() + ":" + config.listenPort());
     }
 
     @Override
@@ -223,7 +226,7 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
     @Override
     public TransactionReceipt callConstant(Transaction tx, Block block) {
         if (tx.getSignature() == null) {
-            tx.sign(ECKey.fromPrivate(new byte[32]));
+            tx.sign(ECKey.DUMMY);
         }
         return callConstantImpl(tx, block).getReceipt();
     }
@@ -299,7 +302,7 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
     @Override
     public ProgramResult callConstantFunction(String receiveAddress,
                                               CallTransaction.Function function, Object... funcArgs) {
-        return callConstantFunction(receiveAddress, ECKey.fromPrivate(new byte[32]), function, funcArgs);
+        return callConstantFunction(receiveAddress, ECKey.DUMMY, function, funcArgs);
     }
 
     @Override
@@ -378,6 +381,10 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
         BlockchainConfig nextBlockConfig = config.getBlockchainConfig().getConfigForBlock(getBlockchain()
                 .getBestBlock().getNumber() + 1);
         return nextBlockConfig.getChainId();
+    }
+
+    public CompletableFuture<Void> switchToShortSync() {
+        return syncManager.switchToShortSync();
     }
 
     @Override

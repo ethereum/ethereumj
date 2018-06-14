@@ -34,6 +34,7 @@ import org.ethereum.net.rlpx.MessageCodec;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.util.BuildInfo;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.Utils;
 import org.ethereum.validator.BlockCustomHashRule;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
@@ -53,6 +54,7 @@ import java.net.URL;
 import java.util.*;
 
 import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Utility class to retrieve property values from the ethereumj.conf files
@@ -664,7 +666,7 @@ public class SystemProperties {
     public String privateKey() {
         if (config.hasPath("peer.privateKey")) {
             String key = config.getString("peer.privateKey");
-            if (key.length() != 64) {
+            if (key.length() != 64 || !Utils.isHexEncoded(key)) {
                 throw new RuntimeException("The peer.privateKey needs to be Hex encoded and 32 byte length");
             }
             return key;
@@ -810,7 +812,7 @@ public class SystemProperties {
     public byte[] getFastSyncPivotBlockHash() {
         if (!config.hasPath("sync.fast.pivotBlockHash")) return null;
         byte[] ret = Hex.decode(config.getString("sync.fast.pivotBlockHash"));
-        if (ret.length != 32) throw new RuntimeException("Invalid block hash length: " + Hex.toHexString(ret));
+        if (ret.length != 32) throw new RuntimeException("Invalid block hash length: " + toHexString(ret));
         return ret;
     }
 
@@ -823,6 +825,12 @@ public class SystemProperties {
     public boolean fastSyncSkipHistory() {
         return config.getBoolean("sync.fast.skipHistory");
     }
+
+    @ValidateMe
+    public int makeDoneByTimeout() {
+        return config.getInt("sync.makeDoneByTimeout");
+    }
+
 
     @ValidateMe
     public boolean isPublicHomeNode() { return config.getBoolean("peer.discovery.public.home.node");}

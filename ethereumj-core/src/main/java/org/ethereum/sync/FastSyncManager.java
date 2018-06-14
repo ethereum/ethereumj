@@ -28,6 +28,7 @@ import org.ethereum.datasource.DbSource;
 import org.ethereum.datasource.NodeKeyCompositor;
 import org.ethereum.datasource.rocksdb.RocksDbDataSource;
 import org.ethereum.db.DbFlushManager;
+import org.ethereum.db.HeaderStore;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.StateSource;
 import org.ethereum.facade.SyncStatus;
@@ -42,13 +43,15 @@ import org.ethereum.trie.TrieKey;
 import org.ethereum.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -58,6 +61,7 @@ import static org.ethereum.listener.EthereumListener.SyncState.SECURE;
 import static org.ethereum.listener.EthereumListener.SyncState.UNSECURE;
 import static org.ethereum.trie.TrieKey.fromPacked;
 import static org.ethereum.util.CompactEncoder.hasTerminator;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Created by Anton Nashatyrev on 24.10.2016.
@@ -330,7 +334,7 @@ public class FastSyncManager {
         public String toString() {
             return "TrieNodeRequest{" +
                     "type=" + type +
-                    ", nodeHash=" + Hex.toHexString(nodeHash) +
+                    ", nodeHash=" + toHexString(nodeHash) +
                     ", nodePath=" + nodePath +
                     '}';
         }
@@ -408,11 +412,14 @@ public class FastSyncManager {
                         try {
                             synchronized (FastSyncManager.this) {
                                 logger.trace("Received " + result.size() + " nodes (of " + hashes.size() + ") from peer: " + idle);
+                                idle.getNodeStatistics().eth63NodesRequested.add(hashes.size());
+                                idle.getNodeStatistics().eth63NodesRetrieveTime.add(System.currentTimeMillis() - reqTime);
                                 for (Pair<byte[], byte[]> pair : result) {
                                     TrieNodeRequest request = pendingNodes.get(pair.getKey());
                                     if (request == null) {
                                         long t = System.currentTimeMillis();
-                                        logger.debug("Received node which was not requested: " + Hex.toHexString(pair.getKey()) + " from " + idle);
+                                        logger.debug("Received node which was not requested: " + toHexString(pair.getKey()) + " from " + idle);
+                                        idle.disconnect(ReasonCode.TOO_MANY_PEERS); // We need better peers for this stage
                                         return;
                                     }
                                     Set<Long> intersection = request.requestIdsSnapshot();
@@ -427,10 +434,7 @@ public class FastSyncManager {
                                 }
 
                                 FastSyncManager.this.notifyAll();
-
-                                idle.getNodeStatistics().eth63NodesRequested.add(hashes.size());
                                 idle.getNodeStatistics().eth63NodesReceived.add(result.size());
-                                idle.getNodeStatistics().eth63NodesRetrieveTime.add(System.currentTimeMillis() - reqTime);
                             }
                         } catch (Exception e) {
                             logger.error("Unexpected error processing nodes", e);
@@ -440,6 +444,8 @@ public class FastSyncManager {
                     @Override
                     public void onFailure(Throwable t) {
                         logger.warn("Error with Trie Node request: " + t);
+                        idle.getNodeStatistics().eth63NodesRequested.add(hashes.size());
+                        idle.getNodeStatistics().eth63NodesRetrieveTime.add(System.currentTimeMillis() - reqTime);
                         synchronized (FastSyncManager.this) {
                             for (byte[] hash : hashes) {
                                 final TrieNodeRequest request = pendingNodes.get(hash);
@@ -540,7 +546,7 @@ public class FastSyncManager {
 
         logger.info("FastSync: downloading 256 blocks prior to pivot block (" + pivot.getShortDescr() + ")");
         FastSyncDownloader downloader = applicationContext.getBean(FastSyncDownloader.class);
-        downloader.startImporting(pivot.getHash(), 260);
+        downloader.startImporting(pivot, 260);
         downloader.waitForStop();
 
         logger.info("FastSync: complete downloading 256 blocks prior to pivot block (" + pivot.getShortDescr() + ")");
@@ -590,7 +596,7 @@ public class FastSyncManager {
         headersDownloader.waitForStop();
         if (!FastByteComparisons.equal(headersDownloader.getGenesisHash(), config.getGenesis().getHash())) {
             logger.error("FASTSYNC FATAL ERROR: after downloading header chain starting from the pivot block (" +
-                    pivot.getShortDescr() + ") obtained genesis block doesn't match ours: " + Hex.toHexString(headersDownloader.getGenesisHash()));
+                    pivot.getShortDescr() + ") obtained genesis block doesn't match ours: " + toHexString(headersDownloader.getGenesisHash()));
             logger.error("Can't recover and exiting now. You need to restart from scratch (all DBs will be reset)");
             System.exit(-666);
         }
@@ -615,6 +621,10 @@ public class FastSyncManager {
             logger.info("FastSync: Block bodies downloaded");
         } else {
             logger.info("FastSync: skip bodies downloading");
+            logger.info("Fixing total difficulty which is usually updated during block bodies download");
+            fixTotalDiff();
+            logger.info("Total difficulty fixed for full blocks");
+            blockchain.setHeaderStore(applicationContext.getBean(HeaderStore.class));
         }
 
         if (!config.fastSyncSkipHistory()) {
@@ -632,7 +642,7 @@ public class FastSyncManager {
         }
 
         logger.info("FastSync: updating totDifficulties starting from the pivot block...");
-        blockchain.updateBlockTotDifficulties((int) pivot.getNumber());
+        blockchain.updateBlockTotDifficulties(pivot.getNumber());
         synchronized (blockchain) {
             Block bestBlock = blockchain.getBestBlock();
             BigInteger totalDifficulty = blockchain.getTotalDifficulty();
@@ -642,6 +652,46 @@ public class FastSyncManager {
         blockchainDB.delete(FASTSYNC_DB_KEY_PIVOT);
         dbFlushManager.commit();
         dbFlushManager.flush();
+        removeHeadersDb(logger);
+    }
+
+    /**
+     * Fixing total difficulty which is usually updated during block bodies download
+     * Executed if {@link BlockBodiesDownloader} stage is skipped
+     */
+    private void fixTotalDiff() {
+        long firstFullBlockNum = pivot.getNumber();
+        while (blockStore.getChainBlockByNumber(firstFullBlockNum - 1) != null) {
+            --firstFullBlockNum;
+        }
+        Block firstFullBlock = blockStore.getChainBlockByNumber(firstFullBlockNum);
+        HeaderStore headersStore = applicationContext.getBean(HeaderStore.class);
+        BigInteger totalDifficulty = blockStore.getChainBlockByNumber(0).getDifficultyBI();
+        for (int i = 1; i < firstFullBlockNum; ++i) {
+            totalDifficulty = totalDifficulty.add(headersStore.getHeaderByNumber(i).getDifficultyBI());
+        }
+        blockStore.saveBlock(firstFullBlock, totalDifficulty.add(firstFullBlock.getDifficultyBI()), true);
+        blockchain.updateBlockTotDifficulties(firstFullBlockNum + 1);
+    }
+
+    /**
+     * Physically removes headers DB if fast sync was performed without skipHistory
+     */
+    public boolean removeHeadersDb(Logger logger) {
+        if (blockStore.getBestBlock().getNumber() > 0 &&
+                blockStore.getChainBlockByNumber(1) != null) {
+            // Everything is cool but maybe we could remove unused DB?
+            Path headersDbPath = Paths.get(config.databaseDir(), "headers");
+            if (Files.exists(headersDbPath)) {
+                logger.info("Headers DB was used during FastSync but not required any more. Removing.");
+                DbSource<byte[]> headerSource = (DbSource<byte[]>) applicationContext.getBean("headerSource");
+                headerSource.close();
+                FileUtil.recursiveDelete(headersDbPath.toString());
+                logger.info("Headers DB removed.");
+                return true;
+            }
+        }
+        return false;
     }
 
     public void main() {
@@ -713,7 +763,7 @@ public class FastSyncManager {
         long s = start;
 
         if (pivotBlockHash != null) {
-            logger.info("FastSync: fetching trusted pivot block with hash " + Hex.toHexString(pivotBlockHash));
+            logger.info("FastSync: fetching trusted pivot block with hash " + toHexString(pivotBlockHash));
         } else {
             logger.info("FastSync: looking for best block number...");
             BlockIdentifier bestKnownBlock;
@@ -803,7 +853,7 @@ public class FastSyncManager {
                         return ret;
                     }
                     logger.warn("Peer " + bestIdle + " returned pivot block with another hash: " +
-                            Hex.toHexString(ret.getHash()) + " Dropping the peer.");
+                            toHexString(ret.getHash()) + " Dropping the peer.");
                     bestIdle.disconnect(ReasonCode.USELESS_PEER);
                 } else {
                     logger.warn("Peer " + bestIdle + " doesn't returned correct pivot block. Dropping the peer.");
@@ -872,6 +922,10 @@ public class FastSyncManager {
         }
 
         return null;
+    }
+
+    public boolean isInProgress() {
+        return blockchainDB.get(FASTSYNC_DB_KEY_PIVOT) != null;
     }
 
     public void close() {

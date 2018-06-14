@@ -41,6 +41,7 @@ import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.RLP.EMPTY_ELEMENT_RLP;
 import static org.ethereum.util.RLP.encodeElement;
 import static org.ethereum.util.RLP.encodeList;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Created by Anton Nashatyrev on 07.02.2017.
@@ -112,8 +113,8 @@ public class TrieImpl implements Trie<byte[]> {
 
         private void resolve() {
             if (!resolveCheck()) {
-                logger.error("Invalid Trie state, can't resolve hash " + Hex.toHexString(hash));
-                throw new RuntimeException("Invalid Trie state, can't resolve hash " + Hex.toHexString(hash));
+                logger.error("Invalid Trie state, can't resolve hash " + toHexString(hash));
+                throw new RuntimeException("Invalid Trie state, can't resolve hash " + toHexString(hash));
             }
         }
 
@@ -423,7 +424,7 @@ public class TrieImpl implements Trie<byte[]> {
 
         @Override
         public String toString() {
-            return getType() + (dirty ? " *" : "") + (hash == null ? "" : "(hash: " + Hex.toHexString(hash) + " )");
+            return getType() + (dirty ? " *" : "") + (hash == null ? "" : "(hash: " + toHexString(hash) + " )");
         }
     }
 

@@ -31,9 +31,10 @@ import java.util.*;
 public class SyncQueueReverseImpl implements SyncQueueIfc {
 
     byte[] curHeaderHash;
-//    List<BlockHeaderWrapper> headers = new ArrayList<>();
+
     MinMaxMap<BlockHeaderWrapper> headers = new MinMaxMap<>();
     long minValidated = -1;
+    long finishValidated = 0;
 
     ByteArrayMap<Block> blocks = new ByteArrayMap<>();
 
@@ -41,6 +42,11 @@ public class SyncQueueReverseImpl implements SyncQueueIfc {
 
     public SyncQueueReverseImpl(byte[] startHash) {
         this.curHeaderHash = startHash;
+    }
+
+    public SyncQueueReverseImpl(byte[] startHash, long finishValidated) {
+        this.curHeaderHash = startHash;
+        this.finishValidated = finishValidated;
     }
 
     public SyncQueueReverseImpl(byte[] startHash, boolean headersOnly) {
@@ -51,9 +57,14 @@ public class SyncQueueReverseImpl implements SyncQueueIfc {
     @Override
     public synchronized List<HeadersRequest> requestHeaders(int maxSize, int maxRequests, int maxTotalHeaders) {
         List<HeadersRequest> ret = new ArrayList<>();
+        if (maxTotalHeaders == 0) return ret;
+        int totalHeaders = 0;
+
         if (minValidated < 0) {
             ret.add(new SyncQueueImpl.HeadersRequestImpl(curHeaderHash, maxSize, true, maxSize - 1));
-        } else if (minValidated == 0) {
+            totalHeaders += maxSize;
+            if (totalHeaders >= maxTotalHeaders) return ret;
+        } else if (minValidated == finishValidated) {
             // genesis reached
             return null;
         } else {
@@ -61,21 +72,23 @@ public class SyncQueueReverseImpl implements SyncQueueIfc {
                 ret.add(new SyncQueueImpl.HeadersRequestImpl(
                         headers.get(headers.getMin()).getHash(), maxSize, true, maxSize - 1));
                 maxRequests--;
+                totalHeaders += maxSize;
             }
 
             Set<Map.Entry<Long, BlockHeaderWrapper>> entries =
                     headers.descendingMap().subMap(minValidated, true, headers.getMin(), true).entrySet();
             Iterator<Map.Entry<Long, BlockHeaderWrapper>> it = entries.iterator();
             BlockHeaderWrapper prevEntry = it.next().getValue();
-            while(maxRequests > 0 && it.hasNext()) {
+            while(maxRequests > 0 && totalHeaders < maxTotalHeaders && it.hasNext()) {
                 BlockHeaderWrapper entry = it.next().getValue();
                 if (prevEntry.getNumber() - entry.getNumber() > 1) {
                     ret.add(new SyncQueueImpl.HeadersRequestImpl(prevEntry.getHash(), maxSize, true));
+                    totalHeaders += maxSize;
                     maxRequests--;
                 }
                 prevEntry = entry;
             }
-            if (maxRequests > 0) {
+            if (maxRequests > 0 && totalHeaders < maxTotalHeaders) {
                 ret.add(new SyncQueueImpl.HeadersRequestImpl(prevEntry.getHash(), maxSize, true));
             }
         }
@@ -96,7 +109,7 @@ public class SyncQueueReverseImpl implements SyncQueueIfc {
         }
 
         // start header not found or we are already done
-        if (minValidated <= 0) return Collections.emptyList();
+        if (minValidated <= finishValidated) return Collections.emptyList();
 
         for (BlockHeaderWrapper header : newHeaders) {
             if (header.getNumber() < minValidated) {
@@ -104,14 +117,12 @@ public class SyncQueueReverseImpl implements SyncQueueIfc {
             }
         }
 
-
-        if (minValidated == -1) minValidated = headers.getMax();
-        for (; minValidated >= headers.getMin() ; minValidated--) {
+        for (; minValidated >= headers.getMin() && minValidated >= finishValidated; minValidated--) {
             BlockHeaderWrapper header = headers.get(minValidated);
             BlockHeaderWrapper parent = headers.get(minValidated - 1);
             if (parent == null) {
                 // Some peers doesn't return 0 block header
-                if (minValidated == 1) minValidated = 0;
+                if (minValidated == 1 && finishValidated == 0) minValidated = 0;
                 break;
             }
             if (!FastByteComparisons.equal(header.getHeader().getParentHash(), parent.getHash())) {
@@ -163,5 +174,9 @@ public class SyncQueueReverseImpl implements SyncQueueIfc {
     @Override
     public synchronized int getHeadersCount() {
         return headers.size();
+    }
+
+    public synchronized int getValidatedHeadersCount() {
+        return headers.getMax() == null ? 0 : (int) (headers.getMax() - minValidated + 1);
     }
 }

@@ -32,6 +32,7 @@ import org.ethereum.vm.program.ProgramResult;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 /**
@@ -201,12 +202,21 @@ public interface Ethereum {
     void initSyncing();
 
     /**
+     * @deprecated
      * Calculates a 'reasonable' Gas price based on statistics of the latest transaction's Gas prices
      * Normally the price returned should be sufficient to execute a transaction since ~25% of the latest
      * transactions were executed at this or lower price.
      * If the transaction is wanted to be executed promptly with higher chances the returned price might
      * be increased at some ratio (e.g. * 1.2)
+     *
+     * <b>UPDATED</b>: Old version of gas tracking greatly fluctuates in networks with big number of transactions
+     * like Ethereum MainNet. But it's light and simple and still could be used for test networks. If you
+     * want to get accurate recommended gas price use {@link org.ethereum.listener.RecommendedGasPriceTracker}
+     * instead by adding it to listener and polling data.
+     * Updated tracker is not enabled by default because it needs noticeable resources
+     * and is excessive for most users.
      */
+    @Deprecated
     long getGasPrice();
 
     /**
@@ -215,6 +225,13 @@ public interface Ethereum {
      * @return chain id or null
      */
     Integer getChainIdForNextBlock();
+
+    /**
+     * Manual switch to Short Sync mode
+     * Maybe useful in small private and detached networks when automatic detection fails
+     * @return Future, which completes when syncDone is turned to True in {@link org.ethereum.sync.SyncManager}
+     */
+    CompletableFuture<Void> switchToShortSync();
 
     void exitOn(long number);
 }

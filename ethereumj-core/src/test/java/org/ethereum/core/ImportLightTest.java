@@ -839,7 +839,7 @@ public class ImportLightTest {
         SolidityContract a = bc.submitNewContract(contractA, "A");
         bc.createBlock();
 
-        ECKey key = ECKey.fromPrivate(BigInteger.ONE);
+        ECKey key = ECKey.DUMMY;
         byte[] hash = new byte[32];
         ECKey.ECDSASignature signature = key.sign(hash);
 
@@ -913,10 +913,10 @@ public class ImportLightTest {
         track.commit();
         repository.commit();
 
-        blockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
+        blockStore.saveBlock(genesis, genesis.getDifficultyBI(), true);
 
         blockchain.setBestBlock(genesis);
-        blockchain.setTotalDifficulty(genesis.getCumulativeDifficulty());
+        blockchain.setTotalDifficulty(genesis.getDifficultyBI());
 
         return blockchain;
     }

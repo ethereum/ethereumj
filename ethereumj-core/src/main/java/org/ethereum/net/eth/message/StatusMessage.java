@@ -21,9 +21,9 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
-import org.spongycastle.util.encoders.Hex;
-
 import java.math.BigInteger;
+
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Wrapper for Ethereum STATUS message. <br>
@@ -142,8 +142,8 @@ public class StatusMessage extends EthMessage {
                 " protocolVersion=" + this.protocolVersion +
                 " networkId=" + this.networkId +
                 " totalDifficulty=" + ByteUtil.toHexString(this.totalDifficulty) +
-                " bestHash=" + Hex.toHexString(this.bestHash) +
-                " genesisHash=" + Hex.toHexString(this.genesisHash) +
+                " bestHash=" + toHexString(this.bestHash) +
+                " genesisHash=" + toHexString(this.genesisHash) +
                 "]";
     }
 }

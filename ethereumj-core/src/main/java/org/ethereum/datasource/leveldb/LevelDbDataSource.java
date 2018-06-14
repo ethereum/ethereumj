@@ -18,12 +18,12 @@
 package org.ethereum.datasource.leveldb;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.datasource.DbSettings;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.util.FileUtil;
 import org.iq80.leveldb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
@@ -38,6 +38,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.fusesource.leveldbjni.JniDBFactory.factory;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * @author Roman Mandeleil
@@ -53,6 +54,8 @@ public class LevelDbDataSource implements DbSource<byte[]> {
     String name;
     DB db;
     boolean alive;
+
+    DbSettings settings = DbSettings.DEFAULT;
 
     // The native LevelDB insert/update/delete are normally thread-safe
     // However close operation is not thread-safe and may lead to a native crash when
@@ -72,6 +75,12 @@ public class LevelDbDataSource implements DbSource<byte[]> {
 
     @Override
     public void init() {
+        init(DbSettings.DEFAULT);
+    }
+
+    @Override
+    public void init(DbSettings settings) {
+        this.settings = settings;
         resetDbLock.writeLock().lock();
         try {
             logger.debug("~> LevelDbDataSource.init(): " + name);
@@ -88,7 +97,7 @@ public class LevelDbDataSource implements DbSource<byte[]> {
             options.cacheSize(0);
             options.paranoidChecks(true);
             options.verifyChecksums(true);
-            options.maxOpenFiles(32);
+            options.maxOpenFiles(settings.getMaxOpenFiles());
 
             try {
                 logger.debug("Opening database");
@@ -135,7 +144,7 @@ public class LevelDbDataSource implements DbSource<byte[]> {
     public void reset() {
         close();
         FileUtil.recursiveDelete(getPath().toString());
-        init();
+        init(settings);
     }
 
     @Override
@@ -177,15 +186,15 @@ public class LevelDbDataSource implements DbSource<byte[]> {
     public byte[] get(byte[] key) {
         resetDbLock.readLock().lock();
         try {
-            if (logger.isTraceEnabled()) logger.trace("~> LevelDbDataSource.get(): " + name + ", key: " + Hex.toHexString(key));
+            if (logger.isTraceEnabled()) logger.trace("~> LevelDbDataSource.get(): " + name + ", key: " + toHexString(key));
             try {
                 byte[] ret = db.get(key);
-                if (logger.isTraceEnabled()) logger.trace("<~ LevelDbDataSource.get(): " + name + ", key: " + Hex.toHexString(key) + ", " + (ret == null ? "null" : ret.length));
+                if (logger.isTraceEnabled()) logger.trace("<~ LevelDbDataSource.get(): " + name + ", key: " + toHexString(key) + ", " + (ret == null ? "null" : ret.length));
                 return ret;
             } catch (DBException e) {
                 logger.warn("Exception. Retrying again...", e);
                 byte[] ret = db.get(key);
-                if (logger.isTraceEnabled()) logger.trace("<~ LevelDbDataSource.get(): " + name + ", key: " + Hex.toHexString(key) + ", " + (ret == null ? "null" : ret.length));
+                if (logger.isTraceEnabled()) logger.trace("<~ LevelDbDataSource.get(): " + name + ", key: " + toHexString(key) + ", " + (ret == null ? "null" : ret.length));
                 return ret;
             }
         } finally {
@@ -197,9 +206,9 @@ public class LevelDbDataSource implements DbSource<byte[]> {
     public void put(byte[] key, byte[] value) {
         resetDbLock.readLock().lock();
         try {
-            if (logger.isTraceEnabled()) logger.trace("~> LevelDbDataSource.put(): " + name + ", key: " + Hex.toHexString(key) + ", " + (value == null ? "null" : value.length));
+            if (logger.isTraceEnabled()) logger.trace("~> LevelDbDataSource.put(): " + name + ", key: " + toHexString(key) + ", " + (value == null ? "null" : value.length));
             db.put(key, value);
-            if (logger.isTraceEnabled()) logger.trace("<~ LevelDbDataSource.put(): " + name + ", key: " + Hex.toHexString(key) + ", " + (value == null ? "null" : value.length));
+            if (logger.isTraceEnabled()) logger.trace("<~ LevelDbDataSource.put(): " + name + ", key: " + toHexString(key) + ", " + (value == null ? "null" : value.length));
         } finally {
             resetDbLock.readLock().unlock();
         }
@@ -209,9 +218,9 @@ public class LevelDbDataSource implements DbSource<byte[]> {
     public void delete(byte[] key) {
         resetDbLock.readLock().lock();
         try {
-            if (logger.isTraceEnabled()) logger.trace("~> LevelDbDataSource.delete(): " + name + ", key: " + Hex.toHexString(key));
+            if (logger.isTraceEnabled()) logger.trace("~> LevelDbDataSource.delete(): " + name + ", key: " + toHexString(key));
             db.delete(key);
-            if (logger.isTraceEnabled()) logger.trace("<~ LevelDbDataSource.delete(): " + name + ", key: " + Hex.toHexString(key));
+            if (logger.isTraceEnabled()) logger.trace("<~ LevelDbDataSource.delete(): " + name + ", key: " + toHexString(key));
         } finally {
             resetDbLock.readLock().unlock();
         }

@@ -32,10 +32,11 @@ import io.netty.handler.logging.LoggingHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
+
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * This class establishes a listener for incoming connections.
@@ -96,7 +97,7 @@ public class PeerServer {
 
             // Start the client.
             logger.info("Listening for incoming connections, port: [{}] ", port);
-            logger.info("NodeId: [{}] ", Hex.toHexString(config.nodeId()));
+            logger.info("NodeId: [{}] ", toHexString(config.nodeId()));
 
             channelFuture = b.bind(port).sync();
 
@@ -106,7 +107,7 @@ public class PeerServer {
             logger.debug("Connection is closed");
 
         } catch (Exception e) {
-            logger.debug("Exception: {} ({})", e.getMessage(), e.getClass().getName());
+            logger.error("Peer server error: {} ({})", e.getMessage(), e.getClass().getName());
             throw new Error("Server Disconnected");
         } finally {
             workerGroup.shutdownGracefully();

@@ -42,7 +42,7 @@ git clone https://github.com/ethereum/ethereumj
 cd ethereumj
 cp ethereumj-core/src/main/resources/ethereumj.conf ethereumj-core/src/main/resources/user.conf
 vim ethereumj-core/src/main/resources/user.conf # adjust user.conf to your needs
-./gradlew clean shadowJar
+./gradlew clean fatJar
 java -jar ethereumj-core/build/libs/ethereumj-core-*-all.jar
 ```
 

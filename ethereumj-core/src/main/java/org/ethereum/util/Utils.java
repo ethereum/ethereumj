@@ -85,7 +85,7 @@ public class Utils {
         long hour = min / 60;
         if (min < 24 * 60) return hour + "h" + (min % 60) + "m";
         long day = hour / 24;
-        return day + "d" + (day % 24) + "h";
+        return day + "d" + (hour % 24) + "h";
     }
 
     public static ImageIcon getImageIcon(String resource) {
@@ -287,6 +287,19 @@ public class Utils {
             Thread.sleep(ms);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+        }
+    }
+
+    public static boolean isHexEncoded(String value) {
+        if (value == null) return false;
+        if ("".equals(value)) return true;
+
+        try {
+            //noinspection ResultOfMethodCallIgnored
+            new BigInteger(value, 16);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
         }
     }
 }

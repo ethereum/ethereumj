@@ -24,6 +24,8 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Roman Mandeleil
@@ -106,7 +108,25 @@ public class UtilsTest {
     }
 
     @Test
+    public void testIsHexEncoded() {
+        assertTrue(Utils.isHexEncoded("AAA"));
+        assertTrue(Utils.isHexEncoded("6c386a4b26f73c802f34673f7248bb118f97424a"));
+        assertFalse(Utils.isHexEncoded(null));
+        assertFalse(Utils.isHexEncoded("I am not hex"));
+        assertTrue(Utils.isHexEncoded(""));
+        assertTrue(Utils.isHexEncoded(
+                "6c386a4b26f73c802f34673f7248bb118f97424a" +
+                        "6c386a4b26f73c802f34673f7248bb118f97424a" +
+                        "6c386a4b26f73c802f34673f7248bb118f97424a" +
+                        "6c386a4b26f73c802f34673f7248bb118f97424a" +
+                        "6c386a4b26f73c802f34673f7248bb118f97424a" +
+                        "6c386a4b26f73c802f34673f7248bb118f97424a" +
+                        "6c386a4b26f73c802f34673f7248bb118f97424a"));
+    }
+
+    @Test
     public void testLongToTimePeriod() {
         assertEquals("2.99s", Utils.longToTimePeriod(3000 - 12));
+        assertEquals("1d21h", Utils.longToTimePeriod(45L * 3600 * 1000));
     }
 }

@@ -20,8 +20,8 @@ package org.ethereum.sync;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.db.DbFlushManager;
+import org.ethereum.db.HeaderStore;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.net.server.Channel;
 import org.ethereum.util.FastByteComparisons;
@@ -29,7 +29,6 @@ import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -54,8 +53,8 @@ public class BlockBodiesDownloader extends BlockDownloader {
     @Autowired
     IndexedBlockStore blockStore;
 
-    @Autowired @Qualifier("headerSource")
-    DataSourceArray<BlockHeader> headerStore;
+    @Autowired
+    HeaderStore headerStore;
 
     @Autowired
     DbFlushManager dbFlushManager;
@@ -95,7 +94,8 @@ public class BlockBodiesDownloader extends BlockDownloader {
             List<BlockHeaderWrapper> wrappers = new ArrayList<>();
             List<BlockHeader> emptyBodyHeaders =  new ArrayList<>();
             for (int i = 0; i < getMaxHeadersInQueue() - syncQueue.getHeadersCount() && curBlockIdx < headerStore.size(); i++) {
-                BlockHeader header = headerStore.get(curBlockIdx++);
+                BlockHeader header = headerStore.getHeaderByNumber(curBlockIdx);
+                ++curBlockIdx;
                 wrappers.add(new BlockHeaderWrapper(header, new byte[0]));
 
                 // Skip bodies download for blocks with empty body

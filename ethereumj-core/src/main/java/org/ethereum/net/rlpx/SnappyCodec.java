@@ -59,7 +59,6 @@ public class SnappyCodec extends MessageToMessageCodec<FrameCodec.Frame, FrameCo
         // stay consistent with decoding party
         if (msg.size > MAX_SIZE) {
             logger.info("{}: outgoing frame size exceeds the limit ({} bytes), disconnect", channel, msg.size);
-            channel.getNodeStatistics().nodeDisconnectedLocal(ReasonCode.USELESS_PEER);
             channel.disconnect(ReasonCode.USELESS_PEER);
             return;
         }
@@ -81,7 +80,6 @@ public class SnappyCodec extends MessageToMessageCodec<FrameCodec.Frame, FrameCo
         long uncompressedLength = Snappy.uncompressedLength(in) & 0xFFFFFFFFL;
         if (uncompressedLength > MAX_SIZE) {
             logger.info("{}: uncompressed frame size exceeds the limit ({} bytes), drop the peer", channel, uncompressedLength);
-            channel.getNodeStatistics().nodeDisconnectedLocal(ReasonCode.BAD_PROTOCOL);
             channel.disconnect(ReasonCode.BAD_PROTOCOL);
             return;
         }
@@ -94,7 +92,6 @@ public class SnappyCodec extends MessageToMessageCodec<FrameCodec.Frame, FrameCo
             // 5 - error code for framed snappy
             if (detailMessage.startsWith("FAILED_TO_UNCOMPRESS") && detailMessage.contains("5")) {
                 logger.info("{}: Snappy frames are not allowed in DEVp2p protocol, drop the peer", channel);
-                channel.getNodeStatistics().nodeDisconnectedLocal(ReasonCode.BAD_PROTOCOL);
                 channel.disconnect(ReasonCode.BAD_PROTOCOL);
                 return;
             } else {
