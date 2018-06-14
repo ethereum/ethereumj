@@ -52,7 +52,7 @@ public class BlockMiner {
 
     private static ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    private Blockchain blockchain;
+    protected Blockchain blockchain;
 
     private BlockStore blockStore;
 

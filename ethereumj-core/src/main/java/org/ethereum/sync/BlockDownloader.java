@@ -48,7 +48,7 @@ public abstract class BlockDownloader {
 
     // Max number of Blocks / Headers in one request
     public static int MAX_IN_REQUEST = 192;
-    private static int REQUESTS = 32;
+    protected static int REQUESTS = 32;
 
     private BlockHeaderValidator headerValidator;
 
@@ -57,16 +57,16 @@ public abstract class BlockDownloader {
     private SyncQueueIfc syncQueue;
 
     private boolean headersDownload = true;
-    private boolean blockBodiesDownload = true;
+    protected boolean blockBodiesDownload = true;
 
-    private CountDownLatch receivedHeadersLatch = new CountDownLatch(0);
-    private CountDownLatch receivedBlocksLatch = new CountDownLatch(0);
+    protected CountDownLatch receivedHeadersLatch = new CountDownLatch(0);
+    protected CountDownLatch receivedBlocksLatch = new CountDownLatch(0);
 
     private Thread getHeadersThread;
     private Thread getBodiesThread;
 
     protected boolean headersDownloadComplete;
-    private boolean downloadComplete;
+    protected boolean downloadComplete;
 
     private CountDownLatch stopLatch = new CountDownLatch(1);
 
@@ -146,7 +146,7 @@ public abstract class BlockDownloader {
         this.blockQueueLimit = blockQueueLimit;
     }
 
-    private void headerRetrieveLoop() {
+    protected void headerRetrieveLoop() {
         List<SyncQueueIfc.HeadersRequest> hReq = emptyList();
         while(!Thread.currentThread().isInterrupted()) {
             try {
@@ -215,7 +215,7 @@ public abstract class BlockDownloader {
         }
     }
 
-    private void blockRetrieveLoop() {
+    protected void blockRetrieveLoop() {
         class BlocksCallback implements FutureCallback<List<Block>> {
             private Channel peer;
 
@@ -324,7 +324,7 @@ public abstract class BlockDownloader {
      * @param blocks block list received from remote peer and be added to the queue
      * @param nodeId nodeId of remote peer which these blocks are received from
      */
-    private void addBlocks(List<Block> blocks, byte[] nodeId) {
+    protected void addBlocks(List<Block> blocks, byte[] nodeId) {
 
         if (blocks.isEmpty()) {
             return;
@@ -368,7 +368,7 @@ public abstract class BlockDownloader {
      * @return true if blocks passed validation and were added to the queue,
      *          otherwise it returns false
      */
-    private boolean validateAndAddHeaders(List<BlockHeader> headers, byte[] nodeId) {
+    protected boolean validateAndAddHeaders(List<BlockHeader> headers, byte[] nodeId) {
 
         if (headers.isEmpty()) return true;
 
