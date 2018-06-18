@@ -190,6 +190,10 @@ public class SyncManager extends BlockDownloader {
         }
     }
 
+    void setSyncDoneType(EthereumListener.SyncState syncDoneType) {
+        this.syncDoneType = syncDoneType;
+    }
+
     public SyncStatus getSyncStatus() {
         if (config.isFastSyncEnabled()) {
             SyncStatus syncStatus = fastSyncManager.getSyncState();

@@ -735,7 +735,11 @@ public class FastSyncManager {
 
                         syncBlocksReceipts();
 
-                        listener.onSyncDone(EthereumListener.SyncState.COMPLETE);
+                        // prevent early switch to COMPLETE state
+                        syncManager.setSyncDoneType(EthereumListener.SyncState.COMPLETE);
+                        if (syncManager.isSyncDone()) {
+                            listener.onSyncDone(EthereumListener.SyncState.COMPLETE);
+                        }
                 }
                 logger.info("FastSync: Full sync done.");
             } catch (InterruptedException ex) {
