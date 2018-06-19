@@ -725,7 +725,7 @@ public class FastSyncManager {
 
                         syncSecure();
 
-                        listener.onSyncDone(EthereumListener.SyncState.SECURE);
+                        fireSyncDone(SECURE);
                     case COMPLETE:
                         if (origSyncStage == COMPLETE) {
                             logger.info("FastSync: SECURE sync was completed prior to this run, proceeding with next stage...");
@@ -735,11 +735,7 @@ public class FastSyncManager {
 
                         syncBlocksReceipts();
 
-                        // prevent early switch to COMPLETE state
-                        syncManager.setSyncDoneType(EthereumListener.SyncState.COMPLETE);
-                        if (syncManager.isSyncDone()) {
-                            listener.onSyncDone(EthereumListener.SyncState.COMPLETE);
-                        }
+                        fireSyncDone(COMPLETE);
                 }
                 logger.info("FastSync: Full sync done.");
             } catch (InterruptedException ex) {
@@ -752,6 +748,14 @@ public class FastSyncManager {
             logger.info("FastSync: fast sync was completed, best block: (" + blockchain.getBestBlock().getShortDescr() + "). " +
                     "Continue with regular sync...");
             syncManager.initRegularSync(EthereumListener.SyncState.COMPLETE);
+        }
+    }
+
+    private void fireSyncDone(EthereumListener.SyncState state) {
+        // prevent early state notification when sync is not yet done
+        syncManager.setSyncDoneType(state);
+        if (syncManager.isSyncDone()) {
+            listener.onSyncDone(state);
         }
     }
 
