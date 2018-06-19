@@ -186,7 +186,7 @@ public class SyncManager extends BlockDownloader {
                 } catch (Exception e) {
                     logger.error("Unexpected", e);
                 }
-            }, 0, 10, TimeUnit.SECONDS);
+            }, 0, 2, TimeUnit.SECONDS);
         }
     }
 
