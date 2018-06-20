@@ -289,7 +289,7 @@ public class CommonConfig {
         List<BlockHeaderRule> rules = new ArrayList<>(asList(
                 new GasValueRule(),
                 new ExtraDataRule(systemProperties()),
-                new ProofOfWorkRule(),
+                new EthashRule(systemProperties()),
                 new GasLimitRule(systemProperties()),
                 new BlockHashRule(systemProperties())
         ));

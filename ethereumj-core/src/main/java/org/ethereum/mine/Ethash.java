@@ -58,7 +58,7 @@ import static org.ethereum.mine.MinerIfc.MiningResult;
  */
 public class Ethash {
     private static final Logger logger = LoggerFactory.getLogger("mine");
-    private static EthashParams ethashParams = new EthashParams();
+    static EthashParams ethashParams = new EthashParams();
 
     private static Ethash cachedInstance = null;
     private static long cachedBlockEpoch = 0;
