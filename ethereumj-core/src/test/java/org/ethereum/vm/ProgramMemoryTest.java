@@ -341,15 +341,11 @@ public class ProgramMemoryTest {
         assertEquals(32, program.getMemSize());
     }
 
-    @Ignore
     @Test
-    public void testInitialInsert() {
-
-
-        // todo: fix the array out of bound here
+    public void testEmptyInsert() {
         int offset = 32;
-        int size = 00;
-        program.memorySave(32, 0, new byte[0]);
-        assertEquals(32, program.getMemSize());
+        int size = 0;
+        program.memorySave(offset, size, new byte[] {0x01});
+        assertEquals(0, program.getMemSize());
     }
 }

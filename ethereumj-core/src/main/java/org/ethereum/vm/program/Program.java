@@ -1200,7 +1200,7 @@ public class Program {
                 track.rollback();
             }
 
-            this.memorySave(msg.getOutDataOffs().intValue(), out.getRight());
+            this.memorySave(msg.getOutDataOffs().intValue(), msg.getOutDataSize().intValueSafe(), out.getRight());
         }
     }
 
