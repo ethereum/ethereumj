@@ -63,8 +63,9 @@ public class SolidityCompiler {
         public static final OutputOption METADATA = OutputOption.METADATA;
         public static final OutputOption ASTJSON = OutputOption.ASTJSON;
 
-        private static final NameOnlyOption OPTIMIZE = NameOnlyOption.OPTIMIZE;
-        private static final NameOnlyOption VERSION = NameOnlyOption.VERSION;
+        public static final NameOnlyOption OPTIMIZE = NameOnlyOption.OPTIMIZE;
+        public static final NameOnlyOption VERSION = NameOnlyOption.VERSION;
+        public static final NameOnlyOption GAS = NameOnlyOption.GAS;
 
         private static class CombinedJson extends ListOption {
             private CombinedJson(List values) {
@@ -115,7 +116,8 @@ public class SolidityCompiler {
 
     private enum NameOnlyOption implements Option {
         OPTIMIZE("optimize"),
-        VERSION("version");
+        VERSION("version"),
+        GAS("gas");
 
         private String name;
 
@@ -260,6 +262,14 @@ public class SolidityCompiler {
             commandParts.add("--" + option.getName());
             commandParts.add(option.getValue());
         }
+
+        for (Option option : getElementsOf(NameOnlyOption.class, options)) {
+            //to remain backwards compatible, only add optimze flag if not added above
+            if(!optimize || option != Options.OPTIMIZE) {
+                commandParts.add("--" + option.getName());
+            }
+        }
+
         return commandParts;
     }
 
