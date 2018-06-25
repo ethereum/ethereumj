@@ -109,7 +109,7 @@ public class VM {
         long gasCost = 0;
 
         // Avoid overflows
-        if (newMemSize.compareTo(MAX_MEM_SIZE) == 1) {
+        if (newMemSize.compareTo(MAX_MEM_SIZE) > 0) {
             throw Program.Exception.gasOverflow(newMemSize, MAX_MEM_SIZE);
         }
 
@@ -790,7 +790,7 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = "data: " + toHexString(msgData);
 
-                    program.memorySave(memOffsetData.intValueSafe(), msgData);
+                    program.memorySave(memOffsetData.intValueSafe(), lengthData.intValueSafe(), msgData);
                     program.step();
                 }
                 break;
@@ -818,7 +818,7 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = "data: " + toHexString(msgData);
 
-                    program.memorySave(memOffsetData.intValueSafe(), msgData);
+                    program.memorySave(memOffsetData.intValueSafe(), lengthData.intValueSafe(), msgData);
                     program.step();
                 }
                 break;
@@ -870,7 +870,7 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = "code: " + toHexString(codeCopy);
 
-                    program.memorySave(memOffset, codeCopy);
+                    program.memorySave(memOffset, lengthData, codeCopy);
                     program.step();
                 }
                 break;
