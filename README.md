@@ -18,7 +18,7 @@ We keep EthereumJ as thin as possible. For [JSON-RPC](https://github.com/ethereu
    <dependency>
      <groupId>org.ethereum</groupId>
      <artifactId>ethereumj-core</artifactId>
-     <version>1.8.0-RELEASE</version>
+     <version>1.8.1-RELEASE</version>
    </dependency>
 ```
 
@@ -62,6 +62,27 @@ java -jar ethereumj-core/build/libs/ethereumj-core-*-all.jar
 ./gradlew run -PmainClass=org.ethereum.samples.TestNetSample
 ./gradlew run -PmainClass=org.ethereum.samples.TransactionBomb
 ```
+
+##### For snapshot builds:
+Please, note, snapshots are not stable and are currently in development! If you still want to try it:
+
+ - Add https://oss.jfrog.org/libs-snapshot/ as a repository to your build script
+ - Add a dependency on `org.ethereum:ethereumj-core:${VERSION}`, where `${VERSION}` is of the form `1.9.0-SNAPSHOT`.
+
+Example:
+
+    <repository>
+        <id>jfrog-snapshots</id>
+        <name>oss.jfrog.org</name>
+        <url>https://oss.jfrog.org/libs-snapshot/</url>
+        <snapshots><enabled>true</enabled></snapshots>
+    </repository>
+    <!-- ... -->
+    <dependency>
+       <groupId>org.ethereum</groupId>
+       <artifactId>ethereumj-core</artifactId>
+       <version>1.9.0-SNAPSHOT</version>
+    </dependency>
 
 ##### Importing project to IntelliJ IDEA: 
 ```
