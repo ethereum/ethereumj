@@ -741,6 +741,11 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
                 for (Transaction tx : txs) {
                     byte[] txSender = tx.getSender();
+                    if (txSender == null) {
+                        logger.warn("Invalid transaction: sender in tx with rlp={} is null." +
+                                "Not valid until EIP-86", ByteUtil.toHexString(tx.getEncoded()));
+                        return false;
+                    }
                     ByteArrayWrapper key = new ByteArrayWrapper(txSender);
                     BigInteger expectedNonce = curNonce.get(key);
                     if (expectedNonce == null) {
