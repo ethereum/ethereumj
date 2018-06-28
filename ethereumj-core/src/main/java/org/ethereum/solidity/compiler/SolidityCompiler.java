@@ -63,9 +63,8 @@ public class SolidityCompiler {
         public static final OutputOption METADATA = OutputOption.METADATA;
         public static final OutputOption ASTJSON = OutputOption.ASTJSON;
 
-        public static final NameOnlyOption OPTIMIZE = NameOnlyOption.OPTIMIZE;
-        public static final NameOnlyOption VERSION = NameOnlyOption.VERSION;
-        public static final NameOnlyOption GAS = NameOnlyOption.GAS;
+        private static final NameOnlyOption OPTIMIZE = NameOnlyOption.OPTIMIZE;
+        private static final NameOnlyOption VERSION = NameOnlyOption.VERSION;
 
         private static class CombinedJson extends ListOption {
             private CombinedJson(List values) {
@@ -116,8 +115,7 @@ public class SolidityCompiler {
 
     private enum NameOnlyOption implements Option {
         OPTIMIZE("optimize"),
-        VERSION("version"),
-        GAS("gas");
+        VERSION("version");
 
         private String name;
 
@@ -149,6 +147,34 @@ public class SolidityCompiler {
         @Override public String getValue() { return ""; }
         @Override public String getName() { return name; }
         @Override public String toString() {
+            return name;
+        }
+    }
+
+    public static class CustomOption implements Option {
+        private String name;
+        private String value;
+
+        public CustomOption(String name) {
+            if (name.startsWith("--")) {
+                this.name = name.substring(2);
+            } else {
+                this.name = name;
+            }
+        }
+
+        public CustomOption(String name, String value) {
+            this(name);
+            this.value = value;
+        }
+
+        @Override
+        public String getValue() {
+            return value;
+        }
+
+        @Override
+        public String getName() {
             return name;
         }
     }
@@ -263,10 +289,10 @@ public class SolidityCompiler {
             commandParts.add(option.getValue());
         }
 
-        for (Option option : getElementsOf(NameOnlyOption.class, options)) {
-            //to remain backwards compatible, only add optimze flag if not added above
-            if(!optimize || option != Options.OPTIMIZE) {
-                commandParts.add("--" + option.getName());
+        for (Option option : getElementsOf(CustomOption.class, options)) {
+            commandParts.add("--" + option.getName());
+            if (option.getValue() != null) {
+                commandParts.add(option.getValue());
             }
         }
 
