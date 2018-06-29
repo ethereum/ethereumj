@@ -78,52 +78,44 @@ public class Handshaker {
     public void doHandshake(String host, int port, String remoteIdHex) throws IOException {
         byte[] remoteId = Hex.decode(remoteIdHex);
         EncryptionHandshake initiator = new EncryptionHandshake(ECKey.fromNodeId(remoteId).getPubKeyPoint());
-        Socket sock = new Socket(host, port);
-        InputStream inp = sock.getInputStream();
-        OutputStream out = sock.getOutputStream();
-        AuthInitiateMessage initiateMessage = initiator.createAuthInitiate(null, myKey);
-        byte[] initiatePacket = initiator.encryptAuthMessage(initiateMessage);
+        try (Socket sock = new Socket(host, port)) {
+            InputStream inp = sock.getInputStream();
+            OutputStream out = sock.getOutputStream();
+            AuthInitiateMessage initiateMessage = initiator.createAuthInitiate(null, myKey);
+            byte[] initiatePacket = initiator.encryptAuthMessage(initiateMessage);
 
-        out.write(initiatePacket);
-        byte[] responsePacket = new byte[AuthResponseMessage.getLength() + ECIESCoder.getOverhead()];
-        int n = inp.read(responsePacket);
-        if (n < responsePacket.length)
-            throw new IOException("could not read, got " + n);
+            out.write(initiatePacket);
+            byte[] responsePacket = new byte[AuthResponseMessage.getLength() + ECIESCoder.getOverhead()];
+            int n = inp.read(responsePacket);
+            if (n < responsePacket.length)
+                throw new IOException("could not read, got " + n);
 
-        initiator.handleAuthResponse(myKey, initiatePacket, responsePacket);
-        byte[] buf = new byte[initiator.getSecrets().getEgressMac().getDigestSize()];
-        new KeccakDigest(initiator.getSecrets().getEgressMac()).doFinal(buf, 0);
-        new KeccakDigest(initiator.getSecrets().getIngressMac()).doFinal(buf, 0);
+            initiator.handleAuthResponse(myKey, initiatePacket, responsePacket);
+            byte[] buf = new byte[initiator.getSecrets().getEgressMac().getDigestSize()];
+            new KeccakDigest(initiator.getSecrets().getEgressMac()).doFinal(buf, 0);
+            new KeccakDigest(initiator.getSecrets().getIngressMac()).doFinal(buf, 0);
 
-        RlpxConnection conn =  new RlpxConnection(initiator.getSecrets(), inp, out);
-        HandshakeMessage handshakeMessage = new HandshakeMessage(
-                3,
-                "computronium1",
-                Lists.newArrayList(
-                        new Capability("eth", (byte) 60),
-                        new Capability("shh", (byte) 2)
-                ),
-                3333,
-                nodeId
-        );
+            RlpxConnection conn = new RlpxConnection(initiator.getSecrets(), inp, out);
+            HandshakeMessage handshakeMessage = new HandshakeMessage(3, "computronium1",
+                    Lists.newArrayList(new Capability("eth", (byte) 60), new Capability("shh", (byte) 2)), 3333, nodeId);
 
-        conn.sendProtocolHandshake(handshakeMessage);
-        conn.handleNextMessage();
-        if (!Arrays.equals(remoteId, conn.getHandshakeMessage().nodeId))
-            throw new IOException("returns node ID doesn't match the node ID we dialed to");
-        System.out.println(conn.getHandshakeMessage().caps);
-        conn.writeMessage(new PingMessage());
-        conn.writeMessage(new DisconnectMessage(ReasonCode.PEER_QUITING));
-        conn.handleNextMessage();
+            conn.sendProtocolHandshake(handshakeMessage);
+            conn.handleNextMessage();
+            if (!Arrays.equals(remoteId, conn.getHandshakeMessage().nodeId))
+                throw new IOException("returns node ID doesn't match the node ID we dialed to");
+            System.out.println(conn.getHandshakeMessage().caps);
+            conn.writeMessage(new PingMessage());
+            conn.writeMessage(new DisconnectMessage(ReasonCode.PEER_QUITING));
+            conn.handleNextMessage();
 
-        while (true) {
-            try {
-                conn.handleNextMessage();
-            } catch (EOFException e) {
-                break;
+            while (true) {
+                try {
+                    conn.handleNextMessage();
+                } catch (EOFException e) {
+                    break;
+                }
             }
         }
-
 
         this.secrets = initiator.getSecrets();
     }
