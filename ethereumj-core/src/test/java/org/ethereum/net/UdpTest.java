@@ -202,8 +202,7 @@ public class UdpTest {
 
     public static String bindIp() {
         String bindIp;
-            try {
-                Socket s = new Socket("www.google.com", 80);
+            try (Socket s = new Socket("www.google.com", 80)){
                 bindIp = s.getLocalAddress().getHostAddress();
                 System.out.printf("UDP local bound to: %s%n", bindIp);
             } catch (IOException e) {

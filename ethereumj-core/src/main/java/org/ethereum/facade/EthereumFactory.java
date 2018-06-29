@@ -60,8 +60,8 @@ public class EthereumFactory {
 
     public static Ethereum createEthereum(Class ... springConfigs) {
         logger.info("Starting EthereumJ...");
-        ApplicationContext context = new AnnotationConfigApplicationContext(springConfigs);
-
+        final AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(springConfigs);
+        Runtime.getRuntime().addShutdownHook(new Thread(()-> context.close()));
         return context.getBean(Ethereum.class);
     }
 }

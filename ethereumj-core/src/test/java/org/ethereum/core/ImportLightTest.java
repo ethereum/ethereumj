@@ -79,15 +79,16 @@ public class ImportLightTest {
         logger.info("#######################################");
         BlockchainImpl blockchain = createBlockchain(GenesisLoader.loadGenesis(
                 getClass().getResourceAsStream("/genesis/frontier.json")));
-        Scanner scanner = new Scanner(new FileInputStream("D:\\ws\\ethereumj\\work\\blocks-rec.dmp"));
-        while (scanner.hasNext()) {
-            String blockHex = scanner.next();
-            Block block = new Block(Hex.decode(blockHex));
-            ImportResult result = blockchain.tryToConnect(block);
-            if (result != ImportResult.EXIST && result != ImportResult.IMPORTED_BEST) {
-                throw new RuntimeException(result + ": " + block + "");
+        try(Scanner scanner = new Scanner(new FileInputStream("D:\\ws\\ethereumj\\work\\blocks-rec.dmp"))){
+            while (scanner.hasNext()) {
+                String blockHex = scanner.next();
+                Block block = new Block(Hex.decode(blockHex));
+                ImportResult result = blockchain.tryToConnect(block);
+                if (result != ImportResult.EXIST && result != ImportResult.IMPORTED_BEST) {
+                    throw new RuntimeException(result + ": " + block + "");
+                }
+                System.out.println("Imported " + block.getShortDescr());
             }
-            System.out.println("Imported " + block.getShortDescr());
         }
     }
 
