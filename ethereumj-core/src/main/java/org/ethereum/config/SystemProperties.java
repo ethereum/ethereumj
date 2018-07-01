@@ -159,6 +159,8 @@ public class SystemProperties {
 
     private final ClassLoader classLoader;
 
+    private GenerateNodeIdStrategy generateNodeIdStrategy = null;
+
     public SystemProperties() {
         this(ConfigFactory.empty());
     }
@@ -217,21 +219,24 @@ public class SystemProperties {
             // There could be several files with the same name from other packages,
             // "version.properties" is a very common name
             List<InputStream> iStreams = loadResources("version.properties", this.getClass().getClassLoader());
-            for (InputStream is : iStreams) {
-                Properties props = new Properties();
-                props.load(is);
-                if (props.getProperty("versionNumber") == null || props.getProperty("databaseVersion") == null) {
-                    continue;
-                }
-                this.projectVersion = props.getProperty("versionNumber");
-                this.projectVersion = this.projectVersion.replaceAll("'", "");
+          for (InputStream is : iStreams) {
+            Properties props = new Properties();
+            props.load(is);
+            if (props.getProperty("versionNumber") == null || props.getProperty("databaseVersion") == null) {
+              continue;
+            }
+            this.projectVersion = props.getProperty("versionNumber");
+            this.projectVersion = this.projectVersion.replaceAll("'", "");
 
-                if (this.projectVersion == null) this.projectVersion = "-.-.-";
+            if (this.projectVersion == null) this.projectVersion = "-.-.-";
 
-                this.projectVersionModifier = "master".equals(BuildInfo.buildBranch) ? "RELEASE" : "SNAPSHOT";
+            this.projectVersionModifier = "master".equals(BuildInfo.buildBranch) ? "RELEASE" : "SNAPSHOT";
 
-                this.databaseVersion = Integer.valueOf(props.getProperty("databaseVersion"));
-                break;
+            this.databaseVersion = Integer.valueOf(props.getProperty("databaseVersion"));
+
+            this.generateNodeIdStrategy = new GetNodeIdFromPropsFile(databaseDir())
+                .withFallback(new GenerateNodeIdRandomly(databaseDir()));
+            break;
             }
         } catch (Exception e) {
             logger.error("Can't read config.", e);
@@ -677,28 +682,7 @@ public class SystemProperties {
 
     private String getGeneratedNodePrivateKey() {
         if (generatedNodePrivateKey == null) {
-            try {
-                File file = new File(databaseDir(), "nodeId.properties");
-                Properties props = new Properties();
-                if (file.canRead()) {
-                    try (Reader r = new FileReader(file)) {
-                        props.load(r);
-                    }
-                } else {
-                    ECKey key = new ECKey();
-                    props.setProperty("nodeIdPrivateKey", Hex.toHexString(key.getPrivKeyBytes()));
-                    props.setProperty("nodeId", Hex.toHexString(key.getNodeId()));
-                    file.getParentFile().mkdirs();
-                    try (Writer w = new FileWriter(file)) {
-                        props.store(w, "Generated NodeID. To use your own nodeId please refer to 'peer.privateKey' config option.");
-                    }
-                    logger.info("New nodeID generated: " + props.getProperty("nodeId"));
-                    logger.info("Generated nodeID and its private key stored in " + file);
-                }
-                generatedNodePrivateKey = props.getProperty("nodeIdPrivateKey");
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            generatedNodePrivateKey = generateNodeIdStrategy.getNodePrivateKey();
         }
         return generatedNodePrivateKey;
     }
@@ -971,5 +955,9 @@ public class SystemProperties {
     public boolean githubTestsLoadLocal() {
         return config.hasPath("GitHubTests.testPath") &&
                 !config.getString("GitHubTests.testPath").isEmpty();
+    }
+
+    void setGenerateNodeIdStrategy(GenerateNodeIdStrategy generateNodeIdStrategy) {
+      this.generateNodeIdStrategy = generateNodeIdStrategy;
     }
 }
