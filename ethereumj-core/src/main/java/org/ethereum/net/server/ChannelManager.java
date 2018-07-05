@@ -153,7 +153,7 @@ public class ChannelManager {
         return ids;
     }
 
-    private void processNewPeers() {
+    private synchronized void processNewPeers() {
         if (newPeers.isEmpty()) return;
 
         List<Channel> processed = new ArrayList<>();
@@ -344,7 +344,7 @@ public class ChannelManager {
         newPeers.add(peer);
     }
 
-    public void notifyDisconnect(Channel channel) {
+    public synchronized void notifyDisconnect(Channel channel) {
         logger.debug("Peer {}: notifies about disconnect", channel);
         channel.onDisconnect();
         syncPool.onDisconnect(channel);
