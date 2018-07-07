@@ -88,6 +88,7 @@ public class VM {
     /* Keeps track of the number of steps performed in this VM */
     private int vmCounter = 0;
 
+    private static VMHookFactory vmHookFactory;
     private VMHook vmHook;
     private boolean vmTrace;
     private long dumpBlock;
@@ -101,9 +102,9 @@ public class VM {
     @Autowired
     public VM(SystemProperties config) {
         this.config = config;
-        this.vmTrace = config.vmTrace();
-        this.dumpBlock = config.dumpBlock();
-        this.vmHook = config.vmHook();
+        vmTrace = config.vmTrace();
+        dumpBlock = config.dumpBlock();
+        vmHook = vmHookFactory.build();
     }
 
     private long calcMemGas(GasCost gasCosts, long oldMemSize, BigInteger newMemSize, long copySize) {
@@ -1327,6 +1328,10 @@ public class VM {
                 vmHook.stopPlay(program);
             }
         }
+    }
+
+    public static void setVmHookFactory(VMHookFactory vmHookFactory) {
+        VM.vmHookFactory = vmHookFactory;
     }
 
     /**
