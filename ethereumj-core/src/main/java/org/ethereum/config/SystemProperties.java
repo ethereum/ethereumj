@@ -157,7 +157,6 @@ public class SystemProperties {
     private Genesis genesis;
     private Boolean vmTrace;
     private Boolean recordInternalTransactionsData;
-    private VMHook vmHook;
 
     private final ClassLoader classLoader;
 
@@ -639,11 +638,6 @@ public class SystemProperties {
     @ValidateMe
     public boolean vmTrace() {
         return vmTrace == null ? (vmTrace = config.getBoolean("vm.structured.trace")) : vmTrace;
-    }
-
-    @ValidateMe
-    public VMHook vmHook() {
-        return null;
     }
 
     @ValidateMe
