@@ -104,7 +104,10 @@ public class VM {
         this.config = config;
         vmTrace = config.vmTrace();
         dumpBlock = config.dumpBlock();
-        vmHook = vmHookFactory.build();
+
+        if (vmHookFactory != null) {
+            vmHook = vmHookFactory.build();
+        }
     }
 
     private long calcMemGas(GasCost gasCosts, long oldMemSize, BigInteger newMemSize, long copySize) {
