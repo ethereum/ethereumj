@@ -20,6 +20,7 @@ package org.ethereum.vm;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.ContractDetails;
+import org.ethereum.sync.FastSyncManager;
 import org.ethereum.vm.program.Program;
 import org.ethereum.vm.program.Stack;
 import org.slf4j.Logger;
@@ -89,6 +90,7 @@ public class VM {
     private int vmCounter = 0;
 
     private static VMHookFactory vmHookFactory;
+    private static VMHook globalVmHook;
     private VMHook vmHook;
     private boolean vmTrace;
     private long dumpBlock;
@@ -106,7 +108,7 @@ public class VM {
         dumpBlock = config.dumpBlock();
 
         if (vmHookFactory != null) {
-            vmHook = vmHookFactory.build();
+            vmHook = vmHookFactory.create();
         }
     }
 
@@ -372,6 +374,8 @@ public class VM {
 
             if (vmHook != null) {
                 vmHook.step(program, op);
+            } else if (globalVmHook != null) {
+                globalVmHook.step(program, op);
             }
 
             // Execute operation
@@ -1313,6 +1317,8 @@ public class VM {
         try {
             if (vmHook != null) {
                 vmHook.startPlay(program);
+            } else if (globalVmHook != null) {
+                globalVmHook.startPlay(program);
             }
 
             if (program.byTestingSuite()) return;
@@ -1329,8 +1335,22 @@ public class VM {
         } finally {
             if (vmHook != null) {
                 vmHook.stopPlay(program);
+            } else if (globalVmHook != null) {
+                globalVmHook.stopPlay(program);
             }
         }
+    }
+
+    /**
+     * @deprecated
+     * TODO: Remove after a few versions
+     * Please use {@link VMHookFactory} and setVmHookFactory to
+     * ensure that every {@link VM} instance has a unique {@link VMHook} to
+     * prevent race conditions
+     */
+    @Deprecated
+    public static void setVmHook(VMHook vmHook) {
+        VM.globalVmHook = vmHook;
     }
 
     public static void setVmHookFactory(VMHookFactory vmHookFactory) {
