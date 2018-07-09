@@ -88,6 +88,18 @@ public class CompositeEthereumListener implements EthereumListener {
     }
 
     @Override
+    public void onBlock(final BlockSummary blockSummary, final boolean best) {
+        for (final EthereumListener listener : listeners) {
+            eventDispatchThread.invokeLater(new RunnableInfo(listener, "onBlock") {
+                @Override
+                public void run() {
+                    listener.onBlock(blockSummary, best);
+                }
+            });
+        }
+    }
+
+    @Override
     public void onRecvMessage(final Channel channel, final Message message) {
         for (final EthereumListener listener : listeners) {
             eventDispatchThread.invokeLater(new RunnableInfo(listener, "onRecvMessage") {

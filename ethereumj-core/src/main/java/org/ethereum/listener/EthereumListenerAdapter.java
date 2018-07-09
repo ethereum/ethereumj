@@ -45,6 +45,11 @@ public class EthereumListenerAdapter implements EthereumListener {
     }
 
     @Override
+    public void onBlock(BlockSummary blockSummary, boolean best) {
+        onBlock(blockSummary);
+    }
+
+    @Override
     public void onRecvMessage(Channel channel, Message message) {
     }
 
