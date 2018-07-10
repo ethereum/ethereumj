@@ -20,7 +20,6 @@ package org.ethereum.vm;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.sync.FastSyncManager;
 import org.ethereum.vm.program.Program;
 import org.ethereum.vm.program.Stack;
 import org.slf4j.Logger;
@@ -374,7 +373,9 @@ public class VM {
 
             if (vmHook != null) {
                 vmHook.step(program, op);
-            } else if (globalVmHook != null) {
+            }
+
+            if (globalVmHook != null) {
                 globalVmHook.step(program, op);
             }
 
@@ -1317,7 +1318,9 @@ public class VM {
         try {
             if (vmHook != null) {
                 vmHook.startPlay(program);
-            } else if (globalVmHook != null) {
+            }
+
+            if (globalVmHook != null) {
                 globalVmHook.startPlay(program);
             }
 
@@ -1335,7 +1338,9 @@ public class VM {
         } finally {
             if (vmHook != null) {
                 vmHook.stopPlay(program);
-            } else if (globalVmHook != null) {
+            }
+
+            if (globalVmHook != null) {
                 globalVmHook.stopPlay(program);
             }
         }

@@ -37,7 +37,6 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Utils;
 import org.ethereum.validator.BlockCustomHashRule;
 import org.ethereum.validator.BlockHeaderValidator;
-import org.ethereum.vm.VMHook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
