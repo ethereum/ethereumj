@@ -24,6 +24,7 @@ import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.leveldb.LevelDbDataSource;
 import org.ethereum.datasource.rocksdb.RocksDbDataSource;
 import org.ethereum.db.*;
+import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.handler.Eth63;
 import org.ethereum.sync.FastSyncManager;
@@ -221,6 +222,11 @@ public class CommonConfig {
         }
     }
 
+    @Bean(name = "EthereumListener")
+    public CompositeEthereumListener ethereumListener() {
+        return new CompositeEthereumListener();
+    }
+
     @Bean
     @Lazy
     public DbSource<byte[]> headerSource() {
@@ -289,7 +295,7 @@ public class CommonConfig {
         List<BlockHeaderRule> rules = new ArrayList<>(asList(
                 new GasValueRule(),
                 new ExtraDataRule(systemProperties()),
-                new EthashRule(),
+                new EthashRule(systemProperties(), ethereumListener()),
                 new GasLimitRule(systemProperties()),
                 new BlockHashRule(systemProperties())
         ));

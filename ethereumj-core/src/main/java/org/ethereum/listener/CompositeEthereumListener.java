@@ -33,7 +33,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @author Roman Mandeleil
  * @since 12.11.2014
  */
-@Component(value = "EthereumListener")
 public class CompositeEthereumListener implements EthereumListener {
 
     private static abstract class RunnableInfo implements Runnable {

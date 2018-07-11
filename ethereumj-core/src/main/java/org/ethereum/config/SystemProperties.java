@@ -899,12 +899,17 @@ public class SystemProperties {
     public String getHash256AlgName() {
         return config.getString("crypto.hash.alg256");
     }
-    
+
     @ValidateMe
     public String getHash512AlgName() {
         return config.getString("crypto.hash.alg512");
     }
-    
+
+    @ValidateMe
+    public String getEthashMode() {
+        return config.getString("sync.ethash");
+    }
+
     private GenesisJson getGenesisJson() {
         if (genesisJson == null) {
             genesisJson = GenesisLoader.loadGenesisJson(this, classLoader);

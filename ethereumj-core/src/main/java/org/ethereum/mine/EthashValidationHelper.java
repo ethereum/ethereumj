@@ -18,18 +18,23 @@
 package org.ethereum.mine;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.ethereum.config.Constants;
 import org.ethereum.core.BlockHeader;
+import org.ethereum.core.BlockSummary;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.listener.CompositeEthereumListener;
+import org.ethereum.listener.EthereumListenerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Maintain datasets of {@link EthashAlgo} for verification purposes.
+ * Maintains datasets of {@link EthashAlgo} for verification purposes.
  *
  * <p>
  *     Takes a burden of light dataset caching and keeping this cache up to date.
@@ -37,36 +42,55 @@ import java.util.concurrent.Executors;
  *     full dataset usage increases verification speed dramatically.
  *
  * <p>
- *     Entry point is {@link #ethashWorkFor(BlockHeader, byte[])}
+ *     Entry point is {@link #ethashWorkFor(BlockHeader, byte[], boolean)}
  *
  * @author Mikhail Kalinin
  * @since 20.06.2018
  */
 public class EthashValidationHelper {
 
-    private static final int MAX_KEPT_EPOCHS = 2;
+    private static final int MAX_CACHED_EPOCHS = 2;
 
     private static final Logger logger = LoggerFactory.getLogger("ethash");
 
-    LinkedList<Cache> caches = new LinkedList<>();
+    List<Cache> caches = new CopyOnWriteArrayList<>();
     EthashAlgo ethashAlgo = new EthashAlgo(Ethash.ethashParams);
+    long lastCachedEpoch = -1;
 
     private ExecutorService executor;
 
-    public EthashValidationHelper() {
+    public EthashValidationHelper(CompositeEthereumListener listener) {
         this.executor = Executors.newSingleThreadExecutor((r) -> {
             Thread t = Executors.defaultThreadFactory().newThread(r);
             t.setName("ethash-validation-helper");
             t.setDaemon(true);
             return t;
         });
+
+        // cache maintenance
+        listener.addListener(new EthereumListenerAdapter() {
+            @Override
+            public void onBlock(BlockSummary blockSummary, boolean best) {
+                if (!best) return;
+
+                // reset cache if it's outdated
+                if (epoch(blockSummary.getBlock().getNumber()) > lastCachedEpoch) {
+                    resetCache(blockSummary.getBlock().getNumber());
+                } else {
+                    preCache(blockSummary.getBlock().getNumber());
+                }
+            }
+        });
     }
 
     /**
      * Calculates ethash results for particular block and nonce.
-     * It also maintains dataset cache.
+     *
+     * @param cachedOnly flag that defined behavior of method when dataset has not been cached:
+     *                   if set to true  - returns null immediately
+     *                   if set to false - generates dataset for block epoch and then runs calculations on it
      */
-    public Pair<byte[], byte[]> ethashWorkFor(BlockHeader header, byte[] nonce) throws Exception {
+    public Pair<byte[], byte[]> ethashWorkFor(BlockHeader header, byte[] nonce, boolean cachedOnly) throws Exception {
 
         long fullSize = ethashAlgo.getParams().getFullSize(header.getNumber());
         byte[] hashWithoutNonce = HashUtil.sha3(header.getEncodedWithoutNonce());
@@ -79,65 +103,64 @@ public class EthashValidationHelper {
             return ethashAlgo.hashimotoFull(fullSize, cachedInstance.getFullData(), hashWithoutNonce, nonce);
         }
 
-        Cache cache = getForBlock(header.getNumber());
-        preCalculateCache(header.getNumber());
-
-        return ethashAlgo.hashimotoLight(fullSize, cache.getDataset(), hashWithoutNonce, nonce);
+        Cache cache = getCachedFor(header.getNumber());
+        if (cache != null) {
+            return ethashAlgo.hashimotoLight(fullSize, cache.getDataset(), hashWithoutNonce, nonce);
+        } else if (!cachedOnly) {
+            cache = new Cache(header.getNumber());
+            return ethashAlgo.hashimotoLight(fullSize, cache.getDataset(), hashWithoutNonce, nonce);
+        } else {
+            return null;
+        }
     }
 
-    Cache getForBlock(long blockNumber) {
+    Cache getCachedFor(long blockNumber) {
         for (Cache cache : caches) {
             if (cache.isFor(blockNumber))
                 return cache;
         }
 
-        Cache cache = new Cache(blockNumber);
-        addCache(cache);
-
-        return cache;
+        return null;
     }
 
-    void addCache(Cache cache) {
-        if (caches.isEmpty()) {
-            caches.push(cache);
-            logger.info("Kept caches: cnt: {} epochs: {}...{}", caches.size(), caches.getFirst().epoch, caches.getLast().epoch);
-            return;
-        }
-
-        // try to prepend
-        if (caches.getFirst().epoch == cache.epoch + 1) {
-            caches.addFirst(cache);
-            if (caches.size() > MAX_KEPT_EPOCHS) {
-                caches.pollLast();
-            }
-            logger.info("Kept caches: cnt: {} epochs: {}...{}", caches.size(), caches.getFirst().epoch, caches.getLast().epoch);
-            return;
-        }
-
-        // try to append
-        if (caches.getLast().epoch == cache.epoch - 1) {
-            caches.addLast(cache);
-            if (caches.size() > MAX_KEPT_EPOCHS) {
-                caches.pollFirst();
-            }
-            logger.info("Kept caches: cnt: {} epochs: {}...{}", caches.size(), caches.getFirst().epoch, caches.getLast().epoch);
-            return;
-        }
-
-        // otherwise clear and add
+    private synchronized void resetCache(long blockNumber) {
         caches.clear();
-        caches.add(cache);
+        caches.add(new Cache(blockNumber));
 
-        logger.info("Kept caches: cnt: {} epochs: {}...{}", caches.size(), caches.getFirst().epoch, caches.getLast().epoch);
+        if (blockNumber % epochLength() > Constants.getLONGEST_CHAIN()) {
+            caches.add(new Cache(blockNumber + epochLength()));
+        } else if (blockNumber >= epochLength()) {
+            caches.add(0, new Cache(blockNumber - epochLength()));
+        }
+
+        lastCachedEpoch = caches.get(caches.size() - 1).epoch;
+
+        logger.info("Kept caches: cnt: {} epochs: {}...{}",
+                caches.size(), caches.get(0).epoch, caches.get(caches.size() - 1).epoch);
     }
 
-    void preCalculateCache(long blockNumber) {
-        if (caches.isEmpty())
+    private void preCache(long blockNumber) {
+
+        // lock-free check
+        if (epoch(blockNumber) + 1 <= lastCachedEpoch ||
+                blockNumber % epochLength() <= Constants.getLONGEST_CHAIN())
             return;
-        
-        long base = blockNumber - caches.getLast().epoch * epochLength();
-        if (base > epochLength() / 2 && base < epochLength()) {
-            addCache(new Cache(blockNumber + epochLength()));
+
+        synchronized (this) {
+            if (epoch(blockNumber) + 1 <= lastCachedEpoch ||
+                    blockNumber % epochLength() <= Constants.getLONGEST_CHAIN())
+                return;
+
+            // cache next epoch
+            caches.add(new Cache(blockNumber + epochLength()));
+            lastCachedEpoch += 1;
+
+            // remove redundant caches
+            while (caches.size() > MAX_CACHED_EPOCHS)
+                caches.remove(0);
+
+            logger.info("Kept caches: cnt: {} epochs: {}...{}",
+                    caches.size(), caches.get(0).epoch, caches.get(caches.size() - 1).epoch);
         }
     }
 
