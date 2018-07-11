@@ -20,10 +20,7 @@ package org.ethereum.mine;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.Constants;
 import org.ethereum.core.BlockHeader;
-import org.ethereum.core.BlockSummary;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.listener.CompositeEthereumListener;
-import org.ethereum.listener.EthereumListenerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,12 +34,15 @@ import java.util.concurrent.Executors;
  * Maintains datasets of {@link EthashAlgo} for verification purposes.
  *
  * <p>
- *     Takes a burden of light dataset caching and keeping this cache up to date.
+ *     Takes a burden of light dataset caching and provides convenient interface for keeping this cache up to date.
  *     Featured with full dataset lookup if such dataset is available (created for mining purposes),
  *     full dataset usage increases verification speed dramatically.
  *
  * <p>
  *     Entry point is {@link #ethashWorkFor(BlockHeader, byte[], boolean)}
+ *
+ * <p>
+ *     Cache management interface: {@link #cacheForward(long)} and {@link #cacheBackward(long)}
  *
  * @author Mikhail Kalinin
  * @since 20.06.2018
@@ -57,30 +57,16 @@ public class EthashValidationHelper {
     EthashAlgo ethashAlgo = new EthashAlgo(Ethash.ethashParams);
     long lastCachedEpoch = -1;
 
-    private ExecutorService executor;
+    private static ExecutorService executor;
 
-    public EthashValidationHelper(CompositeEthereumListener listener) {
-        this.executor = Executors.newSingleThreadExecutor((r) -> {
-            Thread t = Executors.defaultThreadFactory().newThread(r);
-            t.setName("ethash-validation-helper");
-            t.setDaemon(true);
-            return t;
-        });
-
-        // cache maintenance
-        listener.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onBlock(BlockSummary blockSummary, boolean best) {
-                if (!best) return;
-
-                // reset cache if it's outdated
-                if (epoch(blockSummary.getBlock().getNumber()) > lastCachedEpoch) {
-                    resetCache(blockSummary.getBlock().getNumber());
-                } else {
-                    preCache(blockSummary.getBlock().getNumber());
-                }
-            }
-        });
+    public EthashValidationHelper() {
+        if (executor == null)
+            executor = Executors.newSingleThreadExecutor((r) -> {
+                Thread t = Executors.defaultThreadFactory().newThread(r);
+                t.setName("ethash-validation-helper");
+                t.setDaemon(true);
+                return t;
+            });
     }
 
     /**
@@ -123,7 +109,7 @@ public class EthashValidationHelper {
         return null;
     }
 
-    private synchronized void resetCache(long blockNumber) {
+    private synchronized void resetForward(long blockNumber) {
         caches.clear();
         caches.add(new Cache(blockNumber));
 
@@ -139,7 +125,29 @@ public class EthashValidationHelper {
                 caches.size(), caches.get(0).epoch, caches.get(caches.size() - 1).epoch);
     }
 
-    private void preCache(long blockNumber) {
+    private synchronized void resetBackward(long blockNumber) {
+        caches.clear();
+        caches.add(new Cache(blockNumber));
+
+        if (blockNumber % epochLength() >= epochLength() / 2) {
+            caches.add(0, new Cache(blockNumber + epochLength()));
+        } else if (blockNumber >= epochLength()) {
+            caches.add(new Cache(blockNumber - epochLength()));
+        }
+
+        lastCachedEpoch = caches.get(caches.size() - 1).epoch;
+
+        logger.info("Kept caches: cnt: {} epochs: {}...{}",
+                caches.size(), caches.get(0).epoch, caches.get(caches.size() - 1).epoch);
+    }
+
+    public void cacheForward(long blockNumber) {
+
+        // reset cache if it's outdated
+        if (epoch(blockNumber) > lastCachedEpoch || lastCachedEpoch < 0) {
+            resetForward(blockNumber);
+            return;
+        }
 
         // lock-free check
         if (epoch(blockNumber) + 1 <= lastCachedEpoch ||
@@ -154,6 +162,37 @@ public class EthashValidationHelper {
             // cache next epoch
             caches.add(new Cache(blockNumber + epochLength()));
             lastCachedEpoch += 1;
+
+            // remove redundant caches
+            while (caches.size() > MAX_CACHED_EPOCHS)
+                caches.remove(0);
+
+            logger.info("Kept caches: cnt: {} epochs: {}...{}",
+                    caches.size(), caches.get(0).epoch, caches.get(caches.size() - 1).epoch);
+        }
+    }
+
+    public void cacheBackward(long blockNumber) {
+
+        // reset cache if it's outdated
+        if (epoch(blockNumber) < lastCachedEpoch || lastCachedEpoch < 0) {
+            resetBackward(blockNumber);
+            return;
+        }
+
+        // lock-free check
+        if (blockNumber < epochLength() || epoch(blockNumber) - 1 >= lastCachedEpoch ||
+                blockNumber % epochLength() >= epochLength() / 2)
+            return;
+
+        synchronized (this) {
+            if (blockNumber < epochLength() || epoch(blockNumber) - 1 >= lastCachedEpoch ||
+                    blockNumber % epochLength() >= epochLength() / 2)
+                return;
+
+            // cache previos epoch
+            caches.add(new Cache(blockNumber - epochLength()));
+            lastCachedEpoch -= 1;
 
             // remove redundant caches
             while (caches.size() > MAX_CACHED_EPOCHS)

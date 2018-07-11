@@ -22,6 +22,7 @@ import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.validator.BlockHeaderValidator;
+import org.ethereum.validator.EthashRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +48,8 @@ public class FastSyncDownloader extends BlockDownloader {
 
     private SyncQueueReverseImpl syncQueueReverse;
 
+    private EthashRule reverseEthashRule;
+
     int counter;
     int maxCount;
     long t;
@@ -54,6 +57,7 @@ public class FastSyncDownloader extends BlockDownloader {
     @Autowired
     public FastSyncDownloader(BlockHeaderValidator headerValidator) {
         super(headerValidator);
+        reverseEthashRule = EthashRule.createStrictReverse();
     }
 
     public void startImporting(BlockHeader start, int count) {
@@ -112,5 +116,10 @@ public class FastSyncDownloader extends BlockDownloader {
     @Override
     protected void finishDownload() {
         blockStore.flush();
+    }
+
+    @Override
+    protected boolean isValid(BlockHeader header) {
+        return super.isValid(header) && reverseEthashRule.validateAndLog(header, logger);
     }
 }

@@ -20,6 +20,7 @@ package org.ethereum.validator;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeader;
+import org.ethereum.core.BlockSummary;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.mine.EthashValidationHelper;
@@ -29,8 +30,11 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Random;
 
+import static org.ethereum.validator.EthashRule.CacheStrategy.best_block;
+import static org.ethereum.validator.EthashRule.CacheStrategy.reverse_order;
 import static org.ethereum.validator.EthashRule.Mode.fake;
 import static org.ethereum.validator.EthashRule.Mode.mixed;
+import static org.ethereum.validator.EthashRule.Mode.strict;
 
 /**
  * Runs block header validation against Ethash dataset.
@@ -54,7 +58,7 @@ public class EthashRule extends BlockHeaderRule {
     EthashValidationHelper ethashHelper;
     ProofOfWorkRule powRule = new ProofOfWorkRule();
 
-    enum Mode {
+    public enum Mode {
         strict,
         mixed,
         fake;
@@ -68,22 +72,47 @@ public class EthashRule extends BlockHeaderRule {
         }
     }
 
+    public enum CacheStrategy {
+        best_block,     /** cache is updated to fit main import process, around best block */
+        reverse_order   /** for reverse header validation, to work with {@link org.ethereum.sync.SyncQueueReverseImpl} */
+    }
+
     private static final int MIX_DENOMINATOR = 3;
     private Mode mode = mixed;
+    private CacheStrategy cacheStrategy;
     private boolean syncDone = false;
     private Random rnd = new Random();
 
-    public EthashRule(SystemProperties systemProperties, CompositeEthereumListener listener) {
-        mode = Mode.parse(systemProperties.getEthashMode(), mixed);
 
-        if (mode != fake) {
-            ethashHelper = new EthashValidationHelper(listener);
-            listener.addListener(new EthereumListenerAdapter() {
-                @Override
-                public void onSyncDone(SyncState state) {
-                    EthashRule.this.syncDone = true;
-                }
-            });
+    // two most common settings
+    public static EthashRule createRegular(SystemProperties systemProperties, CompositeEthereumListener listener) {
+        return new EthashRule(Mode.parse(systemProperties.getEthashMode(), mixed), best_block, listener);
+    }
+
+    public static EthashRule createStrictReverse() {
+        return new EthashRule(strict, reverse_order, null);
+    }
+
+    public EthashRule(Mode mode, CacheStrategy cacheStrategy, CompositeEthereumListener listener) {
+        this.mode = mode;
+        this.cacheStrategy = cacheStrategy;
+
+        if (this.mode != fake) {
+            ethashHelper = new EthashValidationHelper();
+
+            if (cacheStrategy == best_block && listener != null) {
+                listener.addListener(new EthereumListenerAdapter() {
+                    @Override
+                    public void onSyncDone(SyncState state) {
+                        EthashRule.this.syncDone = true;
+                    }
+
+                    @Override
+                    public void onBlock(BlockSummary blockSummary, boolean best) {
+                        if (best) ethashHelper.cacheForward(blockSummary.getBlock().getNumber());
+                    }
+                });
+            }
         }
     }
 
@@ -101,9 +130,13 @@ public class EthashRule extends BlockHeaderRule {
             return powRule.validate(header);
 
         try {
+            if (cacheStrategy == reverse_order) {
+                ethashHelper.cacheBackward(header.getNumber());
+            }
+
             Pair<byte[], byte[]> res = ethashHelper.ethashWorkFor(header, header.getNonce(), true);
             if (res == null) {
-                loggerEthash.debug("PARTIAL {}", header.getShortDescr());
+                loggerEthash.debug("PARTIAL {}, strategy {}", header.getShortDescr(), cacheStrategy.name());
                 return powRule.validate(header);
             }
 
@@ -115,7 +148,7 @@ public class EthashRule extends BlockHeaderRule {
                 return fault(String.format("#%d: proofValue > header.getPowBoundary()", header.getNumber()));
             }
 
-            loggerEthash.debug("FULL {}", header.getShortDescr());
+            loggerEthash.debug("FULL {}, strategy {}", header.getShortDescr(), cacheStrategy.name());
 
             return Success;
         } catch (Exception e) {
