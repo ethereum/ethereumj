@@ -42,7 +42,7 @@ import java.util.concurrent.Executors;
  *     Entry point is {@link #ethashWorkFor(BlockHeader, byte[], boolean)}
  *
  * <p>
- *     Cache management interface: {@link #cacheForward(long)} and {@link #cacheBackward(long)}
+ *     Cache management interface: {@link #preCache(long)}, {@link CacheOrder}
  *
  * @author Mikhail Kalinin
  * @since 20.06.2018
@@ -53,13 +53,22 @@ public class EthashValidationHelper {
 
     private static final Logger logger = LoggerFactory.getLogger("ethash");
 
+    public enum CacheOrder {
+        direct,     /** cache is updated to fit main import process, toward big numbers */
+        reverse     /** for maintaining reverse header validation, cache is updated to fit block validation with decreasing numbers */
+    }
+
     List<Cache> caches = new CopyOnWriteArrayList<>();
     EthashAlgo ethashAlgo = new EthashAlgo(Ethash.ethashParams);
     long lastCachedEpoch = -1;
 
+    private CacheStrategy cacheStrategy;
+
     private static ExecutorService executor;
 
-    public EthashValidationHelper() {
+    public EthashValidationHelper(CacheOrder cacheOrder) {
+        this.cacheStrategy = createCacheStrategy(cacheOrder);
+
         if (executor == null)
             executor = Executors.newSingleThreadExecutor((r) -> {
                 Thread t = Executors.defaultThreadFactory().newThread(r);
@@ -109,98 +118,8 @@ public class EthashValidationHelper {
         return null;
     }
 
-    private synchronized void resetForward(long blockNumber) {
-        caches.clear();
-        caches.add(new Cache(blockNumber));
-
-        if (blockNumber % epochLength() > Constants.getLONGEST_CHAIN()) {
-            caches.add(new Cache(blockNumber + epochLength()));
-        } else if (blockNumber >= epochLength()) {
-            caches.add(0, new Cache(blockNumber - epochLength()));
-        }
-
-        lastCachedEpoch = caches.get(caches.size() - 1).epoch;
-
-        logger.info("Kept caches: cnt: {} epochs: {}...{}",
-                caches.size(), caches.get(0).epoch, caches.get(caches.size() - 1).epoch);
-    }
-
-    private synchronized void resetBackward(long blockNumber) {
-        caches.clear();
-        caches.add(new Cache(blockNumber));
-
-        if (blockNumber % epochLength() >= epochLength() / 2) {
-            caches.add(0, new Cache(blockNumber + epochLength()));
-        } else if (blockNumber >= epochLength()) {
-            caches.add(new Cache(blockNumber - epochLength()));
-        }
-
-        lastCachedEpoch = caches.get(caches.size() - 1).epoch;
-
-        logger.info("Kept caches: cnt: {} epochs: {}...{}",
-                caches.size(), caches.get(0).epoch, caches.get(caches.size() - 1).epoch);
-    }
-
-    public void cacheForward(long blockNumber) {
-
-        // reset cache if it's outdated
-        if (epoch(blockNumber) > lastCachedEpoch || lastCachedEpoch < 0) {
-            resetForward(blockNumber);
-            return;
-        }
-
-        // lock-free check
-        if (epoch(blockNumber) + 1 <= lastCachedEpoch ||
-                blockNumber % epochLength() <= Constants.getLONGEST_CHAIN())
-            return;
-
-        synchronized (this) {
-            if (epoch(blockNumber) + 1 <= lastCachedEpoch ||
-                    blockNumber % epochLength() <= Constants.getLONGEST_CHAIN())
-                return;
-
-            // cache next epoch
-            caches.add(new Cache(blockNumber + epochLength()));
-            lastCachedEpoch += 1;
-
-            // remove redundant caches
-            while (caches.size() > MAX_CACHED_EPOCHS)
-                caches.remove(0);
-
-            logger.info("Kept caches: cnt: {} epochs: {}...{}",
-                    caches.size(), caches.get(0).epoch, caches.get(caches.size() - 1).epoch);
-        }
-    }
-
-    public void cacheBackward(long blockNumber) {
-
-        // reset cache if it's outdated
-        if (epoch(blockNumber) < lastCachedEpoch || lastCachedEpoch < 0) {
-            resetBackward(blockNumber);
-            return;
-        }
-
-        // lock-free check
-        if (blockNumber < epochLength() || epoch(blockNumber) - 1 >= lastCachedEpoch ||
-                blockNumber % epochLength() >= epochLength() / 2)
-            return;
-
-        synchronized (this) {
-            if (blockNumber < epochLength() || epoch(blockNumber) - 1 >= lastCachedEpoch ||
-                    blockNumber % epochLength() >= epochLength() / 2)
-                return;
-
-            // cache previos epoch
-            caches.add(new Cache(blockNumber - epochLength()));
-            lastCachedEpoch -= 1;
-
-            // remove redundant caches
-            while (caches.size() > MAX_CACHED_EPOCHS)
-                caches.remove(0);
-
-            logger.info("Kept caches: cnt: {} epochs: {}...{}",
-                    caches.size(), caches.get(0).epoch, caches.get(caches.size() - 1).epoch);
-        }
+    public void preCache(long blockNumber) {
+        cacheStrategy.cache(blockNumber);
     }
 
     long epochLength() {
@@ -234,6 +153,125 @@ public class EthashValidationHelper {
 
         int[] getDataset() throws Exception {
             return dataset.get();
+        }
+    }
+
+    private CacheStrategy createCacheStrategy(CacheOrder order) {
+        switch (order) {
+            case direct:    return new DirectCache();
+            case reverse:   return new ReverseCache();
+            default: throw new IllegalArgumentException("Unsupported cache strategy " + order.name());
+        }
+    }
+
+    interface CacheStrategy {
+        void cache(long blockNumber);
+    }
+
+    class ReverseCache implements CacheStrategy {
+
+        @Override
+        public void cache(long blockNumber) {
+
+            // reset cache if it's outdated
+            if (epoch(blockNumber) < lastCachedEpoch || lastCachedEpoch < 0) {
+                reset(blockNumber);
+                return;
+            }
+
+            // lock-free check
+            if (blockNumber < epochLength() || epoch(blockNumber) - 1 >= lastCachedEpoch ||
+                    blockNumber % epochLength() >= epochLength() / 2)
+                return;
+
+            synchronized (EthashValidationHelper.this) {
+                if (blockNumber < epochLength() || epoch(blockNumber) - 1 >= lastCachedEpoch ||
+                        blockNumber % epochLength() >= epochLength() / 2)
+                    return;
+
+                // cache previos epoch
+                caches.add(new Cache(blockNumber - epochLength()));
+                lastCachedEpoch -= 1;
+
+                // remove redundant caches
+                while (caches.size() > MAX_CACHED_EPOCHS)
+                    caches.remove(0);
+
+                logger.info("Kept caches: cnt: {} epochs: {}...{}",
+                        caches.size(), caches.get(0).epoch, caches.get(caches.size() - 1).epoch);
+            }
+        }
+
+        private void reset(long blockNumber) {
+            synchronized (EthashValidationHelper.this) {
+                caches.clear();
+                caches.add(new Cache(blockNumber));
+
+                if (blockNumber % epochLength() >= epochLength() / 2) {
+                    caches.add(0, new Cache(blockNumber + epochLength()));
+                } else if (blockNumber >= epochLength()) {
+                    caches.add(new Cache(blockNumber - epochLength()));
+                }
+
+                lastCachedEpoch = caches.get(caches.size() - 1).epoch;
+
+                logger.info("Kept caches: cnt: {} epochs: {}...{}",
+                        caches.size(), caches.get(0).epoch, caches.get(caches.size() - 1).epoch);
+            }
+        }
+    }
+
+
+    class DirectCache implements CacheStrategy {
+
+        @Override
+        public void cache(long blockNumber) {
+
+            // reset cache if it's outdated
+            if (epoch(blockNumber) > lastCachedEpoch || lastCachedEpoch < 0) {
+                reset(blockNumber);
+                return;
+            }
+
+            // lock-free check
+            if (epoch(blockNumber) + 1 <= lastCachedEpoch ||
+                    blockNumber % epochLength() <= Constants.getLONGEST_CHAIN())
+                return;
+
+            synchronized (EthashValidationHelper.this) {
+                if (epoch(blockNumber) + 1 <= lastCachedEpoch ||
+                        blockNumber % epochLength() <= Constants.getLONGEST_CHAIN())
+                    return;
+
+                // cache next epoch
+                caches.add(new Cache(blockNumber + epochLength()));
+                lastCachedEpoch += 1;
+
+                // remove redundant caches
+                while (caches.size() > MAX_CACHED_EPOCHS)
+                    caches.remove(0);
+
+                logger.info("Kept caches: cnt: {} epochs: {}...{}",
+                        caches.size(), caches.get(0).epoch, caches.get(caches.size() - 1).epoch);
+            }
+        }
+
+        private void reset(long blockNumber) {
+            synchronized (EthashValidationHelper.this) {
+                caches.clear();
+                caches.add(new Cache(blockNumber));
+
+                if (blockNumber % epochLength() > Constants.getLONGEST_CHAIN()) {
+                    caches.add(new Cache(blockNumber + epochLength()));
+                } else if (blockNumber >= epochLength()) {
+                    caches.add(0, new Cache(blockNumber - epochLength()));
+                }
+
+                lastCachedEpoch = caches.get(caches.size() - 1).epoch;
+
+                logger.info("Kept caches: cnt: {} epochs: {}...{}",
+                        caches.size(), caches.get(0).epoch, caches.get(caches.size() - 1).epoch);
+            }
         }
     }
 }

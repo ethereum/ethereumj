@@ -30,8 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Random;
 
-import static org.ethereum.validator.EthashRule.CacheStrategy.best_block;
-import static org.ethereum.validator.EthashRule.CacheStrategy.reverse_order;
 import static org.ethereum.validator.EthashRule.Mode.fake;
 import static org.ethereum.validator.EthashRule.Mode.mixed;
 import static org.ethereum.validator.EthashRule.Mode.strict;
@@ -72,35 +70,30 @@ public class EthashRule extends BlockHeaderRule {
         }
     }
 
-    public enum CacheStrategy {
-        best_block,     /** cache is updated to fit main import process, around best block */
-        reverse_order   /** for reverse header validation, to work with {@link org.ethereum.sync.SyncQueueReverseImpl} */
-    }
-
     private static final int MIX_DENOMINATOR = 3;
     private Mode mode = mixed;
-    private CacheStrategy cacheStrategy;
     private boolean syncDone = false;
+    private boolean reverse = false;
     private Random rnd = new Random();
-
 
     // two most common settings
     public static EthashRule createRegular(SystemProperties systemProperties, CompositeEthereumListener listener) {
-        return new EthashRule(Mode.parse(systemProperties.getEthashMode(), mixed), best_block, listener);
+        return new EthashRule(Mode.parse(systemProperties.getEthashMode(), mixed), false, listener);
     }
 
     public static EthashRule createStrictReverse() {
-        return new EthashRule(strict, reverse_order, null);
+        return new EthashRule(strict, true, null);
     }
 
-    public EthashRule(Mode mode, CacheStrategy cacheStrategy, CompositeEthereumListener listener) {
+    public EthashRule(Mode mode, boolean reverse, CompositeEthereumListener listener) {
         this.mode = mode;
-        this.cacheStrategy = cacheStrategy;
+        this.reverse = reverse;
 
         if (this.mode != fake) {
-            ethashHelper = new EthashValidationHelper();
+            this.ethashHelper = new EthashValidationHelper(
+                    reverse ? EthashValidationHelper.CacheOrder.reverse : EthashValidationHelper.CacheOrder.direct);
 
-            if (cacheStrategy == best_block && listener != null) {
+            if (!this.reverse && listener != null) {
                 listener.addListener(new EthereumListenerAdapter() {
                     @Override
                     public void onSyncDone(SyncState state) {
@@ -109,7 +102,7 @@ public class EthashRule extends BlockHeaderRule {
 
                     @Override
                     public void onBlock(BlockSummary blockSummary, boolean best) {
-                        if (best) ethashHelper.cacheForward(blockSummary.getBlock().getNumber());
+                        if (best) ethashHelper.preCache(blockSummary.getBlock().getNumber());
                     }
                 });
             }
@@ -130,13 +123,13 @@ public class EthashRule extends BlockHeaderRule {
             return powRule.validate(header);
 
         try {
-            if (cacheStrategy == reverse_order) {
-                ethashHelper.cacheBackward(header.getNumber());
+            if (reverse) {
+                ethashHelper.preCache(header.getNumber());
             }
 
             Pair<byte[], byte[]> res = ethashHelper.ethashWorkFor(header, header.getNonce(), true);
             if (res == null) {
-                loggerEthash.debug("PARTIAL {}, strategy {}", header.getShortDescr(), cacheStrategy.name());
+                loggerEthash.debug("PARTIAL {}, strategy {}", header.getShortDescr(), reverse ? "reverse" : "direct");
                 return powRule.validate(header);
             }
 
@@ -148,7 +141,7 @@ public class EthashRule extends BlockHeaderRule {
                 return fault(String.format("#%d: proofValue > header.getPowBoundary()", header.getNumber()));
             }
 
-            loggerEthash.debug("FULL {}, strategy {}", header.getShortDescr(), cacheStrategy.name());
+            loggerEthash.debug("FULL {}, strategy {}", header.getShortDescr(), reverse ? "reverse" : "direct");
 
             return Success;
         } catch (Exception e) {
