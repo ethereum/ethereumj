@@ -119,15 +119,15 @@ public class EthashRule extends BlockHeaderRule {
         if (ethashHelper == null)
             return powRule.validate(header);
 
+        // trigger reverse cache before mixed mode condition
+        if (reverse)
+            ethashHelper.preCache(header.getNumber());
+
         // mixed mode payload
         if (mode == mixed && !syncDone && rnd.nextInt(100) % MIX_DENOMINATOR > 0)
             return powRule.validate(header);
 
         try {
-            if (reverse) {
-                ethashHelper.preCache(header.getNumber());
-            }
-
             Pair<byte[], byte[]> res = ethashHelper.ethashWorkFor(header, header.getNonce(), true);
             if (res == null) {
                 loggerEthash.debug("PARTIAL {}, strategy {}", header.getShortDescr(), reverse ? "reverse" : "direct");
