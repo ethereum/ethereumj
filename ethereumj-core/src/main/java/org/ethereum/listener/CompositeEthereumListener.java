@@ -53,7 +53,7 @@ public class CompositeEthereumListener implements EthereumListener {
     @Autowired
     EventDispatchThread eventDispatchThread = EventDispatchThread.getDefault();
     
-    List<EthereumListener> listeners = new CopyOnWriteArrayList<>();
+    protected List<EthereumListener> listeners = new CopyOnWriteArrayList<>();
 
     public void addListener(EthereumListener listener) {
         listeners.add(listener);

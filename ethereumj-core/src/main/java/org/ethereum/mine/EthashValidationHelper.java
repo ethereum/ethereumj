@@ -189,7 +189,7 @@ public class EthashValidationHelper {
                         blockNumber % epochLength() >= epochLength() / 2)
                     return;
 
-                // cache previos epoch
+                // cache previous epoch
                 caches.add(new Cache(blockNumber - epochLength()));
                 lastCachedEpoch -= 1;
 
