@@ -32,7 +32,6 @@ import java.util.Random;
 
 import static org.ethereum.validator.EthashRule.Mode.fake;
 import static org.ethereum.validator.EthashRule.Mode.mixed;
-import static org.ethereum.validator.EthashRule.Mode.strict;
 
 /**
  * Runs block header validation against Ethash dataset.
