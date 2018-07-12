@@ -70,7 +70,7 @@ public class EthashRule extends BlockHeaderRule {
         }
     }
 
-    private static final int MIX_DENOMINATOR = 3;
+    private static final int MIX_DENOMINATOR = 5;
     private Mode mode = mixed;
     private boolean syncDone = false;
     private boolean reverse = false;
