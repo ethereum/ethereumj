@@ -42,8 +42,10 @@ import static org.ethereum.validator.EthashRule.Mode.strict;
  *     <ul>
  *         <li> fake - partial checks without verification against Ethash dataset
  *         <li> strict - full check for each block
- *         <li> mixed  - run full check in random fashion (~1/3 blocks are checked) during long sync,
- *              run full check for each block during short sync
+ *         <li> mixed  - run full check for each block if main import flow during short sync,
+ *                       run full check in random fashion (<code>1/{@link #MIX_DENOMINATOR}</code> blocks are checked)
+ *                                during long sync, fast sync headers and blocks downloading
+ *
  *
  * @author Mikhail Kalinin
  * @since 19.06.2018
@@ -81,8 +83,8 @@ public class EthashRule extends BlockHeaderRule {
         return new EthashRule(Mode.parse(systemProperties.getEthashMode(), mixed), false, listener);
     }
 
-    public static EthashRule createStrictReverse() {
-        return new EthashRule(strict, true, null);
+    public static EthashRule createReverse(SystemProperties systemProperties) {
+        return new EthashRule(Mode.parse(systemProperties.getEthashMode(), mixed), true, null);
     }
 
     public EthashRule(Mode mode, boolean reverse, CompositeEthereumListener listener) {

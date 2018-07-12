@@ -17,6 +17,7 @@
  */
 package org.ethereum.sync;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.BlockWrapper;
@@ -55,9 +56,9 @@ public class FastSyncDownloader extends BlockDownloader {
     long t;
 
     @Autowired
-    public FastSyncDownloader(BlockHeaderValidator headerValidator) {
+    public FastSyncDownloader(BlockHeaderValidator headerValidator, SystemProperties systemProperties) {
         super(headerValidator);
-        reverseEthashRule = EthashRule.createStrictReverse();
+        reverseEthashRule = EthashRule.createReverse(systemProperties);
     }
 
     public void startImporting(BlockHeader start, int count) {

@@ -17,6 +17,7 @@
  */
 package org.ethereum.sync;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.BlockWrapper;
@@ -71,9 +72,9 @@ public class HeadersDownloader extends BlockDownloader {
     private EthashRule reverseEthashRule;
 
     @Autowired
-    public HeadersDownloader(BlockHeaderValidator headerValidator) {
+    public HeadersDownloader(BlockHeaderValidator headerValidator, SystemProperties systemProperties) {
         super(headerValidator);
-        reverseEthashRule = EthashRule.createStrictReverse();
+        reverseEthashRule = EthashRule.createReverse(systemProperties);
         setHeaderQueueLimit(200000);
         setBlockBodiesDownload(false);
         logger.info("HeaderDownloader created.");
