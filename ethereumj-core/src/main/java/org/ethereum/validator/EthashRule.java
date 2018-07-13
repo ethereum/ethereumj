@@ -54,7 +54,6 @@ import static org.ethereum.validator.EthashRule.Mode.mixed;
 public class EthashRule extends BlockHeaderRule {
 
     private static final Logger logger = LoggerFactory.getLogger("blockchain");
-    private static final Logger loggerEthash = LoggerFactory.getLogger("ethash");
 
     EthashValidationHelper ethashHelper;
     ProofOfWorkRule powRule = new ProofOfWorkRule();
@@ -141,8 +140,8 @@ public class EthashRule extends BlockHeaderRule {
 
         try {
             Pair<byte[], byte[]> res = ethashHelper.ethashWorkFor(header, header.getNonce(), true);
+            // no cache for the epoch? fallback into fake rule
             if (res == null) {
-                loggerEthash.debug("PARTIAL {}, chain {}", header.getShortDescr(), chain);
                 return powRule.validate(header);
             }
 
@@ -153,8 +152,6 @@ public class EthashRule extends BlockHeaderRule {
             if (FastByteComparisons.compareTo(res.getRight(), 0, 32, header.getPowBoundary(), 0, 32) > 0) {
                 return fault(String.format("#%d: proofValue > header.getPowBoundary()", header.getNumber()));
             }
-
-            loggerEthash.debug("FULL {}, chain {}", header.getShortDescr(), chain);
 
             return Success;
         } catch (Exception e) {
