@@ -131,7 +131,7 @@ public class EthashRule extends BlockHeaderRule {
         if (ethashHelper == null)
             return powRule.validate(header);
 
-        // trigger reverse cache before mixed mode condition
+        // trigger cache for side chains before mixed mode condition
         if (chain.isSide())
             ethashHelper.preCache(header.getNumber());
 
