@@ -107,7 +107,11 @@ public class VM {
         dumpBlock = config.dumpBlock();
 
         if (vmHookFactory != null) {
-            vmHook = vmHookFactory.create();
+            try {
+                vmHook = vmHookFactory.create();
+            } catch (Exception e) {
+                logger.error("Error creating VMHook");
+            }
         }
     }
 
@@ -371,13 +375,7 @@ public class VM {
             if (program.getNumber().intValue() == dumpBlock)
                 this.dumpLine(op, gasBefore, gasCost + callGas, memWords, program);
 
-            if (vmHook != null) {
-                vmHook.step(program, op);
-            }
-
-            if (globalVmHook != null) {
-                globalVmHook.step(program, op);
-            }
+            vmHookStepWrapper(program, op);
 
             // Execute operation
             switch (op) {
@@ -1316,13 +1314,7 @@ public class VM {
 
     public void play(Program program) {
         try {
-            if (vmHook != null) {
-                vmHook.startPlay(program);
-            }
-
-            if (globalVmHook != null) {
-                globalVmHook.startPlay(program);
-            }
+            vmHookStartPlayWrapper(program);
 
             if (program.byTestingSuite()) return;
 
@@ -1336,13 +1328,7 @@ public class VM {
             logger.error("\n !!! StackOverflowError: update your java run command with -Xss2M !!!\n", soe);
             System.exit(-1);
         } finally {
-            if (vmHook != null) {
-                vmHook.stopPlay(program);
-            }
-
-            if (globalVmHook != null) {
-                globalVmHook.stopPlay(program);
-            }
+            vmHookStopPlayWrapper(program);
         }
     }
 
@@ -1360,6 +1346,60 @@ public class VM {
 
     public static void setVmHookFactory(VMHookFactory vmHookFactory) {
         VM.vmHookFactory = vmHookFactory;
+    }
+
+    private void vmHookStepWrapper(Program program, OpCode op) {
+        if (vmHook != null) {
+            try {
+                vmHook.step(program, op);
+            } catch (Exception e) {
+                logger.error("Error calling VMHook#step");
+            }
+        }
+
+        if (globalVmHook != null) {
+            try {
+                globalVmHook.step(program, op);
+            } catch (Exception e) {
+                logger.error("Error calling VMHook#step");
+            }
+        }
+    }
+
+    private void vmHookStartPlayWrapper(Program program) {
+        if (vmHook != null) {
+            try {
+                vmHook.startPlay(program);
+            } catch (Exception e) {
+                logger.error("Error calling VMHook#startPlay");
+            }
+        }
+
+        if (globalVmHook != null) {
+            try {
+                globalVmHook.startPlay(program);
+            } catch (Exception e) {
+                logger.error("Error calling VMHook#startPlay");
+            }
+        }
+    }
+
+    private void vmHookStopPlayWrapper(Program program) {
+        if (vmHook != null) {
+            try {
+                vmHook.stopPlay(program);
+            } catch (Exception e) {
+                logger.error("Error calling VMHook#stopPlay");
+            }
+        }
+
+        if (globalVmHook != null) {
+            try {
+                globalVmHook.stopPlay(program);
+            } catch (Exception e) {
+                logger.error("Error calling VMHook#stopPlay");
+            }
+        }
     }
 
     /**
