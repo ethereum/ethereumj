@@ -111,6 +111,10 @@ public interface EthereumListener {
 
     void onBlock(BlockSummary blockSummary);
 
+    default void onBlock(BlockSummary blockSummary, boolean best) {
+        onBlock(blockSummary);
+    }
+
     void onPeerDisconnect(String host, long port);
 
     /**

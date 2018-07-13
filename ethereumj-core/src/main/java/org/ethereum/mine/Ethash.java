@@ -58,10 +58,10 @@ import static org.ethereum.mine.MinerIfc.MiningResult;
  */
 public class Ethash {
     private static final Logger logger = LoggerFactory.getLogger("mine");
-    private static EthashParams ethashParams = new EthashParams();
+    static EthashParams ethashParams = new EthashParams();
 
-    private static Ethash cachedInstance = null;
-    private static long cachedBlockEpoch = 0;
+    static Ethash cachedInstance = null;
+    long epoch = 0;
     //    private static ExecutorService executor = Executors.newSingleThreadExecutor();
     private static ListeningExecutorService executor = MoreExecutors.listeningDecorator(
             new ThreadPoolExecutor(8, 8, 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(),
@@ -77,9 +77,8 @@ public class Ethash {
      */
     public static Ethash getForBlock(SystemProperties config, long blockNumber) {
         long epoch = blockNumber / ethashParams.getEPOCH_LENGTH();
-        if (cachedInstance == null || epoch != cachedBlockEpoch) {
+        if (cachedInstance == null || epoch != cachedInstance.epoch) {
             cachedInstance = new Ethash(config, epoch * ethashParams.getEPOCH_LENGTH());
-            cachedBlockEpoch = epoch;
         }
         return cachedInstance;
     }
@@ -107,6 +106,7 @@ public class Ethash {
     public Ethash(SystemProperties config, long blockNumber) {
         this.config = config;
         this.blockNumber = blockNumber;
+        this.epoch = blockNumber / ethashAlgo.getParams().getEPOCH_LENGTH();
         if (config.getConfig().hasPath("mine.startNonce")) {
             startNonce = config.getConfig().getLong("mine.startNonce");
         }
@@ -213,6 +213,10 @@ public class Ethash {
             }
             fireDatatasetStatusUpdate(DATASET_READY);
         }
+        return fullData;
+    }
+
+    int[] getFullData() {
         return fullData;
     }
 

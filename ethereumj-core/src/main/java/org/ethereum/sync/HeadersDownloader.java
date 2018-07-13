@@ -17,6 +17,8 @@
  */
 package org.ethereum.sync;
 
+import org.ethereum.config.SystemProperties;
+import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Blockchain;
@@ -26,6 +28,7 @@ import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.validator.BlockHeaderValidator;
+import org.ethereum.validator.EthashRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,9 +69,12 @@ public class HeadersDownloader extends BlockDownloader {
 
     int headersLoaded  = 0;
 
+    private EthashRule reverseEthashRule;
+
     @Autowired
-    public HeadersDownloader(BlockHeaderValidator headerValidator) {
+    public HeadersDownloader(BlockHeaderValidator headerValidator, SystemProperties systemProperties) {
         super(headerValidator);
+        reverseEthashRule = EthashRule.createReverse(systemProperties);
         setHeaderQueueLimit(200000);
         setBlockBodiesDownload(false);
         logger.info("HeaderDownloader created.");
@@ -131,5 +137,10 @@ public class HeadersDownloader extends BlockDownloader {
 
     public byte[] getGenesisHash() {
         return genesisHash;
+    }
+
+    @Override
+    protected boolean isValid(BlockHeader header) {
+        return super.isValid(header) && reverseEthashRule.validateAndLog(header, logger);
     }
 }
