@@ -30,6 +30,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Random;
 
+import static org.ethereum.validator.EthashRule.ChainType.main;
+import static org.ethereum.validator.EthashRule.ChainType.reverse;
 import static org.ethereum.validator.EthashRule.Mode.fake;
 import static org.ethereum.validator.EthashRule.Mode.mixed;
 
@@ -71,30 +73,40 @@ public class EthashRule extends BlockHeaderRule {
         }
     }
 
+    public enum ChainType {
+        main,       /** main chain, cache updates are stick to best block events, requires listener */
+        direct,     /** side chain, cache is triggered each validation attempt, no listener required */
+        reverse;    /** side chain with reverted validation order */
+
+        public boolean isSide() {
+            return this == reverse || this == direct;
+        }
+    }
+
     private static final int MIX_DENOMINATOR = 5;
     private Mode mode = mixed;
+    private ChainType chain = main;
     private boolean syncDone = false;
-    private boolean reverse = false;
     private Random rnd = new Random();
 
     // two most common settings
     public static EthashRule createRegular(SystemProperties systemProperties, CompositeEthereumListener listener) {
-        return new EthashRule(Mode.parse(systemProperties.getEthashMode(), mixed), false, listener);
+        return new EthashRule(Mode.parse(systemProperties.getEthashMode(), mixed), main, listener);
     }
 
     public static EthashRule createReverse(SystemProperties systemProperties) {
-        return new EthashRule(Mode.parse(systemProperties.getEthashMode(), mixed), true, null);
+        return new EthashRule(Mode.parse(systemProperties.getEthashMode(), mixed), reverse, null);
     }
 
-    public EthashRule(Mode mode, boolean reverse, CompositeEthereumListener listener) {
+    public EthashRule(Mode mode, ChainType chain, CompositeEthereumListener listener) {
         this.mode = mode;
-        this.reverse = reverse;
+        this.chain = chain;
 
         if (this.mode != fake) {
             this.ethashHelper = new EthashValidationHelper(
-                    reverse ? EthashValidationHelper.CacheOrder.reverse : EthashValidationHelper.CacheOrder.direct);
+                    chain == reverse ? EthashValidationHelper.CacheOrder.reverse : EthashValidationHelper.CacheOrder.direct);
 
-            if (!this.reverse && listener != null) {
+            if (this.chain == main && listener != null) {
                 listener.addListener(new EthereumListenerAdapter() {
                     @Override
                     public void onSyncDone(SyncState state) {
@@ -120,7 +132,7 @@ public class EthashRule extends BlockHeaderRule {
             return powRule.validate(header);
 
         // trigger reverse cache before mixed mode condition
-        if (reverse)
+        if (chain.isSide())
             ethashHelper.preCache(header.getNumber());
 
         // mixed mode payload
@@ -130,7 +142,7 @@ public class EthashRule extends BlockHeaderRule {
         try {
             Pair<byte[], byte[]> res = ethashHelper.ethashWorkFor(header, header.getNonce(), true);
             if (res == null) {
-                loggerEthash.debug("PARTIAL {}, strategy {}", header.getShortDescr(), reverse ? "reverse" : "direct");
+                loggerEthash.debug("PARTIAL {}, chain {}", header.getShortDescr(), chain);
                 return powRule.validate(header);
             }
 
@@ -142,7 +154,7 @@ public class EthashRule extends BlockHeaderRule {
                 return fault(String.format("#%d: proofValue > header.getPowBoundary()", header.getNumber()));
             }
 
-            loggerEthash.debug("FULL {}, strategy {}", header.getShortDescr(), reverse ? "reverse" : "direct");
+            loggerEthash.debug("FULL {}, chain {}", header.getShortDescr(), chain);
 
             return Success;
         } catch (Exception e) {
