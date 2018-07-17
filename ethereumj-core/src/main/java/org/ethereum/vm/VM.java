@@ -30,6 +30,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -88,7 +89,9 @@ public class VM {
     /* Keeps track of the number of steps performed in this VM */
     private int vmCounter = 0;
 
-    private static VMHook vmHook;
+    private static VMHookFactory vmHookFactory;
+    private static VMHook globalVmHook;
+    private VMHook vmHook;
     private boolean vmTrace;
     private long dumpBlock;
 
@@ -103,6 +106,14 @@ public class VM {
         this.config = config;
         vmTrace = config.vmTrace();
         dumpBlock = config.dumpBlock();
+
+        if (vmHookFactory != null) {
+            try {
+                vmHook = vmHookFactory.create();
+            } catch (Exception e) {
+                logger.error("Error creating VMHook: {}", e);
+            }
+        }
     }
 
     private long calcMemGas(GasCost gasCosts, long oldMemSize, BigInteger newMemSize, long copySize) {
@@ -365,9 +376,7 @@ public class VM {
             if (program.getNumber().intValue() == dumpBlock)
                 this.dumpLine(op, gasBefore, gasCost + callGas, memWords, program);
 
-            if (vmHook != null) {
-                vmHook.step(program, op);
-            }
+            callVmHookAction(program, (hook, prg) -> hook.step(prg, op));
 
             // Execute operation
             switch (op) {
@@ -1306,9 +1315,7 @@ public class VM {
 
     public void play(Program program) {
         try {
-            if (vmHook != null) {
-                vmHook.startPlay(program);
-            }
+            callVmHookAction(program, VMHook::startPlay);
 
             if (program.byTestingSuite()) return;
 
@@ -1322,14 +1329,42 @@ public class VM {
             logger.error("\n !!! StackOverflowError: update your java run command with -Xss2M !!!\n", soe);
             System.exit(-1);
         } finally {
-            if (vmHook != null) {
-                vmHook.stopPlay(program);
-            }
+            callVmHookAction(program, VMHook::stopPlay);
         }
     }
 
+    /**
+     * @deprecated
+     * TODO: Remove after a few versions
+     * Please use {@link VMHookFactory} and setVmHookFactory to
+     * ensure that every {@link VM} instance has a unique {@link VMHook} to
+     * prevent race conditions
+     */
+    @Deprecated
     public static void setVmHook(VMHook vmHook) {
-        VM.vmHook = vmHook;
+        VM.globalVmHook = vmHook;
+    }
+
+    public static void setVmHookFactory(VMHookFactory vmHookFactory) {
+        VM.vmHookFactory = vmHookFactory;
+    }
+
+    private void callVmHookAction(Program program, BiConsumer<VMHook, Program> action) {
+        if (vmHook != null) {
+            try {
+               action.accept(vmHook, program);
+            } catch (Exception e) {
+                logger.error("Error calling VMHook action: {}", e);
+            }
+        }
+
+        if (globalVmHook != null) {
+            try {
+               action.accept(globalVmHook, program);
+            } catch (Exception e) {
+                logger.error("Error calling global VMHook action: {}", e);
+            }
+        }
     }
 
     /**
