@@ -376,7 +376,7 @@ public class VM {
             if (program.getNumber().intValue() == dumpBlock)
                 this.dumpLine(op, gasBefore, gasCost + callGas, memWords, program);
 
-            callVmHookAction(program, (hook, prg) -> vmHook.step(prg, op));
+            callVmHookAction(program, (hook, prg) -> hook.step(prg, op));
 
             // Execute operation
             switch (op) {
