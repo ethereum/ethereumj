@@ -178,6 +178,7 @@ public class ChannelManager {
 
                             noLockTasks.add(() -> disconnect(peer, TOO_MANY_PEERS));
                         } else {
+                            addCnt++;
                             process(peer);
                         }
                     } else {
