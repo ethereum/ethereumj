@@ -67,7 +67,7 @@ public class RLP {
 
     public static final byte[] EMPTY_ELEMENT_RLP = encodeElement(new byte[0]);
 
-    public static final int MAX_NESTED_LISTS = 4 * 1024 * 1024;
+    public static final int MAX_NESTED_LISTS = 1024 * 1024;
 
     /**
      * Allow for content up to size of 2^64 bytes *
