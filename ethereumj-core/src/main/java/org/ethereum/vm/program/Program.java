@@ -20,26 +20,14 @@ package org.ethereum.vm.program;
 import static java.lang.StrictMath.min;
 import static java.lang.String.format;
 import static java.math.BigInteger.ZERO;
-import static org.apache.commons.lang3.ArrayUtils.getLength;
-import static org.apache.commons.lang3.ArrayUtils.isEmpty;
-import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
-import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
-import static org.ethereum.util.BIUtil.isNotCovers;
-import static org.ethereum.util.BIUtil.isPositive;
-import static org.ethereum.util.BIUtil.toBI;
-import static org.ethereum.util.BIUtil.transfer;
+import static org.apache.commons.lang3.ArrayUtils.*;
+import static org.ethereum.util.BIUtil.*;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.NavigableSet;
-import java.util.TreeSet;
+import java.util.*;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
@@ -444,7 +432,9 @@ public class Program {
         BigInteger balance = getStorage().getBalance(owner);
 
         if (logger.isInfoEnabled())
-            logger.info("Transfer to: [{}] heritage: [{}]", Hex.toHexString(obtainer), balance);
+            logger.info("Transfer to: [{}] heritage: [{}]",
+                    toHexString(obtainer),
+                    balance);
 
         addInternalTx(null, null, owner, obtainer, balance, null, "suicide");
 
@@ -482,7 +472,7 @@ public class Program {
         byte[] programCode = memoryChunk(memStart.intValue(), memSize.intValue());
 
         if (logger.isInfoEnabled())
-            logger.info("creating a new contract inside contract run: [{}]", Hex.toHexString(senderAddress));
+            logger.info("creating a new contract inside contract run: [{}]", toHexString(senderAddress));
 
         BlockchainConfig blockchainConfig = config.getBlockchainConfig().getConfigForBlock(getNumber().longValue());
         // actual gas subtract
@@ -535,8 +525,7 @@ public class Program {
         ProgramResult result = ProgramResult.createEmpty();
 
         if (contractAlreadyExists) {
-            result.setException(new BytecodeExecutionException(
-                    "Trying to create a contract with existing contract address: 0x" + Hex.toHexString(newAddress)));
+            result.setException(new BytecodeExecutionException("Trying to create a contract with existing contract address: 0x" + toHexString(newAddress)));
         } else if (isNotEmpty(programCode)) {
             VM vm = new VM(config);
             Program program = ProgramFactory.create().withOps(programCode).withProgramInvoke(programInvoke)
@@ -570,7 +559,8 @@ public class Program {
 
         if (result.getException() != null || result.isRevert()) {
             logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
-                    Hex.toHexString(newAddress), result.getException());
+                    toHexString(newAddress),
+                    result.getException());
 
             internalTx.reject();
             result.rejectInternalTransactions();
@@ -597,7 +587,8 @@ public class Program {
             refundGas(refundGas, "remain gas from the internal call");
             if (logger.isInfoEnabled()) {
                 logger.info("The remaining gas is refunded, account: [{}], gas: [{}] ",
-                        Hex.toHexString(getOwnerAddress().getLast20Bytes()), refundGas);
+                        toHexString(getOwnerAddress().getLast20Bytes()),
+                        refundGas);
             }
         }
     }
@@ -628,11 +619,8 @@ public class Program {
         byte[] contextAddress = msg.getType().callIsStateless() ? senderAddress : codeAddress;
 
         if (logger.isInfoEnabled())
-            logger.info(
-                    msg.getType().name()
-                            + " for existing contract: address: [{}], outDataOffs: [{}], outDataSize: [{}]  ",
-                    Hex.toHexString(contextAddress), msg.getOutDataOffs().longValue(),
-                    msg.getOutDataSize().longValue());
+            logger.info(msg.getType().name() + " for existing contract: address: [{}], outDataOffs: [{}], outDataSize: [{}]  ",
+                    toHexString(contextAddress), msg.getOutDataOffs().longValue(), msg.getOutDataSize().longValue());
 
         Repository track = getStorage().startTracking();
 
@@ -681,7 +669,8 @@ public class Program {
 
             if (result.getException() != null || result.isRevert()) {
                 logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
-                        Hex.toHexString(contextAddress), result.getException());
+                        toHexString(contextAddress),
+                        result.getException());
 
                 internalTx.reject();
                 result.rejectInternalTransactions();
@@ -726,7 +715,8 @@ public class Program {
             if (isPositive(refundGas)) {
                 refundGas(refundGas.longValue(), "remaining gas from the internal call");
                 if (logger.isInfoEnabled())
-                    logger.info("The remaining gas refunded, account: [{}], gas: [{}] ", Hex.toHexString(senderAddress),
+                    logger.info("The remaining gas refunded, account: [{}], gas: [{}] ",
+                            toHexString(senderAddress),
                             refundGas.toString());
             }
         } else {
@@ -1249,7 +1239,7 @@ public class Program {
         } else {
 
             if (logger.isDebugEnabled())
-                logger.debug("Call {}(data = {})", contract.getClass().getSimpleName(), Hex.toHexString(data));
+                logger.debug("Call {}(data = {})", contract.getClass().getSimpleName(), toHexString(data));
 
             Pair<Boolean, byte[]> out = contract.execute(data);
 
@@ -1265,7 +1255,7 @@ public class Program {
                 track.rollback();
             }
 
-            this.memorySave(msg.getOutDataOffs().intValue(), out.getRight());
+            this.memorySave(msg.getOutDataOffs().intValue(), msg.getOutDataSize().intValueSafe(), out.getRight());
         }
     }
 

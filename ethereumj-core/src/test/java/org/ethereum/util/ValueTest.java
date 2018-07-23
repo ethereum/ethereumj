@@ -74,5 +74,14 @@ public class ValueTest {
         assertEquals(testRlp, Hex.toHexString(val.encode()));
     }
 
-
+    /**
+     * Shouldn't fail with correct TrieNode CODE data
+     * as opposed to Value.fromRlpEncoded
+     */
+    @Test
+    public void testToString() {
+        Value val = new Value(Hex.decode("fe"));
+        assertEquals("fe", val.toString());
+        assertEquals("fe", Hex.toHexString(val.asBytes()));
+    }
 }

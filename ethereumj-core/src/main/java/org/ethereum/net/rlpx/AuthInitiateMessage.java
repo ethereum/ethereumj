@@ -20,12 +20,12 @@ package org.ethereum.net.rlpx;
 import org.ethereum.crypto.ECKey;
 import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.BigIntegers;
-import org.spongycastle.util.encoders.Hex;
 
 import java.util.Arrays;
 
 import static org.ethereum.util.ByteUtil.merge;
 import static org.spongycastle.util.BigIntegers.asUnsignedByteArray;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Authentication initiation message, to be wrapped inside
@@ -112,10 +112,10 @@ public class AuthInitiateMessage {
                 asUnsignedByteArray(signature.s), new byte[]{EncryptionHandshake.recIdFromSignatureV(signature.v)});
 
         return "AuthInitiateMessage{" +
-                "\n  sigBytes=" + Hex.toHexString(sigBytes) +
-                "\n  ephemeralPublicHash=" + Hex.toHexString(ephemeralPublicHash) +
-                "\n  publicKey=" + Hex.toHexString(publicKey.getEncoded(false)) +
-                "\n  nonce=" + Hex.toHexString(nonce) +
+                "\n  sigBytes=" + toHexString(sigBytes) +
+                "\n  ephemeralPublicHash=" + toHexString(ephemeralPublicHash) +
+                "\n  publicKey=" + toHexString(publicKey.getEncoded(false)) +
+                "\n  nonce=" + toHexString(nonce) +
                 "\n}";
     }
 }

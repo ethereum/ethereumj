@@ -54,7 +54,7 @@ public class GitHubJSONTestSuite {
 
 
     protected static void runGitHubJsonVMTest(String json, String testName) throws ParseException {
-        Assume.assumeFalse("Online test is not available", json.equals(""));
+        Assume.assumeFalse("Online test is not available", json.isEmpty());
 
         JSONParser parser = new JSONParser();
         JSONObject testSuiteObj = (JSONObject) parser.parse(json);
@@ -83,7 +83,7 @@ public class GitHubJSONTestSuite {
     }
 
     public static void runGitHubJsonVMTest(String json) throws ParseException {
-        Assume.assumeFalse("Online test is not available", json.equals(""));
+        Assume.assumeFalse("Online test is not available", json.isEmpty());
 
         JSONParser parser = new JSONParser();
         JSONObject testSuiteObj = (JSONObject) parser.parse(json);
@@ -124,7 +124,7 @@ public class GitHubJSONTestSuite {
 
 
     protected static void runGitHubJsonBlockTest(String json, Set<String> excluded) throws ParseException, IOException {
-        Assume.assumeFalse("Online test is not available", json.equals(""));
+        Assume.assumeFalse("Online test is not available", json.isEmpty());
 
         BlockTestSuite testSuite = new BlockTestSuite(json);
         Set<String> testCases = testSuite.getTestCases().keySet();

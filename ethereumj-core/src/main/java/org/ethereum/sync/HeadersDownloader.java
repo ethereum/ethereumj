@@ -17,25 +17,27 @@
  */
 package org.ethereum.sync;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Blockchain;
-import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.db.DbFlushManager;
+import org.ethereum.db.HeaderStore;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.validator.BlockHeaderValidator;
+import org.ethereum.validator.EthashRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Created by Anton Nashatyrev on 27.10.2016.
@@ -54,8 +56,8 @@ public class HeadersDownloader extends BlockDownloader {
     @Autowired
     IndexedBlockStore blockStore;
 
-    @Autowired @Qualifier("headerSource")
-    DataSourceArray<BlockHeader> headerStore;
+    @Autowired
+    HeaderStore headerStore;
 
     @Autowired
     DbFlushManager dbFlushManager;
@@ -67,16 +69,19 @@ public class HeadersDownloader extends BlockDownloader {
 
     int headersLoaded  = 0;
 
+    private EthashRule reverseEthashRule;
+
     @Autowired
-    public HeadersDownloader(BlockHeaderValidator headerValidator) {
+    public HeadersDownloader(BlockHeaderValidator headerValidator, SystemProperties systemProperties) {
         super(headerValidator);
+        reverseEthashRule = EthashRule.createReverse(systemProperties);
         setHeaderQueueLimit(200000);
         setBlockBodiesDownload(false);
         logger.info("HeaderDownloader created.");
     }
 
     public void init(byte[] startFromBlockHash) {
-        logger.info("HeaderDownloader init: startHash = " + Hex.toHexString(startFromBlockHash));
+        logger.info("HeaderDownloader init: startHash = " + toHexString(startFromBlockHash));
         SyncQueueReverseImpl syncQueue = new SyncQueueReverseImpl(startFromBlockHash, true);
         super.init(syncQueue, syncPool, "HeadersDownloader");
         syncPool.init(channelManager, blockchain);
@@ -95,7 +100,7 @@ public class HeadersDownloader extends BlockDownloader {
         }
         logger.info(name + ": " + headers.size() + " headers loaded: " + headers.get(0).getNumber() + " - " + headers.get(headers.size() - 1).getNumber());
         for (BlockHeaderWrapper header : headers) {
-            headerStore.set((int) header.getNumber(), header.getHeader());
+            headerStore.saveHeader(header.getHeader());
             headersLoaded++;
         }
         dbFlushManager.commit();
@@ -132,5 +137,10 @@ public class HeadersDownloader extends BlockDownloader {
 
     public byte[] getGenesisHash() {
         return genesisHash;
+    }
+
+    @Override
+    protected boolean isValid(BlockHeader header) {
+        return super.isValid(header) && reverseEthashRule.validateAndLog(header, logger);
     }
 }

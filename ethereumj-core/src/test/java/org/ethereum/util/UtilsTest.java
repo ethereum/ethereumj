@@ -17,19 +17,36 @@
  */
 package org.ethereum.util;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.util.Locale;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Roman Mandeleil
  * @since 17.05.14
  */
 public class UtilsTest {
+    private Locale defaultLocale;
+
+    @Before
+    public void setUp() throws Exception {
+        defaultLocale = Locale.getDefault();
+        Locale.setDefault(Locale.US);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        Locale.setDefault(defaultLocale);
+    }
 
     @Test
     public void testGetValueShortString1() {
@@ -106,7 +123,25 @@ public class UtilsTest {
     }
 
     @Test
+    public void testIsHexEncoded() {
+        assertTrue(Utils.isHexEncoded("AAA"));
+        assertTrue(Utils.isHexEncoded("6c386a4b26f73c802f34673f7248bb118f97424a"));
+        assertFalse(Utils.isHexEncoded(null));
+        assertFalse(Utils.isHexEncoded("I am not hex"));
+        assertTrue(Utils.isHexEncoded(""));
+        assertTrue(Utils.isHexEncoded(
+                "6c386a4b26f73c802f34673f7248bb118f97424a" +
+                        "6c386a4b26f73c802f34673f7248bb118f97424a" +
+                        "6c386a4b26f73c802f34673f7248bb118f97424a" +
+                        "6c386a4b26f73c802f34673f7248bb118f97424a" +
+                        "6c386a4b26f73c802f34673f7248bb118f97424a" +
+                        "6c386a4b26f73c802f34673f7248bb118f97424a" +
+                        "6c386a4b26f73c802f34673f7248bb118f97424a"));
+    }
+
+    @Test
     public void testLongToTimePeriod() {
         assertEquals("2.99s", Utils.longToTimePeriod(3000 - 12));
+        assertEquals("1d21h", Utils.longToTimePeriod(45L * 3600 * 1000));
     }
 }

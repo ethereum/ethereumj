@@ -24,6 +24,7 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.util.Arrays;
 import java.util.List;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * <p>Wraps {@link BlockHeader}</p>
@@ -90,7 +91,7 @@ public class BlockHeaderWrapper {
     public String toString() {
         return "BlockHeaderWrapper {" +
                 "header=" + header +
-                ", nodeId=" + Hex.toHexString(nodeId) +
+                ", nodeId=" + toHexString(nodeId) +
                 '}';
     }
 }

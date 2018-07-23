@@ -38,7 +38,12 @@ public interface Memory extends ProgramListenerAware {
 
     DataWord readWord(int address);
 
-    // just access expecting all data valid
+    /**
+     * Read a byte.
+     * This expects all data to be valid.
+     * @param  address Address.
+     * @return         Read byte.
+     */
     byte readByte(int address);
 
     String toString();

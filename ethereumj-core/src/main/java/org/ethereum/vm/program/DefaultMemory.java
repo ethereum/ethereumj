@@ -91,6 +91,7 @@ public class DefaultMemory implements Memory {
      */
     @Override
     public void write(int address, byte[] data, int dataSize, boolean limited) {
+        if (dataSize <= 0) return;
 
         if (data.length < dataSize)
             dataSize = data.length;
@@ -132,7 +133,7 @@ public class DefaultMemory implements Memory {
     @Override
     public void extendAndWrite(int address, int allocSize, byte[] data) {
         extend(address, allocSize);
-        write(address, data, data.length, false);
+        write(address, data, allocSize, false);
     }
 
     /*
@@ -142,8 +143,7 @@ public class DefaultMemory implements Memory {
      */
     @Override
     public void extend(int address, int size) {
-        if (size <= 0)
-            return;
+        if (size <= 0) return;
 
         final int newSize = address + size;
 
@@ -157,8 +157,7 @@ public class DefaultMemory implements Memory {
             toAllocate = (int) ceil((double) toAllocate / WORD_SIZE) * WORD_SIZE;
             softSize += toAllocate;
 
-            if (programListener != null)
-                programListener.onMemoryExtend(toAllocate);
+            if (programListener != null) programListener.onMemoryExtend(toAllocate);
         }
     }
 

@@ -22,9 +22,9 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
-import org.spongycastle.util.encoders.Hex;
 
 import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 public class FindNodeMessage extends Message {
 
@@ -78,10 +78,8 @@ public class FindNodeMessage extends Message {
 
         long currTime = System.currentTimeMillis() / 1000;
 
-        String out = String.format("[FindNodeMessage] \n target: %s \n expires in %d seconds \n %s\n",
-                Hex.toHexString(target), (expires - currTime), super.toString());
-
-        return out;
+        return String.format("[FindNodeMessage] \n target: %s \n expires in %d seconds \n %s\n",
+                toHexString(target), (expires - currTime), super.toString());
     }
 
 }

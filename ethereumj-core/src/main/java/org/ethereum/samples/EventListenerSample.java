@@ -54,6 +54,7 @@ import java.util.Map;
 import java.util.Scanner;
 
 import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Sample usage of events listener API.
@@ -224,7 +225,7 @@ public class EventListenerSample extends TestNetSample {
     }
 
     public void requestFreeEther(byte[] addressBytes) {
-        String address = "0x" + Hex.toHexString(addressBytes);
+        String address = "0x" + toHexString(addressBytes);
         logger.info("Checking address {} for available ether.", address);
         BigInteger balance = ethereum.getRepository().getBalance(addressBytes);
         logger.info("Address {} balance: {} wei", address, balance);
@@ -271,7 +272,7 @@ public class EventListenerSample extends TestNetSample {
         while(true) {
             BigInteger balance = ethereum.getRepository().getBalance(address);
             if (balance.compareTo(requiredBalance) > 0) {
-                logger.info("Address {} successfully funded. Balance: {} wei", "0x" + Hex.toHexString(address), balance);
+                logger.info("Address {} successfully funded. Balance: {} wei", "0x" + toHexString(address), balance);
                 break;
             }
             synchronized (this) {
@@ -305,7 +306,7 @@ public class EventListenerSample extends TestNetSample {
         }
 
         byte[] address = receipt.getTransaction().getContractAddress();
-        logger.info("Contract created: " + Hex.toHexString(address));
+        logger.info("Contract created: " + toHexString(address));
 
         IncEventListener eventListener = new IncEventListener(pendingState, metadata.abi, address);
         ethereum.addListener(eventListener.listener);

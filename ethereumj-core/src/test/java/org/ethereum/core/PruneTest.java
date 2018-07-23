@@ -138,7 +138,7 @@ public class PruneTest {
 
         StandaloneBlockchain bc = new StandaloneBlockchain();
 
-        ECKey alice = ECKey.fromPrivate(BigInteger.ZERO);
+        ECKey alice = ECKey.fromPrivate(BigInteger.TEN);
         ECKey bob = ECKey.fromPrivate(BigInteger.ONE);
 
 //        System.out.println("Gen root: " + Hex.toHexString(bc.getBlockchain().getBestBlock().getStateRoot()));

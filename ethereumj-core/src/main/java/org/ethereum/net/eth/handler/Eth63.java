@@ -33,10 +33,10 @@ import org.ethereum.net.eth.message.GetReceiptsMessage;
 import org.ethereum.net.eth.message.NodeDataMessage;
 import org.ethereum.net.eth.message.ReceiptsMessage;
 
+import org.ethereum.net.message.ReasonCode;
 import org.ethereum.sync.PeerState;
 import org.ethereum.util.ByteArraySet;
 import org.ethereum.util.Value;
-import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
@@ -48,6 +48,7 @@ import java.util.Set;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.net.eth.EthVersion.V63;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Fast synchronization (PV63) Handler
@@ -114,7 +115,8 @@ public class Eth63 extends Eth62 {
             if (rawNode != null) {
                 Value value = new Value(rawNode);
                 nodeValues.add(value);
-                logger.trace("Eth63: " + Hex.toHexString(nodeKey).substring(0, 8) + " -> " + value);
+                if (nodeValues.size() >= MAX_HASHES_TO_SEND) break;
+                logger.trace("Eth63: " + toHexString(nodeKey).substring(0, 8) + " -> " + value);
             }
         }
 
@@ -130,6 +132,7 @@ public class Eth63 extends Eth62 {
         );
 
         List<List<TransactionReceipt>> receipts = new ArrayList<>();
+        int sizeSum = 0;
         for (byte[] blockHash : msg.getBlockHashes()) {
             Block block = blockchain.getBlockByHash(blockHash);
             if (block == null) continue;
@@ -139,8 +142,10 @@ public class Eth63 extends Eth62 {
                 TransactionInfo transactionInfo = blockchain.getTransactionInfo(transaction.getHash());
                 if (transactionInfo == null) break;
                 blockReceipts.add(transactionInfo.getReceipt());
+                sizeSum += TransactionReceipt.MemEstimator.estimateSize(transactionInfo.getReceipt());
             }
             receipts.add(blockReceipts);
+            if (sizeSum >= MAX_MESSAGE_SIZE) break;
         }
 
         sendMessage(new ReceiptsMessage(receipts));
@@ -183,19 +188,22 @@ public class Eth63 extends Eth62 {
 
         List<Pair<byte[], byte[]>> ret = new ArrayList<>();
         if(msg.getDataList().isEmpty()) {
-            String err = "Received NodeDataMessage contains empty node data. Dropping peer " + channel;
-            dropUselessPeer(err);
+            String err = String.format("Received NodeDataMessage contains empty node data. Dropping peer %s", channel);
+            logger.debug(err);
+            requestNodesFuture.setException(new RuntimeException(err));
+            // Not fatal but let us touch it later
+            channel.getChannelManager().disconnect(channel, ReasonCode.TOO_MANY_PEERS);
             return;
         }
 
         for (Value nodeVal : msg.getDataList()) {
-            byte[] hash = nodeVal.hash();
+            byte[] hash = sha3(nodeVal.asBytes());
             if (!requestedNodes.contains(hash)) {
-                String err = "Received NodeDataMessage contains non-requested node with hash :" + Hex.toHexString(hash) + " . Dropping peer " + channel;
+                String err = "Received NodeDataMessage contains non-requested node with hash :" + toHexString(hash) + " . Dropping peer " + channel;
                 dropUselessPeer(err);
                 return;
             }
-            ret.add(Pair.of(hash, nodeVal.encode()));
+            ret.add(Pair.of(hash, nodeVal.asBytes()));
         }
         requestNodesFuture.set(ret);
 

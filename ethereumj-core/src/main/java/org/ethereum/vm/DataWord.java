@@ -28,6 +28,8 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
+import static org.ethereum.util.ByteUtil.toHexString;
+
 /**
  * DataWord is the 32-byte array representation of a 256-bit number
  * Calculations can be done on this word with other DataWords
@@ -339,7 +341,7 @@ public class DataWord implements Comparable<DataWord> {
     @JsonValue
     @Override
     public String toString() {
-        return Hex.toHexString(data);
+        return toHexString(data);
     }
 
     public String toPrefixString() {

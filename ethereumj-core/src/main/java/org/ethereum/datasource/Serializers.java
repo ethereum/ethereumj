@@ -96,12 +96,12 @@ public class Serializers {
     public final static Serializer<Value, byte[]> TrieNodeSerializer = new Serializer<Value, byte[]>() {
         @Override
         public byte[] serialize(Value object) {
-            return object.encode();
+            return object.asBytes();
         }
 
         @Override
         public Value deserialize(byte[] stream) {
-            return Value.fromRlpEncoded(stream);
+            return new Value(stream);
         }
     };
 
@@ -117,6 +117,21 @@ public class Serializers {
         @Override
         public BlockHeader deserialize(byte[] stream) {
             return stream == null ? null : new BlockHeader(stream);
+        }
+    };
+
+    /**
+     * AS IS serializer (doesn't change anything)
+     */
+    public final static Serializer<byte[], byte[]> AsIsSerializer = new Serializer<byte[], byte[]>() {
+        @Override
+        public byte[] serialize(byte[] object) {
+            return object;
+        }
+
+        @Override
+        public byte[] deserialize(byte[] stream) {
+            return stream;
         }
     };
 }

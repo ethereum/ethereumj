@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static java.lang.Math.min;
+import static org.ethereum.net.server.ChannelManager.INBOUND_CONNECTION_BAN_TIMEOUT;
 
 /**
  * Handles all possible statistics related to a Node
@@ -42,7 +43,6 @@ public class NodeStatistics {
     public final static int REPUTATION_HANDSHAKE = 3000;
     public final static int REPUTATION_AUTH = 1000;
     public final static int REPUTATION_DISCOVER_PING = 1;
-    public final static long TOO_MANY_PEERS_PENALIZE_TIMEOUT = 10 * 1000;
 
     public class StatHandler {
         AtomicLong count = new AtomicLong(0);
@@ -145,14 +145,14 @@ public class NodeStatistics {
         return isReputationPenalized() ? 0 : persistedReputation / 2 + getSessionReputation();
     }
 
-    private boolean isReputationPenalized() {
+    public boolean isReputationPenalized() {
         if (wrongFork) return true;
         if (wasDisconnected() && rlpxLastRemoteDisconnectReason == ReasonCode.TOO_MANY_PEERS &&
-                System.currentTimeMillis() - lastDisconnectedTime < TOO_MANY_PEERS_PENALIZE_TIMEOUT) {
+                System.currentTimeMillis() - lastDisconnectedTime < INBOUND_CONNECTION_BAN_TIMEOUT) {
             return true;
         }
         if (wasDisconnected() && rlpxLastRemoteDisconnectReason == ReasonCode.DUPLICATE_PEER &&
-                System.currentTimeMillis() - lastDisconnectedTime < TOO_MANY_PEERS_PENALIZE_TIMEOUT) {
+                System.currentTimeMillis() - lastDisconnectedTime < INBOUND_CONNECTION_BAN_TIMEOUT) {
             return true;
         }
         return  rlpxLastLocalDisconnectReason == ReasonCode.NULL_IDENTITY ||

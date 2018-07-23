@@ -19,10 +19,12 @@ package org.ethereum.samples;
 
 import org.ethereum.core.*;
 import org.ethereum.crypto.ECKey;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.blockchain.EtherUtil;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.context.annotation.Bean;
 
@@ -75,7 +77,7 @@ public class SendTransaction extends BasicSample {
 
     private TransactionReceipt sendTxAndWait(byte[] receiveAddress, byte[] data) throws InterruptedException {
 
-        byte[] senderPrivateKey = Hex.decode("");
+        byte[] senderPrivateKey = HashUtil.sha3("cow".getBytes());
         byte[] fromAddress = ECKey.fromPrivate(senderPrivateKey).getAddress();
         BigInteger nonce = ethereum.getRepository().getNonce(fromAddress);
         Transaction tx = new Transaction(
@@ -83,7 +85,7 @@ public class SendTransaction extends BasicSample {
                 ByteUtil.longToBytesNoLeadZeroes(ethereum.getGasPrice()),
                 ByteUtil.longToBytesNoLeadZeroes(200000),
                 receiveAddress,
-                ByteUtil.bigIntegerToBytes(BigInteger.valueOf(1)),  // 1_000_000_000 gwei, 1_000_000_000_000L szabo, 1_000_000_000_000_000L finney, 1_000_000_000_000_000_000L ether
+                ByteUtil.bigIntegerToBytes(EtherUtil.convert(1, EtherUtil.Unit.WEI)),  // Use EtherUtil.convert for easy value unit conversion
                 data,
                 ethereum.getChainIdForNextBlock());
 

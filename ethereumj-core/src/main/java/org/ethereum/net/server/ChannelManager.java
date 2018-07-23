@@ -54,9 +54,11 @@ public class ChannelManager {
     // If the inbound peer connection was dropped by us with a reason message
     // then we ban that peer IP on any connections for some time to protect from
     // too active peers
-    private static final int inboundConnectionBanTimeout = 10 * 1000;
+    public static final int INBOUND_CONNECTION_BAN_TIMEOUT = 120 * 1000;
 
     private List<Channel> newPeers = new CopyOnWriteArrayList<>();
+    // Limiting number of new peers to avoid delays in processing
+    private static final int MAX_NEW_PEERS = 128;
     private final Map<ByteArrayWrapper, Channel> activePeers = new ConcurrentHashMap<>();
 
     private ScheduledExecutorService mainWorker = Executors.newSingleThreadScheduledExecutor();
@@ -152,56 +154,77 @@ public class ChannelManager {
     }
 
     private void processNewPeers() {
-        if (newPeers.isEmpty()) return;
+        List<Runnable> noLockTasks = new ArrayList<>();
 
-        List<Channel> processed = new ArrayList<>();
+        synchronized (this) {
+            if (newPeers.isEmpty()) return;
 
-        int addCnt = 0;
-        for(Channel peer : newPeers) {
+            List<Channel> processed = new ArrayList<>();
+            int addCnt = 0;
+            for (Channel peer : newPeers) {
 
-            logger.debug("Processing new peer: " + peer);
+                logger.debug("Processing new peer: " + peer);
 
-            if(peer.isProtocolsInitialized()) {
+                if (peer.isProtocolsInitialized()) {
 
-                logger.debug("Protocols initialized");
+                    logger.debug("Protocols initialized");
 
-                if (!activePeers.containsKey(peer.getNodeIdWrapper())) {
-                    if (!peer.isActive() &&
-                        activePeers.size() >= maxActivePeers &&
-                        !trustedPeers.accept(peer.getNode())) {
+                    if (!activePeers.containsKey(peer.getNodeIdWrapper())) {
+                        if (!peer.isActive() &&
+                                activePeers.size() >= maxActivePeers &&
+                                !trustedPeers.accept(peer.getNode())) {
 
-                        // restricting inbound connections unless this is a trusted peer
+                            // restricting inbound connections unless this is a trusted peer
 
-                        disconnect(peer, TOO_MANY_PEERS);
+                            noLockTasks.add(() -> disconnect(peer, TOO_MANY_PEERS));
+                        } else {
+                            addCnt++;
+                            process(peer);
+                        }
                     } else {
-                        process(peer);
-                        addCnt++;
+                        noLockTasks.add(() -> disconnect(peer, DUPLICATE_PEER));
                     }
-                } else {
-                    disconnect(peer, DUPLICATE_PEER);
+
+                    processed.add(peer);
                 }
-
-                processed.add(peer);
             }
+
+            if (addCnt > 0) {
+                logger.info("New peers processed: " + processed + ", active peers added: " + addCnt + ", total active peers: " + activePeers.size());
+            }
+
+            newPeers.removeAll(processed);
         }
 
-        if (addCnt > 0) {
-            logger.info("New peers processed: " + processed + ", active peers added: " + addCnt + ", total active peers: " + activePeers.size());
-        }
-
-        newPeers.removeAll(processed);
+        noLockTasks.forEach(Runnable::run);
     }
 
-    private void disconnect(Channel peer, ReasonCode reason) {
+    public void disconnect(Channel peer, ReasonCode reason) {
         logger.debug("Disconnecting peer with reason " + reason + ": " + peer);
         peer.disconnect(reason);
         recentlyDisconnected.put(peer.getInetSocketAddress().getAddress(), new Date());
     }
 
+    /**
+     * Whether peer with the same ip is in newPeers, waiting for processing
+     * @param peerAddr      Peer address
+     * @return true if we already have connection from this address, otherwise false
+     */
+    public boolean isAddressInQueue(InetAddress peerAddr) {
+        for (Channel peer: newPeers) {
+            if (peer.getInetSocketAddress() != null &&
+                    peer.getInetSocketAddress().getAddress().getHostAddress().equals(peerAddr.getHostAddress())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public boolean isRecentlyDisconnected(InetAddress peerAddr) {
         Date disconnectTime = recentlyDisconnected.get(peerAddr);
         if (disconnectTime != null &&
-                System.currentTimeMillis() - disconnectTime.getTime() < inboundConnectionBanTimeout) {
+                System.currentTimeMillis() - disconnectTime.getTime() < INBOUND_CONNECTION_BAN_TIMEOUT) {
             return true;
         } else {
             recentlyDisconnected.remove(peerAddr);
@@ -224,14 +247,14 @@ public class ChannelManager {
     /**
      * Propagates the transactions message across active peers with exclusion of
      * 'receivedFrom' peer.
-     * @param tx  transactions to be sent
+     * @param txs  transactions to be sent
      * @param receivedFrom the peer which sent original message or null if
      *                     the transactions were originated by this peer
      */
-    public void sendTransaction(List<Transaction> tx, Channel receivedFrom) {
+    public void sendTransaction(List<Transaction> txs, Channel receivedFrom) {
         for (Channel channel : activePeers.values()) {
             if (channel != receivedFrom) {
-                channel.sendTransaction(tx);
+                channel.sendTransactionsCapped(txs);
             }
         }
     }
@@ -289,7 +312,7 @@ public class ChannelManager {
                 channel = newActivePeers.take();
                 List<Transaction> pendingTransactions = pendingState.getPendingTransactions();
                 if (!pendingTransactions.isEmpty()) {
-                    channel.sendTransaction(pendingTransactions);
+                    channel.sendTransactionsCapped(pendingTransactions);
                 }
             } catch (InterruptedException e) {
                 break;
@@ -321,7 +344,7 @@ public class ChannelManager {
         }
     }
 
-    public void add(Channel peer) {
+    public synchronized void add(Channel peer) {
         logger.debug("New peer in ChannelManager {}", peer);
         newPeers.add(peer);
     }
@@ -330,8 +353,10 @@ public class ChannelManager {
         logger.debug("Peer {}: notifies about disconnect", channel);
         channel.onDisconnect();
         syncPool.onDisconnect(channel);
-        activePeers.values().remove(channel);
-        newPeers.remove(channel);
+        synchronized(this) {
+            activePeers.values().remove(channel);
+            newPeers.remove(channel);
+        }
     }
 
     public void onSyncDone(boolean done) {
@@ -343,8 +368,21 @@ public class ChannelManager {
         return new ArrayList<>(activePeers.values());
     }
 
+    /**
+     * Checks whether newPeers is not full
+     * newPeers are used to fill up active peers
+     * @return True if there are free slots for new peers
+     */
+    public boolean acceptingNewPeers() {
+        return newPeers.size() < Math.max(config.maxActivePeers(), MAX_NEW_PEERS);
+    }
+
     public Channel getActivePeer(byte[] nodeId) {
         return activePeers.get(new ByteArrayWrapper(nodeId));
+    }
+
+    public SyncManager getSyncManager() {
+        return syncManager;
     }
 
     public void close() {

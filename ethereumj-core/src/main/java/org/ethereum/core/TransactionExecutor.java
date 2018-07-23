@@ -34,7 +34,6 @@ import org.ethereum.vm.program.invoke.ProgramInvoke;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -219,7 +218,7 @@ public class TransactionExecutor {
             if (!localCall && m_endGas.compareTo(spendingGas) < 0) {
                 // no refund
                 // no endowment
-                execError("Out of Gas calling precompiled contract 0x" + Hex.toHexString(targetAddress) +
+                execError("Out of Gas calling precompiled contract 0x" + toHexString(targetAddress) +
                         ", required: " + spendingGas + ", left: " + m_endGas);
                 m_endGas = BigInteger.ZERO;
                 return;
@@ -231,7 +230,7 @@ public class TransactionExecutor {
                 Pair<Boolean, byte[]> out = precompiledContract.execute(tx.getData());
 
                 if (!out.getLeft()) {
-                    execError("Error executing precompiled contract 0x" + Hex.toHexString(targetAddress));
+                    execError("Error executing precompiled contract 0x" + toHexString(targetAddress));
                     m_endGas = BigInteger.ZERO;
                     return;
                 }
@@ -263,7 +262,7 @@ public class TransactionExecutor {
 
         AccountState existingAddr = cacheTrack.getAccountState(newContractAddress);
         if (existingAddr != null && existingAddr.isContractExist(blockchainConfig)) {
-            execError("Trying to create a contract with existing contract address: 0x" + Hex.toHexString(newContractAddress));
+            execError("Trying to create a contract with existing contract address: 0x" + toHexString(newContractAddress));
             m_endGas = BigInteger.ZERO;
             return;
         }
@@ -433,12 +432,12 @@ public class TransactionExecutor {
 
         // Refund for gas leftover
         track.addBalance(tx.getSender(), summary.getLeftover().add(summary.getRefund()));
-        logger.info("Pay total refund to sender: [{}], refund val: [{}]", Hex.toHexString(tx.getSender()), summary.getRefund());
+        logger.info("Pay total refund to sender: [{}], refund val: [{}]", toHexString(tx.getSender()), summary.getRefund());
 
         // Transfer fees to miner
         track.addBalance(coinbase, summary.getFee());
         touchedAccounts.add(coinbase);
-        logger.info("Pay fees to miner: [{}], feesEarned: [{}]", Hex.toHexString(coinbase), summary.getFee());
+        logger.info("Pay fees to miner: [{}], feesEarned: [{}]", toHexString(coinbase), summary.getFee());
 
         if (result != null) {
             logs = result.getLogInfoList();

@@ -30,9 +30,11 @@ import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.BlockStore;
 import org.ethereum.mine.MinerIfc;
+import org.ethereum.mine.MinerListener;
 import org.ethereum.validator.BlockHeaderValidator;
 
 import java.math.BigInteger;
+import java.util.Collection;
 import java.util.List;
 
 import static com.google.common.collect.Lists.newArrayList;
@@ -186,5 +188,8 @@ class TestBlockchainConfig extends AbstractConfig {
         public boolean validate(BlockHeader blockHeader) {
             return false;
         }
+
+        @Override
+        public void setListeners(Collection<MinerListener> listeners) {}
     }
 }

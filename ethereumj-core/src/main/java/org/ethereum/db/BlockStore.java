@@ -49,7 +49,7 @@ public interface BlockStore {
 
     List<Block> getListBlocksEndWith(byte[] hash, long qty);
 
-    void saveBlock(Block block, BigInteger cummDifficulty, boolean mainChain);
+    void saveBlock(Block block, BigInteger totalDifficulty, boolean mainChain);
 
     BigInteger getTotalDifficultyForHash(byte[] hash);
 

@@ -100,7 +100,7 @@ public class TestRunner {
 
         IndexedBlockStore blockStore = new IndexedBlockStore();
         blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>());
-        blockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
+        blockStore.saveBlock(genesis, genesis.getDifficultyBI(), true);
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 
@@ -111,7 +111,7 @@ public class TestRunner {
         PendingStateImpl pendingState = new PendingStateImpl(new EthereumListenerAdapter());
 
         blockchain.setBestBlock(genesis);
-        blockchain.setTotalDifficulty(genesis.getCumulativeDifficulty());
+        blockchain.setTotalDifficulty(genesis.getDifficultyBI());
         blockchain.setParentHeaderValidator(new CommonConfig().parentHeaderValidator());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
 
@@ -153,7 +153,7 @@ public class TestRunner {
 
             ImportResult importResult = blockchain.tryToConnect(block);
             logger.debug("{} ~ {} difficulty: {} ::: {}", block.getShortHash(), shortHash(block.getParentHash()),
-                    block.getCumulativeDifficulty(), importResult.toString());
+                    block.getDifficultyBI(), importResult.toString());
         }
 
         repository = blockchain.getRepository();

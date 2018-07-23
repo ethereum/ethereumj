@@ -19,6 +19,7 @@ package org.ethereum.net.server;
 
 import io.netty.channel.*;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import org.ethereum.net.rlpx.discover.NodeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +43,9 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
     @Autowired
     ChannelManager channelManager;
 
+    @Autowired
+    NodeManager nodeManager;
+
     private String remoteId;
 
     private boolean peerDiscoveryMode = false;
@@ -57,14 +61,13 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
                 logger.debug("Open {} connection, channel: {}", isInbound() ? "inbound" : "outbound", ch.toString());
             }
 
-            if (isInbound() && channelManager.isRecentlyDisconnected(ch.remoteAddress().getAddress())) {
-                // avoid too frequent connection attempts
-                logger.debug("Drop connection - the same IP was disconnected recently, channel: {}", ch.toString());
+            if (notEligibleForIncomingConnection(ch)) {
                 ch.disconnect();
                 return;
             }
 
             final Channel channel = ctx.getBean(Channel.class);
+            channel.setInetSocketAddress(ch.remoteAddress());
             channel.init(ch.pipeline(), remoteId, peerDiscoveryMode, channelManager);
 
             if(!peerDiscoveryMode) {
@@ -86,6 +89,48 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
         } catch (Exception e) {
             logger.error("Unexpected error: ", e);
         }
+    }
+
+    /**
+     * Tests incoming connection channel for usual abuse/attack vectors
+     * @param ch    Channel
+     * @return true if we should refuse this connection, otherwise false
+     */
+    private boolean notEligibleForIncomingConnection(NioSocketChannel ch) {
+        if(!isInbound()) return false;
+        // For incoming connection drop if..
+        
+        // Bad remote address
+        if (ch.remoteAddress() == null) {
+            logger.debug("Drop connection - bad remote address, channel: {}", ch.toString());
+            return true;
+        }
+        // Drop if we have long waiting queue already
+        if (!channelManager.acceptingNewPeers()) {
+            logger.debug("Drop connection - many new peers are not processed, channel: {}", ch.toString());
+            return true;
+        }
+        // Refuse connections from ips that are already in connection queue
+        // Local and private network addresses are still welcome!
+        if (!ch.remoteAddress().getAddress().isLoopbackAddress() &&
+                !ch.remoteAddress().getAddress().isSiteLocalAddress() &&
+                channelManager.isAddressInQueue(ch.remoteAddress().getAddress())) {
+            logger.debug("Drop connection - already processing connection from this host, channel: {}", ch.toString());
+            return true;
+        }
+
+        // Avoid too frequent connection attempts
+        if (channelManager.isRecentlyDisconnected(ch.remoteAddress().getAddress())) {
+            logger.debug("Drop connection - the same IP was disconnected recently, channel: {}", ch.toString());
+            return true;
+        }
+        // Drop bad peers before creating channel
+        if (nodeManager.isReputationPenalized(ch.remoteAddress())) {
+            logger.debug("Drop connection - bad peer, channel: {}", ch.toString());
+            return true;
+        }
+
+        return false;
     }
 
     private boolean isInbound() {

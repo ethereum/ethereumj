@@ -40,7 +40,6 @@ import java.security.SecureRandom;
 import java.security.Security;
 import java.security.SignatureException;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -104,6 +103,12 @@ public class ECKeyTest {
             Security.getProvider("SunEC"),
             KeyPairGenerator.getInstance("RSA").generateKeyPair().getPrivate(),
             ECKey.fromPublicOnly(pubKey).getPubKeyPoint());
+        fail("Expecting an IllegalArgumentException for using an non EC private key");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidPrivateKey2() throws Exception {
+        ECKey.fromPrivate(new byte[32]);
         fail("Expecting an IllegalArgumentException for using an non EC private key");
     }
 
@@ -202,7 +207,7 @@ public class ECKeyTest {
         BigInteger r = new BigInteger("28157690258821599598544026901946453245423343069728565040002908283498585537001");
         BigInteger s = new BigInteger("30212485197630673222315826773656074299979444367665131281281249560925428307087");
         ECDSASignature sig = ECDSASignature.fromComponents(r.toByteArray(), s.toByteArray(), (byte) 28);
-        key.verify(HashUtil.sha3(exampleMessage.getBytes()), sig);
+        assertFalse(key.verify(HashUtil.sha3(exampleMessage.getBytes()), sig));
     }
 
     @Test
@@ -250,6 +255,22 @@ public class ECKeyTest {
         // todo: add test assertion when the sign/verify part actually works.
     }
 
+    @Test // result is a point at infinity
+    public void testVerifySignature4() {
+
+        byte[] hash = Hex.decode("acb1c19ac0832320815b5e886c6b73ad7d6177853d44b026f2a7a9e11bb899fc");
+        byte[] r = Hex.decode("89ea49159b334f9aebbf54481b69d000d285baa341899db355a4030f6838394e");
+        byte[] s = Hex.decode("540e9f9fa17bef441e32d98d5f4554cfefdc6a56101352e4b92efafd0d9646e8");
+        byte v = (byte) 28;
+
+        ECDSASignature sig = ECKey.ECDSASignature.fromComponents(r, s, v);
+
+        try {
+            ECKey.signatureToKey(hash, sig);
+            fail("Result is a point at infinity, recovery must fail");
+        } catch (SignatureException e) {
+        }
+    }
 
     @Test
     public void testSValue() throws Exception {

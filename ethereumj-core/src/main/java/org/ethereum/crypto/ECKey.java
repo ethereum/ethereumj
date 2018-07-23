@@ -91,6 +91,7 @@ import javax.crypto.KeyAgreement;
 
 import static org.ethereum.util.BIUtil.isLessThan;
 import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * <p>Represents an elliptic curve public and (optionally) private key, usable for digital signatures but not encryption.
@@ -103,7 +104,7 @@ import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
  * signature and want to find out who signed it, rather than requiring the user to provide the expected identity.</p>
  *
  * This code is borrowed from the bitcoinj project and altered to fit Ethereum.<br>
- * See <a href="https://github.com/bitcoinj/bitcoinj/blob/master/core/src/main/java/com/google/bitcoin/core/ECKey.java">
+ * See <a href="https://github.com/bitcoinj/bitcoinj/blob/df9f5a479d28c84161de88165917a5cffcba08ca/core/src/main/java/org/bitcoinj/core/ECKey.java">
  * bitcoinj on GitHub</a>.
  */
 public class ECKey implements Serializable {
@@ -125,6 +126,8 @@ public class ECKey implements Serializable {
      */
     public static final BigInteger HALF_CURVE_ORDER;
 
+    public static final ECKey DUMMY;
+
     private static final SecureRandom secureRandom;
     private static final long serialVersionUID = -728224901792295832L;
 
@@ -135,6 +138,7 @@ public class ECKey implements Serializable {
         CURVE_SPEC = new ECParameterSpec(params.getCurve(), params.getG(), params.getN(), params.getH());
         HALF_CURVE_ORDER = params.getN().shiftRight(1);
         secureRandom = new SecureRandom();
+        DUMMY = fromPrivate(BigInteger.ONE);
     }
 
     // The two parts of the key. If "priv" is set, "pub" can always be calculated. If "pub" is set but not "priv", we
@@ -237,9 +241,13 @@ public class ECKey implements Serializable {
 
         if (pub == null) {
             throw new IllegalArgumentException("Public key may not be null");
-        } else {
-            this.pub = pub;
         }
+
+        if (pub.isInfinity()) {
+            throw new IllegalArgumentException("Public key must not be a point at infinity, probably your private key is incorrect");
+        }
+
+        this.pub = pub;
     }
 
     /* Convert a BigInteger into a PrivateKey object
@@ -546,7 +554,7 @@ public class ECKey implements Serializable {
 
     public String toString() {
         StringBuilder b = new StringBuilder();
-        b.append("pub:").append(Hex.toHexString(pub.getEncoded(false)));
+        b.append("pub:").append(toHexString(pub.getEncoded(false)));
         return b.toString();
     }
 
@@ -561,7 +569,7 @@ public class ECKey implements Serializable {
         StringBuilder b = new StringBuilder();
         b.append(toString());
         if (privKey != null && privKey instanceof BCECPrivateKey) {
-            b.append(" priv:").append(Hex.toHexString(((BCECPrivateKey) privKey).getD().toByteArray()));
+            b.append(" priv:").append(toHexString(((BCECPrivateKey) privKey).getD().toByteArray()));
         }
         return b.toString();
     }
@@ -1107,6 +1115,9 @@ public class ECKey implements Serializable {
         BigInteger srInv = rInv.multiply(sig.s).mod(n);
         BigInteger eInvrInv = rInv.multiply(eInv).mod(n);
         ECPoint.Fp q = (ECPoint.Fp) ECAlgorithms.sumOfTwoMultiplies(CURVE.getG(), eInvrInv, R, srInv);
+        // result sanity check: point must not be at infinity
+        if (q.isInfinity())
+            return null;
         return q.getEncoded(/* compressed */ false);
     }
 

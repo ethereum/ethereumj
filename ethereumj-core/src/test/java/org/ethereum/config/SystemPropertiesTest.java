@@ -51,6 +51,8 @@ import java.util.Map;
 import static com.google.common.collect.Lists.newArrayList;
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 /**
  * Not thread safe - testUseOnlySprintConfig temporarily sets a static flag that may influence other tests.
@@ -395,7 +397,6 @@ public class SystemPropertiesTest {
         } catch (RuntimeException ignore) { }
     }
 
-    @Ignore
     @Test
     public void testExposeBugWhereNonHexEncodedIsAcceptedWithoutValidation() {
         SystemProperties props = new SystemProperties();
@@ -430,6 +431,21 @@ public class SystemPropertiesTest {
         assertEquals("nodeIdPrivateKey=".length() + 64, lines[2].length());
         assertTrue(lines[3].startsWith("nodeId="));
         assertEquals("nodeId=".length() + 128, lines[3].length());
+    }
+
+    @Test
+    public void testGeneratedNodePrivateKeyDelegatesToStrategy() {
+        File outputFile = new File("database-test/nodeId.properties");
+        //noinspection ResultOfMethodCallIgnored
+        outputFile.delete();
+
+        GenerateNodeIdStrategy generateNodeIdStrategyMock = mock(GenerateNodeIdStrategy.class);
+
+        SystemProperties props = new SystemProperties();
+        props.setGenerateNodeIdStrategy(generateNodeIdStrategyMock);
+        props.privateKey();
+
+        verify(generateNodeIdStrategyMock).getNodePrivateKey();
     }
 
     @Test

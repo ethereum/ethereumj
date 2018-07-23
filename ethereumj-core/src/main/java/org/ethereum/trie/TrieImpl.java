@@ -41,6 +41,7 @@ import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.RLP.EMPTY_ELEMENT_RLP;
 import static org.ethereum.util.RLP.encodeElement;
 import static org.ethereum.util.RLP.encodeList;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Created by Anton Nashatyrev on 07.02.2017.
@@ -112,8 +113,8 @@ public class TrieImpl implements Trie<byte[]> {
 
         private void resolve() {
             if (!resolveCheck()) {
-                logger.error("Invalid Trie state, can't resolve hash " + Hex.toHexString(hash));
-                throw new RuntimeException("Invalid Trie state, can't resolve hash " + Hex.toHexString(hash));
+                logger.error("Invalid Trie state, can't resolve hash " + toHexString(hash));
+                throw new RuntimeException("Invalid Trie state, can't resolve hash " + toHexString(hash));
             }
         }
 
@@ -423,7 +424,7 @@ public class TrieImpl implements Trie<byte[]> {
 
         @Override
         public String toString() {
-            return getType() + (dirty ? " *" : "") + (hash == null ? "" : "(hash: " + Hex.toHexString(hash) + " )");
+            return getType() + (dirty ? " *" : "") + (hash == null ? "" : "(hash: " + toHexString(hash) + " )");
         }
     }
 
@@ -551,23 +552,24 @@ public class TrieImpl implements Trie<byte[]> {
                 return n.branchNodeSetChild(k.getHex(0), newChildNode);
             }
         } else {
-            TrieKey commonPrefix = k.getCommonPrefix(n.kvNodeGetKey());
+            TrieKey currentNodeKey = n.kvNodeGetKey();
+            TrieKey commonPrefix = k.getCommonPrefix(currentNodeKey);
             if (commonPrefix.isEmpty()) {
                 Node newBranchNode = new Node();
-                insert(newBranchNode, n.kvNodeGetKey(), n.kvNodeGetValueOrNode());
+                insert(newBranchNode, currentNodeKey, n.kvNodeGetValueOrNode());
                 insert(newBranchNode, k, nodeOrValue);
                 n.dispose();
                 return newBranchNode;
             } else if (commonPrefix.equals(k)) {
                 return n.kvNodeSetValueOrNode(nodeOrValue);
-            } else if (commonPrefix.equals(n.kvNodeGetKey())) {
+            } else if (commonPrefix.equals(currentNodeKey)) {
                 insert(n.kvNodeGetChildNode(), k.shift(commonPrefix.getLength()), nodeOrValue);
                 return n.invalidate();
             } else {
                 Node newBranchNode = new Node();
                 Node newKvNode = new Node(commonPrefix, newBranchNode);
                 // TODO can be optimized
-                insert(newKvNode, n.kvNodeGetKey(), n.kvNodeGetValueOrNode());
+                insert(newKvNode, currentNodeKey, n.kvNodeGetValueOrNode());
                 insert(newKvNode, k, nodeOrValue);
                 n.dispose();
                 return newKvNode;

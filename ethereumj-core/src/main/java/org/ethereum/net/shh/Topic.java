@@ -18,12 +18,12 @@
 package org.ethereum.net.shh;
 
 import org.ethereum.util.RLP;
-import org.spongycastle.util.encoders.Hex;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * @author by Konstantin Shabalin
@@ -85,6 +85,6 @@ public class Topic {
 
     @Override
     public String toString() {
-        return "#" + Hex.toHexString(abrigedTopic) + (originalTopic == null ? "" : "(" + originalTopic + ")");
+        return "#" + toHexString(abrigedTopic) + (originalTopic == null ? "" : "(" + originalTopic + ")");
     }
 }

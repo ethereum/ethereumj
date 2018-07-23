@@ -151,6 +151,34 @@ public class SolidityCompiler {
         }
     }
 
+    public static class CustomOption implements Option {
+        private String name;
+        private String value;
+
+        public CustomOption(String name) {
+            if (name.startsWith("--")) {
+                this.name = name.substring(2);
+            } else {
+                this.name = name;
+            }
+        }
+
+        public CustomOption(String name, String value) {
+            this(name);
+            this.value = value;
+        }
+
+        @Override
+        public String getValue() {
+            return value;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+    }
+
     public static class Result {
         public String errors;
         public String output;
@@ -260,6 +288,14 @@ public class SolidityCompiler {
             commandParts.add("--" + option.getName());
             commandParts.add(option.getValue());
         }
+
+        for (Option option : getElementsOf(CustomOption.class, options)) {
+            commandParts.add("--" + option.getName());
+            if (option.getValue() != null) {
+                commandParts.add(option.getValue());
+            }
+        }
+
         return commandParts;
     }
 

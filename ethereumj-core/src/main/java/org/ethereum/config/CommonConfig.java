@@ -24,6 +24,7 @@ import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.leveldb.LevelDbDataSource;
 import org.ethereum.datasource.rocksdb.RocksDbDataSource;
 import org.ethereum.db.*;
+import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.handler.Eth63;
 import org.ethereum.sync.FastSyncManager;
@@ -154,10 +155,14 @@ public class CommonConfig {
         return ret;
     }
 
+    public DbSource<byte[]> keyValueDataSource(String name) {
+        return keyValueDataSource(name, DbSettings.DEFAULT);
+    }
+
     @Bean
     @Scope("prototype")
     @Primary
-    public DbSource<byte[]> keyValueDataSource(String name) {
+    public DbSource<byte[]> keyValueDataSource(String name, DbSettings settings) {
         String dataSource = systemProperties().getKeyValueDataSource();
         try {
             DbSource<byte[]> dbSource;
@@ -170,7 +175,7 @@ public class CommonConfig {
                 dbSource = rocksDbDataSource();
             }
             dbSource.setName(name);
-            dbSource.init();
+            dbSource.init(settings);
             dbSources.add(dbSource);
             return dbSource;
         } finally {
@@ -193,7 +198,7 @@ public class CommonConfig {
     public void fastSyncCleanUp() {
         byte[] fastsyncStageBytes = blockchainDB().get(FastSyncManager.FASTSYNC_DB_KEY_SYNC_STAGE);
         if (fastsyncStageBytes == null) return; // no uncompleted fast sync
-        if (!systemProperties().blocksLoader().equals("")) return; // blocks loader enabled
+        if (!systemProperties().blocksLoader().isEmpty()) return; // blocks loader enabled
 
         EthereumListener.SyncState syncStage = EthereumListener.SyncState.values()[fastsyncStageBytes[0]];
 
@@ -217,17 +222,33 @@ public class CommonConfig {
         }
     }
 
+    @Bean(name = "EthereumListener")
+    public CompositeEthereumListener ethereumListener() {
+        return new CompositeEthereumListener();
+    }
+
     @Bean
     @Lazy
-    public DataSourceArray<BlockHeader> headerSource() {
-        DbSource<byte[]> dataSource = keyValueDataSource("headers");
-        BatchSourceWriter<byte[], byte[]> batchSourceWriter = new BatchSourceWriter<>(dataSource);
-        WriteCache.BytesKey<byte[]> writeCache = new WriteCache.BytesKey<>(batchSourceWriter, WriteCache.CacheType.SIMPLE);
-        writeCache.withSizeEstimators(MemSizeEstimator.ByteArrayEstimator, MemSizeEstimator.ByteArrayEstimator);
-        writeCache.setFlushSource(true);
-        ObjectDataSource<BlockHeader> objectDataSource = new ObjectDataSource<>(dataSource, Serializers.BlockHeaderSerializer, 0);
-        DataSourceArray<BlockHeader> dataSourceArray = new DataSourceArray<>(objectDataSource);
-        return dataSourceArray;
+    public DbSource<byte[]> headerSource() {
+        return keyValueDataSource("headers");
+    }
+
+    @Bean
+    @Lazy
+    public HeaderStore headerStore() {
+        DbSource<byte[]> dataSource = headerSource();
+
+        WriteCache.BytesKey<byte[]> cache = new WriteCache.BytesKey<>(
+                new BatchSourceWriter<>(dataSource), WriteCache.CacheType.SIMPLE);
+        cache.setFlushSource(true);
+        dbFlushManager().addCache(cache);
+
+        HeaderStore headerStore = new HeaderStore();
+        Source<byte[], byte[]> headers = new XorDataSource<>(cache, HashUtil.sha3("header".getBytes()));
+        Source<byte[], byte[]> index = new XorDataSource<>(cache, HashUtil.sha3("index".getBytes()));
+        headerStore.init(index, headers);
+
+        return headerStore;
     }
 
     @Bean
@@ -256,7 +277,11 @@ public class CommonConfig {
 
     @Bean
     public DbSource<byte[]> blockchainDB() {
-        return keyValueDataSource("blockchain");
+        DbSettings settings = DbSettings.newInstance()
+                .withMaxOpenFiles(systemProperties().getConfig().getInt("database.maxOpenFiles"))
+                .withMaxThreads(Math.max(1, Runtime.getRuntime().availableProcessors() / 2));
+
+        return keyValueDataSource("blockchain", settings);
     }
 
     @Bean
@@ -270,7 +295,7 @@ public class CommonConfig {
         List<BlockHeaderRule> rules = new ArrayList<>(asList(
                 new GasValueRule(),
                 new ExtraDataRule(systemProperties()),
-                new ProofOfWorkRule(),
+                EthashRule.createRegular(systemProperties(), ethereumListener()),
                 new GasLimitRule(systemProperties()),
                 new BlockHashRule(systemProperties())
         ));

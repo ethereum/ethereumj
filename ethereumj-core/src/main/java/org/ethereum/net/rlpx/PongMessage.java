@@ -22,10 +22,6 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
-import org.spongycastle.util.encoders.Hex;
-
-import static org.ethereum.util.ByteUtil.longToBytes;
-import static org.ethereum.util.ByteUtil.stripLeadingZeroes;
 
 public class PongMessage extends Message {
 
@@ -40,8 +36,8 @@ public class PongMessage extends Message {
 
         /* RLP Encode data */
         byte[] rlpToken = RLP.encodeElement(token);
-        byte[] tmpExp = longToBytes(expiration);
-        byte[] rlpExp = RLP.encodeElement(stripLeadingZeroes(tmpExp));
+        byte[] tmpExp = ByteUtil.longToBytes(expiration);
+        byte[] rlpExp = RLP.encodeElement(ByteUtil.stripLeadingZeroes(tmpExp));
 
         byte[] type = new byte[]{2};
         byte[] data = RLP.encodeList(rlpToList, rlpToken, rlpExp);
@@ -101,7 +97,7 @@ public class PongMessage extends Message {
         long currTime = System.currentTimeMillis() / 1000;
 
         String out = String.format("[PongMessage] \n token: %s \n expires in %d seconds \n %s\n",
-                Hex.toHexString(token), (expires - currTime), super.toString());
+                ByteUtil.toHexString(token), (expires - currTime), super.toString());
 
         return out;
     }

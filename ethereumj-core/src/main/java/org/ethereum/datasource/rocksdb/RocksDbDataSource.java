@@ -18,6 +18,7 @@
 package org.ethereum.datasource.rocksdb;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.datasource.DbSettings;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.datasource.NodeKeyCompositor;
 import org.ethereum.util.FileUtil;
@@ -27,7 +28,6 @@ import org.rocksdb.Options;
 import org.rocksdb.WriteBatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
@@ -39,6 +39,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.lang.System.arraycopy;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * @author Mikhail Kalinin
@@ -55,6 +56,8 @@ public class RocksDbDataSource implements DbSource<byte[]> {
     RocksDB db;
     ReadOptions readOpts;
     boolean alive;
+
+    DbSettings settings = DbSettings.DEFAULT;
 
     // The native RocksDB insert/update/delete are normally thread-safe
     // However close operation is not thread-safe.
@@ -86,6 +89,12 @@ public class RocksDbDataSource implements DbSource<byte[]> {
 
     @Override
     public void init() {
+        init(DbSettings.DEFAULT);
+    }
+
+    @Override
+    public void init(DbSettings settings) {
+        this.settings = settings;
         resetDbLock.writeLock().lock();
         try {
             logger.debug("~> RocksDbDataSource.init(): " + name);
@@ -103,9 +112,8 @@ public class RocksDbDataSource implements DbSource<byte[]> {
                 options.setCompressionType(CompressionType.LZ4_COMPRESSION);
                 options.setBottommostCompressionType(CompressionType.ZSTD_COMPRESSION);
                 options.setLevelCompactionDynamicLevelBytes(true);
-                options.setMaxBackgroundCompactions(4);
-                options.setMaxBackgroundFlushes(2);
-                options.setMaxOpenFiles(32);
+                options.setMaxOpenFiles(settings.getMaxOpenFiles());
+                options.setIncreaseParallelism(settings.getMaxThreads());
 
                 // key prefix for state node lookups
                 options.useFixedLengthPrefixExtractor(NodeKeyCompositor.PREFIX_BYTES);
@@ -179,6 +187,7 @@ public class RocksDbDataSource implements DbSource<byte[]> {
             if (logger.isTraceEnabled()) logger.trace("<~ RocksDbDataSource.backup(): " + name + " done");
         } catch (RocksDBException e) {
             logger.error("Failed to backup database '{}'", name, e);
+            hintOnTooManyOpenFiles(e);
             throw new RuntimeException(e);
         } finally {
             resetDbLock.readLock().unlock();
@@ -226,6 +235,7 @@ public class RocksDbDataSource implements DbSource<byte[]> {
                 return result;
             } catch (Exception e) {
                 logger.error("Error iterating db '{}'", name, e);
+                hintOnTooManyOpenFiles(e);
                 throw new RuntimeException(e);
             }
         } finally {
@@ -237,7 +247,7 @@ public class RocksDbDataSource implements DbSource<byte[]> {
     public void reset() {
         close();
         FileUtil.recursiveDelete(getPath().toString());
-        init();
+        init(settings);
     }
 
     private Path getPath() {
@@ -266,6 +276,7 @@ public class RocksDbDataSource implements DbSource<byte[]> {
                 if (logger.isTraceEnabled()) logger.trace("<~ RocksDbDataSource.updateBatch(): " + name + ", " + rows.size());
             } catch (RocksDBException e) {
                 logger.error("Error in batch update on db '{}'", name, e);
+                hintOnTooManyOpenFiles(e);
                 throw new RuntimeException(e);
             }
         } finally {
@@ -277,15 +288,16 @@ public class RocksDbDataSource implements DbSource<byte[]> {
     public void put(byte[] key, byte[] val) {
         resetDbLock.readLock().lock();
         try {
-            if (logger.isTraceEnabled()) logger.trace("~> RocksDbDataSource.put(): " + name + ", key: " + Hex.toHexString(key) + ", " + (val == null ? "null" : val.length));
+            if (logger.isTraceEnabled()) logger.trace("~> RocksDbDataSource.put(): " + name + ", key: " + toHexString(key) + ", " + (val == null ? "null" : val.length));
             if (val != null) {
                 db.put(key, val);
             } else {
                 db.delete(key);
             }
-            if (logger.isTraceEnabled()) logger.trace("<~ RocksDbDataSource.put(): " + name + ", key: " + Hex.toHexString(key) + ", " + (val == null ? "null" : val.length));
+            if (logger.isTraceEnabled()) logger.trace("<~ RocksDbDataSource.put(): " + name + ", key: " + toHexString(key) + ", " + (val == null ? "null" : val.length));
         } catch (RocksDBException e) {
             logger.error("Failed to put into db '{}'", name, e);
+            hintOnTooManyOpenFiles(e);
             throw new RuntimeException(e);
         } finally {
             resetDbLock.readLock().unlock();
@@ -296,12 +308,13 @@ public class RocksDbDataSource implements DbSource<byte[]> {
     public byte[] get(byte[] key) {
         resetDbLock.readLock().lock();
         try {
-            if (logger.isTraceEnabled()) logger.trace("~> RocksDbDataSource.get(): " + name + ", key: " + Hex.toHexString(key));
+            if (logger.isTraceEnabled()) logger.trace("~> RocksDbDataSource.get(): " + name + ", key: " + toHexString(key));
             byte[] ret = db.get(readOpts, key);
-            if (logger.isTraceEnabled()) logger.trace("<~ RocksDbDataSource.get(): " + name + ", key: " + Hex.toHexString(key) + ", " + (ret == null ? "null" : ret.length));
+            if (logger.isTraceEnabled()) logger.trace("<~ RocksDbDataSource.get(): " + name + ", key: " + toHexString(key) + ", " + (ret == null ? "null" : ret.length));
             return ret;
         } catch (RocksDBException e) {
             logger.error("Failed to get from db '{}'", name, e);
+            hintOnTooManyOpenFiles(e);
             throw new RuntimeException(e);
         } finally {
             resetDbLock.readLock().unlock();
@@ -312,9 +325,9 @@ public class RocksDbDataSource implements DbSource<byte[]> {
     public void delete(byte[] key) {
         resetDbLock.readLock().lock();
         try {
-            if (logger.isTraceEnabled()) logger.trace("~> RocksDbDataSource.delete(): " + name + ", key: " + Hex.toHexString(key));
+            if (logger.isTraceEnabled()) logger.trace("~> RocksDbDataSource.delete(): " + name + ", key: " + toHexString(key));
             db.delete(key);
-            if (logger.isTraceEnabled()) logger.trace("<~ RocksDbDataSource.delete(): " + name + ", key: " + Hex.toHexString(key));
+            if (logger.isTraceEnabled()) logger.trace("<~ RocksDbDataSource.delete(): " + name + ", key: " + toHexString(key));
         } catch (RocksDBException e) {
             logger.error("Failed to delete from db '{}'", name, e);
             throw new RuntimeException(e);
@@ -332,7 +345,7 @@ public class RocksDbDataSource implements DbSource<byte[]> {
         resetDbLock.readLock().lock();
         try {
 
-            if (logger.isTraceEnabled()) logger.trace("~> RocksDbDataSource.prefixLookup(): " + name + ", key: " + Hex.toHexString(key));
+            if (logger.isTraceEnabled()) logger.trace("~> RocksDbDataSource.prefixLookup(): " + name + ", key: " + toHexString(key));
 
             // RocksDB sets initial position of iterator to the first key which is greater or equal to the seek key
             // since keys in RocksDB are ordered in asc order iterator must be initiated with the lowest key
@@ -349,10 +362,11 @@ public class RocksDbDataSource implements DbSource<byte[]> {
 
             } catch (Exception e) {
                 logger.error("Failed to seek by prefix in db '{}'", name, e);
+                hintOnTooManyOpenFiles(e);
                 throw new RuntimeException(e);
             }
 
-            if (logger.isTraceEnabled()) logger.trace("<~ RocksDbDataSource.prefixLookup(): " + name + ", key: " + Hex.toHexString(key) + ", " + (ret == null ? "null" : ret.length));
+            if (logger.isTraceEnabled()) logger.trace("<~ RocksDbDataSource.prefixLookup(): " + name + ", key: " + toHexString(key) + ", " + (ret == null ? "null" : ret.length));
 
             return ret;
 
@@ -364,5 +378,15 @@ public class RocksDbDataSource implements DbSource<byte[]> {
     @Override
     public boolean flush() {
         return false;
+    }
+
+    private void hintOnTooManyOpenFiles(Exception e) {
+        if (e.getMessage() != null && e.getMessage().toLowerCase().contains("too many open files")) {
+            logger.info("");
+            logger.info("       Mitigating 'Too many open files':");
+            logger.info("       either decrease value of database.maxOpenFiles parameter in ethereumj.conf");
+            logger.info("       or set higher limit by using 'ulimit -n' command in command line");
+            logger.info("");
+        }
     }
 }

@@ -437,7 +437,7 @@ public class TransactionTest {
 
                     Transaction txConst = CallTransaction.createCallTransaction(0, 0, 100000000000000L,
                             "095e7baea6a6c7c4c2dfeb977efac326af552d87", 0, CallTransaction.Function.fromSignature("get"));
-                    txConst.sign(ECKey.fromPrivate(new byte[32]));
+                    txConst.sign(new ECKey());
 
                     Block bestBlock = block;
 
@@ -777,5 +777,14 @@ public class TransactionTest {
         assertEquals(333333, tx2.getChainId().intValue());
         assertArrayEquals(tx2.getSender(), key.getAddress());
 
+    }
+
+    @Test
+    public void unsignedChainIdTransactionTest() {
+        byte[] rlpUnsignedTx = Hex.decode("ef098504a817c800825208943535353535353535353535353535353535353535880de0b6b3a764000080830516158080");
+        Transaction tx = new Transaction(rlpUnsignedTx);
+        assertEquals(333333, (long) tx.getChainId());
+        Transaction copyTx = new Transaction(tx.getNonce(), tx.getGasPrice(), tx.getGasLimit(), tx.getReceiveAddress(), tx.getValue(), tx.getData(), tx.getChainId());
+        assertArrayEquals(rlpUnsignedTx, copyTx.getEncoded());
     }
 }

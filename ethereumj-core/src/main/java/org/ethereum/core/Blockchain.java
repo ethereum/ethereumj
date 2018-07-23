@@ -18,6 +18,7 @@
 package org.ethereum.core;
 
 import java.math.BigInteger;
+import java.util.Iterator;
 import java.util.List;
 
 public interface Blockchain {
@@ -72,9 +73,47 @@ public interface Blockchain {
 
     boolean isBlockExist(byte[] hash);
 
+    /**
+     * @deprecated
+     * Returns up to limit headers found with following search parameters
+     * [Synchronized only in blockstore, not using any synchronized BlockchainImpl methods]
+     * @param identifier        Identifier of start block, by number of by hash
+     * @param skip              Number of blocks to skip between consecutive headers
+     * @param limit             Maximum number of headers in return
+     * @param reverse           Is search reverse or not
+     * @return  {@link BlockHeader}'s list or empty list if none found
+     */
+    @Deprecated
     List<BlockHeader> getListOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit, boolean reverse);
 
+    /**
+     * Returns iterator with up to limit headers found with following search parameters
+     * [Synchronized only in blockstore, not using any synchronized BlockchainImpl methods]
+     * @param identifier        Identifier of start block, by number of by hash
+     * @param skip              Number of blocks to skip between consecutive headers
+     * @param limit             Maximum number of headers in return
+     * @param reverse           Is search reverse or not
+     * @return  {@link BlockHeader}'s iterator
+     */
+    Iterator<BlockHeader> getIteratorOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit, boolean reverse);
+
+    /**
+     * @deprecated
+     * Returns list of block bodies by block hashes, stopping on first not found block
+     * [Synchronized only in blockstore, not using any synchronized BlockchainImpl methods]
+     * @param hashes List of hashes
+     * @return List of RLP encoded block bodies
+     */
+    @Deprecated
     List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes);
+
+    /**
+     * Returns iterator of block bodies by block hashes, stopping on first not found block
+     * [Synchronized only in blockstore, not using any synchronized BlockchainImpl methods]
+     * @param hashes List of hashes
+     * @return Iterator of RLP encoded block bodies
+     */
+    Iterator<byte[]> getIteratorOfBodiesByHashes(List<byte[]> hashes);
 
     Block createNewBlock(Block parent, List<Transaction> transactions, List<BlockHeader> uncles);
 }
