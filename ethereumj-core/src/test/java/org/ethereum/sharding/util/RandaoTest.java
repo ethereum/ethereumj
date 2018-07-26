@@ -1,7 +1,8 @@
-package org.ethereum.sharding;
+package org.ethereum.sharding.util;
 
 import org.ethereum.datasource.DbSource;
 import org.ethereum.datasource.inmem.HashMapDBSimple;
+import org.ethereum.sharding.util.Randao;
 import org.junit.Test;
 
 import static org.ethereum.crypto.HashUtil.sha3;

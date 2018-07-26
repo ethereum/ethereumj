@@ -910,6 +910,11 @@ public class SystemProperties {
         return config.getString("sync.ethash");
     }
 
+    @ValidateMe
+    public boolean processBeaconChain() {
+        return config.getBoolean("beacon.enabled");
+    }
+
     private GenesisJson getGenesisJson() {
         if (genesisJson == null) {
             genesisJson = GenesisLoader.loadGenesisJson(this, classLoader);

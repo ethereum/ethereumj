@@ -49,6 +49,17 @@ public interface BlockStore {
 
     List<Block> getListBlocksEndWith(byte[] hash, long qty);
 
+    /**
+     * Returns a list of blocks starting from toHash (inclusively) down to fromHash (inclusively).
+     * Both hashes should be of blocks belonging the same chain, otherwise method returns an empty list.
+     * If some blocks between from and to are missed then empty list is returned.
+     *
+     * @param fromHash lower bound of a list
+     * @param toHash upper bound of a list
+     * @return returns a list with inverted block order
+     */
+    List<Block> listBlocks(byte[] fromHash, byte[] toHash);
+
     void saveBlock(Block block, BigInteger totalDifficulty, boolean mainChain);
 
     BigInteger getTotalDifficultyForHash(byte[] hash);
