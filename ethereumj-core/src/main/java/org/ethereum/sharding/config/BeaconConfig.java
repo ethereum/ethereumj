@@ -22,6 +22,7 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.BatchSourceWriter;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.datasource.WriteCache;
+import org.ethereum.db.DbFlushManager;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.sharding.manager.ShardingWorldManager;
@@ -61,6 +62,9 @@ public class BeaconConfig {
     @Autowired
     DepositContractConfig depositContractConfig;
 
+    @Autowired
+    DbFlushManager dbFlushManager;
+
     @Bean
     public ValidatorConfig validatorConfig() {
         return ValidatorConfig.fromFile();
@@ -69,8 +73,8 @@ public class BeaconConfig {
     @Bean @Primary
     public ValidatorService validatorService() {
         if (validatorConfig().isEnabled()) {
-            ValidatorService ret = new ValidatorServiceImpl(ethereum, validatorConfig(), depositContract(),
-                    depositAuthority(), randao());
+            ValidatorService ret = new ValidatorServiceImpl(ethereum, dbFlushManager, validatorConfig(),
+                    depositContract(), depositAuthority(), randao());
             ((ShardingWorldManager) worldManager).setValidatorService(ret);
             return ret;
         } else {
@@ -97,7 +101,7 @@ public class BeaconConfig {
         WriteCache.BytesKey<byte[]> cache = new WriteCache.BytesKey<>(
                 new BatchSourceWriter<>(src), WriteCache.CacheType.SIMPLE);
         cache.setFlushSource(true);
-        commonConfig.dbFlushManager().addCache(cache);
+        dbFlushManager.addCache(cache);
 
         return new Randao(cache);
     }
