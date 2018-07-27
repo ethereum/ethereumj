@@ -18,7 +18,9 @@
 package org.ethereum.sharding.manager;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.core.Block;
 import org.ethereum.core.Blockchain;
+import org.ethereum.core.Genesis;
 import org.ethereum.core.Repository;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.DbFlushManager;
@@ -28,6 +30,9 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.sharding.config.DepositContractConfig;
 import org.ethereum.sharding.service.ValidatorService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.concurrent.CompletableFuture;
@@ -37,6 +42,8 @@ import java.util.concurrent.CompletableFuture;
  * @since 26.07.2018
  */
 public class ShardingWorldManager extends WorldManager {
+
+    private static final Logger logger = LoggerFactory.getLogger("sharding");
 
     DepositContractConfig contractConfig;
     DbFlushManager dbFlushManager;
@@ -59,9 +66,19 @@ public class ShardingWorldManager extends WorldManager {
 
     private void initDepositContract() {
         if (getBlockchain().getBestBlock().isGenesis()) {
-            ((RepositoryWrapper) getRepository()).saveCode(contractConfig.getAddress(), contractConfig.getBin());
-            ((RepositoryWrapper) getRepository()).flush();
+            RepositoryWrapper repository = ((RepositoryWrapper) getRepository());
+            repository.saveCode(contractConfig.getAddress(), contractConfig.getBin());
+            repository.flush();
+
+            // Update Genesis root
+            Block genesis = getBlockchain().getBestBlock();
+            genesis.setStateRoot(repository.getRoot());
+            getBlockStore().saveBlock(genesis, genesis.getDifficultyBI(), true);
+            getBlockchain().setBestBlock(genesis);
+
             dbFlushManager.flushSync();
+
+            logger.info("Set Validator Registration: contract.address: {}", Hex.toHexString(contractConfig.getAddress()));
         }
         contractInit.complete(null);
     }

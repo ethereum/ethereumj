@@ -51,7 +51,7 @@
     <logger name="org.springframework" level="ERROR"/>
     <logger name="state" level="WARN"/>
     <logger name="trie" level="ERROR"/>
-    <logger name="net" level="DEBUG"/>
+    <logger name="net" level="WARN"/>
     <logger name="execute" level="ERROR"/>
     <logger name="VM" level="ERROR"/>
     <logger name="pending" level="DEBUG"/>
@@ -72,6 +72,7 @@
     <logger name="hsqldb.db" level="ERROR"/>
     <logger name="prune" level="DEBUG"/>
     <logger name="beacon" level="DEBUG"/>
+    <logger name="sharding" level="DEBUG"/>
 
 
 </configuration>

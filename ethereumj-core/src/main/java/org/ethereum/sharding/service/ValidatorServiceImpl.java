@@ -28,6 +28,7 @@ import org.ethereum.sharding.crypto.DepositAuthority;
 import org.ethereum.sharding.domain.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.concurrent.CompletableFuture;
@@ -70,7 +71,6 @@ public class ValidatorServiceImpl implements ValidatorService {
 
     @Override
     public void init() {
-        updateState(WaitForDeposit);
         if (isEnlisted()) {
             updateState(Enlisted);
             return;
@@ -83,6 +83,7 @@ public class ValidatorServiceImpl implements ValidatorService {
             public void onSyncDone(SyncState state) {
                 if (!isEnlisted()) {
                     byte[] commitment = initRandao();
+                    logger.info("Generate RANDAO with commitment: {}", Hex.toHexString(commitment));
                     deposit(commitment);
                 }
             }

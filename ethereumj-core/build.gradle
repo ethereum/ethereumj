@@ -58,6 +58,12 @@ task runTest (type: JavaExec) {
     jvmArgs = applicationDefaultJvmArgs + '-Dethereumj.conf.res=test.conf'
 }
 
+task runSharding (type: JavaExec) {
+    main = 'org.ethereum.sharding.ShardingEntry'
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = ["-server", "-Xss2m", "-Xmx3G", "-XX:-OmitStackTraceInFastThrow"]
+}
+
 /**
  *  This is TCK test command line option,
  *  to run the test:
