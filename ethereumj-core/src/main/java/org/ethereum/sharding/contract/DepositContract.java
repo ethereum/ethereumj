@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -116,11 +117,9 @@ public class DepositContract {
 
             // parse validator
             for (LogInfo log : receipt.getLogInfoList()) {
-                if (isDepositLog(log)) {
-                    Validator validator = Validator.fromLogData(log.getData());
-                    if (validator != null && FastByteComparisons.equal(pubKey, validator.getPubKey()))
-                        return validator;
-                }
+                Validator validator = parseValidator(log);
+                if (validator != null && FastByteComparisons.equal(pubKey, validator.getPubKey()))
+                    return validator;
             }
 
             throw new RuntimeException("log.Deposit(" + Hex.toHexString(pubKey) + ") is not found in tx.hash: " +
@@ -131,6 +130,16 @@ public class DepositContract {
 
     public boolean isDepositLog(LogInfo log) {
         return depositFilter.matchesExactly(log);
+    }
+
+    @Nullable
+    public Validator parseValidator(LogInfo log) {
+        if (!isDepositLog(log))
+            return null;
+
+        Object[] args = contract.parseEvent(log).args;
+        return new Validator((byte[]) args[0], ((BigInteger) args[1]).longValue(),
+                (byte[]) args[2], (byte[]) args[3]);
     }
 
     public boolean usedPubKey(final byte[] pubKey) {

@@ -17,17 +17,11 @@
  */
 package org.ethereum.sharding.domain;
 
-import org.ethereum.util.ByteUtil;
-
-import static java.util.Arrays.copyOfRange;
-
 /**
  * @author Mikhail Kalinin
  * @since 21.07.2018
  */
 public class Validator {
-
-    private static final int LOG_DATA_SIZE = 32 * 3 + 20; // pubKey + shardId + withdrawalAddress + randao
 
     private byte[] pubKey;
     private long withdrawalShard;
@@ -37,17 +31,11 @@ public class Validator {
     private Validator() {
     }
 
-    public static Validator fromLogData(byte[] data) {
-        if (data.length < LOG_DATA_SIZE)
-            return null;
-
-        Validator v = new Validator();
-        v.pubKey = copyOfRange(data, 0, 32);
-        v.withdrawalShard = ByteUtil.bytesToBigInteger(copyOfRange(data, 32, 64)).longValue();
-        v.withdrawalAddress = copyOfRange(data, 64, 84);
-        v.randao = copyOfRange(data, 84, 116);
-
-        return v;
+    public Validator(byte[] pubKey, long withdrawalShard, byte[] withdrawalAddress, byte[] randao) {
+        this.pubKey = pubKey;
+        this.withdrawalShard = withdrawalShard;
+        this.withdrawalAddress = withdrawalAddress;
+        this.randao = randao;
     }
 
     public byte[] getPubKey() {

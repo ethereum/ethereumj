@@ -60,11 +60,9 @@ public class ValidatorRepository {
                 TransactionInfo txInfo = txStore.get(tx.getHash(), block.getHash());
                 if (txInfo != null) {
                     txInfo.getReceipt().getLogInfoList().forEach(log -> {
-                        if (depositContract.isDepositLog(log)) {
-                            Validator validator = Validator.fromLogData(log.getData());
-                            if (validator != null)
-                                validators.add(validator);
-                        }
+                        Validator validator = depositContract.parseValidator(log);
+                        if (validator != null)
+                            validators.add(validator);
                     });
                 }
             });
