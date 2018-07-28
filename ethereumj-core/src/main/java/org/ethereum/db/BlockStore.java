@@ -56,7 +56,6 @@ public interface BlockStore {
      *
      * @param fromHash lower bound of a list
      * @param toHash upper bound of a list
-     * @return returns a list with inverted block order
      */
     List<Block> listBlocks(byte[] fromHash, byte[] toHash);
 

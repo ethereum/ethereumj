@@ -305,11 +305,11 @@ public class IndexedBlockStore extends AbstractBlockstore{
         List<Block> ret = new ArrayList<>();
         Block block = to;
         for (long i = 0; i < qty && block != null && !from.isEqual(block); ++i) {
-            ret.add(block);
+            ret.add(0, block);
             block = blocks.get(block.getParentHash());
         }
 
-        if (ret.size() > 0 && !ret.get(ret.size() - 1).isEqual(from))
+        if (ret.isEmpty() || !ret.get(0).isEqual(from))
             return Collections.emptyList();
 
         return ret;

@@ -52,21 +52,16 @@ public class ValidatorRepository {
             return Collections.emptyList();
 
         List<Validator> validators = new ArrayList<>();
-        // the order of returned blocks is inverted
-        for (int i = blocks.size() - 1; i >= 0; i--) {
-            Block block = blocks.get(i);
-
-            block.getTransactionsList().forEach(tx -> {
-                TransactionInfo txInfo = txStore.get(tx.getHash(), block.getHash());
-                if (txInfo != null) {
-                    txInfo.getReceipt().getLogInfoList().forEach(log -> {
-                        Validator validator = depositContract.parseValidator(log);
-                        if (validator != null)
-                            validators.add(validator);
-                    });
-                }
-            });
-        }
+        blocks.forEach(block -> block.getTransactionsList().forEach(tx -> {
+            TransactionInfo txInfo = txStore.get(tx.getHash(), block.getHash());
+            if (txInfo != null) {
+                txInfo.getReceipt().getLogInfoList().forEach(log -> {
+                    Validator validator = depositContract.parseValidator(log);
+                    if (validator != null)
+                        validators.add(validator);
+                });
+            }
+        }));
 
         return validators;
     }
