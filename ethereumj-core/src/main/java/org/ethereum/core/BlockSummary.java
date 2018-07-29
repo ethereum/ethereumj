@@ -40,14 +40,14 @@ public class BlockSummary {
     private BigInteger totalDifficulty = BigInteger.ZERO;
 
     public BlockSummary(byte[] rlp) {
-        RLPList summary = (RLPList) RLP.decode2(rlp).get(0);
+        RLPList rlpList = RLP.decode2ListNarrow(rlp);
 
-        this.block = new Block(summary.get(0).getRLPData());
-        this.rewards = decodeRewards((RLPList) summary.get(1));
-        this.summaries = decodeSummaries((RLPList) summary.get(2));
+        this.block = new Block(rlpList.get(0).getRLPData());
+        this.rewards = decodeRewards(RLP.decode2ListNarrow(rlpList.get(1).getRLPData()));
+        this.summaries = decodeSummaries(RLP.decode2ListNarrow(rlpList.get(2).getRLPData()));
         this.receipts = new ArrayList<>();
 
-        Map<String, TransactionReceipt> receiptByTxHash = decodeReceipts((RLPList) summary.get(3));
+        Map<String, TransactionReceipt> receiptByTxHash = decodeReceipts(RLP.decode2ListNarrow(rlpList.get(3).getRLPData()));
         for (Transaction tx : this.block.getTransactionsList()) {
             TransactionReceipt receipt = receiptByTxHash.get(toHexString(tx.getHash()));
             receipt.setTransaction(tx);

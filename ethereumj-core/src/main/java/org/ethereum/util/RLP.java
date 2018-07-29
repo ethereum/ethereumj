@@ -24,7 +24,6 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.Arrays.copyOfRange;
 import static org.ethereum.util.ByteUtil.*;
@@ -440,25 +439,52 @@ public class RLP {
      * Parse wire byte[] message into RLP elements
      *
      * @param msgData - raw RLP data
+     * @param depthLimit - limits depth of decoding
+     * @return rlpList
+     * - outcome of recursive RLP structure
+     */
+    public static RLPList decode2(byte[] msgData, int depthLimit) {
+        if (depthLimit < 1) {
+            throw new RuntimeException("Depth limit should be 1 or higher");
+        }
+        RLPList rlpList = new RLPList();
+        fullTraverse(msgData, 0, 0, msgData.length, rlpList, depthLimit);
+        return rlpList;
+    }
+
+    /**
+     * Parse wire byte[] message into RLP elements
+     *
+     * @param msgData - raw RLP data
      * @return rlpList
      * - outcome of recursive RLP structure
      */
     public static RLPList decode2(byte[] msgData) {
         RLPList rlpList = new RLPList();
-        fullTraverse(msgData, 0, 0, msgData.length, rlpList);
+        fullTraverse(msgData, 0, 0, msgData.length, rlpList, Integer.MAX_VALUE);
         return rlpList;
+    }
+
+    /**
+     * Decodes without going deep after 1st level list
+     * (actually, 2nd as RLP nesting one extra level)
+     * @param msgData rlp data
+     * @return list of RLPItems
+     */
+    public static RLPList decode2ListNarrow(byte[] msgData) {
+        return (RLPList) decode2(msgData, 2).get(0);
     }
 
     public static RLPElement decode2OneItem(byte[] msgData, int startPos) {
         RLPList rlpList = new RLPList();
-        fullTraverse(msgData, 0, startPos, startPos + 1, rlpList);
+        fullTraverse(msgData, 0, startPos, startPos + 1, rlpList, Integer.MAX_VALUE);
         return rlpList.get(0);
     }
     /**
      * Get exactly one message payload
      */
     static void fullTraverse(byte[] msgData, int level, int startPos,
-                             int endPos, RLPList rlpList) {
+                             int endPos, RLPList rlpList, int depth) {
         if (level > MAX_DEPTH) {
             throw new RuntimeException(String.format("Error: Traversing over max RLP depth (%s)", MAX_DEPTH));
         }
@@ -492,12 +518,16 @@ public class RLP {
                     System.arraycopy(msgData, pos, rlpData, 0, lengthOfLength
                             + length + 1);
 
-                    RLPList newLevelList = new RLPList();
-                    newLevelList.setRLPData(rlpData);
+                    if(level + 1 < depth) {
+                        RLPList newLevelList = new RLPList();
+                        newLevelList.setRLPData(rlpData);
 
-                    fullTraverse(msgData, level + 1, pos + lengthOfLength + 1,
-                            pos + lengthOfLength + length + 1, newLevelList);
-                    rlpList.add(newLevelList);
+                        fullTraverse(msgData, level + 1, pos + lengthOfLength + 1,
+                                pos + lengthOfLength + length + 1, newLevelList, depth);
+                        rlpList.add(newLevelList);
+                    } else {
+                        rlpList.add(new RLPItem(rlpData));
+                    }
 
                     pos += lengthOfLength + length + 1;
                     continue;
@@ -511,12 +541,16 @@ public class RLP {
                     byte[] rlpData = new byte[length + 1];
                     System.arraycopy(msgData, pos, rlpData, 0, length + 1);
 
-                    RLPList newLevelList = new RLPList();
-                    newLevelList.setRLPData(rlpData);
+                    if(level + 1 < depth) {
+                        RLPList newLevelList = new RLPList();
+                        newLevelList.setRLPData(rlpData);
 
-                    if (length > 0)
-                        fullTraverse(msgData, level + 1, pos + 1, pos + length + 1, newLevelList);
-                    rlpList.add(newLevelList);
+                        if (length > 0)
+                            fullTraverse(msgData, level + 1, pos + 1, pos + length + 1, newLevelList, depth);
+                        rlpList.add(newLevelList);
+                    } else {
+                        rlpList.add(new RLPItem(rlpData));
+                    }
 
                     pos += 1 + length;
                     continue;

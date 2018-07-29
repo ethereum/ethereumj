@@ -17,6 +17,7 @@
  */
 package org.ethereum.util;
 
+import org.ethereum.core.Transaction;
 import org.ethereum.crypto.HashUtil;
 
 import com.cedarsoftware.util.DeepEquals;
@@ -397,7 +398,7 @@ public class RLPTest {
         byte[] payload = Hex.decode(tx);
 
         RLPList rlpList = new RLPList();
-        fullTraverse(payload, 0, 0, payload.length, rlpList);
+        fullTraverse(payload, 0, 0, payload.length, rlpList, Integer.MAX_VALUE);
 
         assertEquals(18, ByteUtil.byteArrayToInt(((RLPList) rlpList.get(0)).get(0).getRLPData()));
         assertEquals(9, ((RLPList) (((RLPList) rlpList.get(0)).get(1))).size());
@@ -1747,5 +1748,29 @@ public class RLPTest {
         }
 
         assert tooBigNestedFired;
+    }
+
+    @Test
+    public void testDepthLimit() {
+        byte[] rlp = Hex.decode("f902fdf90217a09daf27b854a6e1272c2f3070f7729ba5f4891a9dc324c360a0ad32d1d62419f7a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d4934794790b8a3ce86e707ed0ed32bf89b3269692a23cc1a02b7e61e61837adb79b36eee4e1589b2c2140852bb105dc034d5cfa052c6ef5b8a0b36ebb69537e04d3bcd94a20bebcb12a8ef4715eb26fc1d19382392cc98db9b1a0c86bea989ed46040c5d1cbc39da108fb249bb9bf0804a5889e897f7e0c710864b90100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008606b539ecc193830a2acc832fefd882a410845668801a98d783010302844765746887676f312e352e31856c696e7578a0d82d30ce9d68e733738eee0c6f37c95968622878334f4f010e95acae000bb40188b34e28af786cc323f8e0f86f82d65e850ba43b740083015f9094ff45159c63fb01f45cd86767a020406f06faa8528820d3ff69fe230800801ba0d0ea8a650bf50b61b421e8275a79219988889c3e86460b323fb3d4d60bd80d3ca05a653410e7fd97786b3b503936127ece61ed3dcfabdbcbe8d7f06066f4a41687f86d822a3b850ba43b740082520894c47aaa860008be6f65b58c6c6e02a84e666efe318742087a56e84c00801ca0bc2b89b75b68e7ad8eb1db4de4aa550db79df3bd6430f2258fe55805ca7d7fe7a07d8b53c48f24788f21e3a26cfbd007cdab71a8ef7f28f6f6fae6ed4dcd4a0df1c0");
+        RLPElement rlpEl1 = RLP.decode2(rlp, 1);
+        RLPElement rlpElLevel1 = ((RLPList) rlpEl1).get(0);
+        assert !(rlpElLevel1 instanceof RLPList);
+
+        RLPElement rlpEl2 = RLP.decode2(rlp, 2);
+        RLPElement rlpEl2Level1 = ((RLPList) rlpEl2).get(0);
+        assert rlpEl2Level1 instanceof RLPList;
+        RLPElement txList = ((RLPList) rlpEl2Level1).get(1);
+        assert !(txList instanceof RLPList);
+
+        RLPElement rlpEl3 = RLP.decode2(rlp, 3);
+        RLPElement rlpEl3Level1 = ((RLPList) rlpEl3).get(0);
+        assert rlpEl3Level1 instanceof RLPList;
+        RLPElement rlpEl3Level2 = ((RLPList) rlpEl3Level1).get(1);
+        assert rlpEl3Level2 instanceof RLPList;
+        RLPElement rlpEl3Level3 = ((RLPList) rlpEl3Level2).get(0);
+        assert !(rlpEl3Level3 instanceof RLPList);
+        Transaction tx = new Transaction(rlpEl3Level3.getRLPData());
+        assertArrayEquals(Hex.decode("3e15c330e00f3af7ceeeeb10c27237845a034399c151f8d69708fd3ee45c09c6"), tx.getHash());
     }
 }

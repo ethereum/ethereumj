@@ -55,10 +55,9 @@ public class NewBlockMessage extends EthMessage {
 
     private synchronized void parse() {
         if (parsed) return;
-        RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
+        RLPList paramsList = RLP.decode2ListNarrow(encoded);
 
-        RLPList blockRLP = ((RLPList) paramsList.get(0));
-        block = new Block(blockRLP.getRLPData());
+        block = new Block(paramsList.get(0).getRLPData());
         difficulty = paramsList.get(1).getRLPData();
 
         parsed = true;
