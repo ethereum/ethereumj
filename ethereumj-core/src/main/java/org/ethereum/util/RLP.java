@@ -391,111 +391,6 @@ public class RLP {
     }
 
     /**
-     * Get exactly one message payload
-     */
-    public static void fullTraverse(byte[] msgData, int level, int startPos,
-                                    int endPos, int levelToIndex, Queue<Integer> index) {
-
-        try {
-
-            if (msgData == null || msgData.length == 0)
-                return;
-            int pos = startPos;
-
-            while (pos < endPos) {
-
-                if (level == levelToIndex)
-                    index.add(pos);
-
-                // It's a list with a payload more than 55 bytes
-                // data[0] - 0xF7 = how many next bytes allocated
-                // for the length of the list
-                // [0xf8, 0xff]
-                if ((msgData[pos] & 0xFF) > OFFSET_LONG_LIST) {
-
-                    byte lengthOfLength = (byte) (msgData[pos] - OFFSET_LONG_LIST);
-                    int length = calcLength(lengthOfLength, msgData, pos);
-
-                    // now we can parse an item for data[1]..data[length]
-                    System.out.println("-- level: [" + level
-                            + "] Found big list length: " + length);
-
-                    fullTraverse(msgData, level + 1, pos + lengthOfLength + 1,
-                            pos + lengthOfLength + length, levelToIndex, index);
-
-                    pos += lengthOfLength + length + 1;
-                    continue;
-                }
-                // It's a list with a payload less than or equal to 55 bytes
-                // [0xc0, 0xf7]
-                if ((msgData[pos] & 0xFF) >= OFFSET_SHORT_LIST
-                        && (msgData[pos] & 0xFF) <= OFFSET_LONG_LIST) {
-
-                    byte length = (byte) ((msgData[pos] & 0xFF) - OFFSET_SHORT_LIST);
-
-                    System.out.println("-- level: [" + level
-                            + "] Found small list length: " + length);
-
-                    fullTraverse(msgData, level + 1, pos + 1, pos + length + 1,
-                            levelToIndex, index);
-
-                    pos += 1 + length;
-                    continue;
-                }
-                // It's an item with a payload more than 55 bytes
-                // data[0] - 0xB7 = how much next bytes allocated for
-                // the length of the string
-                // [0xb8, 0xbf]
-                if ((msgData[pos] & 0xFF) > OFFSET_LONG_ITEM
-                        && (msgData[pos] & 0xFF) < OFFSET_SHORT_LIST) {
-
-                    byte lengthOfLength = (byte) (msgData[pos] - OFFSET_LONG_ITEM);
-                    int length = calcLength(lengthOfLength, msgData, pos);
-
-                    // now we can parse an item for data[1]..data[length]
-                    System.out.println("-- level: [" + level
-                            + "] Found big item length: " + length);
-                    pos += lengthOfLength + length + 1;
-
-                    continue;
-                }
-                // It's an item less than 55 bytes long,
-                // data[0] - 0x80 == length of the item
-                // [0x81, 0xb7]
-                if ((msgData[pos] & 0xFF) > OFFSET_SHORT_ITEM
-                        && (msgData[pos] & 0xFF) <= OFFSET_LONG_ITEM) {
-
-                    byte length = (byte) ((msgData[pos] & 0xFF) - OFFSET_SHORT_ITEM);
-
-                    System.out.println("-- level: [" + level
-                            + "] Found small item length: " + length);
-                    pos += 1 + length;
-                    continue;
-                }
-                // null item
-                // [0x80]
-                if ((msgData[pos] & 0xFF) == OFFSET_SHORT_ITEM) {
-                    System.out.println("-- level: [" + level
-                            + "] Found null item: ");
-                    pos += 1;
-                    continue;
-                }
-                // single byte item
-                // [0x00, 0x7f]
-                if ((msgData[pos] & 0xFF) < OFFSET_SHORT_ITEM) {
-                    System.out.println("-- level: [" + level
-                            + "] Found single item: ");
-                    pos += 1;
-                    continue;
-                }
-            }
-        } catch (Throwable th) {
-            throw new RuntimeException("RLP wrong encoding",
-                    th.fillInStackTrace());
-        }
-    }
-
-    /**
      * Parse length of long item or list.
      * RLP supports lengths with up to 8 bytes long,
      * but due to java limitation it returns either encoded length
@@ -550,20 +445,20 @@ public class RLP {
      */
     public static RLPList decode2(byte[] msgData) {
         RLPList rlpList = new RLPList();
-        fullTraverse(msgData, 0, 0, msgData.length, 1, rlpList);
+        fullTraverse(msgData, 0, 0, msgData.length, rlpList);
         return rlpList;
     }
 
     public static RLPElement decode2OneItem(byte[] msgData, int startPos) {
         RLPList rlpList = new RLPList();
-        fullTraverse(msgData, 0, startPos, startPos + 1, 1, rlpList);
+        fullTraverse(msgData, 0, startPos, startPos + 1, rlpList);
         return rlpList.get(0);
     }
     /**
      * Get exactly one message payload
      */
-    private static void fullTraverse(byte[] msgData, int level, int startPos,
-                                     int endPos, int levelToIndex, RLPList rlpList) {
+    static void fullTraverse(byte[] msgData, int level, int startPos,
+                             int endPos, RLPList rlpList) {
         if (level > MAX_DEPTH) {
             throw new RuntimeException(String.format("Error: Traversing over max RLP depth (%s)", MAX_DEPTH));
         }
@@ -601,8 +496,7 @@ public class RLP {
                     newLevelList.setRLPData(rlpData);
 
                     fullTraverse(msgData, level + 1, pos + lengthOfLength + 1,
-                            pos + lengthOfLength + length + 1, levelToIndex,
-                            newLevelList);
+                            pos + lengthOfLength + length + 1, newLevelList);
                     rlpList.add(newLevelList);
 
                     pos += lengthOfLength + length + 1;
@@ -621,8 +515,7 @@ public class RLP {
                     newLevelList.setRLPData(rlpData);
 
                     if (length > 0)
-                        fullTraverse(msgData, level + 1, pos + 1, pos + length
-                                + 1, levelToIndex, newLevelList);
+                        fullTraverse(msgData, level + 1, pos + 1, pos + length + 1, newLevelList);
                     rlpList.add(newLevelList);
 
                     pos += 1 + length;
