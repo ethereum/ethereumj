@@ -35,14 +35,16 @@ import java.util.List;
  */
 public class ValidatorRepository {
 
-    @Autowired
     BlockStore blockStore;
-
-    @Autowired
     TransactionStore txStore;
+    DepositContract depositContract;
 
     @Autowired
-    DepositContract depositContract;
+    public ValidatorRepository(BlockStore blockStore, TransactionStore txStore, DepositContract depositContract) {
+        this.blockStore = blockStore;
+        this.txStore = txStore;
+        this.depositContract = depositContract;
+    }
 
     public List<Validator> query(byte[] fromBlock, byte[] toBlock) {
 

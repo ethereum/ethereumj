@@ -62,6 +62,18 @@ public class ValidatorConfig {
         return depositPrivKey;
     }
 
+    public ValidatorConfig(boolean enabled, byte[] pubKey, long withdrawalShard,
+                           byte[] withdrawalAddress, byte[] depositPrivKey) {
+        this.enabled = enabled;
+        this.pubKey = pubKey;
+        this.withdrawalShard = withdrawalShard;
+        this.withdrawalAddress = withdrawalAddress;
+        this.depositPrivKey = depositPrivKey;
+    }
+
+    private ValidatorConfig() {
+    }
+
     public static ValidatorConfig fromFile() {
         try {
             Config fileCfg = buildFileConfig();

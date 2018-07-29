@@ -26,6 +26,7 @@ import org.ethereum.facade.Ethereum;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.listener.LogFilter;
 import org.ethereum.listener.RecommendedGasPriceTracker;
+import org.ethereum.sharding.crypto.DepositAuthority;
 import org.ethereum.sharding.domain.Validator;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.Futures;
@@ -41,7 +42,6 @@ import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 import static org.ethereum.util.ByteUtil.longToBytes;
 import static org.ethereum.util.blockchain.EtherUtil.convert;
@@ -55,41 +55,33 @@ public class DepositContract {
     private static final Logger logger = LoggerFactory.getLogger("beacon");
 
     private static final byte[] DEPOSIT_WEI = convert(32, EtherUtil.Unit.ETHER).toByteArray();
-    private static final long GAS_LIMIT = 100_000;
+    private static final long GAS_LIMIT = 200_000;
     private static final long DEFAULT_GAS_PRICE = convert(5, EtherUtil.Unit.GWEI).longValue();
     private static final long DEPOSIT_TIMEOUT = 5; // 5 minutes
 
     private byte[] address;
+    private byte[] bin;
     private CallTransaction.Contract contract;
     private LogFilter depositFilter;
 
-    @Autowired
     Ethereum ethereum;
-
     RecommendedGasPriceTracker gasPriceTracker;
 
     CompletableFuture<TransactionReceipt> depositFuture;
     byte[] depositTxHash;
 
-    public DepositContract(Ethereum ethereum, byte[] address, String abi) {
-        this.ethereum = ethereum;
+    public DepositContract(byte[] address, byte[] bin, String abi) {
         this.address = address;
+        this.bin = bin;
         this.contract = new CallTransaction.Contract(abi);
         this.depositFilter = new LogFilter().withContractAddress(address)
                 .withTopic(contract.getByName("Deposit").encodeSignatureLong());
     }
 
     public CompletableFuture<Validator> deposit(final byte[] pubKey, long withdrawalShard, byte[] withdrawalAddress,
-                               byte[] randao, byte[] sender, Consumer<Transaction> sign) {
+                               byte[] randao, DepositAuthority authority) {
 
-        byte[] data = contract.getByName("deposit").encode(pubKey, withdrawalShard, withdrawalAddress, randao);
-
-        BigInteger nonce = ethereum.getRepository().getNonce(sender);
-        long gasPrice = gasPriceTracker.getRecommendedGasPrice();
-        Integer chainId = ethereum.getChainIdForNextBlock();
-        Transaction tx = new Transaction(nonce.toByteArray(), longToBytes(gasPrice), longToBytes(GAS_LIMIT),
-                address, DEPOSIT_WEI, data, chainId);
-        sign.accept(tx);
+        Transaction tx = depositTx(pubKey, withdrawalShard, withdrawalAddress, randao, authority);
         depositTxHash = tx.getHash();
 
         ethereum.addListener(new EthereumListenerAdapter() {
@@ -110,7 +102,7 @@ public class DepositContract {
             if (receipt == null)
                 throw new RuntimeException(t);
 
-            if (!receipt.isTxStatusOK())
+            if (!(receipt.hasTxStatus() ? receipt.isTxStatusOK() : receipt.isSuccessful()))
                 throw new RuntimeException(receipt.getError().isEmpty() ? "unknown" : receipt.getError());
 
             logger.info("Deposit Tx included in block, tx.hash: {}", Hex.toHexString(depositTxHash));
@@ -126,6 +118,20 @@ public class DepositContract {
                 Hex.toHexString(receipt.getTransaction().getHash()));
 
         })).applyToEitherAsync(Futures.timeout(DEPOSIT_TIMEOUT, TimeUnit.MINUTES, "timeout exceeded"), (v) -> v);
+    }
+
+    public Transaction depositTx(final byte[] pubKey, long withdrawalShard, byte[] withdrawalAddress,
+                                 byte[] randao, DepositAuthority authority) {
+
+        byte[] data = contract.getByName("deposit").encode(pubKey, withdrawalShard, withdrawalAddress, randao);
+
+        BigInteger nonce = ethereum.getRepository().getNonce(authority.address());
+        long gasPrice = gasPriceTracker.getRecommendedGasPrice();
+        Integer chainId = ethereum.getChainIdForNextBlock();
+        Transaction tx = new Transaction(nonce.toByteArray(), longToBytes(gasPrice), longToBytes(GAS_LIMIT),
+                address, DEPOSIT_WEI, data, chainId);
+        authority.sign(tx);
+        return tx;
     }
 
     public boolean isDepositLog(LogInfo log) {
@@ -147,6 +153,22 @@ public class DepositContract {
         CallTransaction.Function usedPubKey = contract.getByName("used_pubkey");
         ProgramResult res = ethereum.callConstantFunction(Hex.toHexString(address), usedPubKey, args);
         return ((Boolean) usedPubKey.decodeResult(res.getHReturn())[0]);
+    }
+
+    public Transaction deployTx(DepositAuthority authority) {
+        BigInteger nonce = ethereum.getRepository().getNonce(authority.address());
+        long gasPrice = gasPriceTracker.getRecommendedGasPrice();
+        Integer chainId = ethereum.getChainIdForNextBlock();
+        Transaction tx = new Transaction(nonce.toByteArray(), longToBytes(gasPrice), longToBytes(GAS_LIMIT),
+                null, BigInteger.ZERO.toByteArray(), bin, chainId) {
+            @Override
+            public byte[] getContractAddress() {
+                return address;
+            }
+        };
+        authority.sign(tx);
+
+        return tx;
     }
 
     @Autowired

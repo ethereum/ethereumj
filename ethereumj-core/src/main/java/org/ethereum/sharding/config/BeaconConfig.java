@@ -22,7 +22,9 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.BatchSourceWriter;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.datasource.WriteCache;
+import org.ethereum.db.BlockStore;
 import org.ethereum.db.DbFlushManager;
+import org.ethereum.db.TransactionStore;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.sharding.manager.ShardingWorldManager;
@@ -65,6 +67,12 @@ public class BeaconConfig {
     @Autowired
     DbFlushManager dbFlushManager;
 
+    @Autowired
+    BlockStore blockStore;
+
+    @Autowired
+    TransactionStore txStore;
+
     @Bean
     public ValidatorConfig validatorConfig() {
         return ValidatorConfig.fromFile();
@@ -84,12 +92,13 @@ public class BeaconConfig {
 
     @Bean
     public ValidatorRepository validatorRepository() {
-        return new ValidatorRepository();
+        return new ValidatorRepository(blockStore, txStore, depositContract());
     }
 
     @Bean
     public DepositContract depositContract() {
-        return new DepositContract(ethereum, depositContractConfig.getBin(), depositContractConfig.getAbi());
+        return new DepositContract(depositContractConfig.getAddress(), depositContractConfig.getBin(),
+                depositContractConfig.getAbi());
     }
 
     public DepositAuthority depositAuthority() {

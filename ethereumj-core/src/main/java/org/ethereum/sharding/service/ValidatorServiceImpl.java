@@ -29,7 +29,6 @@ import org.ethereum.sharding.domain.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -106,7 +105,7 @@ public class ValidatorServiceImpl implements ValidatorService {
     void deposit(byte[] randao) {
         CompletableFuture<Validator> future = depositContract.deposit(
                 config.pubKey(), config.withdrawalShard(), config.withdrawalAddress(),
-                randao, depositAuthority.address(), depositAuthority::sign);
+                randao, depositAuthority);
 
         future.whenCompleteAsync((validator, t) -> {
             if (validator != null) {
