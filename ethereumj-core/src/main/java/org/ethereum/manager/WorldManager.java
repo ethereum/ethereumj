@@ -93,7 +93,7 @@ public class WorldManager {
     @Autowired
     private ApplicationContext ctx;
 
-    private SystemProperties config;
+    protected SystemProperties config;
 
     private EthereumListener listener;
 

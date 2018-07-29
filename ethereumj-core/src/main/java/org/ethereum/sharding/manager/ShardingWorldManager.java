@@ -20,22 +20,27 @@ package org.ethereum.sharding.manager;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Blockchain;
-import org.ethereum.core.Genesis;
 import org.ethereum.core.Repository;
+import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionExecutor;
+import org.ethereum.crypto.ECKey;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.DbFlushManager;
-import org.ethereum.db.RepositoryImpl;
 import org.ethereum.db.RepositoryWrapper;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.sharding.config.DepositContractConfig;
 import org.ethereum.sharding.service.ValidatorService;
+import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.beans.factory.annotation.Autowired;
 
+import java.math.BigInteger;
 import java.util.concurrent.CompletableFuture;
+
+import static org.ethereum.util.ByteUtil.longToBytes;
 
 /**
  * @author Mikhail Kalinin
@@ -44,6 +49,10 @@ import java.util.concurrent.CompletableFuture;
 public class ShardingWorldManager extends WorldManager {
 
     private static final Logger logger = LoggerFactory.getLogger("sharding");
+
+    private static final ECKey DEPLOY_AUTHORITY = ECKey.fromPrivate(Hex.decode("41791102999c339c844880b23950704cc43aa840f3739e365323cda4dfa89e7a"));
+    private static final long DEPLOY_GAS_PRICE = 1_000_000_000; // 1 GWEI
+    private static final long DEPLOY_GAS_LIMIT = 200_000;
 
     DepositContractConfig contractConfig;
     DbFlushManager dbFlushManager;
@@ -66,8 +75,30 @@ public class ShardingWorldManager extends WorldManager {
 
     private void initDepositContract() {
         if (getBlockchain().getBestBlock().isGenesis()) {
+            Block best = getBlockchain().getBestBlock();
+
+            // build and execute deploy transaction
+            BigInteger nonce = getRepository().getNonce(DEPLOY_AUTHORITY.getAddress());
+            Integer chainId = config.getBlockchainConfig().getConfigForBlock(0).getChainId();
+            Transaction tx = new Transaction(nonce.toByteArray(), longToBytes(DEPLOY_GAS_PRICE), longToBytes(DEPLOY_GAS_LIMIT),
+                    null, BigInteger.ZERO.toByteArray(), contractConfig.getBin(), chainId) {
+                @Override
+                public byte[] getContractAddress() {
+                    return contractConfig.getAddress();
+                }
+            };
+            tx.sign(DEPLOY_AUTHORITY);
+
+            TransactionExecutor executor = new TransactionExecutor(
+                    tx, best.getCoinbase(), (Repository) getRepository(),
+                    getBlockStore(), new ProgramInvokeFactoryImpl(), best, new EthereumListenerAdapter(), 0);
+
+            executor.init();
+            executor.execute();
+            executor.go();
+            executor.finalization();
+
             RepositoryWrapper repository = ((RepositoryWrapper) getRepository());
-            repository.saveCode(contractConfig.getAddress(), contractConfig.getBin());
             repository.flush();
 
             // Update Genesis root
