@@ -304,8 +304,9 @@ public class IndexedBlockStore extends AbstractBlockstore{
 
         List<Block> ret = new ArrayList<>();
         Block block = to;
-        for (long i = 0; i < qty && block != null && !from.isEqual(block); ++i) {
+        for (long i = 0; i < qty && block != null; ++i) {
             ret.add(0, block);
+            if (from.isEqual(block)) break;
             block = blocks.get(block.getParentHash());
         }
 
