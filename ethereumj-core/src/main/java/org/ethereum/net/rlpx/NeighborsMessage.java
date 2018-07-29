@@ -44,7 +44,7 @@ public class NeighborsMessage extends Message {
 
         for (int i = 0; i < nodesRLP.size(); ++i) {
             RLPList nodeRLP = (RLPList) nodesRLP.get(i);
-            Node node = new Node(nodeRLP.getRLPData());
+            Node node = new Node(nodeRLP);
             nodes.add(node);
         }
         this.expires = ByteUtil.byteArrayToLong(expires.getRLPData());

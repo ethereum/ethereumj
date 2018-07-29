@@ -85,12 +85,7 @@ public class Node implements Serializable {
         this.port = port;
     }
 
-
-    public Node(byte[] rlp) {
-
-        RLPList nodeRLP = RLP.decode2(rlp);
-        nodeRLP = (RLPList) nodeRLP.get(0);
-
+    public Node(RLPList nodeRLP) {
         byte[] hostB = nodeRLP.get(0).getRLPData();
         byte[] portB = nodeRLP.get(1).getRLPData();
         byte[] idB;
@@ -106,6 +101,10 @@ public class Node implements Serializable {
         this.host = bytesToIp(hostB);
         this.port = port;
         this.id = idB;
+    }
+
+    public Node(byte[] rlp) {
+        this((RLPList) RLP.decode2(rlp).get(0));
     }
 
     /**

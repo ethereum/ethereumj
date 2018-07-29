@@ -17,8 +17,8 @@
  */
 package org.ethereum.net.eth.message;
 
-import org.ethereum.core.Block;
 import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
 
 import java.util.ArrayList;
@@ -48,12 +48,12 @@ public class BlockBodiesMessage extends EthMessage {
 
     private synchronized void parse() {
         if (parsed) return;
-        RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
+        RLPList paramsList = RLP.decode2ListNarrow(encoded);
         this.encoded = null;
 
         blockBodies = new ArrayList<>();
         for (int i = 0; i < paramsList.size(); ++i) {
-            RLPList rlpData = ((RLPList) paramsList.get(i));
+            RLPElement rlpData = paramsList.get(i);
             blockBodies.add(rlpData.getRLPData());
         }
         parsed = true;

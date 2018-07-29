@@ -19,6 +19,7 @@ package org.ethereum.net.eth.message;
 
 import org.ethereum.core.Transaction;
 import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
 
 import java.util.ArrayList;
@@ -51,11 +52,11 @@ public class TransactionsMessage extends EthMessage {
 
     private synchronized void parse() {
         if (parsed) return;
-        RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
+        RLPList paramsList = RLP.decode2ListNarrow(encoded);
 
         transactions = new ArrayList<>();
         for (int i = 0; i < paramsList.size(); ++i) {
-            RLPList rlpTxData = (RLPList) paramsList.get(i);
+            RLPElement rlpTxData = paramsList.get(i);
             Transaction tx = new Transaction(rlpTxData.getRLPData());
             transactions.add(tx);
         }
