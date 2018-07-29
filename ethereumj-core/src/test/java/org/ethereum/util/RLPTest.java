@@ -1740,7 +1740,7 @@ public class RLPTest {
         } catch (RuntimeException ex) {
             Throwable cause = ex;
             while (cause != null) {
-                if (cause.getMessage().contains("big") && cause.getMessage().contains("nesting")) tooBigNestedFired = true;
+                if (cause.getMessage().contains("max") && cause.getMessage().contains("depth")) tooBigNestedFired = true;
                 cause = cause.getCause(); // To the next level
             }
         }

@@ -67,7 +67,7 @@ public class RLP {
 
     public static final byte[] EMPTY_ELEMENT_RLP = encodeElement(new byte[0]);
 
-    public static final int MAX_NESTED_LISTS = 1024 * 1024;
+    private static final int MAX_DEPTH = 16;
 
     /**
      * Allow for content up to size of 2^64 bytes *
@@ -550,24 +550,22 @@ public class RLP {
      */
     public static RLPList decode2(byte[] msgData) {
         RLPList rlpList = new RLPList();
-        fullTraverse(msgData, 0, 0, msgData.length, 1, rlpList, new AtomicInteger(1));
+        fullTraverse(msgData, 0, 0, msgData.length, 1, rlpList);
         return rlpList;
     }
 
     public static RLPElement decode2OneItem(byte[] msgData, int startPos) {
         RLPList rlpList = new RLPList();
-        fullTraverse(msgData, 0, startPos, startPos + 1, 1, rlpList, new AtomicInteger(1));
+        fullTraverse(msgData, 0, startPos, startPos + 1, 1, rlpList);
         return rlpList.get(0);
     }
     /**
      * Get exactly one message payload
      */
     private static void fullTraverse(byte[] msgData, int level, int startPos,
-                                     int endPos, int levelToIndex, RLPList rlpList,
-                                     AtomicInteger listCounter) {
-        if (listCounter.get() > MAX_NESTED_LISTS) {
-            throw new RuntimeException(String.format("Too big nesting of lists. " +
-                    "No more than %s lists allowed", MAX_NESTED_LISTS));
+                                     int endPos, int levelToIndex, RLPList rlpList) {
+        if (level > MAX_DEPTH) {
+            throw new RuntimeException(String.format("Error: Traversing over max RLP depth (%s)", MAX_DEPTH));
         }
 
         try {
@@ -600,12 +598,11 @@ public class RLP {
                             + length + 1);
 
                     RLPList newLevelList = new RLPList();
-                    listCounter.incrementAndGet();
                     newLevelList.setRLPData(rlpData);
 
                     fullTraverse(msgData, level + 1, pos + lengthOfLength + 1,
                             pos + lengthOfLength + length + 1, levelToIndex,
-                            newLevelList, listCounter);
+                            newLevelList);
                     rlpList.add(newLevelList);
 
                     pos += lengthOfLength + length + 1;
@@ -621,12 +618,11 @@ public class RLP {
                     System.arraycopy(msgData, pos, rlpData, 0, length + 1);
 
                     RLPList newLevelList = new RLPList();
-                    listCounter.incrementAndGet();
                     newLevelList.setRLPData(rlpData);
 
                     if (length > 0)
                         fullTraverse(msgData, level + 1, pos + 1, pos + length
-                                + 1, levelToIndex, newLevelList, listCounter);
+                                + 1, levelToIndex, newLevelList);
                     rlpList.add(newLevelList);
 
                     pos += 1 + length;
