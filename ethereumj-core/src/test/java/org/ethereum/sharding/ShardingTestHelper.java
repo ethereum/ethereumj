@@ -40,6 +40,7 @@ import org.ethereum.sharding.contract.DepositContract;
 import org.ethereum.sharding.crypto.DepositAuthority;
 import org.ethereum.sharding.crypto.UnsecuredDepositAuthority;
 import org.ethereum.sharding.service.ValidatorRepository;
+import org.ethereum.sharding.service.ValidatorRepositoryImpl;
 import org.ethereum.sharding.service.ValidatorService;
 import org.ethereum.sharding.service.ValidatorServiceImpl;
 import org.ethereum.sharding.util.Randao;
@@ -165,7 +166,7 @@ public class ShardingTestHelper {
         sharding.validatorService = new ValidatorServiceImpl(ethereum, dbFlushManager, sharding.validatorConfig,
                 sharding.depositContract, authority, randao);
 
-        sharding.validatorRepository = new ValidatorRepository(standaloneBlockchain.getBlockchain().getBlockStore(),
+        sharding.validatorRepository = new ValidatorRepositoryImpl(standaloneBlockchain.getBlockchain().getBlockStore(),
                 standaloneBlockchain.getBlockchain().getTransactionStore(), sharding.depositContract);
 
         return sharding;

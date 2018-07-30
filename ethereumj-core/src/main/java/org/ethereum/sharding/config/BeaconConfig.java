@@ -28,6 +28,7 @@ import org.ethereum.db.TransactionStore;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.sharding.manager.ShardingWorldManager;
+import org.ethereum.sharding.service.ValidatorRepositoryImpl;
 import org.ethereum.sharding.service.ValidatorService;
 import org.ethereum.sharding.crypto.DepositAuthority;
 import org.ethereum.sharding.contract.DepositContract;
@@ -96,7 +97,7 @@ public class BeaconConfig {
 
     @Bean
     public ValidatorRepository validatorRepository() {
-        return new ValidatorRepository(blockStore, txStore, depositContract());
+        return new ValidatorRepositoryImpl(blockStore, txStore, depositContract());
     }
 
     @Bean

@@ -38,6 +38,8 @@ import static org.ethereum.sharding.service.ValidatorService.State.Undefined;
 import static org.ethereum.sharding.service.ValidatorService.State.WaitForDeposit;
 
 /**
+ * Default implementation of {@link ValidatorService}
+ *
  * @author Mikhail Kalinin
  * @since 21.07.2018
  */
