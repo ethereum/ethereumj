@@ -27,6 +27,14 @@ import org.spongycastle.util.encoders.Hex;
 import java.io.File;
 
 /**
+ * Serves as a provider of validator configuration including {@code pubKey} and withdrawal credentials.
+ *
+ * <p>
+ *     Able to fetch parameters from different sources, check {@link #buildFileConfig()} for details.
+ *
+ * <p>
+ *     <b>Note:</b> has a security drawback by storing plain {@link #depositPrivKey} in config files and memory
+ *
  * @author Mikhail Kalinin
  * @since 23.07.2018
  */
@@ -40,6 +48,8 @@ public class ValidatorConfig {
     byte[] pubKey;
     long withdrawalShard;
     byte[] withdrawalAddress;
+
+    // FIXME do not store private key in memory
     byte[] depositPrivKey;
 
     public boolean isEnabled() {

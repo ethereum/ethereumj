@@ -23,6 +23,11 @@ import org.ethereum.sharding.config.ValidatorConfig;
 import org.ethereum.sharding.crypto.DepositAuthority;
 
 /**
+ * Unsecure implementation of {@link DepositAuthority}.
+ *
+ * <p>
+ *     Keeps plain private key in memory.
+ *
  * @author Mikhail Kalinin
  * @since 23.07.2018
  */

@@ -17,14 +17,24 @@
  */
 package org.ethereum.sharding.service;
 
+import org.ethereum.sharding.config.ValidatorConfig;
+
 /**
+ * Deposit validator if it's enabled in {@link ValidatorConfig}
+ *
  * @author Mikhail Kalinin
  * @since 26.07.2018
  */
 public interface ValidatorService {
 
+    /**
+     * Deposit validator when sync is done.
+     */
     default void init() {}
 
+    /**
+     * Returns current state of the validator.
+     */
     default State getState() {
         return State.Undefined;
     }

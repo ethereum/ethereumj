@@ -30,6 +30,8 @@ import java.util.Collections;
 import java.util.List;
 
 /**
+ * Helper class to look for deposited validators in the receipts.
+ *
  * @author Mikhail Kalinin
  * @since 23.07.2018
  */
@@ -46,6 +48,10 @@ public class ValidatorRepository {
         this.depositContract = depositContract;
     }
 
+    /**
+     * Returns a list of validators deployed in an inclusive range {@code [fromBlock, toBlock]}.
+     * An order of deposits is preserved, hence first deposited validator has the lowest index in returned list.
+     */
     public List<Validator> query(byte[] fromBlock, byte[] toBlock) {
 
         List<Block> blocks = blockStore.listBlocks(fromBlock, toBlock);

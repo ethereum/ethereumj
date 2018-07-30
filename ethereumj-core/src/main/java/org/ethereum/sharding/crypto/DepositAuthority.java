@@ -18,14 +18,29 @@
 package org.ethereum.sharding.crypto;
 
 import org.ethereum.core.Transaction;
+import org.ethereum.sharding.contract.DepositContract;
 
 /**
+ * An interface used by {@link DepositContract} methods as an authority provider.
+ *
+ * <p>
+ *     Originally was introduced to abstract transaction signing process.
+ *
+ * <p>
+ *     Basically, it can be used as an authority provider from any kind of places where transaction signing is required.
+ *
  * @author Mikhail Kalinin
  * @since 23.07.2018
  */
 public interface DepositAuthority {
 
+    /**
+     * Signs given transaction
+     */
     void sign(Transaction tx);
 
+    /**
+     * Returns and address of held authority
+     */
     byte[] address();
 }

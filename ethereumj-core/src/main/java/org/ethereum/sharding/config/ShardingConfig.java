@@ -36,6 +36,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
+ * In addition to {@link DefaultConfig} bootstraps validator registration contract.
+ *
  * @author Mikhail Kalinin
  * @since 26.07.2018
  */

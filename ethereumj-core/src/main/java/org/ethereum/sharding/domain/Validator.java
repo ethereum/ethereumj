@@ -18,6 +18,8 @@
 package org.ethereum.sharding.domain;
 
 /**
+ * Represents and item of a list of validators held by validator registration contract.
+ *
  * @author Mikhail Kalinin
  * @since 21.07.2018
  */

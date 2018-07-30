@@ -41,10 +41,14 @@ import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 
 /**
+ * In addition to {@link ShardingConfig} bootstraps beacon chain processing.
+ *
+ * <p>
+ *     Enabled only if {@code beacon.enabled} option in config is set to {@code true}.
+ *
  * @author Mikhail Kalinin
  * @since 21.07.2018
  */
@@ -78,7 +82,7 @@ public class BeaconConfig {
         return ValidatorConfig.fromFile();
     }
 
-    @Bean @Primary
+    @Bean
     public ValidatorService validatorService() {
         if (validatorConfig().isEnabled()) {
             ValidatorService ret = new ValidatorServiceImpl(ethereum, dbFlushManager, validatorConfig(),

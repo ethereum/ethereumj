@@ -22,6 +22,11 @@ import com.typesafe.config.ConfigFactory;
 import org.spongycastle.util.encoders.Hex;
 
 /**
+ * Holds {@code abi}, {@code binary} and {@code address} of validator registration contract.
+ *
+ * <p>
+ *     Parses parameters from {@code deposit-contract.conf} resource with {@link #fromFile()} method.
+ *
  * @author Mikhail Kalinin
  * @since 26.07.2018
  */

@@ -43,6 +43,12 @@ import java.util.concurrent.CompletableFuture;
 import static org.ethereum.util.ByteUtil.longToBytes;
 
 /**
+ * In addition to original {@link WorldManager} runs sharding bootstrap things:
+ * <ul>
+ *     <li> deploys validator registration contract to the empty blockchain
+ *     <li> starts {@link ValidatorService} if it's enabled
+ * </ul>
+ *
  * @author Mikhail Kalinin
  * @since 26.07.2018
  */

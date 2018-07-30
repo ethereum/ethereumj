@@ -29,6 +29,8 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 
 /**
+ * An entry point for shard-aware network and chain.
+ *
  * @author Mikhail Kalinin
  * @since 26.07.2018
  */

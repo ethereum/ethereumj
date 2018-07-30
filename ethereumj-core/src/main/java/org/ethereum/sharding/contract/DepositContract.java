@@ -47,6 +47,19 @@ import static org.ethereum.util.ByteUtil.longToBytes;
 import static org.ethereum.util.blockchain.EtherUtil.convert;
 
 /**
+ * Delivers an API of validator registration contract.
+ *
+ * <p>
+ *     Main endpoints are:
+ *     <ul>
+ *         <li> {@link #deposit(byte[], long, byte[], byte[], DepositAuthority)}
+ *         <li> {@link #usedPubKey(byte[])}
+ *         <li> {@link #deployTx(DepositAuthority)}
+ *     </ul>
+ *
+ * <p>
+ *     There is also a helper method to parse {@link Validator} from tx event logs: {@link #parseValidator(LogInfo)}
+ *
  * @author Mikhail Kalinin
  * @since 21.07.2018
  */
