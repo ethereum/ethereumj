@@ -466,12 +466,16 @@ public class RLP {
     }
 
     /**
-     * Decodes without going deep after 1st level list
-     * (actually, 2nd as RLP nesting one extra level)
+     * Decodes RLP with list without going deep after 1st level list
+     * (actually, 2nd as 1st level is wrap only)
+     *
+     * So assuming you've packed several byte[] with {@link #encodeList(byte[]...)},
+     * you could use this method to unpack them,
+     * getting RLPList with RLPItem's holding byte[] inside
      * @param msgData rlp data
      * @return list of RLPItems
      */
-    public static RLPList decode2ListNarrow(byte[] msgData) {
+    public static RLPList unwrapList(byte[] msgData) {
         return (RLPList) decode2(msgData, 2).get(0);
     }
 

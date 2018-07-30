@@ -66,7 +66,7 @@ public class TransactionStore extends ObjectDataSource<List<TransactionInfo>> {
         public List<TransactionInfo> deserialize(byte[] stream) {
             try {
                 if (stream == null) return null;
-                RLPList infoList = RLP.decode2ListNarrow(stream);
+                RLPList infoList = RLP.unwrapList(stream);
                 List<TransactionInfo> ret = new ArrayList<>();
                 for (int i = 0; i < infoList.size(); i++) {
                     ret.add(new TransactionInfo(infoList.get(i).getRLPData()));
