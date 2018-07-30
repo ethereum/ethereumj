@@ -112,7 +112,7 @@ public class BlockLoader {
                 Path path = Paths.get(fileSrc);
                 // NOT OPTIMAL, but fine for tests
                 byte[] data = Files.readAllBytes(path);
-                RLPList list = RLP.unwrapList(data);
+                RLPList list = RLP.decode2(data, 1);
                 for (RLPElement item : list) {
                     Block block = new Block(item.getRLPData());
                     exec1.push(block);
