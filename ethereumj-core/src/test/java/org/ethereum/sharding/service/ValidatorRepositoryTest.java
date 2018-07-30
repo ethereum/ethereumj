@@ -22,6 +22,7 @@ import org.ethereum.core.Transaction;
 import org.ethereum.sharding.ShardingTestHelper;
 import org.ethereum.sharding.domain.Validator;
 import org.ethereum.util.ByteUtil;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
@@ -36,6 +37,7 @@ import static org.junit.Assert.assertEquals;
  * @author Mikhail Kalinin
  * @since 28.07.2018
  */
+@Ignore
 public class ValidatorRepositoryTest {
 
     @Test

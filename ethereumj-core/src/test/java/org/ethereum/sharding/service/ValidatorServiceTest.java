@@ -20,6 +20,7 @@ package org.ethereum.sharding.service;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.sharding.ShardingTestHelper;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -28,6 +29,7 @@ import static org.junit.Assert.assertEquals;
  * @author Mikhail Kalinin
  * @since 28.07.2018
  */
+@Ignore
 public class ValidatorServiceTest {
 
     @Test
