@@ -29,18 +29,21 @@ public interface ValidatorService {
 
     /**
      * Deposit validator when sync is done.
+     * Does nothing by default.
      */
     default void init() {}
 
     /**
      * Returns current state of the validator.
+     * Default state is Disabled.
      */
     default State getState() {
-        return State.Undefined;
+        return State.Disabled;
     }
 
     enum State {
         Undefined,
+        Disabled,
         WaitForDeposit,
         DepositFailed,
         Enlisted
