@@ -52,7 +52,7 @@ public class TransactionsMessage extends EthMessage {
 
     private synchronized void parse() {
         if (parsed) return;
-        RLPList paramsList = RLP.decode2ListNarrow(encoded);
+        RLPList paramsList = RLP.unwrapList(encoded);
 
         transactions = new ArrayList<>();
         for (int i = 0; i < paramsList.size(); ++i) {

@@ -152,7 +152,7 @@ public class BlockWrapper {
     }
 
     private void parse(byte[] bytes) {
-        List<RLPElement> wrapper = RLP.decode2ListNarrow(bytes);
+        List<RLPElement> wrapper = RLP.unwrapList(bytes);
 
         byte[] blockBytes = wrapper.get(0).getRLPData();
         byte[] importFailedBytes = wrapper.get(1).getRLPData();
