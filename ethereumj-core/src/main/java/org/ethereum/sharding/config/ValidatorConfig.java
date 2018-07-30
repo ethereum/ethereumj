@@ -130,6 +130,8 @@ public class ValidatorConfig {
                 .withFallback(cmdLineConfigRes)
                 .withFallback(referenceConfig);
 
+        logger.info("Validator is {}", config.getBoolean("beacon.validator.enabled") ? "Enabled" : "Disabled");
+
         logger.debug("Validator Config trace: " + config.root().render(ConfigRenderOptions.defaults().
                 setComments(false).setJson(false)));
 
