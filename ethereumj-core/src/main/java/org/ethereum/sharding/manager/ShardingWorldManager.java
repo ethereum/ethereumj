@@ -36,6 +36,7 @@ import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigInteger;
 import java.util.concurrent.CompletableFuture;
@@ -120,6 +121,7 @@ public class ShardingWorldManager extends WorldManager {
         contractInit.complete(null);
     }
 
+    @Autowired
     public void setValidatorService(final ValidatorService validatorService) {
         contractInit.thenRunAsync(validatorService::init);
     }

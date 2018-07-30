@@ -27,7 +27,6 @@ import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.TransactionStore;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.manager.WorldManager;
-import org.ethereum.sharding.manager.ShardingWorldManager;
 import org.ethereum.sharding.service.ValidatorRepositoryImpl;
 import org.ethereum.sharding.service.ValidatorService;
 import org.ethereum.sharding.crypto.DepositAuthority;
@@ -86,10 +85,8 @@ public class BeaconConfig {
     @Bean
     public ValidatorService validatorService() {
         if (validatorConfig().isEnabled()) {
-            ValidatorService ret = new ValidatorServiceImpl(ethereum, dbFlushManager, validatorConfig(),
+            return new ValidatorServiceImpl(ethereum, dbFlushManager, validatorConfig(),
                     depositContract(), depositAuthority(), randao());
-            ((ShardingWorldManager) worldManager).setValidatorService(ret);
-            return ret;
         } else {
             return new ValidatorService() {};
         }
