@@ -40,7 +40,7 @@ public interface DepositAuthority {
     void sign(Transaction tx);
 
     /**
-     * Returns and address of held authority
+     * Returns an address of held authority
      */
     byte[] address();
 }

@@ -52,9 +52,9 @@ import static org.ethereum.util.blockchain.EtherUtil.convert;
  * <p>
  *     Main endpoints are:
  *     <ul>
- *         <li> {@link #deposit(byte[], long, byte[], byte[], DepositAuthority)}
- *         <li> {@link #usedPubKey(byte[])}
- *         <li> {@link #deployTx(DepositAuthority)}
+ *         <li> {@link #deposit(byte[], long, byte[], byte[], DepositAuthority)} registers validator
+ *         <li> {@link #usedPubKey(byte[])} is useful to check whether validator was registered or not
+ *         <li> {@link #deployTx(DepositAuthority)} returns a signed transaction that creates the contract itself
  *     </ul>
  *
  * <p>
