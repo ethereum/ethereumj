@@ -73,10 +73,10 @@ public class WorldManager {
     private NodeManager nodeManager;
 
     @Autowired
-    private SyncManager syncManager;
+    protected SyncManager syncManager;
 
     @Autowired
-    private SyncPool pool;
+    protected SyncPool pool;
 
     @Autowired
     private PendingState pendingState;
@@ -93,7 +93,7 @@ public class WorldManager {
     @Autowired
     private ApplicationContext ctx;
 
-    private SystemProperties config;
+    protected SystemProperties config;
 
     private EthereumListener listener;
 
@@ -116,7 +116,7 @@ public class WorldManager {
     }
 
     @PostConstruct
-    private void init() {
+    protected void init() {
         fastSyncDbJobs();
         syncManager.init(channelManager, pool);
     }

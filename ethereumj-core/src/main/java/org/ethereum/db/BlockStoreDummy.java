@@ -23,6 +23,7 @@ import org.ethereum.crypto.HashUtil;
 
 import java.math.BigInteger;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -71,6 +72,11 @@ public class BlockStoreDummy implements BlockStore {
     @Override
     public List<Block> getListBlocksEndWith(byte[] hash, long qty) {
         return null;
+    }
+
+    @Override
+    public List<Block> listBlocks(byte[] fromHash, byte[] toHash) {
+        return Collections.emptyList();
     }
 
     @Override

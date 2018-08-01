@@ -177,6 +177,11 @@ public class StandaloneBlockchain implements LocalBlockchain {
         return this;
     }
 
+    public StandaloneBlockchain withListener(CompositeEthereumListener listener) {
+        this.listener = listener;
+        return this;
+    }
+
     /**
      * [-100, 100]
      * 0 - the same block gas limit as parent
@@ -755,5 +760,9 @@ public class StandaloneBlockchain implements LocalBlockchain {
                 return BigInteger.ONE;
             }
         });
+    }
+
+    public CompositeEthereumListener getListener() {
+        return listener;
     }
 }

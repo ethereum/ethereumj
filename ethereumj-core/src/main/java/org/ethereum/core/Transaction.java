@@ -401,9 +401,10 @@ public class Transaction {
         sign(ECKey.fromPrivate(privKeyBytes));
     }
 
-    public void sign(ECKey key) throws MissingPrivateKeyException {
+    public Transaction sign(ECKey key) throws MissingPrivateKeyException {
         this.signature = key.sign(this.getRawHash());
         this.rlpEncoded = null;
+        return this;
     }
 
     @Override

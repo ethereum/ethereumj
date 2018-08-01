@@ -161,6 +161,8 @@ public class SystemProperties {
 
     private GenerateNodeIdStrategy generateNodeIdStrategy = null;
 
+    private BigInteger mineMinGasPrice = null;
+
     public SystemProperties() {
         this(ConfigFactory.empty());
     }
@@ -860,7 +862,11 @@ public class SystemProperties {
 
     @ValidateMe
     public BigInteger getMineMinGasPrice() {
-        return new BigInteger(config.getString("mine.minGasPrice"));
+        return mineMinGasPrice == null ? new BigInteger(config.getString("mine.minGasPrice")) : mineMinGasPrice;
+    }
+
+    public void setMineMinGasPrice(BigInteger mineMinGasPrice) {
+        this.mineMinGasPrice = mineMinGasPrice;
     }
 
     @ValidateMe
@@ -908,6 +914,11 @@ public class SystemProperties {
     @ValidateMe
     public String getEthashMode() {
         return config.getString("sync.ethash");
+    }
+
+    @ValidateMe
+    public boolean processBeaconChain() {
+        return config.getBoolean("beacon.enabled");
     }
 
     private GenesisJson getGenesisJson() {

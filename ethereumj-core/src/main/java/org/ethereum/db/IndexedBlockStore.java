@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static java.math.BigInteger.ZERO;
@@ -288,6 +289,31 @@ public class IndexedBlockStore extends AbstractBlockstore{
     @Override
     public synchronized List<Block> getListBlocksEndWith(byte[] hash, long qty) {
         return getListBlocksEndWithInner(hash, qty);
+    }
+
+    @Override
+    public List<Block> listBlocks(byte[] fromHash, byte[] toHash) {
+        Block from = blocks.get(fromHash);
+        Block to = blocks.get(toHash);
+
+        // sanity checks
+        if (from == null || to == null || to.getNumber() < from.getNumber())
+            return Collections.emptyList();
+
+        long qty = to.getNumber() - from.getNumber() + 1;
+
+        List<Block> ret = new ArrayList<>();
+        Block block = to;
+        for (long i = 0; i < qty && block != null; ++i) {
+            ret.add(0, block);
+            if (from.isEqual(block)) break;
+            block = blocks.get(block.getParentHash());
+        }
+
+        if (ret.isEmpty() || !ret.get(0).isEqual(from))
+            return Collections.emptyList();
+
+        return ret;
     }
 
     private List<Block> getListBlocksEndWithInner(byte[] hash, long qty) {
