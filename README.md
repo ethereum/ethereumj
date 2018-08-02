@@ -1,126 +1,17 @@
-# Welcome to ethereumj
+# Welcome to EthereumJ sharding research
 
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ethereum/ethereumj?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status](https://travis-ci.org/ethereum/ethereumj.svg?branch=master)](https://travis-ci.org/ethereum/ethereumj)
 [![Coverage Status](https://coveralls.io/repos/ethereum/ethereumj/badge.png?branch=master)](https://coveralls.io/r/ethereum/ethereumj?branch=master)
 
+# Useful links
+- Our Roadmap: https://github.com/ethereum/ethereumj/wiki/Sharding-Roadmap
+- Implementation details: https://github.com/ethereum/ethereumj/wiki/Sharding-Implementation
+- Specifications: [Sharding v2.1](https://notes.ethereum.org/SCIg8AH5SA-O4C1G1LYZHQ?view), [Beacon chain RPJ](https://ethresear.ch/t/beacon-chain-casper-ffg-rpj-mini-spec/2760), https://ethresear.ch/c/sharding, https://ethresear.ch/c/casper
+- Ethereum Sharding Gitter: https://gitter.im/ethereum/sharding
 
-# About
-EthereumJ is a pure-Java implementation of the Ethereum protocol. For high-level information about Ethereum and its goals, visit [ethereum.org](https://ethereum.org). The [ethereum white paper](https://github.com/ethereum/wiki/wiki/White-Paper) provides a complete conceptual overview, and the [yellow paper](http://gavwood.com/Paper.pdf) provides a formal definition of the protocol.
-
-We keep EthereumJ as thin as possible. For [JSON-RPC](https://github.com/ethereum/wiki/wiki/JSON-RPC) support and other client features check [Ethereum Harmony](https://github.com/ether-camp/ethereum-harmony).
-
-# Running EthereumJ
-
-##### Adding as a dependency to your Maven project: 
-
-```
-   <dependency>
-     <groupId>org.ethereum</groupId>
-     <artifactId>ethereumj-core</artifactId>
-     <version>1.8.1-RELEASE</version>
-   </dependency>
-```
-
-##### or your Gradle project: 
-
-```
-   repositories {
-       mavenCentral()
-       jcenter()
-       maven { url "https://dl.bintray.com/ethereum/maven/" }
-   }
-   compile "org.ethereum:ethereumj-core:1.8.+"
-```
-
-As a starting point for your own project take a look at https://github.com/ether-camp/ethereumj.starter
-
-##### Building an executable JAR
-```
-git clone https://github.com/ethereum/ethereumj
-cd ethereumj
-cp ethereumj-core/src/main/resources/ethereumj.conf ethereumj-core/src/main/resources/user.conf
-vim ethereumj-core/src/main/resources/user.conf # adjust user.conf to your needs
-./gradlew clean fatJar
-java -jar ethereumj-core/build/libs/ethereumj-core-*-all.jar
-```
-
-##### Running from command line:
-```
-> git clone https://github.com/ethereum/ethereumj
-> cd ethereumj
-> ./gradlew run [-PmainClass=<sample class>]
-```
-
-##### Optional samples to try:
-```
-./gradlew run -PmainClass=org.ethereum.samples.BasicSample
-./gradlew run -PmainClass=org.ethereum.samples.FollowAccount
-./gradlew run -PmainClass=org.ethereum.samples.PendingStateSample
-./gradlew run -PmainClass=org.ethereum.samples.PriceFeedSample
-./gradlew run -PmainClass=org.ethereum.samples.PrivateMinerSample
-./gradlew run -PmainClass=org.ethereum.samples.TestNetSample
-./gradlew run -PmainClass=org.ethereum.samples.TransactionBomb
-```
-
-##### For snapshot builds:
-Please, note, snapshots are not stable and are currently in development! If you still want to try it:
-
- - Add https://oss.jfrog.org/libs-snapshot/ as a repository to your build script
- - Add a dependency on `org.ethereum:ethereumj-core:${VERSION}`, where `${VERSION}` is of the form `1.9.0-SNAPSHOT`.
-
-Example:
-
-    <repository>
-        <id>jfrog-snapshots</id>
-        <name>oss.jfrog.org</name>
-        <url>https://oss.jfrog.org/libs-snapshot/</url>
-        <snapshots><enabled>true</enabled></snapshots>
-    </repository>
-    <!-- ... -->
-    <dependency>
-       <groupId>org.ethereum</groupId>
-       <artifactId>ethereumj-core</artifactId>
-       <version>1.9.0-SNAPSHOT</version>
-    </dependency>
-
-##### Importing project to IntelliJ IDEA: 
-```
-> git clone https://github.com/ethereum/ethereumj
-> cd ethereumj
-> gradlew build
-```
-  IDEA: 
-* File -> New -> Project from existing sources…
-* Select ethereumj/build.gradle
-* Dialog “Import Project from gradle”: press “OK”
-* After building run either `org.ethereum.Start`, one of `org.ethereum.samples.*` or create your own main. 
-
-# Configuring EthereumJ
-
-For reference on all existing options, their description and defaults you may refer to the default config `ethereumj.conf` (you may find it in either the library jar or in the source tree `ethereum-core/src/main/resources`) 
-To override needed options you may use one of the following ways: 
-* put your options to the `<working dir>/config/ethereumj.conf` file
-* put `user.conf` to the root of your classpath (as a resource) 
-* put your options to any file and supply it via `-Dethereumj.conf.file=<your config>`
-* programmatically by using `SystemProperties.CONFIG.override*()`
-* programmatically using by overriding Spring `SystemProperties` bean 
-
-Note that don’t need to put all the options to your custom config, just those you want to override. 
-
-# Special thanks
-YourKit for providing us with their nice profiler absolutely for free.
-
-YourKit supports open source projects with its full-featured Java Profiler.
-YourKit, LLC is the creator of <a href="https://www.yourkit.com/java/profiler/">YourKit Java Profiler</a>
-and <a href="https://www.yourkit.com/.net/profiler/">YourKit .NET Profiler</a>,
-innovative and intelligent tools for profiling Java and .NET applications.
-
-![YourKit Logo](https://www.yourkit.com/images/yklogo.png)
-
-# Contact
-Chat with us via [Gitter](https://gitter.im/ethereum/ethereumj)
+# Contribution
+If you're looking for a contribution, you may find it useful to visit [Roadmap](https://github.com/ethereum/ethereumj/wiki/Sharding-Roadmap) and [Implementation](https://github.com/ethereum/ethereumj/wiki/Sharding-Implementation) pages first. Ask us for next steps in either [EthereumJ](https://gitter.im/ethereum/ethereumj) or [Sharding](https://gitter.im/ethereum/sharding) Gitter channel.
 
 # License
 ethereumj is released under the [LGPL-V3 license](LICENSE).
-
