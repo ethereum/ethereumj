@@ -80,7 +80,7 @@ public class StateTestRunner {
             executor.go();
             executor.finalization();
         } catch (StackOverflowError soe){
-            logger.error("!!! VM recursion error: update your java run command with -Xss8M !!!");
+            logger.error(" !!! StackOverflowError: update your java run command with -Xss4M !!!");
             System.exit(-1);
         }
 
