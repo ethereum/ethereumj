@@ -1326,7 +1326,7 @@ public class VM {
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);
         } catch (StackOverflowError soe){
-            logger.error("\n !!! StackOverflowError: update your java run command with -Xss2M !!!\n", soe);
+            logger.error("\n !!! StackOverflowError: update your java run command with -Xss2M (-Xss4M for tests) !!!\n", soe);
             System.exit(-1);
         } finally {
             callVmHookAction(program, VMHook::stopPlay);
