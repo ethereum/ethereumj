@@ -23,14 +23,16 @@ import org.ethereum.db.BlockStore;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.HeaderStore;
 import org.ethereum.db.migrate.MigrateHeaderSourceTotalDiff;
-import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
+import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.rlpx.discover.UDPListener;
+import org.ethereum.net.server.ChannelManager;
+import org.ethereum.publish.Publisher;
+import org.ethereum.publish.event.BestBlockAddedEvent;
+import org.ethereum.publish.event.Event;
 import org.ethereum.sync.FastSyncManager;
 import org.ethereum.sync.SyncManager;
-import org.ethereum.net.rlpx.discover.NodeManager;
-import org.ethereum.net.server.ChannelManager;
 import org.ethereum.sync.SyncPool;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
@@ -42,11 +44,13 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.function.Consumer;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.ethereum.publish.Subscription.to;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
@@ -95,7 +99,7 @@ public class WorldManager {
 
     private SystemProperties config;
 
-    private EthereumListener listener;
+    private Publisher publisher;
 
     private Blockchain blockchain;
 
@@ -105,9 +109,9 @@ public class WorldManager {
 
     @Autowired
     public WorldManager(final SystemProperties config, final Repository repository,
-                        final EthereumListener listener, final Blockchain blockchain,
+                        final Publisher publisher, final Blockchain blockchain,
                         final BlockStore blockStore) {
-        this.listener = listener;
+        this.publisher = publisher;
         this.blockchain = blockchain;
         this.repository = repository;
         this.blockStore = blockStore;
@@ -121,9 +125,18 @@ public class WorldManager {
         syncManager.init(channelManager, pool);
     }
 
+    /**
+     * @param listener
+     * @deprecated use {@link #subscribe(Class, Consumer)} instead.
+     */
+    @Deprecated
     public void addListener(EthereumListener listener) {
         logger.info("Ethereum listener added");
-        ((CompositeEthereumListener) this.listener).addListener(listener);
+        publisher.subscribeListener(listener);
+    }
+
+    public <E extends Event<P>, P> Publisher subscribe(Class<E> eventType, Consumer<P> handler) {
+        return this.publisher.subscribe(to(eventType, handler));
     }
 
     public void startPeerDiscovery() {
@@ -143,12 +156,21 @@ public class WorldManager {
         return channelManager;
     }
 
+    /**
+     * @return
+     * @deprecated use {@link #getPublisher()} instead.
+     */
+    @Deprecated
     public EthereumListener getListener() {
-        return listener;
+        return publisher.asListener();
+    }
+
+    public Publisher getPublisher() {
+        return publisher;
     }
 
     public org.ethereum.facade.Repository getRepository() {
-        return (org.ethereum.facade.Repository)repository;
+        return repository;
     }
 
     public Blockchain getBlockchain() {
@@ -186,7 +208,8 @@ public class WorldManager {
             blockchain.setBestBlock(Genesis.getInstance(config));
             blockchain.setTotalDifficulty(Genesis.getInstance(config).getDifficultyBI());
 
-            listener.onBlock(new BlockSummary(Genesis.getInstance(config), new HashMap<byte[], BigInteger>(), new ArrayList<TransactionReceipt>(), new ArrayList<TransactionExecutionSummary>()), true);
+            BlockSummary blockSummary = new BlockSummary(Genesis.getInstance(config), emptyMap(), emptyList(), emptyList());
+            publisher.publish(new BestBlockAddedEvent(blockSummary, true));
 //            repository.dumpState(Genesis.getInstance(config), 0, 0, null);
 
             logger.info("Genesis block loaded");

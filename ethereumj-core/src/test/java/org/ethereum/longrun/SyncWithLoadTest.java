@@ -21,19 +21,13 @@ import com.typesafe.config.ConfigFactory;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.AccountState;
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockSummary;
-import org.ethereum.core.Repository;
-import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionExecutor;
-import org.ethereum.core.TransactionReceipt;
+import org.ethereum.core.*;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.db.RepositoryImpl;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.publish.Publisher;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
@@ -49,7 +43,6 @@ import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -60,18 +53,18 @@ import static java.lang.Thread.sleep;
 /**
  * Regular sync with load
  * Loads ethereumJ during sync with various onBlock/repo track/callback usages
- *
+ * <p>
  * Runs sync with defined config for 1-30 minutes
  * - checks State Trie is not broken
  * - checks whether all blocks are in blockstore, validates parent connection and bodies
  * - checks and validate transaction receipts
  * Stopped, than restarts in 1 minute, syncs and pass all checks again.
  * Repeats forever or until first error occurs
- *
+ * <p>
  * Run with '-Dlogback.configurationFile=longrun/logback.xml' for proper logging
  * Also following flags are available:
- *     -Dreset.db.onFirstRun=true
- *     -Doverride.config.res=longrun/conf/live.conf
+ * -Dreset.db.onFirstRun=true
+ * -Doverride.config.res=longrun/conf/live.conf
  */
 @Ignore
 public class SyncWithLoadTest {
@@ -88,7 +81,7 @@ public class SyncWithLoadTest {
     private static final MutableObject<Boolean> resetDBOnFirstRun = new MutableObject<>(null);
 
     // Timer stops while not syncing
-    private static final AtomicLong lastImport =  new AtomicLong();
+    private static final AtomicLong lastImport = new AtomicLong();
     private static final int LAST_IMPORT_TIMEOUT = 10 * 60 * 1000;
 
     public SyncWithLoadTest() throws Exception {
@@ -209,7 +202,7 @@ public class SyncWithLoadTest {
                     try {
                         TransactionExecutor executor = new TransactionExecutor
                                 (tx, block.getCoinbase(), repository, ethereum.getBlockchain().getBlockStore(),
-                                        programInvokeFactory, block, new EthereumListenerAdapter(), 0)
+                                        programInvokeFactory, block, new Publisher(EventDispatchThread.getDefault()), 0)
                                 .withCommonConfig(commonConfig)
                                 .setLocalCall(true);
 
@@ -285,13 +278,13 @@ public class SyncWithLoadTest {
 
         new Thread(() -> {
             try {
-                while(firstRun.get()) {
+                while (firstRun.get()) {
                     sleep(1000);
                 }
                 testLogger.info("Stopping first run");
 
-                while(true) {
-                    while(isRunning.get()) {
+                while (true) {
+                    while (isRunning.get()) {
                         sleep(1000);
                     }
                     regularNode.close();

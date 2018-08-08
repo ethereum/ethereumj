@@ -17,22 +17,20 @@
  */
 package org.ethereum.listener;
 
-import org.ethereum.core.BlockSummary;
 import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionExecutionSummary;
 import org.ethereum.util.ByteUtil;
 
 import java.util.Arrays;
 
 /**
  * Calculates a 'reasonable' Gas price based on statistics of the latest transaction's Gas prices
- *
+ * <p>
  * Normally the price returned should be sufficient to execute a transaction since ~25% of the latest
  * transactions were executed at this or lower price.
- *
+ * <p>
  * Created by Anton Nashatyrev on 22.09.2015.
  */
-public class GasPriceTracker extends EthereumListenerAdapter {
+public class GasPriceTracker {
 
     private static final long defaultPrice = 70_000_000_000L;
 
@@ -41,13 +39,6 @@ public class GasPriceTracker extends EthereumListenerAdapter {
     private boolean filled = false;
 
     private long lastVal;
-
-    @Override
-    public void onBlock(BlockSummary blockSummary) {
-        for (Transaction tx : blockSummary.getBlock().getTransactionsList()) {
-            onTransaction(tx);
-        }
-    }
 
     public void onTransaction(Transaction tx) {
         if (idx == -1) {

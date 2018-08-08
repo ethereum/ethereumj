@@ -18,20 +18,19 @@
 package org.ethereum.db;
 
 import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.JdkFutureAdapters;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.datasource.*;
-import org.ethereum.listener.CompositeEthereumListener;
-import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.datasource.AbstractCachedSource;
+import org.ethereum.datasource.AsyncFlushable;
+import org.ethereum.datasource.DbSource;
+import org.ethereum.datasource.Source;
+import org.ethereum.listener.EthereumListener;
+import org.ethereum.publish.Publisher;
+import org.ethereum.publish.event.SyncDoneEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
@@ -44,7 +43,7 @@ public class DbFlushManager {
 
     List<AbstractCachedSource<byte[], ?>> writeCaches = new CopyOnWriteArrayList<>();
     List<Source<byte[], ?>> sources = new CopyOnWriteArrayList<>();
-    Set<DbSource> dbSources = new HashSet<>();
+    Set<DbSource> dbSources ;
     AbstractCachedSource<byte[], byte[]> stateDbCache;
 
     long sizeThreshold;
@@ -71,15 +70,13 @@ public class DbFlushManager {
     }
 
     @Autowired
-    public void setEthereumListener(CompositeEthereumListener listener) {
+    public void setPublisher(Publisher publisher) {
         if (!flushAfterSyncDone) return;
-        listener.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onSyncDone(SyncState state) {
-                if (state == SyncState.COMPLETE) {
-                    logger.info("DbFlushManager: long sync done, flushing each block now");
-                    syncDone = true;
-                }
+
+        publisher.subscribe(SyncDoneEvent.class, state -> {
+            if (state == EthereumListener.SyncState.COMPLETE) {
+                logger.info("DbFlushManager: long sync done, flushing each block now");
+                syncDone = true;
             }
         });
     }

@@ -32,13 +32,13 @@ import org.ethereum.db.HeaderStore;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.StateSource;
 import org.ethereum.facade.SyncStatus;
-import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.handler.Eth63;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.server.Channel;
+import org.ethereum.publish.Publisher;
+import org.ethereum.publish.event.SyncDoneEvent;
 import org.ethereum.trie.TrieKey;
 import org.ethereum.util.*;
 import org.slf4j.Logger;
@@ -56,12 +56,10 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
-import static org.ethereum.listener.EthereumListener.SyncState.COMPLETE;
-import static org.ethereum.listener.EthereumListener.SyncState.SECURE;
-import static org.ethereum.listener.EthereumListener.SyncState.UNSECURE;
+import static org.ethereum.listener.EthereumListener.SyncState.*;
 import static org.ethereum.trie.TrieKey.fromPacked;
-import static org.ethereum.util.CompactEncoder.hasTerminator;
 import static org.ethereum.util.ByteUtil.toHexString;
+import static org.ethereum.util.CompactEncoder.hasTerminator;
 
 /**
  * Created by Anton Nashatyrev on 24.10.2016.
@@ -109,7 +107,7 @@ public class FastSyncManager {
     DbFlushManager dbFlushManager;
 
     @Autowired
-    CompositeEthereumListener listener;
+    private Publisher publisher;
 
     @Autowired
     ApplicationContext applicationContext;
@@ -194,7 +192,7 @@ public class FastSyncManager {
             case SECURE:
                 if (headersDownloader != null) {
                     return new SyncStatus(SyncStatus.SyncStage.Headers, headersDownloader.getHeadersLoaded(),
-                                pivot.getNumber());
+                            pivot.getNumber());
                 } else {
                     return new SyncStatus(SyncStatus.SyncStage.Headers, pivot.getNumber(), pivot.getNumber());
                 }
@@ -236,9 +234,15 @@ public class FastSyncManager {
             this.nodeHash = nodeHash;
 
             switch (type) {
-                case STATE: stateNodesCnt++; break;
-                case CODE: codeNodesCnt++; break;
-                case STORAGE: storageNodesCnt++; break;
+                case STATE:
+                    stateNodesCnt++;
+                    break;
+                case CODE:
+                    codeNodesCnt++;
+                    break;
+                case STORAGE:
+                    storageNodesCnt++;
+                    break;
             }
         }
 
@@ -540,7 +544,7 @@ public class FastSyncManager {
 
         retrieveLoop();
 
-        logger.info("FastSync: state trie download complete! (Nodes count: state: " + stateNodesCnt + ", storage: " +storageNodesCnt + ", code: " +codeNodesCnt + ")");
+        logger.info("FastSync: state trie download complete! (Nodes count: state: " + stateNodesCnt + ", storage: " + storageNodesCnt + ", code: " + codeNodesCnt + ")");
         last = 0;
         logStat();
 
@@ -556,12 +560,7 @@ public class FastSyncManager {
         logger.info("FastSync: proceeding to regular sync...");
 
         final CountDownLatch syncDoneLatch = new CountDownLatch(1);
-        listener.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onSyncDone(SyncState state) {
-                syncDoneLatch.countDown();
-            }
-        });
+        publisher.subscribe(SyncDoneEvent.class, syncState -> syncDoneLatch.countDown());
         syncManager.initRegularSync(UNSECURE);
         logger.info("FastSync: waiting for regular sync to reach the blockchain head...");
 
@@ -755,7 +754,8 @@ public class FastSyncManager {
         // prevent early state notification when sync is not yet done
         syncManager.setSyncDoneType(state);
         if (syncManager.isSyncDone()) {
-            listener.onSyncDone(state);
+//            listener.onSyncDone(state);
+            publisher.publish(new SyncDoneEvent(state));
         }
     }
 
@@ -880,10 +880,11 @@ public class FastSyncManager {
      * 1. Get pivotBlockNumber blocks from all peers
      * 2. Ensure that pivot block available from 50% + 1 peer
      * 3. Otherwise proposes new pivotBlockNumber (stepped back)
-     * @param pivotBlockNumber      Pivot block number
-     * @return     null - if no peers available
-     *             null, newPivotBlockNumber - if it's better to try other pivot block number
-     *             BlockHeader, null - if pivot successfully fetched and verified by majority of peers
+     *
+     * @param pivotBlockNumber Pivot block number
+     * @return null - if no peers available
+     * null, newPivotBlockNumber - if it's better to try other pivot block number
+     * BlockHeader, null - if pivot successfully fetched and verified by majority of peers
      */
     private Pair<BlockHeader, Long> getPivotHeaderByNumber(long pivotBlockNumber) throws Exception {
         List<Channel> allIdle = pool.getAllIdle();

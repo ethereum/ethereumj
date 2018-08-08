@@ -17,22 +17,17 @@
  */
 package org.ethereum.net.eth.handler;
 
-import org.ethereum.config.CommonConfig;
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeader;
-import org.ethereum.core.Blockchain;
-import org.ethereum.core.BlockchainImpl;
+import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.BlockStoreDummy;
-import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.net.eth.message.EthMessage;
 import org.ethereum.net.eth.message.GetBlockBodiesMessage;
 import org.ethereum.net.eth.message.GetBlockHeadersMessage;
+import org.ethereum.publish.Publisher;
 import org.ethereum.sync.SyncManager;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.spongycastle.util.encoders.Hex;
@@ -98,11 +93,12 @@ public class LockBlockchainTest {
         };
 
         SysPropConfig1.testHandler = new Eth62(SysPropConfig1.props, blockchain, blockStoreDummy,
-                new CompositeEthereumListener()) {
+                new Publisher(EventDispatchThread.getDefault())) {
             {
                 this.blockstore = blockStoreDummy;
                 this.syncManager = Mockito.mock(SyncManager.class);
             }
+
             @Override
             public synchronized void sendStatus() {
                 super.sendStatus();
@@ -144,15 +140,15 @@ public class LockBlockchainTest {
     public synchronized void testHeadersWithoutSkip() throws FileNotFoundException, InterruptedException {
         ExecutorService executor1 = Executors.newSingleThreadExecutor();
         executor1.submit(() -> {
-            blockchain.isBlockExist(null);
-        }
+                    blockchain.isBlockExist(null);
+                }
         );
         this.wait(DELAY);
         ExecutorService executor2 = Executors.newSingleThreadExecutor();
         executor2.submit(() -> {
-            GetBlockHeadersMessage msg = new GetBlockHeadersMessage(1L, new byte[0], 10, 0, false);
-            SysPropConfig1.testHandler.processGetBlockHeaders(msg);
-        }
+                    GetBlockHeadersMessage msg = new GetBlockHeadersMessage(1L, new byte[0], 10, 0, false);
+                    SysPropConfig1.testHandler.processGetBlockHeaders(msg);
+                }
         );
         this.wait(DELAY);
         assert result.get();
@@ -162,15 +158,15 @@ public class LockBlockchainTest {
     public synchronized void testHeadersWithSkip() throws FileNotFoundException, InterruptedException {
         ExecutorService executor1 = Executors.newSingleThreadExecutor();
         executor1.submit(() -> {
-            blockchain.isBlockExist(null);
-        }
+                    blockchain.isBlockExist(null);
+                }
         );
         this.wait(DELAY);
         ExecutorService executor2 = Executors.newSingleThreadExecutor();
         executor2.submit(() -> {
-            GetBlockHeadersMessage msg = new GetBlockHeadersMessage(1L, new byte[0], 10, 5, false);
-            SysPropConfig1.testHandler.processGetBlockHeaders(msg);
-        }
+                    GetBlockHeadersMessage msg = new GetBlockHeadersMessage(1L, new byte[0], 10, 5, false);
+                    SysPropConfig1.testHandler.processGetBlockHeaders(msg);
+                }
         );
         this.wait(DELAY);
         assert result.get();
@@ -180,18 +176,18 @@ public class LockBlockchainTest {
     public synchronized void testBodies() throws FileNotFoundException, InterruptedException {
         ExecutorService executor1 = Executors.newSingleThreadExecutor();
         executor1.submit(() -> {
-            blockchain.isBlockExist(null);
-        }
+                    blockchain.isBlockExist(null);
+                }
         );
         this.wait(DELAY);
         ExecutorService executor2 = Executors.newSingleThreadExecutor();
         executor2.submit(() -> {
-            List<byte[]> hashes = new ArrayList<>();
-            hashes.add(new byte[] {1, 2, 3});
-            hashes.add(new byte[] {4, 5, 6});
-            GetBlockBodiesMessage msg = new GetBlockBodiesMessage(hashes);
-            SysPropConfig1.testHandler.processGetBlockBodies(msg);
-        }
+                    List<byte[]> hashes = new ArrayList<>();
+                    hashes.add(new byte[]{1, 2, 3});
+                    hashes.add(new byte[]{4, 5, 6});
+                    GetBlockBodiesMessage msg = new GetBlockBodiesMessage(hashes);
+                    SysPropConfig1.testHandler.processGetBlockBodies(msg);
+                }
         );
         this.wait(DELAY);
         assert result.get();
@@ -201,18 +197,18 @@ public class LockBlockchainTest {
     public synchronized void testStatus() throws FileNotFoundException, InterruptedException {
         ExecutorService executor1 = Executors.newSingleThreadExecutor();
         executor1.submit(() -> {
-            blockchain.isBlockExist(null);
-        }
+                    blockchain.isBlockExist(null);
+                }
         );
         this.wait(DELAY);
         ExecutorService executor2 = Executors.newSingleThreadExecutor();
         executor2.submit(() -> {
-            try {
-                SysPropConfig1.testHandler.sendStatus();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+                    try {
+                        SysPropConfig1.testHandler.sendStatus();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
         );
         this.wait(DELAY);
         assert result.get();

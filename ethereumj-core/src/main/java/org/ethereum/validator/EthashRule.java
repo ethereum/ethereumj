@@ -20,16 +20,17 @@ package org.ethereum.validator;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeader;
-import org.ethereum.core.BlockSummary;
-import org.ethereum.listener.CompositeEthereumListener;
-import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.mine.EthashValidationHelper;
+import org.ethereum.publish.Publisher;
+import org.ethereum.publish.event.BestBlockAddedEvent;
+import org.ethereum.publish.event.SyncDoneEvent;
 import org.ethereum.util.FastByteComparisons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Random;
 
+import static org.ethereum.publish.Subscription.to;
 import static org.ethereum.validator.EthashRule.ChainType.main;
 import static org.ethereum.validator.EthashRule.ChainType.reverse;
 import static org.ethereum.validator.EthashRule.Mode.fake;
@@ -39,14 +40,13 @@ import static org.ethereum.validator.EthashRule.Mode.mixed;
  * Runs block header validation against Ethash dataset.
  *
  * <p>
- *     Configurable to work in several modes:
- *     <ul>
- *         <li> fake - partial checks without verification against Ethash dataset
- *         <li> strict - full check for each block
- *         <li> mixed  - run full check for each block if main import flow during short sync,
- *                       run full check in random fashion (<code>1/{@link #MIX_DENOMINATOR}</code> blocks are checked)
- *                                during long sync, fast sync headers and blocks downloading
- *
+ * Configurable to work in several modes:
+ * <ul>
+ * <li> fake - partial checks without verification against Ethash dataset
+ * <li> strict - full check for each block
+ * <li> mixed  - run full check for each block if main import flow during short sync,
+ * run full check in random fashion (<code>1/{@link #MIX_DENOMINATOR}</code> blocks are checked)
+ * during long sync, fast sync headers and blocks downloading
  *
  * @author Mikhail Kalinin
  * @since 19.06.2018
@@ -73,9 +73,17 @@ public class EthashRule extends BlockHeaderRule {
     }
 
     public enum ChainType {
-        main,       /** main chain, cache updates are stick to best block events, requires listener */
-        direct,     /** side chain, cache is triggered each validation attempt, no listener required */
-        reverse;    /** side chain with reverted validation order */
+        main, /**
+         * main chain, cache updates are stick to best block events, requires listener
+         */
+        direct, /**
+         * side chain, cache is triggered each validation attempt, no listener required
+         */
+        reverse;
+
+        /**
+         * side chain with reverted validation order
+         */
 
         public boolean isSide() {
             return this == reverse || this == direct;
@@ -89,15 +97,15 @@ public class EthashRule extends BlockHeaderRule {
     private Random rnd = new Random();
 
     // two most common settings
-    public static EthashRule createRegular(SystemProperties systemProperties, CompositeEthereumListener listener) {
-        return new EthashRule(Mode.parse(systemProperties.getEthashMode(), mixed), main, listener);
+    public static EthashRule createRegular(SystemProperties systemProperties, Publisher publisher) {
+        return new EthashRule(Mode.parse(systemProperties.getEthashMode(), mixed), main, publisher);
     }
 
     public static EthashRule createReverse(SystemProperties systemProperties) {
         return new EthashRule(Mode.parse(systemProperties.getEthashMode(), mixed), reverse, null);
     }
 
-    public EthashRule(Mode mode, ChainType chain, CompositeEthereumListener listener) {
+    public EthashRule(Mode mode, ChainType chain, Publisher publisher) {
         this.mode = mode;
         this.chain = chain;
 
@@ -105,18 +113,14 @@ public class EthashRule extends BlockHeaderRule {
             this.ethashHelper = new EthashValidationHelper(
                     chain == reverse ? EthashValidationHelper.CacheOrder.reverse : EthashValidationHelper.CacheOrder.direct);
 
-            if (this.chain == main && listener != null) {
-                listener.addListener(new EthereumListenerAdapter() {
-                    @Override
-                    public void onSyncDone(SyncState state) {
-                        EthashRule.this.syncDone = true;
-                    }
-
-                    @Override
-                    public void onBlock(BlockSummary blockSummary, boolean best) {
-                        if (best) ethashHelper.preCache(blockSummary.getBlock().getNumber());
-                    }
-                });
+            if (this.chain == main && publisher != null) {
+                publisher
+                        .subscribe(to(SyncDoneEvent.class, ss -> EthashRule.this.syncDone = true))
+                        .subscribe(to(BestBlockAddedEvent.class, data -> {
+                            if (data.isBest()) {
+                                ethashHelper.preCache(data.getBlockSummary().getBlock().getNumber());
+                            }
+                        }));
             }
         }
     }

@@ -23,10 +23,14 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.listener.EthereumListener;
-import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.publish.Publisher;
+import org.ethereum.publish.event.TransactionExecutedEvent;
+import org.ethereum.publish.event.VmTraceCreatedEvent;
 import org.ethereum.util.ByteArraySet;
-import org.ethereum.vm.*;
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.LogInfo;
+import org.ethereum.vm.PrecompiledContracts;
+import org.ethereum.vm.VM;
 import org.ethereum.vm.program.Program;
 import org.ethereum.vm.program.ProgramResult;
 import org.ethereum.vm.program.invoke.ProgramInvoke;
@@ -73,7 +77,7 @@ public class TransactionExecutor {
     private ProgramResult result = new ProgramResult();
     private Block currentBlock;
 
-    private final EthereumListener listener;
+    private final Publisher publisher;
 
     private VM vm;
     private Program program;
@@ -91,12 +95,12 @@ public class TransactionExecutor {
     public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
                                ProgramInvokeFactory programInvokeFactory, Block currentBlock) {
 
-        this(tx, coinbase, track, blockStore, programInvokeFactory, currentBlock, new EthereumListenerAdapter(), 0);
+        this(tx, coinbase, track, blockStore, programInvokeFactory, currentBlock, new Publisher(EventDispatchThread.getDefault()), 0);
     }
 
     public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
                                ProgramInvokeFactory programInvokeFactory, Block currentBlock,
-                               EthereumListener listener, long gasUsedInTheBlock) {
+                               Publisher publisher, long gasUsedInTheBlock) {
 
         this.tx = tx;
         this.coinbase = coinbase;
@@ -105,7 +109,7 @@ public class TransactionExecutor {
         this.blockStore = blockStore;
         this.programInvokeFactory = programInvokeFactory;
         this.currentBlock = currentBlock;
-        this.listener = listener;
+        this.publisher = publisher;
         this.gasUsedInTheBlock = gasUsedInTheBlock;
         this.m_endGas = toBI(tx.getGasLimit());
         withCommonConfig(CommonConfig.getDefault());
@@ -450,7 +454,7 @@ public class TransactionExecutor {
         }
 
 
-        listener.onTransactionExecuted(summary);
+        publisher.publish(new TransactionExecutedEvent(summary));
 
         if (config.vmTrace() && program != null && result != null) {
             String trace = program.getTrace()
@@ -465,7 +469,7 @@ public class TransactionExecutor {
 
             String txHash = toHexString(tx.getHash());
             saveProgramTraceFile(config, txHash, trace);
-            listener.onVMTraceCreated(txHash, trace);
+            publisher.publish(new VmTraceCreatedEvent(txHash, trace));
         }
         return summary;
     }

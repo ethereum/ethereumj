@@ -17,16 +17,17 @@
  */
 package org.ethereum.config;
 
-import org.ethereum.core.*;
+import org.ethereum.core.EventDispatchThread;
+import org.ethereum.core.Repository;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.leveldb.LevelDbDataSource;
 import org.ethereum.datasource.rocksdb.RocksDbDataSource;
 import org.ethereum.db.*;
-import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.handler.Eth63;
+import org.ethereum.publish.Publisher;
 import org.ethereum.sync.FastSyncManager;
 import org.ethereum.validator.*;
 import org.ethereum.vm.DataWord;
@@ -78,7 +79,8 @@ public class CommonConfig {
     }
 
 
-    @Bean @Primary
+    @Bean
+    @Primary
     public Repository repository() {
         return new RepositoryWrapper();
     }
@@ -88,7 +90,8 @@ public class CommonConfig {
         return new RepositoryRoot(stateSource(), null);
     }
 
-    @Bean @Scope("prototype")
+    @Bean
+    @Scope("prototype")
     public Repository repository(byte[] stateRoot) {
         return new RepositoryRoot(stateSource(), stateRoot);
     }
@@ -96,7 +99,7 @@ public class CommonConfig {
     /**
      * A source of nodes for state trie and all contract storage tries. <br/>
      * This source provides contract code too. <br/><br/>
-     *
+     * <p>
      * Picks node by 16-bytes prefix of its key. <br/>
      * Within {@link NodeKeyCompositor} this source is a part of ref counting workaround<br/><br/>
      *
@@ -128,7 +131,7 @@ public class CommonConfig {
     @Bean
     @Scope("prototype")
     public Source<byte[], byte[]> cachedDbSource(String name) {
-        AbstractCachedSource<byte[], byte[]>  writeCache = new AsyncWriteCache<byte[], byte[]>(blockchainSource(name)) {
+        AbstractCachedSource<byte[], byte[]> writeCache = new AsyncWriteCache<byte[], byte[]>(blockchainSource(name)) {
             @Override
             protected WriteCache<byte[], byte[]> createCache(Source<byte[], byte[]> source) {
                 WriteCache.BytesKey<byte[]> ret = new WriteCache.BytesKey<>(source, WriteCache.CacheType.SIMPLE);
@@ -168,7 +171,7 @@ public class CommonConfig {
             DbSource<byte[]> dbSource;
             if ("inmem".equals(dataSource)) {
                 dbSource = new HashMapDB<>();
-            } else if ("leveldb".equals(dataSource)){
+            } else if ("leveldb".equals(dataSource)) {
                 dbSource = levelDbDataSource();
             } else {
                 dataSource = "rocksdb";
@@ -222,9 +225,14 @@ public class CommonConfig {
         }
     }
 
-    @Bean(name = "EthereumListener")
-    public CompositeEthereumListener ethereumListener() {
-        return new CompositeEthereumListener();
+    @Bean
+    public Publisher publisher(EventDispatchThread eventDispatchThread) {
+        return new Publisher(eventDispatchThread);
+    }
+
+    @Bean
+    public EthereumListener ethereumListener(Publisher publisher) {
+        return publisher.asListener();
     }
 
     @Bean
@@ -262,16 +270,18 @@ public class CommonConfig {
                         ret.add(new DataWord(1));
                         return ret.getLast20Bytes();
                     }
+
                     public byte[] deserialize(byte[] stream) {
                         throw new RuntimeException("Shouldn't be called");
                     }
                 }, new Serializer<ProgramPrecompile, byte[]>() {
-                    public byte[] serialize(ProgramPrecompile object) {
-                        return object == null ? null : object.serialize();
-                    }
-                    public ProgramPrecompile deserialize(byte[] stream) {
-                        return stream == null ? null : ProgramPrecompile.deserialize(stream);
-                    }
+            public byte[] serialize(ProgramPrecompile object) {
+                return object == null ? null : object.serialize();
+            }
+
+            public ProgramPrecompile deserialize(byte[] stream) {
+                return stream == null ? null : ProgramPrecompile.deserialize(stream);
+            }
         });
     }
 
@@ -290,14 +300,14 @@ public class CommonConfig {
     }
 
     @Bean
-    public BlockHeaderValidator headerValidator() {
+    public BlockHeaderValidator headerValidator(SystemProperties systemProperties, Publisher publisher) {
 
         List<BlockHeaderRule> rules = new ArrayList<>(asList(
                 new GasValueRule(),
-                new ExtraDataRule(systemProperties()),
-                EthashRule.createRegular(systemProperties(), ethereumListener()),
-                new GasLimitRule(systemProperties()),
-                new BlockHashRule(systemProperties())
+                new ExtraDataRule(systemProperties),
+                EthashRule.createRegular(systemProperties, publisher),
+                new GasLimitRule(systemProperties),
+                new BlockHashRule(systemProperties)
         ));
 
         return new BlockHeaderValidator(rules);
