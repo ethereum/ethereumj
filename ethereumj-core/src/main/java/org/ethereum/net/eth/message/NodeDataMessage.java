@@ -44,7 +44,7 @@ public class NodeDataMessage extends EthMessage {
     }
 
     private void parse() {
-        RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
+        RLPList paramsList = RLP.unwrapList(encoded);
 
         dataList = new ArrayList<>();
         for (int i = 0; i < paramsList.size(); ++i) {

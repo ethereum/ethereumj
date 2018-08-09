@@ -552,23 +552,24 @@ public class TrieImpl implements Trie<byte[]> {
                 return n.branchNodeSetChild(k.getHex(0), newChildNode);
             }
         } else {
-            TrieKey commonPrefix = k.getCommonPrefix(n.kvNodeGetKey());
+            TrieKey currentNodeKey = n.kvNodeGetKey();
+            TrieKey commonPrefix = k.getCommonPrefix(currentNodeKey);
             if (commonPrefix.isEmpty()) {
                 Node newBranchNode = new Node();
-                insert(newBranchNode, n.kvNodeGetKey(), n.kvNodeGetValueOrNode());
+                insert(newBranchNode, currentNodeKey, n.kvNodeGetValueOrNode());
                 insert(newBranchNode, k, nodeOrValue);
                 n.dispose();
                 return newBranchNode;
             } else if (commonPrefix.equals(k)) {
                 return n.kvNodeSetValueOrNode(nodeOrValue);
-            } else if (commonPrefix.equals(n.kvNodeGetKey())) {
+            } else if (commonPrefix.equals(currentNodeKey)) {
                 insert(n.kvNodeGetChildNode(), k.shift(commonPrefix.getLength()), nodeOrValue);
                 return n.invalidate();
             } else {
                 Node newBranchNode = new Node();
                 Node newKvNode = new Node(commonPrefix, newBranchNode);
                 // TODO can be optimized
-                insert(newKvNode, n.kvNodeGetKey(), n.kvNodeGetValueOrNode());
+                insert(newKvNode, currentNodeKey, n.kvNodeGetValueOrNode());
                 insert(newKvNode, k, nodeOrValue);
                 n.dispose();
                 return newKvNode;

@@ -67,5 +67,11 @@ public abstract class BlockHeaderRule extends AbstractValidationRule {
             this.success = success;
             this.error = error;
         }
+
+        @Override
+        public String toString() {
+            return (success ? "Success" : "Fail") +
+                    (error == null ? "" : "(" + error + ")");
+        }
     }
 }

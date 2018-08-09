@@ -33,7 +33,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @author Roman Mandeleil
  * @since 12.11.2014
  */
-@Component(value = "EthereumListener")
 public class CompositeEthereumListener implements EthereumListener {
 
     private static abstract class RunnableInfo implements Runnable {
@@ -54,7 +53,7 @@ public class CompositeEthereumListener implements EthereumListener {
     @Autowired
     EventDispatchThread eventDispatchThread = EventDispatchThread.getDefault();
     
-    List<EthereumListener> listeners = new CopyOnWriteArrayList<>();
+    protected List<EthereumListener> listeners = new CopyOnWriteArrayList<>();
 
     public void addListener(EthereumListener listener) {
         listeners.add(listener);
@@ -82,6 +81,18 @@ public class CompositeEthereumListener implements EthereumListener {
                 @Override
                 public void run() {
                     listener.onBlock(blockSummary);
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onBlock(final BlockSummary blockSummary, final boolean best) {
+        for (final EthereumListener listener : listeners) {
+            eventDispatchThread.invokeLater(new RunnableInfo(listener, "onBlock") {
+                @Override
+                public void run() {
+                    listener.onBlock(blockSummary, best);
                 }
             });
         }
