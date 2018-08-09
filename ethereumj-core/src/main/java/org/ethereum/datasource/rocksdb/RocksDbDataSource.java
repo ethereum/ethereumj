@@ -213,7 +213,7 @@ public class RocksDbDataSource implements DbSource<byte[]> {
             logger.debug("Close db: {}", name);
             db.close();
             readOpts.close();
-            
+
             alive = false;
 
         } catch (Exception e) {

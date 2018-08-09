@@ -60,7 +60,7 @@ public class Solc {
         tmpDir.mkdirs();
 
         InputStream is = getClass().getResourceAsStream("/native/" + getOS() + "/solc/file.list");
-        try(Scanner scanner = new Scanner(is)){
+        try (Scanner scanner = new Scanner(is)) {
             while (scanner.hasNext()) {
                 String s = scanner.next();
                 File targetFile = new File(tmpDir, s);
