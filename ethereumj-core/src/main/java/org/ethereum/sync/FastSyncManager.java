@@ -716,8 +716,7 @@ public class FastSyncManager {
                         }
 
                         syncUnsecure(pivot);  // regularSync should be inited here
-                    //$FALL-THROUGH$
-                case SECURE:
+                    case SECURE:
                         if (origSyncStage == SECURE) {
                             logger.info("FastSync: UNSECURE sync was completed prior to this run, proceeding with next stage...");
                             logger.info("Initializing regular sync");
@@ -727,8 +726,7 @@ public class FastSyncManager {
                         syncSecure();
 
                         fireSyncDone(SECURE);
-                    //$FALL-THROUGH$
-                case COMPLETE:
+                    case COMPLETE:
                         if (origSyncStage == COMPLETE) {
                             logger.info("FastSync: SECURE sync was completed prior to this run, proceeding with next stage...");
                             logger.info("Initializing regular sync");

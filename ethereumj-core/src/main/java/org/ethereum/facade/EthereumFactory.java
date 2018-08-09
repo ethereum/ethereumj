@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.stereotype.Component;
 
 
@@ -60,8 +61,8 @@ public class EthereumFactory {
 
     public static Ethereum createEthereum(Class ... springConfigs) {
         logger.info("Starting EthereumJ...");
-        final AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(springConfigs);
-        Runtime.getRuntime().addShutdownHook(new Thread(()-> context.close()));
+        AbstractApplicationContext context = new AnnotationConfigApplicationContext(springConfigs);
+        context.registerShutdownHook();
         return context.getBean(Ethereum.class);
     }
 }
