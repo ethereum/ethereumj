@@ -19,8 +19,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.toList;
@@ -67,11 +69,31 @@ public class Publisher {
 
     private static final Logger log = LoggerFactory.getLogger("events");
 
-    private final EventDispatchThread dispatchThread;
+    private class Command implements Runnable {
+        private final List<Subscription> subscriptions;
+        private final Event event;
+
+        private Command(List<Subscription> subscriptions, Event event) {
+            this.subscriptions = subscriptions;
+            this.event = event;
+        }
+
+        @Override
+        public void run() {
+            subscriptions.forEach(subscription -> subscription.handle(event));
+        }
+
+        @Override
+        public String toString() {
+            return format("%s: consumed by %d subscriber(s).", event, subscriptions.size());
+        }
+    }
+
+    private final Executor executor;
     private final Map<Class<? extends Event>, List<Subscription>> subscriptionsByEvent = new ConcurrentHashMap<>();
 
-    public Publisher(EventDispatchThread dispatchThread) {
-        this.dispatchThread = dispatchThread;
+    public Publisher(Executor executor) {
+        this.executor = executor;
     }
 
     /**
@@ -83,23 +105,24 @@ public class Publisher {
      */
     public Publisher publish(Event event) {
         List<Subscription> subscriptions = subscriptionsByEvent.getOrDefault(event.getClass(), emptyList());
-        List<Subscription> toHandle = subscriptions.stream()
-                .filter(subscription -> subscription.matches(event))
-                .collect(toList());
+        if (!subscriptions.isEmpty()) {
 
-        subscriptions.stream()
-                .filter(subscription -> subscription.needUnsubscribeAfter(event))
-                .forEach(this::unsubscribe);
+            List<Subscription> toHandle = subscriptions.stream()
+                    .filter(subscription -> subscription.matches(event))
+                    .collect(toList());
+
+            subscriptions.stream()
+                    .filter(subscription -> subscription.needUnsubscribeAfter(event))
+                    .forEach(this::unsubscribe);
+
+            if (event instanceof Single) {
+                subscriptionsByEvent.remove(event.getClass());
+            }
 
 
-        if (!toHandle.isEmpty()) {
-            dispatchThread.invokeLater(() -> toHandle.forEach(subscription -> {
-                subscription.handle(event);
-
-                if (event instanceof Single) {
-                    subscriptionsByEvent.remove(event.getClass());
-                }
-            }));
+            if (!toHandle.isEmpty()) {
+                executor.execute(new Command(toHandle, event));
+            }
         }
 
         return this;
@@ -176,10 +199,6 @@ public class Publisher {
         return subscriptionsByEvent.values().stream()
                 .mapToInt(List::size)
                 .sum();
-    }
-
-    public void shutdown() {
-        dispatchThread.shutdown();
     }
 
     /**

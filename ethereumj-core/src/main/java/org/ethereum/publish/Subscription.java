@@ -11,8 +11,8 @@ import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 /**
- * Abstraction that holds together event type, event processor (a.k.a consumer) and optional condition that resolves
- * event processing.
+ * Abstraction that holds together event type, event processor (a.k.a consumer) and optional conditions that resolves
+ * event processing and auto-unsubscribe.
  *
  * @author Eugene Shevchenko
  */
