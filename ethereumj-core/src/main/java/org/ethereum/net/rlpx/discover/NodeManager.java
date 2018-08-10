@@ -21,9 +21,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.PeerSource;
-import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.rlpx.*;
 import org.ethereum.net.rlpx.discover.table.NodeTable;
+import org.ethereum.publish.Publisher;
+import org.ethereum.publish.event.NodeDiscoveredEvent;
 import org.ethereum.util.CollectionUtils;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,8 +38,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-
-import static java.lang.Math.min;
 
 /**
  * The central class for Peer Discovery machinery.
@@ -62,7 +61,7 @@ public class NodeManager implements Consumer<DiscoveryEvent>{
 
     PeerConnectionTester peerConnectionManager;
     PeerSource peerSource;
-    EthereumListener ethereumListener;
+    Publisher publisher;
     SystemProperties config = SystemProperties.getDefault();
 
     Consumer<DiscoveryEvent> messageSender;
@@ -86,10 +85,10 @@ public class NodeManager implements Consumer<DiscoveryEvent>{
     private ScheduledExecutorService pongTimer;
 
     @Autowired
-    public NodeManager(SystemProperties config, EthereumListener ethereumListener,
+    public NodeManager(SystemProperties config, Publisher publisher,
                        ApplicationContext ctx, PeerConnectionTester peerConnectionManager) {
         this.config = config;
-        this.ethereumListener = ethereumListener;
+        this.publisher = publisher;
         this.peerConnectionManager = peerConnectionManager;
 
         PERSIST = config.peerDiscoveryPersist();
@@ -198,14 +197,14 @@ public class NodeManager implements Consumer<DiscoveryEvent>{
             nodeHandlerMap.put(key, ret);
             logger.debug(" +++ New node: " + ret + " " + n);
             if (!n.isDiscoveryNode() && !n.getHexId().equals(homeNode.getHexId())) {
-                ethereumListener.onNodeDiscovered(ret.getNode());
+                publisher.publish(new NodeDiscoveredEvent(ret.getNode()));
             }
         } else if (ret.getNode().isDiscoveryNode() && !n.isDiscoveryNode()) {
             // we found discovery node with same host:port,
             // replace node with correct nodeId
             ret.node = n;
             if (!n.getHexId().equals(homeNode.getHexId())) {
-                ethereumListener.onNodeDiscovered(ret.getNode());
+                publisher.publish(new NodeDiscoveredEvent(ret.getNode()));
             }
             logger.debug(" +++ Found real nodeId for discovery endpoint {}", n);
         }

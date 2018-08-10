@@ -17,10 +17,6 @@
  */
 package org.ethereum.net.client;
 
-import org.ethereum.config.SystemProperties;
-import org.ethereum.listener.EthereumListener;
-import org.ethereum.net.server.EthereumChannelInitializer;
-
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
@@ -28,12 +24,12 @@ import io.netty.channel.DefaultMessageSizeEstimator;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
-
+import org.ethereum.config.SystemProperties;
+import org.ethereum.net.server.EthereumChannelInitializer;
 import org.ethereum.publish.Publisher;
 import org.ethereum.publish.event.TraceEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;

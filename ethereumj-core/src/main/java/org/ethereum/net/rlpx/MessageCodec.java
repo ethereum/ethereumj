@@ -23,7 +23,6 @@ import io.netty.handler.codec.MessageToMessageCodec;
 import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessageCodes;
@@ -34,6 +33,9 @@ import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhMessageCodes;
 import org.ethereum.net.swarm.bzz.BzzMessageCodes;
+import org.ethereum.publish.Publisher;
+import org.ethereum.publish.event.TraceEvent;
+import org.ethereum.publish.event.message.ReceivedMessageEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,7 +74,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
     private EthVersion ethVersion;
 
     @Autowired
-    EthereumListener ethereumListener;
+    private Publisher publisher;
 
     private SystemProperties config;
 
@@ -166,7 +168,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
             return null;
         }
 
-        ethereumListener.onRecvMessage(channel, msg);
+        publisher.publish(new ReceivedMessageEvent(channel, msg));
 
         channel.getNodeStatistics().rlpxInMessages.add();
         return msg;
@@ -175,7 +177,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
     @Override
     protected void encode(ChannelHandlerContext ctx, Message msg, List<Object> out) throws Exception {
         String output = String.format("To: \t%s \tSend: \t%s", ctx.channel().remoteAddress(), msg);
-        ethereumListener.trace(output);
+        publisher.publish(new TraceEvent(output));
 
         if (loggerNet.isDebugEnabled())
             loggerNet.debug("To:   {}    Send:  {}", channel, msg);

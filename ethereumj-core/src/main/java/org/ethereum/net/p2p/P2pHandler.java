@@ -17,11 +17,11 @@
  */
 package org.ethereum.net.p2p;
 
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
-import org.ethereum.listener.EthereumListener;
-import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.client.ConfigCapabilities;
@@ -31,30 +31,28 @@ import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhHandler;
-
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
-
 import org.ethereum.net.swarm.Util;
 import org.ethereum.net.swarm.bzz.BzzHandler;
+import org.ethereum.publish.Publisher;
+import org.ethereum.publish.event.TraceEvent;
+import org.ethereum.publish.event.message.PeerHandshakedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
-import static org.ethereum.net.eth.EthVersion.*;
-import static org.ethereum.net.message.StaticMessages.*;
+import static java.lang.String.format;
+import static org.ethereum.net.eth.EthVersion.fromCode;
+import static org.ethereum.net.message.StaticMessages.PING_MESSAGE;
+import static org.ethereum.net.message.StaticMessages.PONG_MESSAGE;
 
 /**
  * Process the basic protocol messages between every peer on the network.
@@ -90,7 +88,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     private int ethOutbound;
 
     @Autowired
-    EthereumListener ethereumListener;
+    private Publisher publisher;
 
     @Autowired
     ConfigCapabilities configCapabilities;
@@ -122,7 +120,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         logger.debug("P2P protocol activated");
         msgQueue.activate(ctx);
-        ethereumListener.trace("P2P protocol activated");
+        publisher.publish(new TraceEvent("P2P protocol activated"));
         startTimers();
     }
 
@@ -133,7 +131,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         if (P2pMessageCodes.inRange(msg.getCommand().asByte()))
             logger.trace("P2PHandler invoke: [{}]", msg.getCommand());
 
-        ethereumListener.trace(String.format("P2PHandler invoke: [%s]", msg.getCommand()));
+        publisher.publish(new TraceEvent(format("P2PHandler invoke: [%s]", msg.getCommand())));
 
         switch (msg.getCommand()) {
             case HELLO:
@@ -245,7 +243,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         }
 
         //todo calculate the Offsets
-        ethereumListener.onHandShakePeer(channel, msg);
+        publisher.publish(new PeerHandshakedEvent(channel, msg));
     }
 
     /**
