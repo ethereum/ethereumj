@@ -200,22 +200,22 @@ public class BlockTxForwardTest {
         private final String config =
                 // no need for discovery in that small network
                 "peer.discovery.enabled = false \n" +
-                        "peer.listen.port = 30335 \n" +
-                        // need to have different nodeId's for the peers
-                        "peer.privateKey = 6ef8da380c27cea8fdf7448340ea99e8e2268fc2950d79ed47cbf6f85dc977ec \n" +
-                        // our private net ID
-                        "peer.networkId = 555 \n" +
-                        // we have no peers to sync with
-                        "sync.enabled = false \n" +
-                        // genesis with a lower initial difficulty and some predefined known funded accounts
-                        "genesis = sample-genesis.json \n" +
-                        // two peers need to have separate database dirs
-                        "database.dir = sampleDB-1 \n" +
-                        "keyvalue.datasource = rocksdb \n" +
-                        // when more than 1 miner exist on the network extraData helps to identify the block creator
-                        "mine.extraDataHex = cccccccccccccccccccc \n" +
-                        "mine.cpuMineThreads = 2 \n" +
-                        "cache.flush.blocks = 1";
+                "peer.listen.port = 30335 \n" +
+                // need to have different nodeId's for the peers
+                "peer.privateKey = 6ef8da380c27cea8fdf7448340ea99e8e2268fc2950d79ed47cbf6f85dc977ec \n" +
+                // our private net ID
+                "peer.networkId = 555 \n" +
+                // we have no peers to sync with
+                "sync.enabled = false \n" +
+                // genesis with a lower initial difficulty and some predefined known funded accounts
+                "genesis = sample-genesis.json \n" +
+                // two peers need to have separate database dirs
+                "database.dir = sampleDB-1 \n" +
+                "keyvalue.datasource = rocksdb \n" +
+                // when more than 1 miner exist on the network extraData helps to identify the block creator
+                "mine.extraDataHex = cccccccccccccccccccc \n" +
+                "mine.cpuMineThreads = 2 \n" +
+                "cache.flush.blocks = 1";
 
         @Bean
         public MinerNode node() {
@@ -295,22 +295,22 @@ public class BlockTxForwardTest {
         private final String config =
                 // no discovery: we are connecting directly to the generator and miner peers
                 "peer.discovery.enabled = false \n" +
-                        "peer.listen.port = 30339 \n" +
-                        "peer.privateKey = 1f0bbd4ffd61128a7d150c07d3f5b7dcd078359cd708ada8b60e4b9ffd90b3f5 \n" +
-                        "peer.networkId = 555 \n" +
-                        // actively connecting to the miner and tx generator
-                        "peer.active = [" +
-                        // miner
-                        "    { url = 'enode://26ba1aadaf59d7607ad7f437146927d79e80312f026cfa635c6b2ccf2c5d3521f5812ca2beb3b295b14f97110e6448c1c7ff68f14c5328d43a3c62b44143e9b1@localhost:30335' }, \n" +
-                        // tx generator
-                        "    { url = 'enode://3973cb86d7bef9c96e5d589601d788370f9e24670dcba0480c0b3b1b0647d13d0f0fffed115dd2d4b5ca1929287839dcd4e77bdc724302b44ae48622a8766ee6@localhost:30336' } \n" +
-                        "] \n" +
-                        "sync.enabled = true \n" +
-                        // all peers in the same network need to use the same genesis block
-                        "genesis = sample-genesis.json \n" +
-                        // two peers need to have separate database dirs
-                        "database.dir = sampleDB-2 \n" +
-                        "keyvalue.datasource = rocksdb \n";
+                "peer.listen.port = 30339 \n" +
+                "peer.privateKey = 1f0bbd4ffd61128a7d150c07d3f5b7dcd078359cd708ada8b60e4b9ffd90b3f5 \n" +
+                "peer.networkId = 555 \n" +
+                // actively connecting to the miner and tx generator
+                "peer.active = [" +
+                // miner
+                "    { url = 'enode://26ba1aadaf59d7607ad7f437146927d79e80312f026cfa635c6b2ccf2c5d3521f5812ca2beb3b295b14f97110e6448c1c7ff68f14c5328d43a3c62b44143e9b1@localhost:30335' }, \n" +
+                // tx generator
+                "    { url = 'enode://3973cb86d7bef9c96e5d589601d788370f9e24670dcba0480c0b3b1b0647d13d0f0fffed115dd2d4b5ca1929287839dcd4e77bdc724302b44ae48622a8766ee6@localhost:30336' } \n" +
+                "] \n" +
+                "sync.enabled = true \n" +
+                // all peers in the same network need to use the same genesis block
+                "genesis = sample-genesis.json \n" +
+                // two peers need to have separate database dirs
+                "database.dir = sampleDB-2 \n" +
+                "keyvalue.datasource = rocksdb \n";
 
         @Bean
         public RegularNode node() {
@@ -347,15 +347,15 @@ public class BlockTxForwardTest {
         private final String config =
                 // no discovery: forwarder will connect to us
                 "peer.discovery.enabled = false \n" +
-                        "peer.listen.port = 30336 \n" +
-                        "peer.privateKey = 3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c \n" +
-                        "peer.networkId = 555 \n" +
-                        "sync.enabled = true \n" +
-                        // all peers in the same network need to use the same genesis block
-                        "genesis = sample-genesis.json \n" +
-                        // two peers need to have separate database dirs
-                        "database.dir = sampleDB-3 \n" +
-                        "keyvalue.datasource = rocksdb \n";
+                "peer.listen.port = 30336 \n" +
+                "peer.privateKey = 3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c \n" +
+                "peer.networkId = 555 \n" +
+                "sync.enabled = true \n" +
+                // all peers in the same network need to use the same genesis block
+                "genesis = sample-genesis.json \n" +
+                // two peers need to have separate database dirs
+                "database.dir = sampleDB-3 \n" +
+                "keyvalue.datasource = rocksdb \n";
 
         @Bean
         public GeneratorNode node() {
@@ -399,11 +399,12 @@ public class BlockTxForwardTest {
         }
 
 
+
         /**
          * Generate one simple value transfer transaction each 7 seconds.
          * Thus blocks will include one, several and none transactions
          */
-        private void generateTransactions() throws Exception {
+        private void generateTransactions() throws Exception{
             logger.info("Start generating transactions...");
 
             // the sender which some coins from the genesis
@@ -506,6 +507,7 @@ public class BlockTxForwardTest {
                                     fatalErrors.incrementAndGet();
                                 }
                             }
+                            break;
                         default:
                             break;
                     }
