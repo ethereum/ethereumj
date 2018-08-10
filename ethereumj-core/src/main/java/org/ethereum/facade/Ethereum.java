@@ -27,6 +27,9 @@ import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.net.shh.Whisper;
+import org.ethereum.publish.Publisher;
+import org.ethereum.publish.Subscription;
+import org.ethereum.publish.event.Event;
 import org.ethereum.vm.program.ProgramResult;
 
 import java.math.BigInteger;
@@ -58,6 +61,8 @@ public interface Ethereum {
     PeerClient getDefaultPeer();
 
     boolean isConnected();
+
+    <E extends Event<P>, P> Publisher subscribe(Subscription<E, P> subscription);
 
     void close();
 

@@ -17,22 +17,23 @@
  */
 package org.ethereum.samples;
 
-import org.ethereum.core.Block;
+import org.ethereum.core.BlockSummary;
 import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionReceipt;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.listener.EthereumListener;
+import org.ethereum.publish.event.BlockAddedEvent;
+import org.ethereum.publish.event.SyncDoneEvent;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.Collections;
-import java.util.List;
 
 import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.publish.Subscription.to;
 import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
 import static org.ethereum.util.ByteUtil.toHexString;
 
-public class TransactionBomb extends EthereumListenerAdapter {
+public class TransactionBomb {
 
 
     Ethereum ethereum = null;
@@ -40,18 +41,17 @@ public class TransactionBomb extends EthereumListenerAdapter {
 
     public TransactionBomb(Ethereum ethereum) {
         this.ethereum = ethereum;
+        this.ethereum
+                .subscribe(to(SyncDoneEvent.class, this::onSyncDone))
+                .subscribe(to(BlockAddedEvent.class, this::onBlock));
     }
 
     public static void main(String[] args) {
-
-        Ethereum ethereum = EthereumFactory.createEthereum();
-        ethereum.addListener(new TransactionBomb(ethereum));
+        new TransactionBomb(EthereumFactory.createEthereum());
     }
 
 
-    @Override
-    public void onSyncDone(SyncState state) {
-
+    public void onSyncDone(EthereumListener.SyncState state) {
         // We will send transactions only
         // after we have the full chain syncs
         // - in order to prevent old nonce usage
@@ -59,12 +59,11 @@ public class TransactionBomb extends EthereumListenerAdapter {
         System.err.println(" ~~~ SYNC DONE ~~~ ");
     }
 
-    @Override
-    public void onBlock(Block block, List<TransactionReceipt> receipts) {
+    public void onBlock(BlockSummary blockSummary) {
 
         if (startedTxBomb){
             byte[] sender = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
-            long nonce = ethereum.getRepository().getNonce(sender).longValue();;
+            long nonce = ethereum.getRepository().getNonce(sender).longValue();
 
             for (int i=0; i < 20; ++i){
                 sendTx(nonce);

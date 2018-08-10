@@ -38,7 +38,7 @@ import java.util.List;
  * (if {@link #getPercentileShare()} is not overridden) of the latest transactions were
  * executed at this or lower price.
  */
-public class RecommendedGasPriceTracker extends EthereumListenerAdapter {
+public class RecommendedGasPriceTracker {
 
     private static final Long DEFAULT_PRICE = null;
     private static final int MIN_BLOCKS = 128;
@@ -51,7 +51,6 @@ public class RecommendedGasPriceTracker extends EthereumListenerAdapter {
     private int idx = 0;
     private Long recommendedGasPrice = getDefaultPrice();
 
-    @Override
     public void onBlock(BlockSummary blockSummary) {
         onBlock(blockSummary.getBlock());
     }

@@ -184,7 +184,7 @@ public class Publisher {
      */
     public void subscribeListener(EthereumListener listener) {
         this
-                .subscribe(to(TraceCreatedEvent.class, listener::trace))
+                .subscribe(to(TraceEvent.class, listener::trace))
                 .subscribe(to(NodeDiscoveredEvent.class, listener::onNodeDiscovered))
                 .subscribe(to(PeerHandshakedEvent.class, data -> listener.onHandShakePeer(data.getChannel(), data.getMessage())))
                 .subscribe(to(EthStatusUpdatedEvent.class, data -> listener.onEthStatusUpdated(data.getChannel(), data.getMessage())))
@@ -213,7 +213,7 @@ public class Publisher {
         return new EthereumListener() {
             @Override
             public void trace(String output) {
-                publish(new TraceCreatedEvent(output));
+                publish(new TraceEvent(output));
             }
 
             @Override

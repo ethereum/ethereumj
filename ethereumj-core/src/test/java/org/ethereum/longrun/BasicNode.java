@@ -20,15 +20,18 @@ package org.ethereum.longrun;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
-import org.ethereum.core.TransactionReceipt;
+import org.ethereum.core.BlockSummary;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
+import org.ethereum.publish.event.BlockAddedEvent;
+import org.ethereum.publish.event.PeerAddedToSyncPoolEvent;
+import org.ethereum.publish.event.SyncDoneEvent;
+import org.ethereum.publish.event.message.EthStatusUpdatedEvent;
 import org.ethereum.sync.SyncPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +45,7 @@ import java.util.Map;
 import java.util.Vector;
 
 import static java.lang.Thread.sleep;
+import static org.ethereum.publish.Subscription.to;
 
 /**
  * BasicNode of ethereum instance
@@ -103,7 +107,11 @@ class BasicNode implements Runnable {
     private void springInit() {
         logger = LoggerFactory.getLogger(loggerName);
         // adding the main EthereumJ callback to be notified on different kind of events
-        ethereum.addListener(listener);
+        this.ethereum
+                .subscribe(to(SyncDoneEvent.class, this::onSyncDone))
+                .subscribe(to(BlockAddedEvent.class, this::onBlock))
+                .subscribe(to(EthStatusUpdatedEvent.class, this::onEthStatusUpdated))
+                .subscribe(to(PeerAddedToSyncPoolEvent.class, this::onPeerAddedToSyncPool));
 
         logger.info("Sample component created. Listening for ethereum events...");
 
@@ -170,31 +178,26 @@ class BasicNode implements Runnable {
     /**
      * The main EthereumJ callback.
      */
-    EthereumListener listener = new EthereumListenerAdapter() {
-        @Override
-        public void onSyncDone(SyncState state) {
-            syncState = state;
-            if (state.equals(SyncState.COMPLETE)) syncComplete = true;
-            onSyncDoneImpl(state);
-        }
+    public void onSyncDone(EthereumListener.SyncState state) {
+        syncState = state;
+        if (state.equals(EthereumListener.SyncState.COMPLETE)) syncComplete = true;
+        onSyncDoneImpl(state);
+    }
 
-        @Override
-        public void onEthStatusUpdated(Channel channel, StatusMessage statusMessage) {
-            ethNodes.put(channel.getNode(), statusMessage);
-        }
+    public void onEthStatusUpdated(EthStatusUpdatedEvent.Data data) {
+        ethNodes.put(data.getChannel().getNode(), data.getMessage());
+    }
 
-        @Override
-        public void onPeerAddedToSyncPool(Channel peer) {
-            syncPeers.add(peer.getNode());
-        }
+    public void onPeerAddedToSyncPool(Channel peer) {
+        syncPeers.add(peer.getNode());
+    }
 
-        @Override
-        public void onBlock(Block block, List<TransactionReceipt> receipts) {
-            bestBlock = block;
+    public void onBlock(BlockSummary blockSummary) {
+        Block block = blockSummary.getBlock();
+        bestBlock = block;
 
-            if (syncComplete) {
-                logger.info("New block: " + block.getShortDescr());
-            }
+        if (syncComplete) {
+            logger.info("New block: " + block.getShortDescr());
         }
-    };
+    }
 }

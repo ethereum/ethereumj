@@ -37,7 +37,9 @@ import org.ethereum.net.shh.Whisper;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
 import org.ethereum.publish.Publisher;
+import org.ethereum.publish.Subscription;
 import org.ethereum.publish.event.BlockAddedEvent;
+import org.ethereum.publish.event.Event;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.program.ProgramResult;
@@ -172,6 +174,11 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
     @Override
     public void addListener(EthereumListener listener) {
         worldManager.getPublisher().subscribeListener(listener);
+    }
+
+    @Override
+    public <E extends Event<P>, P> Publisher subscribe(Subscription<E, P> subscription) {
+        return worldManager.getPublisher().subscribe(subscription);
     }
 
     @Override

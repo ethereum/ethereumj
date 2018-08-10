@@ -21,11 +21,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.WorldManager;
-import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.rlpx.Node;
-import org.ethereum.net.server.Channel;
+import org.ethereum.publish.event.message.PeerHandshakedEvent;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
@@ -40,6 +38,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+
+import static org.ethereum.publish.Subscription.to;
 
 /**
  * This is not a JUnit test but rather a long running standalone test for messages exchange with another peer.
@@ -110,15 +110,12 @@ public class ShhLongRun extends Thread {
         @PostConstruct
         void init() {
             System.out.println("========= init");
-            worldManager.addListener(new EthereumListenerAdapter() {
-                @Override
-                public void onHandShakePeer(Channel channel, HelloMessage helloMessage) {
-                    System.out.println("========= onHandShakePeer");
-                    if (!isAlive()) {
-                        start();
-                    }
+            worldManager.getPublisher().subscribe(to(PeerHandshakedEvent.class, data -> {
+                System.out.println("========= onHandShakePeer");
+                if (!isAlive()) {
+                    start();
                 }
-            });
+            }));
         }
 
         static class MessageMatcher extends MessageWatcher {

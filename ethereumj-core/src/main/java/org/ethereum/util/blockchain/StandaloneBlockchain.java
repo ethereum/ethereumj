@@ -33,6 +33,7 @@ import org.ethereum.db.RepositoryRoot;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.mine.Ethash;
 import org.ethereum.publish.Publisher;
+import org.ethereum.publish.Subscription;
 import org.ethereum.publish.event.BlockAddedEvent;
 import org.ethereum.publish.event.Event;
 import org.ethereum.solidity.compiler.CompilationResult;
@@ -134,6 +135,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
         withMinerCoinbase(Hex.decode("ffffffffffffffffffffffffffffffffffffffff"));
         setSender(ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c")));
 //        withAccountBalance(txSender.getAddress(), new BigInteger("100000000000000000000000000"));
+
+        publisher = new Publisher(EventDispatchThread.getDefault());
     }
 
     public StandaloneBlockchain withGenesis(Genesis genesis) {
@@ -450,6 +453,11 @@ public class StandaloneBlockchain implements LocalBlockchain {
         publisher.subscribeListener(listener);
     }
 
+    public <E extends Event<P>, P> StandaloneBlockchain subscribe(Subscription<E, P> subscription) {
+        publisher.subscribe(subscription);
+        return this;
+    }
+
     public <E extends Event<P>, P> StandaloneBlockchain subscribe(Class<E> eventType, Consumer<P> handler) {
         publisher.subscribe(eventType, handler);
         return this;
@@ -489,7 +497,6 @@ public class StandaloneBlockchain implements LocalBlockchain {
         final RepositoryRoot repository = new RepositoryRoot(pruningStateDS);
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
-        publisher = new Publisher(EventDispatchThread.getDefault());
 
         BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, publisher)
                 .withSyncManager(new SyncManager());

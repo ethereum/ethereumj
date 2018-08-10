@@ -20,43 +20,32 @@ package org.ethereum.mine;
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.net.MainNetConfig;
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockSummary;
-import org.ethereum.core.Blockchain;
-import org.ethereum.core.ImportResult;
-import org.ethereum.core.Transaction;
+import org.ethereum.core.*;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.facade.EthereumImpl;
 import org.ethereum.facade.SyncStatus;
-import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.eth.handler.Eth62;
 import org.ethereum.net.rlpx.Node;
-import org.ethereum.net.server.Channel;
+import org.ethereum.publish.event.BlockAddedEvent;
+import org.ethereum.publish.event.PeerAddedToSyncPoolEvent;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.blockchain.EtherUtil;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 
-import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.ArrayList;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
@@ -65,13 +54,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
 import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.publish.Subscription.to;
 import static org.ethereum.util.FileUtil.recursiveDelete;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.spongycastle.util.encoders.Hex.decode;
+import static org.junit.Assert.*;
 
 
 /**
@@ -81,7 +68,7 @@ import static org.spongycastle.util.encoders.Hex.decode;
  * While automatic detection of long sync works correctly in any live network
  * with big number of peers, automatic detection of Short Sync condition in
  * detached or small private networks looks not doable.
- *
+ * <p>
  * To resolve this and any other similar issues manual switch to Short Sync mode
  * was added: {@link EthereumImpl#switchToShortSync()}
  * This test verifies that manual switching to Short Sync works correctly
@@ -124,17 +111,11 @@ public class SyncDoneTest {
     }
 
     private static List<Block> loadBlocks(String path) throws URISyntaxException, IOException {
-
         URL url = ClassLoader.getSystemResource(path);
-        File file = new File(url.toURI());
-        List<String> strData = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
-
-        List<Block> blocks = new ArrayList<>(strData.size());
-        for (String rlp : strData) {
-            blocks.add(new Block(decode(rlp)));
-        }
-
-        return blocks;
+        return Files.lines(Paths.get(url.toURI()), StandardCharsets.UTF_8)
+                .map(Hex::decode)
+                .map(Block::new)
+                .collect(toList());
     }
 
     @AfterClass
@@ -143,7 +124,7 @@ public class SyncDoneTest {
     }
 
     @Before
-    public void setupTest() throws InterruptedException {
+    public void setupTest() {
         testDbA = "test_db_" + new BigInteger(32, new Random());
         testDbB = "test_db_" + new BigInteger(32, new Random());
 
@@ -179,38 +160,27 @@ public class SyncDoneTest {
         // Check that we are synced and on the same block
         assertTrue(loadedBlocks > 0);
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereumB.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onBlock(BlockSummary blockSummary) {
-                if (blockSummary.getBlock().getNumber() == loadedBlocks) {
-                    semaphore.countDown();
-                }
-            }
-        });
+
+        ethereumB.subscribe(to(BlockAddedEvent.class, bs -> semaphore.countDown())
+                .conditionally(bs -> isBlockNumber(bs, loadedBlocks)));
+
         semaphore.await(MAX_SECONDS_WAIT, SECONDS);
-        Assert.assertEquals(0, semaphore.getCount());
+        assertEquals(0, semaphore.getCount());
         assertEquals(loadedBlocks, ethereumB.getBlockchain().getBestBlock().getNumber());
 
         ethereumA.getBlockMiner().startMining();
 
         final CountDownLatch semaphore2 = new CountDownLatch(2);
-        ethereumB.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onBlock(BlockSummary blockSummary) {
-                if (blockSummary.getBlock().getNumber() == loadedBlocks + 2) {
-                    semaphore2.countDown();
-                    ethereumA.getBlockMiner().stopMining();
-                }
+        ethereumB.subscribe(to(BlockAddedEvent.class, bs -> {
+            if (isBlockNumber(bs, loadedBlocks + 2)) {
+                semaphore2.countDown();
+                ethereumA.getBlockMiner().stopMining();
             }
-        });
-        ethereumA.addListener(new EthereumListenerAdapter(){
-            @Override
-            public void onBlock(BlockSummary blockSummary) {
-                if (blockSummary.getBlock().getNumber() == loadedBlocks + 2) {
-                    semaphore2.countDown();
-                }
-            }
-        });
+        }));
+
+        ethereumA.subscribe(to(BlockAddedEvent.class, bs -> semaphore2.countDown())
+                .conditionally(bs -> isBlockNumber(bs, loadedBlocks + 2)));
+
         semaphore2.await(MAX_SECONDS_WAIT, SECONDS);
         Assert.assertEquals(0, semaphore2.getCount());
 
@@ -230,36 +200,27 @@ public class SyncDoneTest {
         );
         tx.sign(sender);
         final CountDownLatch txSemaphore = new CountDownLatch(1);
-        ethereumA.addListener(new EthereumListenerAdapter(){
-            @Override
-            public void onBlock(BlockSummary blockSummary) {
-                if (!blockSummary.getBlock().getTransactionsList().isEmpty() &&
-                        FastByteComparisons.equal(blockSummary.getBlock().getTransactionsList().get(0).getSender(), sender.getAddress()) &&
-                        blockSummary.getReceipts().get(0).isSuccessful()) {
-                    txSemaphore.countDown();
-                }
+        ethereumA.subscribe(to(BlockAddedEvent.class, blockSummary -> {
+
+            if (!blockSummary.getBlock().getTransactionsList().isEmpty() &&
+                    FastByteComparisons.equal(blockSummary.getBlock().getTransactionsList().get(0).getSender(), sender.getAddress()) &&
+                    blockSummary.getReceipts().get(0).isSuccessful()) {
+                txSemaphore.countDown();
             }
-        });
+        }));
+
         ethereumB.submitTransaction(tx);
 
         final CountDownLatch semaphore3 = new CountDownLatch(2);
-        ethereumB.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onBlock(BlockSummary blockSummary) {
-                if (blockSummary.getBlock().getNumber() == loadedBlocks + 5) {
-                    semaphore3.countDown();
-                }
+        ethereumB.subscribe(to(BlockAddedEvent.class, blockSummary -> semaphore3.countDown())
+                .conditionally(bs -> isBlockNumber(bs, loadedBlocks + 5)));
+
+        ethereumA.subscribe(to(BlockAddedEvent.class, blockSummary -> {
+            if (isBlockNumber(blockSummary, loadedBlocks + 5)) {
+                semaphore3.countDown();
+                ethereumA.getBlockMiner().stopMining();
             }
-        });
-        ethereumA.addListener(new EthereumListenerAdapter(){
-            @Override
-            public void onBlock(BlockSummary blockSummary) {
-                if (blockSummary.getBlock().getNumber() == loadedBlocks + 5) {
-                    semaphore3.countDown();
-                    ethereumA.getBlockMiner().stopMining();
-                }
-            }
-        });
+        }));
         ethereumA.getBlockMiner().startMining();
 
         semaphore3.await(MAX_SECONDS_WAIT, SECONDS);
@@ -290,30 +251,24 @@ public class SyncDoneTest {
         ethereumB.submitTransaction(tx2);
 
         final CountDownLatch semaphore4 = new CountDownLatch(2);
-        ethereumB.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onBlock(BlockSummary blockSummary) {
-                if (blockSummary.getBlock().getNumber() == loadedBlocks + 9) {
-                    semaphore4.countDown();
-                    ethereumA.getBlockMiner().stopMining();
-                }
+
+        ethereumB.subscribe(to(BlockAddedEvent.class, bs -> {
+            if (isBlockNumber(bs, loadedBlocks + 9)) {
+                semaphore4.countDown();
+                ethereumA.getBlockMiner().stopMining();
             }
-        });
-        ethereumA.addListener(new EthereumListenerAdapter(){
-            @Override
-            public void onBlock(BlockSummary blockSummary) {
-                if (blockSummary.getBlock().getNumber() == loadedBlocks + 9) {
-                    semaphore4.countDown();
-                }
-            }
-        });
+        }));
+
+        ethereumA.subscribe(to(BlockAddedEvent.class, blockSummary -> semaphore4.countDown())
+                .conditionally(bs -> isBlockNumber(bs, loadedBlocks + 9)));
 
         semaphore4.await(MAX_SECONDS_WAIT, SECONDS);
-        Assert.assertEquals(0, semaphore4.getCount());
-        Assert.assertEquals(loadedBlocks + 9, ethereumA.getBlockchain().getBestBlock().getNumber());
-        Assert.assertEquals(loadedBlocks + 9, ethereumB.getBlockchain().getBestBlock().getNumber());
-        assertTrue(ethereumA.getSyncStatus().getStage().equals(SyncStatus.SyncStage.Complete));
-        assertTrue(ethereumB.getSyncStatus().getStage().equals(SyncStatus.SyncStage.Complete));
+
+        assertEquals(0, semaphore4.getCount());
+        assertEquals(loadedBlocks + 9, ethereumA.getBlockchain().getBestBlock().getNumber());
+        assertEquals(loadedBlocks + 9, ethereumB.getBlockchain().getBestBlock().getNumber());
+        assertEquals(SyncStatus.SyncStage.Complete, ethereumA.getSyncStatus().getStage());
+        assertEquals(SyncStatus.SyncStage.Complete, ethereumB.getSyncStatus().getStage());
         // Tx is included!
         assertTrue(txSemaphore.getCount() == 0);
     }
@@ -325,19 +280,18 @@ public class SyncDoneTest {
 
         final CountDownLatch semaphore = new CountDownLatch(1);
 
-        ethereumB.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onPeerAddedToSyncPool(Channel peer) {
-                semaphore.countDown();
-            }
-        });
+        ethereumB.subscribe(to(PeerAddedToSyncPoolEvent.class, channel -> semaphore.countDown()));
 
         ethereumB.connect(nodeA);
 
         semaphore.await(10, SECONDS);
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             fail("Failed to set up peers");
         }
+    }
+
+    private static boolean isBlockNumber(BlockSummary blockSummary, long number) {
+        return blockSummary.getBlock().getNumber() == number;
     }
 
     @Configuration
@@ -354,7 +308,7 @@ public class SyncDoneTest {
 
         @Bean
         @Scope("prototype")
-        public Eth62 eth62() throws IllegalAccessException, InstantiationException {
+        public Eth62 eth62() {
             if (eth62 != null) return eth62;
             return new Eth62();
         }

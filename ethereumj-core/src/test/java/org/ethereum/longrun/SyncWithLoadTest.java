@@ -25,9 +25,9 @@ import org.ethereum.core.*;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.listener.EthereumListener;
-import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.publish.Publisher;
+import org.ethereum.publish.event.BlockAddedEvent;
+import org.ethereum.publish.event.PendingTransactionsReceivedEvent;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
@@ -49,6 +49,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static java.lang.Thread.sleep;
+import static org.ethereum.publish.Subscription.to;
 
 /**
  * Regular sync with load
@@ -157,67 +158,60 @@ public class SyncWithLoadTest {
         /**
          * The main EthereumJ callback.
          */
-        EthereumListener blockListener = new EthereumListenerAdapter() {
-            @Override
-            public void onBlock(BlockSummary blockSummary) {
-                lastImport.set(System.currentTimeMillis());
-            }
+        public void onBlock(BlockSummary blockSummary) {
+            lastImport.set(System.currentTimeMillis());
 
-            @Override
-            public void onBlock(Block block, List<TransactionReceipt> receipts) {
-                for (TransactionReceipt receipt : receipts) {
-                    // Getting contract details
-                    byte[] contractAddress = receipt.getTransaction().getContractAddress();
-                    if (contractAddress != null) {
-                        ContractDetails details = ((Repository) ethereum.getRepository()).getContractDetails(contractAddress);
-                        assert FastByteComparisons.equal(details.getAddress(), contractAddress);
-                    }
-
-                    // Getting AccountState for sender in the past
-                    Random rnd = new Random();
-                    Block bestBlock = ethereum.getBlockchain().getBestBlock();
-                    Block randomBlock = ethereum.getBlockchain().getBlockByNumber(rnd.nextInt((int) bestBlock.getNumber()));
-                    byte[] sender = receipt.getTransaction().getSender();
-                    AccountState senderState = ((Repository) ethereum.getRepository()).getSnapshotTo(randomBlock.getStateRoot()).getAccountState(sender);
-                    if (senderState != null) senderState.getBalance();
-
-                    // Getting receiver's nonce somewhere in the past
-                    Block anotherRandomBlock = ethereum.getBlockchain().getBlockByNumber(rnd.nextInt((int) bestBlock.getNumber()));
-                    byte[] receiver = receipt.getTransaction().getReceiveAddress();
-                    if (receiver != null) {
-                        ((Repository) ethereum.getRepository()).getSnapshotTo(anotherRandomBlock.getStateRoot()).getNonce(receiver);
-                    }
+            for (TransactionReceipt receipt : blockSummary.getReceipts()) {
+                // Getting contract details
+                byte[] contractAddress = receipt.getTransaction().getContractAddress();
+                if (contractAddress != null) {
+                    ContractDetails details = ((Repository) ethereum.getRepository()).getContractDetails(contractAddress);
+                    assert FastByteComparisons.equal(details.getAddress(), contractAddress);
                 }
-            }
 
-            @Override
-            public void onPendingTransactionsReceived(List<Transaction> transactions) {
+                // Getting AccountState for sender in the past
                 Random rnd = new Random();
                 Block bestBlock = ethereum.getBlockchain().getBestBlock();
-                for (Transaction tx : transactions) {
-                    Block block = ethereum.getBlockchain().getBlockByNumber(rnd.nextInt((int) bestBlock.getNumber()));
-                    Repository repository = ((Repository) ethereum.getRepository())
-                            .getSnapshotTo(block.getStateRoot())
-                            .startTracking();
-                    try {
-                        TransactionExecutor executor = new TransactionExecutor
-                                (tx, block.getCoinbase(), repository, ethereum.getBlockchain().getBlockStore(),
-                                        programInvokeFactory, block, new Publisher(EventDispatchThread.getDefault()), 0)
-                                .withCommonConfig(commonConfig)
-                                .setLocalCall(true);
+                Block randomBlock = ethereum.getBlockchain().getBlockByNumber(rnd.nextInt((int) bestBlock.getNumber()));
+                byte[] sender = receipt.getTransaction().getSender();
+                AccountState senderState = ((Repository) ethereum.getRepository()).getSnapshotTo(randomBlock.getStateRoot()).getAccountState(sender);
+                if (senderState != null) senderState.getBalance();
 
-                        executor.init();
-                        executor.execute();
-                        executor.go();
-                        executor.finalization();
-
-                        executor.getReceipt();
-                    } finally {
-                        repository.rollback();
-                    }
+                // Getting receiver's nonce somewhere in the past
+                Block anotherRandomBlock = ethereum.getBlockchain().getBlockByNumber(rnd.nextInt((int) bestBlock.getNumber()));
+                byte[] receiver = receipt.getTransaction().getReceiveAddress();
+                if (receiver != null) {
+                    ((Repository) ethereum.getRepository()).getSnapshotTo(anotherRandomBlock.getStateRoot()).getNonce(receiver);
                 }
             }
-        };
+        }
+
+        public void onPendingTransactionsReceived(List<Transaction> transactions) {
+            Random rnd = new Random();
+            Block bestBlock = ethereum.getBlockchain().getBestBlock();
+            for (Transaction tx : transactions) {
+                Block block = ethereum.getBlockchain().getBlockByNumber(rnd.nextInt((int) bestBlock.getNumber()));
+                Repository repository = ((Repository) ethereum.getRepository())
+                        .getSnapshotTo(block.getStateRoot())
+                        .startTracking();
+                try {
+                    TransactionExecutor executor = new TransactionExecutor
+                            (tx, block.getCoinbase(), repository, ethereum.getBlockchain().getBlockStore(),
+                                    programInvokeFactory, block, new Publisher(EventDispatchThread.getDefault()), 0)
+                            .withCommonConfig(commonConfig)
+                            .setLocalCall(true);
+
+                    executor.init();
+                    executor.execute();
+                    executor.go();
+                    executor.finalization();
+
+                    executor.getReceipt();
+                } finally {
+                    repository.rollback();
+                }
+            }
+        }
 
         public RegularNode() {
             super("sampleNode");
@@ -226,7 +220,9 @@ public class SyncWithLoadTest {
         @Override
         public void run() {
             try {
-                ethereum.addListener(blockListener);
+                this.ethereum
+                        .subscribe(to(BlockAddedEvent.class, this::onBlock))
+                        .subscribe(to(PendingTransactionsReceivedEvent.class, this::onPendingTransactionsReceived));
 
                 // Run 1-30 minutes
                 Random generator = new Random();

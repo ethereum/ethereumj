@@ -19,13 +19,15 @@ package org.ethereum.core;
 
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.publish.event.BlockAddedEvent;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.ethereum.publish.Subscription.to;
 
 /**
  * Created by Anton Nashatyrev on 24.06.2016.
@@ -41,14 +43,13 @@ public class CloseTest {
             Block bestBlock = ethereum.getBlockchain().getBestBlock();
             Assert.assertNotNull(bestBlock);
             final CountDownLatch latch = new CountDownLatch(1);
-            ethereum.addListener(new EthereumListenerAdapter() {
-                int counter = 0;
-                @Override
-                public void onBlock(Block block, List<TransactionReceipt> receipts) {
-                    counter++;
-                    if (counter > 1100) latch.countDown();
+            AtomicInteger counter = new AtomicInteger();
+            ethereum.subscribe(to(BlockAddedEvent.class, blockSummary -> {
+                if (counter.addAndGet(1) > 1100)  {
+                    latch.countDown();
                 }
-            });
+            }));
+
             System.out.println("### Waiting for some blocks to be imported...");
             latch.await();
             System.out.println("### Closing Ethereum instance");

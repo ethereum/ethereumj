@@ -118,7 +118,7 @@ public abstract class EventListener<EventData> {
     private boolean initialized = false;
 
     // txHash => PendingEvent
-    protected ByteArrayMap<PendingEvent> pendings = new ByteArrayMap<>(new LinkedHashMap<ByteArrayWrapper, PendingEvent>());
+    protected ByteArrayMap<PendingEvent> pendings = new ByteArrayMap<>(new LinkedHashMap<>());
     protected Block bestBlock;
     BigInteger lastTotDiff = BigInteger.ZERO;
     // executing EthereumListener callbacks on a separate thread to avoid long running

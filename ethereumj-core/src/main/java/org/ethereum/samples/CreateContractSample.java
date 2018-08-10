@@ -17,14 +17,14 @@
  */
 package org.ethereum.samples;
 
-import org.ethereum.core.Block;
+import org.ethereum.core.BlockSummary;
 import org.ethereum.core.CallTransaction;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.publish.event.BlockAddedEvent;
 import org.ethereum.solidity.compiler.CompilationResult;
 import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.ethereum.util.ByteUtil;
@@ -34,8 +34,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 
 import java.math.BigInteger;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
+import static org.ethereum.publish.Subscription.to;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
@@ -48,27 +51,21 @@ public class CreateContractSample extends TestNetSample {
 
     String contract =
             "contract Sample {" +
-            "  int i;" +
-            "  function inc(int n) {" +
-            "    i = i + n;" +
-            "  }" +
-            "  function get() returns (int) {" +
-            "    return i;" +
-            "  }" +
-            "}";
+                    "  int i;" +
+                    "  function inc(int n) {" +
+                    "    i = i + n;" +
+                    "  }" +
+                    "  function get() returns (int) {" +
+                    "    return i;" +
+                    "  }" +
+                    "}";
 
-    private Map<ByteArrayWrapper, TransactionReceipt> txWaiters =
-            Collections.synchronizedMap(new HashMap<ByteArrayWrapper, TransactionReceipt>());
+    private Map<ByteArrayWrapper, TransactionReceipt> txWaiters = Collections.synchronizedMap(new HashMap<>());
 
     @Override
     public void onSyncDone() throws Exception {
-        ethereum.addListener(new EthereumListenerAdapter() {
-            // when block arrives look for our included transactions
-            @Override
-            public void onBlock(Block block, List<TransactionReceipt> receipts) {
-                CreateContractSample.this.onBlock(block, receipts);
-            }
-        });
+        // when block arrives look for our included transactions
+        ethereum.subscribe(to(BlockAddedEvent.class, this::onBlock));
 
         logger.info("Compiling contract...");
         SolidityCompiler.Result result = compiler.compileSrc(contract.getBytes(), true, true,
@@ -130,8 +127,9 @@ public class CreateContractSample extends TestNetSample {
         return waitForTx(tx.getHash());
     }
 
-    private void onBlock(Block block, List<TransactionReceipt> receipts) {
-        for (TransactionReceipt receipt : receipts) {
+    private void onBlock(BlockSummary blockSummary) {
+        for (TransactionReceipt receipt : blockSummary.getReceipts()) {
+
             ByteArrayWrapper txHashW = new ByteArrayWrapper(receipt.getTransaction().getHash());
             if (txWaiters.containsKey(txHashW)) {
                 txWaiters.put(txHashW, receipt);
@@ -146,16 +144,16 @@ public class CreateContractSample extends TestNetSample {
         ByteArrayWrapper txHashW = new ByteArrayWrapper(txHash);
         txWaiters.put(txHashW, null);
         long startBlock = ethereum.getBlockchain().getBestBlock().getNumber();
-        while(true) {
+        while (true) {
             TransactionReceipt receipt = txWaiters.get(txHashW);
             if (receipt != null) {
                 return receipt;
             } else {
                 long curBlock = ethereum.getBlockchain().getBestBlock().getNumber();
                 if (curBlock > startBlock + 16) {
-                    throw new RuntimeException("The transaction was not included during last 16 blocks: " + txHashW.toString().substring(0,8));
+                    throw new RuntimeException("The transaction was not included during last 16 blocks: " + txHashW.toString().substring(0, 8));
                 } else {
-                    logger.info("Waiting for block with transaction 0x" + txHashW.toString().substring(0,8) +
+                    logger.info("Waiting for block with transaction 0x" + txHashW.toString().substring(0, 8) +
                             " included (" + (curBlock - startBlock) + " blocks received so far) ...");
                 }
             }
@@ -168,7 +166,7 @@ public class CreateContractSample extends TestNetSample {
     public static void main(String[] args) throws Exception {
         sLogger.info("Starting EthereumJ!");
 
-        class Config extends TestNetConfig{
+        class Config extends TestNetConfig {
             @Override
             @Bean
             public TestNetSample sampleBean() {

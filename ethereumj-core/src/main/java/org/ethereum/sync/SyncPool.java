@@ -26,6 +26,8 @@ import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
+import org.ethereum.publish.Publisher;
+import org.ethereum.publish.event.PeerAddedToSyncPoolEvent;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +72,7 @@ public class SyncPool {
     private BigInteger lowerUsefulDifficulty = BigInteger.ZERO;
 
     @Autowired
-    private EthereumListener ethereumListener;
+    private Publisher publisher;
 
     @Autowired
     private NodeManager nodeManager;
@@ -339,7 +341,7 @@ public class SyncPool {
 
         for (Channel channel : filtered) {
             if (!activePeers.contains(channel)) {
-                ethereumListener.onPeerAddedToSyncPool(channel);
+                publisher.publish(new PeerAddedToSyncPoolEvent(channel));
             }
         }
         if (logger.isTraceEnabled())
