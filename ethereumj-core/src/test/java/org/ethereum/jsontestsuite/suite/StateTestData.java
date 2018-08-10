@@ -17,8 +17,8 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.JavaType;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.ethereum.jsontestsuite.GitHubJSONTestSuite;
 
 import java.io.IOException;

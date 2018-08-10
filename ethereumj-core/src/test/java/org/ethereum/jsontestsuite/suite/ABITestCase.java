@@ -17,7 +17,7 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.ethereum.core.CallTransaction;
 import org.spongycastle.util.encoders.Hex;
 

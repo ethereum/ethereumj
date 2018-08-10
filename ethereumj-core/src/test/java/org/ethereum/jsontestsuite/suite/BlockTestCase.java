@@ -17,7 +17,7 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.jsontestsuite.GitHubJSONTestSuite;
 import org.ethereum.jsontestsuite.suite.model.AccountTck;

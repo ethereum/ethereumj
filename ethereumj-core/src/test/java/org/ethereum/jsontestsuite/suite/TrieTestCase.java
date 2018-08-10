@@ -17,8 +17,8 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.ethereum.datasource.NoDeleteSource;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.trie.SecureTrie;
