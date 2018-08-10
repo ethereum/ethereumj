@@ -17,9 +17,8 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.ethereum.core.BlockHeader;
-import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
