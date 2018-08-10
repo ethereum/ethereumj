@@ -73,16 +73,16 @@ public class PublisherTest {
     @Test
     public void testConditionallySubscription() {
 
-        AtomicLong expectedSum = new AtomicLong();
-        AtomicInteger expectedEvenSum = new AtomicInteger();
+        AtomicLong actualSum = new AtomicLong();
+        AtomicInteger actualEvenSum = new AtomicInteger();
 
         int[] numbers = IntStream.rangeClosed(1, 10).toArray();
         int sum = IntStream.of(numbers).sum();
         int evenSum = IntStream.of(numbers).filter(num -> isEven(num)).sum();
 
         Publisher publisher = createPublisher()
-                .subscribe(to(LongEvent.class, expectedSum::getAndAdd))
-                .subscribe(to(IntEvent.class, expectedEvenSum::getAndAdd)
+                .subscribe(to(LongEvent.class, actualSum::getAndAdd))
+                .subscribe(to(IntEvent.class, actualEvenSum::getAndAdd)
                         .conditionally(PublisherTest::isEven));
 
         IntStream.of(numbers)
@@ -90,8 +90,27 @@ public class PublisherTest {
                         .publish(new LongEvent(num))
                         .publish(new IntEvent(num)));
 
-        assertEquals(sum, expectedSum.get());
-        assertEquals(evenSum, expectedEvenSum.get());
+        assertEquals(sum, actualSum.get());
+        assertEquals(evenSum, actualEvenSum.get());
+    }
+
+    @Test
+    public void testUnsubscribeAfter() {
+        AtomicInteger actualSum = new AtomicInteger();
+
+        int limit = 10;
+        int[] numbers = IntStream.rangeClosed(1, limit).toArray();
+        int sum = IntStream.of(numbers).sum();
+
+        Publisher publisher = createPublisher()
+                .subscribe(to(IntEvent.class, actualSum::addAndGet)
+                        .unsubscribeAfter(num -> num == limit));
+
+        IntStream.rangeClosed(1, limit * 2)
+                .mapToObj(IntEvent::new)
+                .forEach(publisher::publish);
+
+        assertEquals(sum, actualSum.get());
     }
 
     @Test

@@ -15,10 +15,10 @@ import org.ethereum.publish.event.message.SentMessageEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 import static java.util.Collections.emptyList;
@@ -82,13 +82,20 @@ public class Publisher {
      * @return current {@link Publisher} instance to support fluent API.
      */
     public Publisher publish(Event event) {
-        List<Subscription> subscriptions = subscriptionsByEvent.getOrDefault(event.getClass(), emptyList()).stream()
+        List<Subscription> subscriptions = subscriptionsByEvent.getOrDefault(event.getClass(), emptyList());
+        List<Subscription> toHandle = subscriptions.stream()
                 .filter(subscription -> subscription.matches(event))
                 .collect(toList());
 
-        if (!subscriptions.isEmpty()) {
-            dispatchThread.invokeLater(() -> subscriptions.forEach(subscription -> {
+        subscriptions.stream()
+                .filter(subscription -> subscription.needUnsubscribeAfter(event))
+                .forEach(this::unsubscribe);
+
+
+        if (!toHandle.isEmpty()) {
+            dispatchThread.invokeLater(() -> toHandle.forEach(subscription -> {
                 subscription.handle(event);
+
                 if (event instanceof Single) {
                     subscriptionsByEvent.remove(event.getClass());
                 }
@@ -108,7 +115,7 @@ public class Publisher {
      * @return current {@link Publisher} instance to support fluent API.
      */
     public <E extends Event<P>, P> Publisher subscribe(Subscription<E, P> subscription) {
-        List<Subscription> subscriptions = subscriptionsByEvent.computeIfAbsent(subscription.getEventType(), t -> new ArrayList<>());
+        List<Subscription> subscriptions = subscriptionsByEvent.computeIfAbsent(subscription.getEventType(), t -> new CopyOnWriteArrayList<>());
         if (subscriptions.contains(subscription)) {
             log.warn("Specified subscription already exists {}.", subscription.getEventType().getSimpleName());
         } else {

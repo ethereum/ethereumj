@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 
 /**
  * Abstraction that holds together event type, event processor (a.k.a consumer) and optional condition that resolves
@@ -21,7 +22,8 @@ public class Subscription<E extends Event<D>, D> {
 
     private final Class<E> eventType;
     private final Consumer<D> consumer;
-    private Function<D, Boolean> condition;
+    private Function<D, Boolean> handleCondition;
+    private Function<D, Boolean> unsubscribeCondition;
 
     public Subscription(Class<E> eventType, Consumer<D> consumer) {
         this.eventType = eventType;
@@ -44,7 +46,18 @@ public class Subscription<E extends Event<D>, D> {
      * @return current {@link Subscription} instance to support fluent API.
      */
     public Subscription<E, D> conditionally(Function<D, Boolean> condition) {
-        this.condition = condition;
+        this.handleCondition = condition;
+        return this;
+    }
+
+    /**
+     * Optionally adds unsubscribe condition after event consuming.
+     *
+     * @param condition function that resolves unsubscribing after event consumption.
+     * @return current {@link Subscription} instance to support fluent API.
+     */
+    public Subscription<E, D> unsubscribeAfter(Function<D, Boolean> condition) {
+        this.unsubscribeCondition = condition;
         return this;
     }
 
@@ -55,7 +68,7 @@ public class Subscription<E extends Event<D>, D> {
      * @return <code>true</code> if event should be consumed, <code>false</code> otherwise.
      */
     boolean matches(E event) {
-        return isNull(condition) || condition.apply(event.getPayload());
+        return isNull(handleCondition) || handleCondition.apply(event.getPayload());
     }
 
     /**
@@ -72,12 +85,22 @@ public class Subscription<E extends Event<D>, D> {
     }
 
     /**
+     * Tests whether publisher should remove current {@link Subscription} after specified event handling.
+     *
+     * @param event event to test;
+     * @return <code>true</code> if after event consumption {@link Subscription} should be unsubscribed, <code>false</code> otherwise.
+     */
+    boolean needUnsubscribeAfter(E event) {
+        return nonNull(unsubscribeCondition) && unsubscribeCondition.apply(event.getPayload());
+    }
+
+    /**
      * Short static alias for {@link Subscription} constructor.
      *
      * @param eventType event type to process;
-     * @param consumer callback that consumes event's payload;
-     * @param <E> event type that should be process;
-     * @param <D> payload's type of specified event type;
+     * @param consumer  callback that consumes event's payload;
+     * @param <E>       event type that should be process;
+     * @param <D>       payload's type of specified event type;
      * @return new {@link Subscription} instance.
      */
     public static <E extends Event<D>, D> Subscription<E, D> to(Class<E> eventType, Consumer<D> consumer) {
