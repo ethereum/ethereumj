@@ -538,6 +538,7 @@ public class BlockTxForwardTest {
                                 fatalErrors.incrementAndGet();
                             };
                         }
+                        break;
                     default:
                         break;
                 }

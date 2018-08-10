@@ -1404,6 +1404,7 @@ public class VM {
                                 toHexString(key.getNoLeadZeroesData()),
                                 toHexString(details.getStorage().get(key).getNoLeadZeroesData()));
                     }
+                    break;
                 default:
                     break;
             }
