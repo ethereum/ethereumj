@@ -155,7 +155,7 @@ public class TransactionExecutionSummaryTest {
 
     private static InternalTransaction randomInternalTransaction(Transaction parent, int deep, int index) {
         try {
-            return new InternalTransaction(parent.getHash(), deep, index, randomBytes(1), DataWord.ZERO, DataWord.ZERO,
+            return new InternalTransaction(parent.getHash(), deep, index, randomBytes(1), DataWord.zero(), DataWord.zero(),
                     parent.getReceiveAddress(), randomBytes(20), randomBytes(2), randomBytes(64), "test note");
         } catch (StackOverflowError e) {
             System.out.println("\n !!! StackOverflowError: update your java run command with -Xss8M !!!\n");

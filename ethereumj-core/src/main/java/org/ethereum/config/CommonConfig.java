@@ -259,8 +259,8 @@ public class CommonConfig {
                 new Serializer<byte[], byte[]>() {
                     public byte[] serialize(byte[] object) {
                         DataWord ret = new DataWord(object);
-                        ret.add(new DataWord(1));
-                        return ret.getLast20Bytes();
+                        DataWord addResult = ret.add(new DataWord(1));
+                        return addResult.getLast20Bytes();
                     }
                     public byte[] deserialize(byte[] stream) {
                         throw new RuntimeException("Shouldn't be called");

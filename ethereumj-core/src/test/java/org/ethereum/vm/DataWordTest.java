@@ -43,14 +43,14 @@ public class DataWordTest {
             long now1 = System.currentTimeMillis();
             for (int i = 0; i < ITERATIONS; i++) {
                 DataWord x = new DataWord(one);
-                x.add(x);
+                x = x.add(x);
             }
             System.out.println("Add1: " + (System.currentTimeMillis() - now1) + "ms");
 
             long now2 = System.currentTimeMillis();
             for (int i = 0; i < ITERATIONS; i++) {
                 DataWord x = new DataWord(one);
-                x.add2(x);
+                x = x.add2(x);
             }
             System.out.println("Add2: " + (System.currentTimeMillis() - now2) + "ms");
         } else {
@@ -64,11 +64,11 @@ public class DataWordTest {
         two[31] = (byte) 0xff; // 0x000000000000000000000000000000000000000000000000000000000000ff
 
         DataWord x = new DataWord(two);
-        x.add(new DataWord(two));
+        x = x.add(new DataWord(two));
         System.out.println(Hex.toHexString(x.getData()));
 
         DataWord y = new DataWord(two);
-        y.add2(new DataWord(two));
+        y = y.add2(new DataWord(two));
         System.out.println(Hex.toHexString(y.getData()));
     }
 
@@ -80,7 +80,7 @@ public class DataWordTest {
         }
 
         DataWord x = new DataWord(three);
-        x.add(new DataWord(three));
+        x = x.add(new DataWord(three));
         assertEquals(32, x.getData().length);
         System.out.println(Hex.toHexString(x.getData()));
 
@@ -105,9 +105,9 @@ public class DataWordTest {
 
         DataWord x = new DataWord(one);// System.out.println(x.value());
         DataWord y = new DataWord(two);// System.out.println(y.value());
-        y.mod(x);
+        DataWord actual = y.mod(x);
         assertEquals(32, y.getData().length);
-        assertEquals(expected, Hex.toHexString(y.getData()));
+        assertEquals(expected, Hex.toHexString(actual.getData()));
     }
 
     @Test
@@ -120,7 +120,7 @@ public class DataWordTest {
 
         DataWord x = new DataWord(one);// System.out.println(x.value());
         DataWord y = new DataWord(two);// System.out.println(y.value());
-        x.mul(y);
+        x = x.mul(y);
         assertEquals(32, y.getData().length);
         assertEquals("0000000000000000000000010000000000000000000000000000000000000000", Hex.toHexString(y.getData()));
     }
@@ -136,7 +136,7 @@ public class DataWordTest {
 
         DataWord x = new DataWord(one);// System.out.println(x.value());
         DataWord y = new DataWord(two);// System.out.println(y.value());
-        x.mul(y);
+        x = x.mul(y);
         assertEquals(32, y.getData().length);
         assertEquals("0100000000000000000000000000000000000000000000000000000000000000", Hex.toHexString(y.getData()));
     }
@@ -152,10 +152,10 @@ public class DataWordTest {
 
         DataWord x = new DataWord(one);
         DataWord y = new DataWord(two);
-        x.div(y);
+        DataWord actual = x.div(y);
 
         assertEquals(32, x.getData().length);
-        assertEquals("0000000000000000000000000000000000000000000000000000000000000014", Hex.toHexString(x.getData()));
+        assertEquals("0000000000000000000000000000000000000000000000000000000000000014", Hex.toHexString(actual.getData()));
     }
 
     @Test
@@ -167,10 +167,10 @@ public class DataWordTest {
 
         DataWord x = new DataWord(one);
         DataWord y = new DataWord(two);
-        x.div(y);
+        DataWord actual = x.div(y);
 
-        assertEquals(32, x.getData().length);
-        assertTrue(x.isZero());
+        assertEquals(32, actual.getData().length);
+        assertTrue(actual.isZero());
     }
 
     @Test
@@ -184,10 +184,10 @@ public class DataWordTest {
 
         DataWord x = new DataWord(one);
         DataWord y = new DataWord(two);
-        x.sDiv(y);
+        DataWord actual = x.sDiv(y);
 
         assertEquals(32, x.getData().length);
-        assertEquals("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffec", x.toString());
+        assertEquals("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffec", actual.toString());
     }
 
     @Test
@@ -209,9 +209,9 @@ public class DataWordTest {
         byte k = 0;
         String expected = "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff2";
 
-        x.signExtend(k);
-        System.out.println(x.toString());
-        assertEquals(expected, x.toString());
+        DataWord signExtend = x.signExtend(k);
+        System.out.println(signExtend.toString());
+        assertEquals(expected, signExtend.toString());
     }
 
     @Test
@@ -220,7 +220,7 @@ public class DataWordTest {
         byte k = 1;
         String expected = "00000000000000000000000000000000000000000000000000000000000000f2";
 
-        x.signExtend(k);
+        x = x.signExtend(k);
         System.out.println(x.toString());
         assertEquals(expected, x.toString());
     }
@@ -232,9 +232,9 @@ public class DataWordTest {
         DataWord x = new DataWord(Hex.decode("0f00ab"));
         String expected = "00000000000000000000000000000000000000000000000000000000000000ab";
 
-        x.signExtend(k);
-        System.out.println(x.toString());
-        assertEquals(expected, x.toString());
+        DataWord signExtend = x.signExtend(k);
+        System.out.println(signExtend.toString());
+        assertEquals(expected, signExtend.toString());
     }
 
     @Test
@@ -244,9 +244,9 @@ public class DataWordTest {
         DataWord x = new DataWord(Hex.decode("ffff"));
         String expected = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
 
-        x.signExtend(k);
-        System.out.println(x.toString());
-        assertEquals(expected, x.toString());
+        DataWord signExtend = x.signExtend(k);
+        System.out.println(signExtend.toString());
+        assertEquals(expected, signExtend.toString());
     }
 
     @Test
@@ -256,9 +256,9 @@ public class DataWordTest {
         DataWord x = new DataWord(Hex.decode("ffffffff"));
         String expected = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
 
-        x.signExtend(k);
-        System.out.println(x.toString());
-        assertEquals(expected, x.toString());
+        DataWord signExtend = x.signExtend(k);
+        System.out.println(signExtend.toString());
+        assertEquals(expected, signExtend.toString());
     }
 
     @Test
@@ -268,9 +268,9 @@ public class DataWordTest {
         DataWord x = new DataWord(Hex.decode("ab02345678"));
         String expected = "0000000000000000000000000000000000000000000000000000000002345678";
 
-        x.signExtend(k);
-        System.out.println(x.toString());
-        assertEquals(expected, x.toString());
+        DataWord signExtend = x.signExtend(k);
+        System.out.println(signExtend.toString());
+        assertEquals(expected, signExtend.toString());
     }
 
     @Test
@@ -280,9 +280,9 @@ public class DataWordTest {
         DataWord x = new DataWord(Hex.decode("ab82345678"));
         String expected = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffff82345678";
 
-        x.signExtend(k);
-        System.out.println(x.toString());
-        assertEquals(expected, x.toString());
+        DataWord signExtend = x.signExtend(k);
+        System.out.println(signExtend.toString());
+        assertEquals(expected, signExtend.toString());
     }
 
     @Test
@@ -292,16 +292,16 @@ public class DataWordTest {
         DataWord x = new DataWord(Hex.decode("ff34567882345678823456788234567882345678823456788234567882345678"));
         String expected = "0034567882345678823456788234567882345678823456788234567882345678";
 
-        x.signExtend(k);
-        System.out.println(x.toString());
-        assertEquals(expected, x.toString());
+        DataWord signExtend = x.signExtend(k);
+        System.out.println(signExtend.toString());
+        assertEquals(expected, signExtend.toString());
     }
 
     @Test(expected = IndexOutOfBoundsException.class)
     public void testSignExtendException1() {
 
         byte k = -1;
-        DataWord x = new DataWord();
+        DataWord x = DataWord.zero();
 
         x.signExtend(k); // should throw an exception
     }
@@ -310,7 +310,7 @@ public class DataWordTest {
     public void testSignExtendException2() {
 
         byte k = 32;
-        DataWord x = new DataWord();
+        DataWord x = DataWord.zero();
 
         x.signExtend(k); // should throw an exception
     }
@@ -333,9 +333,9 @@ public class DataWordTest {
         BigInteger bv2 = new BigInteger(v2, 16);
         BigInteger bv3 = new BigInteger(v3, 16);
 
-        dv1.addmod(dv2, dv3);
+        DataWord actual = dv1.addmod(dv2, dv3);
         BigInteger br = bv1.add(bv2).mod(bv3);
-        assertEquals(dv1.value(), br);
+        assertEquals(actual.value(), br);
     }
 
     @Test
@@ -344,10 +344,10 @@ public class DataWordTest {
         DataWord w1 = new DataWord(Hex.decode("01"));
         DataWord w2 = new DataWord(Hex.decode("9999999999999999999999999999999999999999999999999999999999999998"));
 
-        wr.mulmod(w1, w2);
+        DataWord actual = wr.mulmod(w1, w2);
 
-        assertEquals(32, wr.getData().length);
-        assertEquals("0000000000000000000000000000000000000000000000000000000000000001", Hex.toHexString(wr.getData()));
+        assertEquals(32, actual.getData().length);
+        assertEquals("0000000000000000000000000000000000000000000000000000000000000001", Hex.toHexString(actual.getData()));
     }
 
     @Test
@@ -356,10 +356,10 @@ public class DataWordTest {
         DataWord w1 = new DataWord(Hex.decode("01"));
         DataWord w2 = new DataWord(Hex.decode("9999999999999999999999999999999999999999999999999999999999999999"));
 
-        wr.mulmod(w1, w2);
+        DataWord actual = wr.mulmod(w1, w2);
 
-        assertEquals(32, wr.getData().length);
-        assertTrue(wr.isZero());
+        assertEquals(32, actual.getData().length);
+        assertTrue(actual.isZero());
     }
 
     @Test
@@ -368,7 +368,7 @@ public class DataWordTest {
         DataWord w1 = new DataWord(Hex.decode("9999999999999999999999999999999999999999999999999999999999999999"));
         DataWord w2 = new DataWord(Hex.decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
 
-        wr.mulmod(w1, w2);
+        wr = wr.mulmod(w1, w2);
 
         assertEquals(32, wr.getData().length);
         assertTrue(wr.isZero());
@@ -380,10 +380,10 @@ public class DataWordTest {
         DataWord w1 = new DataWord(Hex.decode("00"));
         DataWord w2 = new DataWord(Hex.decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
 
-        wr.mulmod(w1, w2);
+        DataWord actual = wr.mulmod(w1, w2);
 
         assertEquals(32, wr.getData().length);
-        assertTrue(wr.isZero());
+        assertTrue(actual.isZero());
     }
 
     @Test
@@ -392,10 +392,10 @@ public class DataWordTest {
         DataWord w1 = new DataWord(Hex.decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
         DataWord w2 = new DataWord(Hex.decode("00"));
 
-        wr.mulmod(w1, w2);
+        DataWord actual = wr.mulmod(w1, w2);
 
         assertEquals(32, wr.getData().length);
-        assertTrue(wr.isZero());
+        assertTrue(actual.isZero());
     }
 
     @Test
@@ -404,10 +404,10 @@ public class DataWordTest {
         DataWord w1 = new DataWord(Hex.decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
         DataWord w2 = new DataWord(Hex.decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
 
-        wr.mulmod(w1, w2);
+        DataWord actual = wr.mulmod(w1, w2);
 
         assertEquals(32, wr.getData().length);
-        assertTrue(wr.isZero());
+        assertTrue(actual.isZero());
     }
 
     public static BigInteger pow(BigInteger x, BigInteger y) {

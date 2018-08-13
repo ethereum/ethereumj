@@ -93,7 +93,7 @@ public class TrieNodeSourceTest {
                 Hex.toHexString(trieNodeSource.get(Hex.decode("4b7fc4d98630bae2133ad002f743124f2ef5d8167f094af0c2b82d3476604055"))));
 
         // one of that storage rows is gonna be removed
-        repository.addStorageRow(addr1, new DataWord(k1), DataWord.ZERO);
+        repository.addStorageRow(addr1, new DataWord(k1), DataWord.zero());
         flushChanges();
 
         // state doesn't contain a copy of node that belongs to addr1
@@ -106,7 +106,7 @@ public class TrieNodeSourceTest {
                 Hex.toHexString(trieNodeSource.get(Hex.decode("4b7fc4d98630bae2133ad002f743124f2ef5d8167f094af0c2b82d3476604055"))));
 
         // remove a copy of value stick to addr2
-        repository.addStorageRow(addr2, new DataWord(k1), DataWord.ZERO);
+        repository.addStorageRow(addr2, new DataWord(k1), DataWord.zero());
         flushChanges();
 
         // no source can resolve any of those keys

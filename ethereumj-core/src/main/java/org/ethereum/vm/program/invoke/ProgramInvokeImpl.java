@@ -187,7 +187,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
 
         if (msgData == null || index >= msgData.length
                 || tempIndex.compareTo(MAX_MSG_DATA) == 1)
-            return new DataWord();
+            return DataWord.zero();
         if (index + size > msgData.length)
             size = msgData.length - index;
 
@@ -199,7 +199,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     /*  CALLDATASIZE */
     public DataWord getDataSize() {
 
-        if (msgData == null || msgData.length == 0) return DataWord.ZERO;
+        if (msgData == null || msgData.length == 0) return DataWord.zero();
         int size = msgData.length;
         return new DataWord(size);
     }

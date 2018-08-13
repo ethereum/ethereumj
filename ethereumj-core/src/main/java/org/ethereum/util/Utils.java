@@ -230,11 +230,8 @@ public class Utils {
     }
 
     public static DataWord allButOne64th(DataWord dw) {
-        DataWord ret = dw.clone();
-        DataWord d = dw.clone();
-        d.div(DIVISOR);
-        ret.sub(d);
-        return ret;
+        DataWord divResult = dw.div(DIVISOR);
+        return dw.sub(divResult);
     }
 
     /**
