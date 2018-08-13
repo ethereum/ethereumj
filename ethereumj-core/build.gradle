@@ -307,8 +307,8 @@ def customizePom(pom, gradleProject) {
             }
             licenses {
                 license {
-                    name "The MIT License"
-                    url "http://mit-license.org/"
+                    name "GNU Lesser General Public License v3.0"
+                    url "https://www.gnu.org/licenses/lgpl-3.0.en.html"
                     distribution "repo"
                 }
             }
