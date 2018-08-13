@@ -17,11 +17,9 @@
  */
 package org.ethereum.jsontestsuite.suite.model;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonDeserialize;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.ethereum.jsontestsuite.suite.Logs;
-
-import java.util.List;
 
 /**
  * @author Mikhail Kalinin

@@ -17,12 +17,15 @@
  */
 package org.ethereum.jsontestsuite;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.JavaType;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.ethereum.jsontestsuite.suite.JSONReader;
 import org.ethereum.jsontestsuite.suite.RLPTestCase;
 import org.json.simple.parser.ParseException;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
