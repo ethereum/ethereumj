@@ -34,6 +34,8 @@ public final class SpongyCastleProvider {
             
         INSTANCE.put("MessageDigest.ETH-KECCAK-256", "org.ethereum.crypto.cryptohash.Keccak256");
         INSTANCE.put("MessageDigest.ETH-KECCAK-512", "org.ethereum.crypto.cryptohash.Keccak512");
+
+        INSTANCE.put("MessageDigest.BLAKE2B-256", "org.spongycastle.jcajce.provider.digest.Blake2b$Blake2b256");
     }
   }
 

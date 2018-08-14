@@ -246,6 +246,17 @@ public class HashUtil {
         return randomHash;
     }
 
+    public static byte[] blake2b(byte[] data) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("BLAKE2B-256");
+            digest.update(data);
+            return digest.digest();
+        } catch (NoSuchAlgorithmException e) {
+            LOG.error("Can't find such algorithm", e);
+            throw new RuntimeException(e);
+        }
+    }
+
     public static String shortHash(byte[] hash) {
         return Hex.toHexString(hash).substring(0, 6);
     }
