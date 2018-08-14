@@ -24,7 +24,7 @@ import org.ethereum.db.PeerSource;
 import org.ethereum.net.rlpx.*;
 import org.ethereum.net.rlpx.discover.table.NodeTable;
 import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.NodeDiscoveredEvent;
+import org.ethereum.publish.event.NodeDiscovered;
 import org.ethereum.util.CollectionUtils;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -197,14 +197,14 @@ public class NodeManager implements Consumer<DiscoveryEvent>{
             nodeHandlerMap.put(key, ret);
             logger.debug(" +++ New node: " + ret + " " + n);
             if (!n.isDiscoveryNode() && !n.getHexId().equals(homeNode.getHexId())) {
-                publisher.publish(new NodeDiscoveredEvent(ret.getNode()));
+                publisher.publish(new NodeDiscovered(ret.getNode()));
             }
         } else if (ret.getNode().isDiscoveryNode() && !n.isDiscoveryNode()) {
             // we found discovery node with same host:port,
             // replace node with correct nodeId
             ret.node = n;
             if (!n.getHexId().equals(homeNode.getHexId())) {
-                publisher.publish(new NodeDiscoveredEvent(ret.getNode()));
+                publisher.publish(new NodeDiscovered(ret.getNode()));
             }
             logger.debug(" +++ Found real nodeId for discovery endpoint {}", n);
         }

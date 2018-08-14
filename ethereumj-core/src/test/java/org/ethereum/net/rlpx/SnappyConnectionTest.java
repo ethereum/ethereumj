@@ -21,7 +21,7 @@ import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.publish.event.message.EthStatusUpdatedEvent;
+import org.ethereum.publish.event.message.EthStatusUpdated;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.context.annotation.Bean;
@@ -99,11 +99,11 @@ public class SnappyConnectionTest {
 
         final CountDownLatch semaphore = new CountDownLatch(2);
 
-        ethereum1.subscribe(to(EthStatusUpdatedEvent.class, data -> {
+        ethereum1.subscribe(to(EthStatusUpdated.class, data -> {
             System.out.println("1: -> " + data.getMessage());
             semaphore.countDown();
         }));
-        ethereum2.subscribe(to(EthStatusUpdatedEvent.class, data -> {
+        ethereum2.subscribe(to(EthStatusUpdated.class, data -> {
             System.out.println("2: -> " + data.getMessage());
             semaphore.countDown();
         }));

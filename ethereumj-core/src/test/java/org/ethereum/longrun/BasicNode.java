@@ -28,10 +28,10 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
-import org.ethereum.publish.event.BlockAddedEvent;
-import org.ethereum.publish.event.PeerAddedToSyncPoolEvent;
-import org.ethereum.publish.event.SyncDoneEvent;
-import org.ethereum.publish.event.message.EthStatusUpdatedEvent;
+import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.PeerAddedToSyncPool;
+import org.ethereum.publish.event.SyncDone;
+import org.ethereum.publish.event.message.EthStatusUpdated;
 import org.ethereum.sync.SyncPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,10 +108,10 @@ class BasicNode implements Runnable {
         logger = LoggerFactory.getLogger(loggerName);
         // adding the main EthereumJ callback to be notified on different kind of events
         this.ethereum
-                .subscribe(to(SyncDoneEvent.class, this::onSyncDone))
-                .subscribe(to(BlockAddedEvent.class, this::onBlock))
-                .subscribe(to(EthStatusUpdatedEvent.class, this::onEthStatusUpdated))
-                .subscribe(to(PeerAddedToSyncPoolEvent.class, this::onPeerAddedToSyncPool));
+                .subscribe(to(SyncDone.class, this::onSyncDone))
+                .subscribe(to(BlockAdded.class, this::onBlock))
+                .subscribe(to(EthStatusUpdated.class, this::onEthStatusUpdated))
+                .subscribe(to(PeerAddedToSyncPool.class, this::onPeerAddedToSyncPool));
 
         logger.info("Sample component created. Listening for ethereum events...");
 
@@ -184,7 +184,7 @@ class BasicNode implements Runnable {
         onSyncDoneImpl(state);
     }
 
-    public void onEthStatusUpdated(EthStatusUpdatedEvent.Data data) {
+    public void onEthStatusUpdated(EthStatusUpdated.Data data) {
         ethNodes.put(data.getChannel().getNode(), data.getMessage());
     }
 

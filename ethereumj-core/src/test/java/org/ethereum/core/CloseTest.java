@@ -19,7 +19,7 @@ package org.ethereum.core;
 
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.publish.event.BlockAddedEvent;
+import org.ethereum.publish.event.BlockAdded;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -44,7 +44,7 @@ public class CloseTest {
             Assert.assertNotNull(bestBlock);
             final CountDownLatch latch = new CountDownLatch(1);
             AtomicInteger counter = new AtomicInteger();
-            ethereum.subscribe(to(BlockAddedEvent.class, blockSummary -> {
+            ethereum.subscribe(to(BlockAdded.class, blockSummary -> {
                 if (counter.addAndGet(1) > 1100)  {
                     latch.countDown();
                 }

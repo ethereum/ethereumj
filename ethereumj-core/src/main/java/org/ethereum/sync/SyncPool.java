@@ -19,7 +19,6 @@ package org.ethereum.sync;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Blockchain;
-import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.NodeHandler;
@@ -27,7 +26,7 @@ import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.PeerAddedToSyncPoolEvent;
+import org.ethereum.publish.event.PeerAddedToSyncPool;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -341,7 +340,7 @@ public class SyncPool {
 
         for (Channel channel : filtered) {
             if (!activePeers.contains(channel)) {
-                publisher.publish(new PeerAddedToSyncPoolEvent(channel));
+                publisher.publish(new PeerAddedToSyncPool(channel));
             }
         }
         if (logger.isTraceEnabled())

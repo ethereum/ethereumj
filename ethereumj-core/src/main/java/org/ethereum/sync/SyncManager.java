@@ -24,7 +24,7 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.SyncDoneEvent;
+import org.ethereum.publish.event.SyncDone;
 import org.ethereum.util.ExecutorPipeline;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
@@ -341,7 +341,7 @@ public class SyncManager extends BlockDownloader {
         if (syncDone) return;
         syncDone = true;
         channelManager.onSyncDone(true);
-        publisher.publish(new SyncDoneEvent(syncDoneType));
+        publisher.publish(new SyncDone(syncDoneType));
     }
 
     public CompletableFuture<Void> switchToShortSync() {

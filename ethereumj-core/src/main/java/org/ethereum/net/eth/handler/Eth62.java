@@ -31,7 +31,7 @@ import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
 import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.message.EthStatusUpdatedEvent;
+import org.ethereum.publish.event.message.EthStatusUpdated;
 import org.ethereum.sync.PeerState;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.SyncStatistics;
@@ -340,7 +340,7 @@ public class Eth62 extends EthHandler {
 
             // basic checks passed, update statistics
             channel.getNodeStatistics().ethHandshake(msg);
-            getPublisher().publish(new EthStatusUpdatedEvent(channel, msg));
+            getPublisher().publish(new EthStatusUpdated(channel, msg));
 
             if (peerDiscoveryMode) {
                 loggerNet.trace("Peer discovery mode: STATUS received, disconnecting...");

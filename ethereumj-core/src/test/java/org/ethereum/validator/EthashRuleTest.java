@@ -7,8 +7,8 @@ import org.ethereum.core.EventDispatchThread;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.mine.EthashValidationHelper;
 import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.BestBlockAddedEvent;
-import org.ethereum.publish.event.SyncDoneEvent;
+import org.ethereum.publish.event.BestBlockAdded;
+import org.ethereum.publish.event.SyncDone;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
@@ -68,7 +68,7 @@ public class EthashRuleTest {
         assertEquals(Success, rule.validate(partlyValidHeader));
 
         // trigger ethash cache
-        publisher.publish(new BestBlockAddedEvent(dummySummaryNum_1, true));
+        publisher.publish(new BestBlockAdded(dummySummaryNum_1, true));
 
         assertEquals(Success, rule.validate(validHeader));
         assertNotEquals(Success, rule.validate(partlyValidHeader));
@@ -86,7 +86,7 @@ public class EthashRuleTest {
         EthashRule rule = new EthashRule(EthashRule.Mode.mixed, EthashRule.ChainType.main, publisher);
 
         // trigger ethash cache
-        publisher.publish(new BestBlockAddedEvent(dummySummaryNum_1, true));
+        publisher.publish(new BestBlockAdded(dummySummaryNum_1, true));
 
         // check mixed mode randomness
         boolean fullCheckTriggered = false;
@@ -104,7 +104,7 @@ public class EthashRuleTest {
         assertTrue(partialCheckTriggered);
 
         // trigger onSyncDone
-        publisher.publish(new SyncDoneEvent(EthereumListener.SyncState.COMPLETE));
+        publisher.publish(new SyncDone(EthereumListener.SyncState.COMPLETE));
 
         // check that full verification is done on each run in strict mode
         for (int i = 0; i < 100; i++) {
@@ -122,8 +122,8 @@ public class EthashRuleTest {
         // trigger cache
         for (int i = 0; i < 100; i++) {
             publisher
-                    .publish(new BestBlockAddedEvent(dummySummaryNum_1, false))
-                    .publish(new BestBlockAddedEvent(dummySummaryNum_1, true));
+                    .publish(new BestBlockAdded(dummySummaryNum_1, false))
+                    .publish(new BestBlockAdded(dummySummaryNum_1, true));
         }
 
         // must be triggered on best block only

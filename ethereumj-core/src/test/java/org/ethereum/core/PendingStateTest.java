@@ -23,9 +23,9 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.publish.event.BlockAddedEvent;
-import org.ethereum.publish.event.PendingStateChangedEvent;
-import org.ethereum.publish.event.PendingTransactionUpdatedEvent;
+import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.PendingStateChanged;
+import org.ethereum.publish.event.PendingTransactionUpdated;
 import org.ethereum.util.blockchain.SolidityContract;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.junit.AfterClass;
@@ -84,7 +84,7 @@ public class PendingStateTest {
             onPendingStateChanged.add(new Object());
         }
 
-        public void onPendingTransactionUpdate(PendingTransactionUpdatedEvent.Data data) {
+        public void onPendingTransactionUpdate(PendingTransactionUpdated.Data data) {
             onPendingTransactionUpdate(data.getReceipt(), data.getState(), data.getBlock());
         }
 
@@ -117,9 +117,9 @@ public class PendingStateTest {
     public void testSimple() throws InterruptedException {
         PendingListener l = new PendingListener();
         StandaloneBlockchain bc = new StandaloneBlockchain()
-                .subscribe(to(BlockAddedEvent.class, l::onBlock))
-                .subscribe(to(PendingStateChangedEvent.class, l::onPendingStateChanged))
-                .subscribe(to(PendingTransactionUpdatedEvent.class, l::onPendingTransactionUpdate));
+                .subscribe(to(BlockAdded.class, l::onBlock))
+                .subscribe(to(PendingStateChanged.class, l::onPendingStateChanged))
+                .subscribe(to(PendingTransactionUpdated.class, l::onPendingTransactionUpdate));
 
         Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd;
         PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
@@ -192,9 +192,9 @@ public class PendingStateTest {
     public void testRebranch1() throws InterruptedException {
         PendingListener l = new PendingListener();
         StandaloneBlockchain bc = new StandaloneBlockchain()
-                .subscribe(to(BlockAddedEvent.class, l::onBlock))
-                .subscribe(to(PendingStateChangedEvent.class, l::onPendingStateChanged))
-                .subscribe(to(PendingTransactionUpdatedEvent.class, l::onPendingTransactionUpdate));
+                .subscribe(to(BlockAdded.class, l::onBlock))
+                .subscribe(to(PendingStateChanged.class, l::onPendingStateChanged))
+                .subscribe(to(PendingTransactionUpdated.class, l::onPendingTransactionUpdate));
 
         Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd = null;
         PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
@@ -261,9 +261,9 @@ public class PendingStateTest {
     public void testRebranch2() throws InterruptedException {
         PendingListener l = new PendingListener();
         StandaloneBlockchain bc = new StandaloneBlockchain()
-                .subscribe(to(BlockAddedEvent.class, l::onBlock))
-                .subscribe(to(PendingStateChangedEvent.class, l::onPendingStateChanged))
-                .subscribe(to(PendingTransactionUpdatedEvent.class, l::onPendingTransactionUpdate));
+                .subscribe(to(BlockAdded.class, l::onBlock))
+                .subscribe(to(PendingStateChanged.class, l::onPendingStateChanged))
+                .subscribe(to(PendingTransactionUpdated.class, l::onPendingTransactionUpdate));
 
         Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd = null;
         PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
@@ -351,9 +351,9 @@ public class PendingStateTest {
     public void testRebranch3() throws InterruptedException {
         PendingListener l = new PendingListener();
         StandaloneBlockchain bc = new StandaloneBlockchain()
-                .subscribe(to(BlockAddedEvent.class, l::onBlock))
-                .subscribe(to(PendingStateChangedEvent.class, l::onPendingStateChanged))
-                .subscribe(to(PendingTransactionUpdatedEvent.class, l::onPendingTransactionUpdate));
+                .subscribe(to(BlockAdded.class, l::onBlock))
+                .subscribe(to(PendingStateChanged.class, l::onPendingStateChanged))
+                .subscribe(to(PendingTransactionUpdated.class, l::onPendingTransactionUpdate));
 
         Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd = null;
         PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
@@ -403,9 +403,9 @@ public class PendingStateTest {
     public void testOldBlockIncluded() throws InterruptedException {
         PendingListener l = new PendingListener();
         StandaloneBlockchain bc = new StandaloneBlockchain()
-                .subscribe(to(BlockAddedEvent.class, l::onBlock))
-                .subscribe(to(PendingStateChangedEvent.class, l::onPendingStateChanged))
-                .subscribe(to(PendingTransactionUpdatedEvent.class, l::onPendingTransactionUpdate));
+                .subscribe(to(BlockAdded.class, l::onBlock))
+                .subscribe(to(PendingStateChanged.class, l::onPendingStateChanged))
+                .subscribe(to(PendingTransactionUpdated.class, l::onPendingTransactionUpdate));
 
         Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd = null;
         PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
@@ -441,9 +441,9 @@ public class PendingStateTest {
     public void testBlockOnlyIncluded() throws InterruptedException {
         PendingListener l = new PendingListener();
         StandaloneBlockchain bc = new StandaloneBlockchain()
-                .subscribe(to(BlockAddedEvent.class, l::onBlock))
-                .subscribe(to(PendingStateChangedEvent.class, l::onPendingStateChanged))
-                .subscribe(to(PendingTransactionUpdatedEvent.class, l::onPendingTransactionUpdate));
+                .subscribe(to(BlockAdded.class, l::onBlock))
+                .subscribe(to(PendingStateChanged.class, l::onPendingStateChanged))
+                .subscribe(to(PendingTransactionUpdated.class, l::onPendingTransactionUpdate));
 
         Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd = null;
         PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
@@ -470,9 +470,9 @@ public class PendingStateTest {
     public void testTrackTx1() throws InterruptedException {
         PendingListener l = new PendingListener();
         StandaloneBlockchain bc = new StandaloneBlockchain()
-                .subscribe(to(BlockAddedEvent.class, l::onBlock))
-                .subscribe(to(PendingStateChangedEvent.class, l::onPendingStateChanged))
-                .subscribe(to(PendingTransactionUpdatedEvent.class, l::onPendingTransactionUpdate));
+                .subscribe(to(BlockAdded.class, l::onBlock))
+                .subscribe(to(PendingStateChanged.class, l::onPendingStateChanged))
+                .subscribe(to(PendingTransactionUpdated.class, l::onPendingTransactionUpdate));
 
         Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd = null;
         PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
@@ -524,9 +524,9 @@ public class PendingStateTest {
 
         PendingListener l = new PendingListener();
         bc
-                .subscribe(to(BlockAddedEvent.class, l::onBlock))
-                .subscribe(to(PendingStateChangedEvent.class, l::onPendingStateChanged))
-                .subscribe(to(PendingTransactionUpdatedEvent.class, l::onPendingTransactionUpdate));
+                .subscribe(to(BlockAdded.class, l::onBlock))
+                .subscribe(to(PendingStateChanged.class, l::onPendingStateChanged))
+                .subscribe(to(PendingTransactionUpdated.class, l::onPendingTransactionUpdate));
 
         Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd;
 
@@ -541,9 +541,9 @@ public class PendingStateTest {
     public void testTrackTx2() throws InterruptedException {
         PendingListener l = new PendingListener();
         StandaloneBlockchain bc = new StandaloneBlockchain()
-                .subscribe(to(BlockAddedEvent.class, l::onBlock))
-                .subscribe(to(PendingStateChangedEvent.class, l::onPendingStateChanged))
-                .subscribe(to(PendingTransactionUpdatedEvent.class, l::onPendingTransactionUpdate));
+                .subscribe(to(BlockAdded.class, l::onBlock))
+                .subscribe(to(PendingStateChanged.class, l::onPendingStateChanged))
+                .subscribe(to(PendingTransactionUpdated.class, l::onPendingTransactionUpdate));
 
         Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd = null;
         PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
@@ -574,9 +574,9 @@ public class PendingStateTest {
     public void testRejected1() throws InterruptedException {
         PendingListener l = new PendingListener();
         StandaloneBlockchain bc = new StandaloneBlockchain()
-                .subscribe(to(BlockAddedEvent.class, l::onBlock))
-                .subscribe(to(PendingStateChangedEvent.class, l::onPendingStateChanged))
-                .subscribe(to(PendingTransactionUpdatedEvent.class, l::onPendingTransactionUpdate));
+                .subscribe(to(BlockAdded.class, l::onBlock))
+                .subscribe(to(PendingStateChanged.class, l::onPendingStateChanged))
+                .subscribe(to(PendingTransactionUpdated.class, l::onPendingTransactionUpdate));
 
         Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd = null;
         PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
@@ -623,9 +623,9 @@ public class PendingStateTest {
         // the transaction becomes the main chain
         PendingListener l = new PendingListener();
         StandaloneBlockchain bc = new StandaloneBlockchain()
-                .subscribe(to(BlockAddedEvent.class, l::onBlock))
-                .subscribe(to(PendingStateChangedEvent.class, l::onPendingStateChanged))
-                .subscribe(to(PendingTransactionUpdatedEvent.class, l::onPendingTransactionUpdate));
+                .subscribe(to(BlockAdded.class, l::onBlock))
+                .subscribe(to(PendingStateChanged.class, l::onPendingStateChanged))
+                .subscribe(to(PendingTransactionUpdated.class, l::onPendingTransactionUpdate));
 
         Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd = null;
         PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
@@ -677,9 +677,9 @@ public class PendingStateTest {
         };
 
         StandaloneBlockchain bc = new StandaloneBlockchain()
-                .subscribe(to(BlockAddedEvent.class, l::onBlock))
-                .subscribe(to(PendingStateChangedEvent.class, l::onPendingStateChanged))
-                .subscribe(to(PendingTransactionUpdatedEvent.class, l::onPendingTransactionUpdate));
+                .subscribe(to(BlockAdded.class, l::onBlock))
+                .subscribe(to(PendingStateChanged.class, l::onPendingStateChanged))
+                .subscribe(to(PendingTransactionUpdated.class, l::onPendingTransactionUpdate));
 
         PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
 

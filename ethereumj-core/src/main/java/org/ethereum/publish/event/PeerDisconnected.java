@@ -1,6 +1,6 @@
 package org.ethereum.publish.event;
 
-public class PeerDisconnectedEvent extends Event<PeerDisconnectedEvent.Data> {
+public class PeerDisconnected extends Event<PeerDisconnected.Data> {
 
     public static class Data {
         private final String host;
@@ -20,7 +20,7 @@ public class PeerDisconnectedEvent extends Event<PeerDisconnectedEvent.Data> {
         }
     }
 
-    public PeerDisconnectedEvent(String host, long port) {
+    public PeerDisconnected(String host, long port) {
         super(new Data(host, port));
     }
 }

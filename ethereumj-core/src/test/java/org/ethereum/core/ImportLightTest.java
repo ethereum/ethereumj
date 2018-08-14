@@ -28,7 +28,7 @@ import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.RepositoryRoot;
 import org.ethereum.mine.Ethash;
 import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.TransactionExecutedEvent;
+import org.ethereum.publish.event.TransactionExecuted;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.blockchain.SolidityContract;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
@@ -772,7 +772,7 @@ public class ImportLightTest {
         SolidityContract a = bc.submitNewContract(contractA, "A");
         bc.createBlock();
         final BigInteger[] refund = new BigInteger[1];
-        bc.subscribe(TransactionExecutedEvent.class, tes -> refund[0] = tes.getGasRefund());
+        bc.subscribe(TransactionExecuted.class, tes -> refund[0] = tes.getGasRefund());
         a.callFunction("f");
         bc.createBlock();
 
@@ -800,7 +800,7 @@ public class ImportLightTest {
         SolidityContract a = bc.submitNewContract(contractA, "A");
         bc.createBlock();
         final List<LogInfo> logs = new ArrayList<>();
-        bc.subscribe(TransactionExecutedEvent.class, tes -> logs.addAll(tes.getLogs()));
+        bc.subscribe(TransactionExecuted.class, tes -> logs.addAll(tes.getLogs()));
         a.callFunction("f");
         bc.createBlock();
 

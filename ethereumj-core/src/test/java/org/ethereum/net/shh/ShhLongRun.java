@@ -23,7 +23,7 @@ import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.rlpx.Node;
-import org.ethereum.publish.event.message.PeerHandshakedEvent;
+import org.ethereum.publish.event.message.PeerHandshaked;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
@@ -110,7 +110,7 @@ public class ShhLongRun extends Thread {
         @PostConstruct
         void init() {
             System.out.println("========= init");
-            worldManager.getPublisher().subscribe(to(PeerHandshakedEvent.class, data -> {
+            worldManager.getPublisher().subscribe(to(PeerHandshaked.class, data -> {
                 System.out.println("========= onHandShakePeer");
                 if (!isAlive()) {
                     start();

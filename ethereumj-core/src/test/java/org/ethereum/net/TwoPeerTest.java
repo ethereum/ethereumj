@@ -31,8 +31,8 @@ import org.ethereum.net.eth.message.BlockHeadersMessage;
 import org.ethereum.net.eth.message.GetBlockBodiesMessage;
 import org.ethereum.net.eth.message.GetBlockHeadersMessage;
 import org.ethereum.net.server.Channel;
-import org.ethereum.publish.event.BlockAddedEvent;
-import org.ethereum.publish.event.message.EthStatusUpdatedEvent;
+import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.message.EthStatusUpdated;
 import org.ethereum.util.RLP;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -226,12 +226,12 @@ public class TwoPeerTest {
         final CountDownLatch semaphore = new CountDownLatch(1);
 
         final Channel[] channel1 = new Channel[1];
-        ethereum1.subscribe(to(EthStatusUpdatedEvent.class, data -> {
+        ethereum1.subscribe(to(EthStatusUpdated.class, data -> {
             channel1[0] = data.getChannel();
             System.out.println("==== Got the Channel: " + data.getChannel());
         }));
 
-        ethereum2.subscribe(to(BlockAddedEvent.class, blockSummary -> {
+        ethereum2.subscribe(to(BlockAdded.class, blockSummary -> {
             Block block = blockSummary.getBlock();
             if (block.getNumber() == 4) {
                 semaphore.countDown();

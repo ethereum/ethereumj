@@ -21,8 +21,8 @@ import org.ethereum.core.*;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.publish.event.BlockAddedEvent;
-import org.ethereum.publish.event.PendingTransactionsReceivedEvent;
+import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.PendingTransactionsReceived;
 import org.ethereum.util.ByteUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -65,9 +65,9 @@ public class PendingStateSample extends TestNetSample {
     public void onSyncDone() {
         this.ethereum
                 // listening here when the PendingState is updated with new transactions
-                .subscribe(to(PendingTransactionsReceivedEvent.class, txs -> txs.forEach(this::onPendingTransactionReceived)))
+                .subscribe(to(PendingTransactionsReceived.class, txs -> txs.forEach(this::onPendingTransactionReceived)))
                 // when block arrives look for our included transactions
-                .subscribe(to(BlockAddedEvent.class, this::onBlock));
+                .subscribe(to(BlockAdded.class, this::onBlock));
 
         new Thread(() -> {
             try {

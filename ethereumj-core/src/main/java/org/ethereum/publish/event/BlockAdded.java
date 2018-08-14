@@ -2,9 +2,9 @@ package org.ethereum.publish.event;
 
 import org.ethereum.core.BlockSummary;
 
-public class BlockAddedEvent extends Event<BlockSummary> {
+public class BlockAdded extends Event<BlockSummary> {
 
-    public BlockAddedEvent(BlockSummary data) {
+    public BlockAdded(BlockSummary data) {
         super(data);
     }
 }

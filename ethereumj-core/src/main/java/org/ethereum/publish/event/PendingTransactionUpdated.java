@@ -9,7 +9,7 @@ import org.ethereum.listener.EthereumListener;
  *
  * @author Eugene Shevchenko
  */
-public class PendingTransactionUpdatedEvent extends Event<PendingTransactionUpdatedEvent.Data> {
+public class PendingTransactionUpdated extends Event<PendingTransactionUpdated.Data> {
 
     /**
      * Event DTO
@@ -44,7 +44,7 @@ public class PendingTransactionUpdatedEvent extends Event<PendingTransactionUpda
         }
     }
 
-    public PendingTransactionUpdatedEvent(Block block, TransactionReceipt receipt, EthereumListener.PendingTransactionState state) {
+    public PendingTransactionUpdated(Block block, TransactionReceipt receipt, EthereumListener.PendingTransactionState state) {
         super(new Data(block, receipt, state));
     }
 }

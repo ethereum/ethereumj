@@ -30,10 +30,10 @@ import org.ethereum.net.eth.handler.EthHandler;
 import org.ethereum.net.eth.message.*;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.rlpx.Node;
-import org.ethereum.publish.event.BlockAddedEvent;
-import org.ethereum.publish.event.PeerAddedToSyncPoolEvent;
-import org.ethereum.publish.event.message.EthStatusUpdatedEvent;
-import org.ethereum.publish.event.message.ReceivedMessageEvent;
+import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.PeerAddedToSyncPool;
+import org.ethereum.publish.event.message.EthStatusUpdated;
+import org.ethereum.publish.event.message.MessageReceived;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.junit.*;
 import org.springframework.context.annotation.Bean;
@@ -160,7 +160,7 @@ public class ShortSyncTest {
         // A == b10, B == genesis
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereumB.subscribe(to(BlockAddedEvent.class, blockSummary -> semaphore.countDown())
+        ethereumB.subscribe(to(BlockAdded.class, blockSummary -> semaphore.countDown())
                 .conditionally(blockSummary -> blockSummary.getBlock().isEqual(b10)));
 
         ethA.sendNewBlock(b10);
@@ -192,7 +192,7 @@ public class ShortSyncTest {
         // A == b8', B == genesis
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereumB.subscribe(to(BlockAddedEvent.class, blockSummary -> semaphore.countDown())
+        ethereumB.subscribe(to(BlockAdded.class, blockSummary -> semaphore.countDown())
                 .conditionally(blockSummary -> blockSummary.getBlock().isEqual(b8_)));
 
         ethA.sendNewBlock(b8_);
@@ -228,7 +228,7 @@ public class ShortSyncTest {
         // A == b10, B == b8'
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereumB.subscribe(to(BlockAddedEvent.class, blockSummary -> {
+        ethereumB.subscribe(to(BlockAdded.class, blockSummary -> {
             Block block = blockSummary.getBlock();
             if (block.isEqual(b10)) {
                 semaphore.countDown();
@@ -273,7 +273,7 @@ public class ShortSyncTest {
         // A == b5, B == b9
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereumB.subscribe(to(BlockAddedEvent.class, blockSummary -> semaphore.countDown())
+        ethereumB.subscribe(to(BlockAdded.class, blockSummary -> semaphore.countDown())
                 .conditionally(blockSummary -> blockSummary.getBlock().equals(b10)));
 
         ethA.sendNewBlockHashes(b5);
@@ -322,7 +322,7 @@ public class ShortSyncTest {
 
         final CountDownLatch semaphore = new CountDownLatch(1);
         final CountDownLatch semaphoreB8_ = new CountDownLatch(1);
-        ethereumB.subscribe(to(BlockAddedEvent.class, blockSummary -> {
+        ethereumB.subscribe(to(BlockAdded.class, blockSummary -> {
             Block block = blockSummary.getBlock();
             if (block.isEqual(b10)) {
                 semaphore.countDown();
@@ -382,7 +382,7 @@ public class ShortSyncTest {
 
         final CountDownLatch semaphore = new CountDownLatch(1);
         final CountDownLatch semaphoreB7 = new CountDownLatch(1);
-        ethereumB.subscribe(to(BlockAddedEvent.class, blockSummary -> {
+        ethereumB.subscribe(to(BlockAdded.class, blockSummary -> {
             Block block = blockSummary.getBlock();
             if (block.isEqual(b7)) {
                 semaphoreB7.countDown();
@@ -442,7 +442,7 @@ public class ShortSyncTest {
 
         // A == b8', B == b4
 
-        ethereumB.subscribe(to(ReceivedMessageEvent.class, data -> {
+        ethereumB.subscribe(to(MessageReceived.class, data -> {
             if (data.getMessage() instanceof NewBlockMessage) {
                 // it's time to do a re-branch
                 for (Block b : mainB1B10) {
@@ -453,7 +453,7 @@ public class ShortSyncTest {
         }));
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereumB.subscribe(to(BlockAddedEvent.class, blockSummary -> {
+        ethereumB.subscribe(to(BlockAdded.class, blockSummary -> {
             Block block = blockSummary.getBlock();
             if (block.isEqual(b10)) {
                 semaphore.countDown();
@@ -501,7 +501,7 @@ public class ShortSyncTest {
 
         final CountDownLatch semaphore = new CountDownLatch(1);
         final CountDownLatch semaphoreB7_ = new CountDownLatch(1);
-        ethereumB.subscribe(to(BlockAddedEvent.class, blockSummary -> {
+        ethereumB.subscribe(to(BlockAdded.class, blockSummary -> {
             Block block = blockSummary.getBlock();
             if (block.isEqual(b7_)) {
                 // it's time to do a re-branch
@@ -583,7 +583,7 @@ public class ShortSyncTest {
         ethA.sendNewBlock(b8_);
 
         final CountDownLatch semaphoreDisconnect = new CountDownLatch(1);
-        ethereumA.subscribe(to(ReceivedMessageEvent.class, messageData -> {
+        ethereumA.subscribe(to(MessageReceived.class, messageData -> {
             if (messageData.getMessage() instanceof DisconnectMessage) {
                 semaphoreDisconnect.countDown();
             }
@@ -604,7 +604,7 @@ public class ShortSyncTest {
         }
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereumB.subscribe(to(BlockAddedEvent.class, blockSummary -> {
+        ethereumB.subscribe(to(BlockAdded.class, blockSummary -> {
             Block block = blockSummary.getBlock();
             if (block.isEqual(b10)) {
                 semaphore.countDown();
@@ -613,7 +613,7 @@ public class ShortSyncTest {
 
 
         final CountDownLatch semaphoreConnect = new CountDownLatch(1);
-        ethereumB.subscribe(to(PeerAddedToSyncPoolEvent.class, channel -> semaphoreConnect.countDown()));
+        ethereumB.subscribe(to(PeerAddedToSyncPool.class, channel -> semaphoreConnect.countDown()));
         ethereumB.connect(nodeA);
 
         // await connection
@@ -681,7 +681,7 @@ public class ShortSyncTest {
         ethA.sendNewBlockHashes(b8_);
 
         final CountDownLatch semaphoreDisconnect = new CountDownLatch(1);
-        ethereumA.subscribe(to(ReceivedMessageEvent.class, data -> {
+        ethereumA.subscribe(to(MessageReceived.class, data -> {
             if (data.getMessage() instanceof DisconnectMessage) {
                 semaphoreDisconnect.countDown();
             }
@@ -699,7 +699,7 @@ public class ShortSyncTest {
         LongSyncTest.SysPropConfigA.eth62 = null;
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereumB.subscribe(to(BlockAddedEvent.class, blockSummary -> {
+        ethereumB.subscribe(to(BlockAdded.class, blockSummary -> {
             Block block = blockSummary.getBlock();
             if (block.isEqual(b10)) {
                 semaphore.countDown();
@@ -707,7 +707,7 @@ public class ShortSyncTest {
         }));
 
         final CountDownLatch semaphoreConnect = new CountDownLatch(1);
-        ethereumB.subscribe(to(PeerAddedToSyncPoolEvent.class, channel -> semaphoreConnect.countDown()));
+        ethereumB.subscribe(to(PeerAddedToSyncPool.class, channel -> semaphoreConnect.countDown()));
         ethereumB.connect(nodeA);
 
         // await connection
@@ -760,7 +760,7 @@ public class ShortSyncTest {
 
         final CountDownLatch semaphore1 = new CountDownLatch(1);
         final CountDownLatch semaphore2 = new CountDownLatch(1);
-        ethereumB.subscribe(to(BlockAddedEvent.class, blockSummary -> {
+        ethereumB.subscribe(to(BlockAdded.class, blockSummary -> {
             if (blockSummary.getBlock().isEqual(b6_)) {
                 if (semaphore1.getCount() > 0) {
                     semaphore1.countDown();
@@ -823,7 +823,7 @@ public class ShortSyncTest {
 
         final CountDownLatch semaphoreDisconnect = new CountDownLatch(1);
         this.ethereumA
-                .subscribe(to(ReceivedMessageEvent.class, data -> semaphoreDisconnect.countDown())
+                .subscribe(to(MessageReceived.class, data -> semaphoreDisconnect.countDown())
                         .conditionally(data -> data.getMessage() instanceof DisconnectMessage));
 
         ethA.sendNewBlock(b10);
@@ -882,7 +882,7 @@ public class ShortSyncTest {
         // A == b8', B == b10
 
         final CountDownLatch semaphoreDisconnect = new CountDownLatch(1);
-        ethereumA.subscribe(to(ReceivedMessageEvent.class, data -> semaphoreDisconnect.countDown())
+        ethereumA.subscribe(to(MessageReceived.class, data -> semaphoreDisconnect.countDown())
                 .conditionally(data -> data.getMessage() instanceof DisconnectMessage));
 
         ethA.sendNewBlockHashes(b8_);
@@ -942,7 +942,7 @@ public class ShortSyncTest {
         // A == b8', B == b10
 
         final CountDownLatch semaphoreDisconnect = new CountDownLatch(1);
-        ethereumA.subscribe(to(ReceivedMessageEvent.class, data -> semaphoreDisconnect.countDown())
+        ethereumA.subscribe(to(MessageReceived.class, data -> semaphoreDisconnect.countDown())
                 .conditionally(data -> data.getMessage() instanceof DisconnectMessage));
 
         ethA.sendNewBlockHashes(b8_);
@@ -960,11 +960,11 @@ public class ShortSyncTest {
         ethereumA = EthereumFactory.createEthereum(SysPropConfigA.props, SysPropConfigA.class);
         ethereumB = EthereumFactory.createEthereum(SysPropConfigB.props, SysPropConfigB.class);
 
-        ethereumA.subscribe(to(EthStatusUpdatedEvent.class, data -> ethA = (EthHandler) data.getChannel().getEthHandler()));
+        ethereumA.subscribe(to(EthStatusUpdated.class, data -> ethA = (EthHandler) data.getChannel().getEthHandler()));
 
         final CountDownLatch semaphore = new CountDownLatch(1);
 
-        ethereumB.subscribe(to(PeerAddedToSyncPoolEvent.class, channel -> semaphore.countDown()));
+        ethereumB.subscribe(to(PeerAddedToSyncPool.class, channel -> semaphore.countDown()));
         ethereumB.connect(nodeA);
 
         semaphore.await(10, SECONDS);

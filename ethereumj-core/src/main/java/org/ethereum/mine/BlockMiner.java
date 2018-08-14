@@ -29,8 +29,8 @@ import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumImpl;
 import org.ethereum.mine.MinerIfc.MiningResult;
 import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.PendingStateChangedEvent;
-import org.ethereum.publish.event.SyncDoneEvent;
+import org.ethereum.publish.event.PendingStateChanged;
+import org.ethereum.publish.event.SyncDone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -98,8 +98,8 @@ public class BlockMiner {
         this.cpuThreads = config.getMineCpuThreads();
         this.fullMining = config.isMineFullDataset();
         this.publisher = publisher
-                .subscribe(to(PendingStateChangedEvent.class, ps -> onPendingStateChanged()))
-                .subscribe(to(SyncDoneEvent.class, s -> {
+                .subscribe(to(PendingStateChanged.class, ps -> onPendingStateChanged()))
+                .subscribe(to(SyncDone.class, s -> {
                     if (config.minerStart() && config.isSyncEnabled()) {
                         logger.info("Sync complete, start mining...");
                         startMining();

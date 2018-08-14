@@ -8,10 +8,10 @@ import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
 import org.ethereum.publish.event.*;
-import org.ethereum.publish.event.message.EthStatusUpdatedEvent;
-import org.ethereum.publish.event.message.PeerHandshakedEvent;
-import org.ethereum.publish.event.message.ReceivedMessageEvent;
-import org.ethereum.publish.event.message.SentMessageEvent;
+import org.ethereum.publish.event.message.EthStatusUpdated;
+import org.ethereum.publish.event.message.PeerHandshaked;
+import org.ethereum.publish.event.message.MessageReceived;
+import org.ethereum.publish.event.message.MessageSent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -210,23 +210,23 @@ public class Publisher {
      */
     public void subscribeListener(EthereumListener listener) {
         this
-                .subscribe(to(TraceEvent.class, listener::trace))
-                .subscribe(to(NodeDiscoveredEvent.class, listener::onNodeDiscovered))
-                .subscribe(to(PeerHandshakedEvent.class, data -> listener.onHandShakePeer(data.getChannel(), data.getMessage())))
-                .subscribe(to(EthStatusUpdatedEvent.class, data -> listener.onEthStatusUpdated(data.getChannel(), data.getMessage())))
-                .subscribe(to(ReceivedMessageEvent.class, data -> listener.onRecvMessage(data.getChannel(), data.getMessage())))
-                .subscribe(to(SentMessageEvent.class, data -> listener.onSendMessage(data.getChannel(), data.getMessage())))
-                .subscribe(to(BlockAddedEvent.class, listener::onBlock))
-                .subscribe(to(BestBlockAddedEvent.class, data -> listener.onBlock(data.getBlockSummary(), data.isBest())))
-                .subscribe(to(PeerDisconnectedEvent.class, data -> listener.onPeerDisconnect(data.getHost(), data.getPort())))
-                .subscribe(to(PendingTransactionsReceivedEvent.class, listener::onPendingTransactionsReceived))
-                .subscribe(to(PendingStateChangedEvent.class, listener::onPendingStateChanged))
-                .subscribe(to(PendingTransactionUpdatedEvent.class, data -> listener.onPendingTransactionUpdate(data.getReceipt(), data.getState(), data.getBlock())))
-                .subscribe(to(SyncDoneEvent.class, listener::onSyncDone))
-                .subscribe(to(NoConnectionsEvent.class, data -> listener.onNoConnections()))
-                .subscribe(to(VmTraceCreatedEvent.class, data -> listener.onVMTraceCreated(data.getTxHash(), data.getTrace())))
-                .subscribe(to(TransactionExecutedEvent.class, listener::onTransactionExecuted))
-                .subscribe(to(PeerAddedToSyncPoolEvent.class, listener::onPeerAddedToSyncPool));
+                .subscribe(to(Trace.class, listener::trace))
+                .subscribe(to(NodeDiscovered.class, listener::onNodeDiscovered))
+                .subscribe(to(PeerHandshaked.class, data -> listener.onHandShakePeer(data.getChannel(), data.getMessage())))
+                .subscribe(to(EthStatusUpdated.class, data -> listener.onEthStatusUpdated(data.getChannel(), data.getMessage())))
+                .subscribe(to(MessageReceived.class, data -> listener.onRecvMessage(data.getChannel(), data.getMessage())))
+                .subscribe(to(MessageSent.class, data -> listener.onSendMessage(data.getChannel(), data.getMessage())))
+                .subscribe(to(BlockAdded.class, listener::onBlock))
+                .subscribe(to(BestBlockAdded.class, data -> listener.onBlock(data.getBlockSummary(), data.isBest())))
+                .subscribe(to(PeerDisconnected.class, data -> listener.onPeerDisconnect(data.getHost(), data.getPort())))
+                .subscribe(to(PendingTransactionsReceived.class, listener::onPendingTransactionsReceived))
+                .subscribe(to(PendingStateChanged.class, listener::onPendingStateChanged))
+                .subscribe(to(PendingTransactionUpdated.class, data -> listener.onPendingTransactionUpdate(data.getReceipt(), data.getState(), data.getBlock())))
+                .subscribe(to(SyncDone.class, listener::onSyncDone))
+                .subscribe(to(NoConnections.class, data -> listener.onNoConnections()))
+                .subscribe(to(VmTraceCreated.class, data -> listener.onVMTraceCreated(data.getTxHash(), data.getTrace())))
+                .subscribe(to(TransactionExecuted.class, listener::onTransactionExecuted))
+                .subscribe(to(PeerAddedToSyncPool.class, listener::onPeerAddedToSyncPool));
     }
 
     /**
@@ -239,87 +239,87 @@ public class Publisher {
         return new EthereumListener() {
             @Override
             public void trace(String output) {
-                publish(new TraceEvent(output));
+                publish(new Trace(output));
             }
 
             @Override
             public void onNodeDiscovered(Node node) {
-                publish(new NodeDiscoveredEvent(node));
+                publish(new NodeDiscovered(node));
             }
 
             @Override
             public void onHandShakePeer(Channel channel, HelloMessage helloMessage) {
-                publish(new PeerHandshakedEvent(channel, helloMessage));
+                publish(new PeerHandshaked(channel, helloMessage));
             }
 
             @Override
             public void onEthStatusUpdated(Channel channel, StatusMessage status) {
-                publish(new EthStatusUpdatedEvent(channel, status));
+                publish(new EthStatusUpdated(channel, status));
             }
 
             @Override
             public void onRecvMessage(Channel channel, Message message) {
-                publish(new ReceivedMessageEvent(channel, message));
+                publish(new MessageReceived(channel, message));
             }
 
             @Override
             public void onSendMessage(Channel channel, Message message) {
-                publish(new SentMessageEvent(channel, message));
+                publish(new MessageSent(channel, message));
             }
 
             @Override
             public void onBlock(BlockSummary blockSummary) {
-                publish(new BlockAddedEvent(blockSummary));
+                publish(new BlockAdded(blockSummary));
             }
 
             @Override
             public void onBlock(BlockSummary blockSummary, boolean best) {
-                publish(new BestBlockAddedEvent(blockSummary, best));
+                publish(new BestBlockAdded(blockSummary, best));
             }
 
             @Override
             public void onPeerDisconnect(String host, long port) {
-                publish(new PeerDisconnectedEvent(host, port));
+                publish(new PeerDisconnected(host, port));
             }
 
             @Override
             public void onPendingTransactionsReceived(List<Transaction> transactions) {
-                publish(new PendingTransactionsReceivedEvent(transactions));
+                publish(new PendingTransactionsReceived(transactions));
             }
 
             @Override
             public void onPendingStateChanged(PendingState pendingState) {
-                publish(new PendingStateChangedEvent(pendingState));
+                publish(new PendingStateChanged(pendingState));
             }
 
             @Override
             public void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state, Block block) {
-                publish(new PendingTransactionUpdatedEvent(block, txReceipt, state));
+                publish(new PendingTransactionUpdated(block, txReceipt, state));
             }
 
             @Override
             public void onSyncDone(SyncState state) {
-                publish(new SyncDoneEvent(state));
+                publish(new SyncDone(state));
             }
 
             @Override
             public void onNoConnections() {
-                publish(new NoConnectionsEvent());
+                publish(new NoConnections());
             }
 
             @Override
             public void onVMTraceCreated(String transactionHash, String trace) {
-                publish(new VmTraceCreatedEvent(transactionHash, trace));
+                publish(new VmTraceCreated(transactionHash, trace));
             }
 
             @Override
             public void onTransactionExecuted(TransactionExecutionSummary summary) {
-                publish(new TransactionExecutedEvent(summary));
+                publish(new TransactionExecuted(summary));
             }
 
             @Override
             public void onPeerAddedToSyncPool(Channel peer) {
-                publish(new PeerAddedToSyncPoolEvent(peer));
+                publish(new PeerAddedToSyncPool(peer));
             }
         };
     }

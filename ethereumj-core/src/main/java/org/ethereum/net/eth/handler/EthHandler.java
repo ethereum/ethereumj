@@ -33,8 +33,8 @@ import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.server.Channel;
 import org.ethereum.publish.Publisher;
 import org.ethereum.publish.Subscription;
-import org.ethereum.publish.event.BlockAddedEvent;
-import org.ethereum.publish.event.TraceEvent;
+import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.Trace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +66,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     protected Block bestBlock;
 
     protected boolean processTransactions = false;
-    private Subscription<BlockAddedEvent, BlockSummary> bestBlockSub;
+    private Subscription<BlockAdded, BlockSummary> bestBlockSub;
 
     protected EthHandler(EthVersion version) {
         this.version = version;
@@ -80,7 +80,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         this.blockchain = blockchain;
         this.bestBlock = blockStore.getBestBlock();
         this.publisher = publisher;
-        this.bestBlockSub = publisher.subscribe(BlockAddedEvent.class, this::setBestBlock);
+        this.bestBlockSub = publisher.subscribe(BlockAdded.class, this::setBestBlock);
 
         // when sync enabled we delay transactions processing until sync is complete
         this.processTransactions = !config.isSyncEnabled();
@@ -96,7 +96,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         if (EthMessageCodes.inRange(msg.getCommand().asByte(), version))
             logger.trace("EthHandler invoke: [{}]", msg.getCommand());
 
-        publisher.publish(new TraceEvent(format("EthHandler invoke: [%s]", msg.getCommand())));
+        publisher.publish(new Trace(format("EthHandler invoke: [%s]", msg.getCommand())));
 
         channel.getNodeStatistics().ethInbound.add();
 
@@ -122,7 +122,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     public void activate() {
         logger.debug("ETH protocol activated");
-        publisher.publish(new TraceEvent("ETH protocol activated"));
+        publisher.publish(new Trace("ETH protocol activated"));
         sendStatus();
     }
 

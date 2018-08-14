@@ -25,9 +25,9 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.TransactionStore;
 import org.ethereum.listener.EthereumListener.PendingTransactionState;
 import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.PendingStateChangedEvent;
-import org.ethereum.publish.event.PendingTransactionUpdatedEvent;
-import org.ethereum.publish.event.PendingTransactionsReceivedEvent;
+import org.ethereum.publish.event.PendingStateChanged;
+import org.ethereum.publish.event.PendingTransactionUpdated;
+import org.ethereum.publish.event.PendingTransactionsReceived;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
@@ -166,8 +166,8 @@ public class PendingStateImpl implements PendingState {
 
         if (!newPending.isEmpty()) {
             this.publisher
-                    .publish(new PendingTransactionsReceivedEvent(newPending))
-                    .publish(new PendingStateChangedEvent(PendingStateImpl.this));
+                    .publish(new PendingTransactionsReceived(newPending))
+                    .publish(new PendingStateChanged(PendingStateImpl.this));
         }
 
         return newPending;
@@ -197,7 +197,7 @@ public class PendingStateImpl implements PendingState {
                     ByteUtil.byteArrayToLong(txReceipt.getTransaction().getNonce()),
                     block.getShortDescr(), txReceipt.getError()));
         }
-        publisher.publish(new PendingTransactionUpdatedEvent(block, txReceipt, state));
+        publisher.publish(new PendingTransactionUpdated(block, txReceipt, state));
     }
 
     /**
@@ -316,7 +316,7 @@ public class PendingStateImpl implements PendingState {
 
         updateState(newBlock);
 
-        publisher.publish(new PendingStateChangedEvent(PendingStateImpl.this));
+        publisher.publish(new PendingStateChanged(PendingStateImpl.this));
     }
 
     private void processBestInternal(Block block, List<TransactionReceipt> receipts) {

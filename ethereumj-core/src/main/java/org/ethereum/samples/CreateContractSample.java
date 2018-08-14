@@ -24,7 +24,7 @@ import org.ethereum.core.TransactionReceipt;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.publish.event.BlockAddedEvent;
+import org.ethereum.publish.event.BlockAdded;
 import org.ethereum.solidity.compiler.CompilationResult;
 import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.ethereum.util.ByteUtil;
@@ -65,7 +65,7 @@ public class CreateContractSample extends TestNetSample {
     @Override
     public void onSyncDone() throws Exception {
         // when block arrives look for our included transactions
-        ethereum.subscribe(to(BlockAddedEvent.class, this::onBlock));
+        ethereum.subscribe(to(BlockAdded.class, this::onBlock));
 
         logger.info("Compiling contract...");
         SolidityCompiler.Result result = compiler.compileSrc(contract.getBytes(), true, true,

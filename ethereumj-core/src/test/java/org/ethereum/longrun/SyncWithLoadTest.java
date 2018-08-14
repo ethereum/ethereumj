@@ -26,8 +26,8 @@ import org.ethereum.db.ContractDetails;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.BlockAddedEvent;
-import org.ethereum.publish.event.PendingTransactionsReceivedEvent;
+import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.PendingTransactionsReceived;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
@@ -221,8 +221,8 @@ public class SyncWithLoadTest {
         public void run() {
             try {
                 this.ethereum
-                        .subscribe(to(BlockAddedEvent.class, this::onBlock))
-                        .subscribe(to(PendingTransactionsReceivedEvent.class, this::onPendingTransactionsReceived));
+                        .subscribe(to(BlockAdded.class, this::onBlock))
+                        .subscribe(to(PendingTransactionsReceived.class, this::onPendingTransactionsReceived));
 
                 // Run 1-30 minutes
                 Random generator = new Random();

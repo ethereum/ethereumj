@@ -38,7 +38,7 @@ import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
 import org.ethereum.publish.Publisher;
 import org.ethereum.publish.Subscription;
-import org.ethereum.publish.event.BlockAddedEvent;
+import org.ethereum.publish.event.BlockAdded;
 import org.ethereum.publish.event.Event;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.util.ByteUtil;
@@ -122,7 +122,7 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
 
     @PostConstruct
     public void init() {
-        publisher.subscribe(BlockAddedEvent.class, blockSummary -> {
+        publisher.subscribe(BlockAdded.class, blockSummary -> {
             blockSummary.getBlock().getTransactionsList().forEach(gasPriceTracker::onTransaction);
         });
     }

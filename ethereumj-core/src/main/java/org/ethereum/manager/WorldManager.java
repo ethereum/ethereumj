@@ -29,7 +29,7 @@ import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.rlpx.discover.UDPListener;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.BestBlockAddedEvent;
+import org.ethereum.publish.event.BestBlockAdded;
 import org.ethereum.publish.event.Event;
 import org.ethereum.sync.FastSyncManager;
 import org.ethereum.sync.SyncManager;
@@ -209,7 +209,7 @@ public class WorldManager {
             blockchain.setTotalDifficulty(Genesis.getInstance(config).getDifficultyBI());
 
             BlockSummary blockSummary = new BlockSummary(Genesis.getInstance(config), emptyMap(), emptyList(), emptyList());
-            publisher.publish(new BestBlockAddedEvent(blockSummary, true));
+            publisher.publish(new BestBlockAdded(blockSummary, true));
 //            repository.dumpState(Genesis.getInstance(config), 0, 0, null);
 
             logger.info("Genesis block loaded");

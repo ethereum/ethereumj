@@ -24,8 +24,8 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.TransactionExecutedEvent;
-import org.ethereum.publish.event.VmTraceCreatedEvent;
+import org.ethereum.publish.event.TransactionExecuted;
+import org.ethereum.publish.event.VmTraceCreated;
 import org.ethereum.util.ByteArraySet;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
@@ -454,7 +454,7 @@ public class TransactionExecutor {
         }
 
 
-        publisher.publish(new TransactionExecutedEvent(summary));
+        publisher.publish(new TransactionExecuted(summary));
 
         if (config.vmTrace() && program != null && result != null) {
             String trace = program.getTrace()
@@ -469,7 +469,7 @@ public class TransactionExecutor {
 
             String txHash = toHexString(tx.getHash());
             saveProgramTraceFile(config, txHash, trace);
-            publisher.publish(new VmTraceCreatedEvent(txHash, trace));
+            publisher.publish(new VmTraceCreated(txHash, trace));
         }
         return summary;
     }

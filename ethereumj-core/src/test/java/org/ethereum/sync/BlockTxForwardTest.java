@@ -31,12 +31,12 @@ import org.ethereum.mine.MinerListener;
 import org.ethereum.net.eth.message.*;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.rlpx.Node;
-import org.ethereum.publish.event.BlockAddedEvent;
-import org.ethereum.publish.event.PeerAddedToSyncPoolEvent;
-import org.ethereum.publish.event.SyncDoneEvent;
-import org.ethereum.publish.event.message.EthStatusUpdatedEvent;
-import org.ethereum.publish.event.message.ReceivedMessageEvent;
-import org.ethereum.publish.event.message.SentMessageEvent;
+import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.PeerAddedToSyncPool;
+import org.ethereum.publish.event.SyncDone;
+import org.ethereum.publish.event.message.EthStatusUpdated;
+import org.ethereum.publish.event.message.MessageReceived;
+import org.ethereum.publish.event.message.MessageSent;
 import org.ethereum.util.ByteUtil;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -121,10 +121,10 @@ public class BlockTxForwardTest {
             logger = LoggerFactory.getLogger(loggerName);
             // adding the main EthereumJ callback to be notified on different kind of events
             this.ethereum
-                    .subscribe(to(SyncDoneEvent.class, syncState -> synced = true))
-                    .subscribe(to(EthStatusUpdatedEvent.class, data -> ethNodes.put(data.getChannel().getNode(), data.getMessage())))
-                    .subscribe(to(PeerAddedToSyncPoolEvent.class, peer -> syncPeers.add(peer.getNode())))
-                    .subscribe(to(BlockAddedEvent.class, blockSummary -> {
+                    .subscribe(to(SyncDone.class, syncState -> synced = true))
+                    .subscribe(to(EthStatusUpdated.class, data -> ethNodes.put(data.getChannel().getNode(), data.getMessage())))
+                    .subscribe(to(PeerAddedToSyncPool.class, peer -> syncPeers.add(peer.getNode())))
+                    .subscribe(to(BlockAdded.class, blockSummary -> {
                         bestBlock = blockSummary.getBlock();
                         if (syncComplete) {
                             logger.info("New block: " + bestBlock.getShortDescr());
@@ -482,12 +482,12 @@ public class BlockTxForwardTest {
         Ethereum miner = EthereumFactory.createEthereum(MinerConfig.class);
 
         miner
-                .subscribe(to(BlockAddedEvent.class, blockSummary -> {
+                .subscribe(to(BlockAdded.class, blockSummary -> {
                     if (blockSummary.getBlock().getNumber() != 0L) {
                         blocks.put(Hex.toHexString(blockSummary.getBlock().getHash()), Boolean.FALSE);
                     }
                 }))
-                .subscribe(to(ReceivedMessageEvent.class, messageData -> {
+                .subscribe(to(MessageReceived.class, messageData -> {
                     Message message = messageData.getMessage();
                     if (!(message instanceof EthMessage)) return;
                     switch (((EthMessage) message).getCommand()) {
@@ -519,7 +519,7 @@ public class BlockTxForwardTest {
         testLogger.info("Starting EthereumJ txSender instance!");
         Ethereum txGenerator = EthereumFactory.createEthereum(GeneratorConfig.class);
         txGenerator
-                .subscribe(to(ReceivedMessageEvent.class, messageData -> {
+                .subscribe(to(MessageReceived.class, messageData -> {
                     Message message = messageData.getMessage();
                     if (!(message instanceof EthMessage)) return;
                     switch (((EthMessage) message).getCommand()) {
@@ -554,7 +554,7 @@ public class BlockTxForwardTest {
                     }
 
                 }))
-                .subscribe(to(SentMessageEvent.class, messageData -> {
+                .subscribe(to(MessageSent.class, messageData -> {
                     Message message = messageData.getMessage();
                     if (!(message instanceof EthMessage)) return;
                     if (((EthMessage) message).getCommand().equals(EthMessageCodes.TRANSACTIONS)) {

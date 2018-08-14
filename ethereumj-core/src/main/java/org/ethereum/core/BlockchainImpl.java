@@ -26,9 +26,9 @@ import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.*;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.BestBlockAddedEvent;
-import org.ethereum.publish.event.BlockAddedEvent;
-import org.ethereum.publish.event.TraceEvent;
+import org.ethereum.publish.event.BestBlockAdded;
+import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.Trace;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
@@ -455,9 +455,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         if (ret.isSuccessful()) {
             publisher
-                    .publish(new BlockAddedEvent(summary))
-                    .publish(new BestBlockAddedEvent(summary, ret == IMPORTED_BEST))
-                    .publish(new TraceEvent(format("Block chain size: [ %d ]", this.getSize())));
+                    .publish(new BlockAdded(summary))
+                    .publish(new BestBlockAdded(summary, ret == IMPORTED_BEST))
+                    .publish(new Trace(format("Block chain size: [ %d ]", this.getSize())));
 
             if (ret == IMPORTED_BEST) {
                 eventDispatchThread.invokeLater(() -> pendingState.processBest(block, summary.getReceipts()));

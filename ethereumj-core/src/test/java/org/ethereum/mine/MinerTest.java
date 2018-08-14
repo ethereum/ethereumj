@@ -30,9 +30,9 @@ import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.net.eth.handler.Eth62;
 import org.ethereum.net.eth.message.NewBlockMessage;
-import org.ethereum.publish.event.BlockAddedEvent;
-import org.ethereum.publish.event.PendingTransactionsReceivedEvent;
-import org.ethereum.publish.event.SyncDoneEvent;
+import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.PendingTransactionsReceived;
+import org.ethereum.publish.event.SyncDone;
 import org.ethereum.util.ByteUtil;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -107,7 +107,7 @@ public class MinerTest {
         Ethereum ethereum2 = EthereumFactory.createEthereum(SysPropConfig2.props, SysPropConfig2.class);
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereum2.subscribe(to(BlockAddedEvent.class, blockSummary -> {
+        ethereum2.subscribe(to(BlockAdded.class, blockSummary -> {
             Block block = blockSummary.getBlock();
             System.err.println("=== New block: " + blockInfo(block));
             System.err.println(block);
@@ -131,8 +131,8 @@ public class MinerTest {
 //                }
 
         }))
-        .subscribe(to(PendingTransactionsReceivedEvent.class, transactions -> System.err.println("=== Tx: " + transactions)))
-        .subscribe(to(SyncDoneEvent.class, syncState -> {
+        .subscribe(to(PendingTransactionsReceived.class, transactions -> System.err.println("=== Tx: " + transactions)))
+        .subscribe(to(SyncDone.class, syncState -> {
             semaphore.countDown();
             System.err.println("=== Sync Done!");
         }));
@@ -205,8 +205,8 @@ public class MinerTest {
 
         final CountDownLatch semaphore = new CountDownLatch(1);
         ethereum1
-                .subscribe(to(BlockAddedEvent.class, blockSummary -> System.out.println("=== New block: " + blockInfo(blockSummary.getBlock()))))
-                .subscribe(to(SyncDoneEvent.class, syncState -> semaphore.countDown()));
+                .subscribe(to(BlockAdded.class, blockSummary -> System.out.println("=== New block: " + blockInfo(blockSummary.getBlock()))))
+                .subscribe(to(SyncDone.class, syncState -> semaphore.countDown()));
 
 //        ethereum2.addListener(new EthereumListenerAdapter() {
 //            @Override

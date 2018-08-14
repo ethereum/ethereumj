@@ -22,7 +22,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.swarm.NetStore;
 import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.TraceEvent;
+import org.ethereum.publish.event.Trace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,7 +71,7 @@ public class BzzHandler extends SimpleChannelInboundHandler<BzzMessage>
         if (BzzMessageCodes.inRange(msg.getCommand().asByte()))
             logger.debug("BzzHandler invoke: [{}]", msg.getCommand());
 
-        publisher.publish(new TraceEvent(format("BzzHandler invoke: [%s]", msg.getCommand())));
+        publisher.publish(new Trace(format("BzzHandler invoke: [%s]", msg.getCommand())));
 
         if (bzzProtocol != null) {
             bzzProtocol.accept(msg);
@@ -98,7 +98,7 @@ public class BzzHandler extends SimpleChannelInboundHandler<BzzMessage>
 
     public void activate() {
         logger.info("BZZ protocol activated");
-        publisher.publish(new TraceEvent("BZZ protocol activated"));
+        publisher.publish(new Trace("BZZ protocol activated"));
         createBzzProtocol();
         this.active = true;
     }

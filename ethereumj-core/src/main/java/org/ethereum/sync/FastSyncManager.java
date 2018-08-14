@@ -38,7 +38,7 @@ import org.ethereum.net.eth.handler.Eth63;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.server.Channel;
 import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.SyncDoneEvent;
+import org.ethereum.publish.event.SyncDone;
 import org.ethereum.trie.TrieKey;
 import org.ethereum.util.*;
 import org.slf4j.Logger;
@@ -560,7 +560,7 @@ public class FastSyncManager {
         logger.info("FastSync: proceeding to regular sync...");
 
         final CountDownLatch syncDoneLatch = new CountDownLatch(1);
-        publisher.subscribe(SyncDoneEvent.class, syncState -> syncDoneLatch.countDown());
+        publisher.subscribe(SyncDone.class, syncState -> syncDoneLatch.countDown());
         syncManager.initRegularSync(UNSECURE);
         logger.info("FastSync: waiting for regular sync to reach the blockchain head...");
 
@@ -755,7 +755,7 @@ public class FastSyncManager {
         syncManager.setSyncDoneType(state);
         if (syncManager.isSyncDone()) {
 //            listener.onSyncDone(state);
-            publisher.publish(new SyncDoneEvent(state));
+            publisher.publish(new SyncDone(state));
         }
     }
 

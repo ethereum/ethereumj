@@ -10,8 +10,8 @@ import org.ethereum.core.PendingState;
  *
  * @author Eugene Shevchenko
  */
-public class PendingStateChangedEvent extends Event<PendingState> {
-    public PendingStateChangedEvent(PendingState state) {
+public class PendingStateChanged extends Event<PendingState> {
+    public PendingStateChanged(PendingState state) {
         super(state);
     }
 }

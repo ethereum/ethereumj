@@ -27,8 +27,8 @@ import org.ethereum.listener.BlockReplay;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EventListener;
 import org.ethereum.listener.TxStatus;
-import org.ethereum.publish.event.BlockAddedEvent;
-import org.ethereum.publish.event.PendingTransactionUpdatedEvent;
+import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.PendingTransactionUpdated;
 import org.ethereum.solidity.compiler.CompilationResult;
 import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.ethereum.util.ByteUtil;
@@ -202,7 +202,7 @@ public class EventListenerSample extends TestNetSample {
      */
     @Override
     public void onSyncDone() throws Exception {
-        ethereum.subscribe(to(PendingTransactionUpdatedEvent.class, data -> {
+        ethereum.subscribe(to(PendingTransactionUpdated.class, data -> {
             TransactionReceipt txReceipt = data.getReceipt();
             ByteArrayWrapper txHashW = new ByteArrayWrapper(txReceipt.getTransaction().getHash());
             // Catching transaction errors
@@ -284,7 +284,7 @@ public class EventListenerSample extends TestNetSample {
      */
     private void deployContractAndTest() throws Exception {
         // when block arrives look for our included transactions
-        ethereum.subscribe(to(BlockAddedEvent.class, this::onBlock));
+        ethereum.subscribe(to(BlockAdded.class, this::onBlock));
 
         CompilationResult.ContractMetadata metadata = compileContract();
 

@@ -30,11 +30,11 @@ import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.rlpx.Node;
-import org.ethereum.publish.event.BlockAddedEvent;
-import org.ethereum.publish.event.NodeDiscoveredEvent;
-import org.ethereum.publish.event.PeerAddedToSyncPoolEvent;
-import org.ethereum.publish.event.SyncDoneEvent;
-import org.ethereum.publish.event.message.EthStatusUpdatedEvent;
+import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.NodeDiscovered;
+import org.ethereum.publish.event.PeerAddedToSyncPool;
+import org.ethereum.publish.event.SyncDone;
+import org.ethereum.publish.event.message.EthStatusUpdated;
 import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -135,12 +135,12 @@ public class BasicSample implements Runnable {
 
         // adding the main EthereumJ callback to be notified on different kind of events
         this.ethereum
-                .subscribe(to(SyncDoneEvent.class, syncState -> synced = true))
-                .subscribe(to(NodeDiscoveredEvent.class, nodesDiscovered::add)
+                .subscribe(to(SyncDone.class, syncState -> synced = true))
+                .subscribe(to(NodeDiscovered.class, nodesDiscovered::add)
                         .conditionally(node -> nodesDiscovered.size() < 1000))
-                .subscribe(to(EthStatusUpdatedEvent.class, data -> ethNodes.put(data.getChannel().getNode(), data.getMessage())))
-                .subscribe(to(PeerAddedToSyncPoolEvent.class, peer -> syncPeers.add(peer.getNode())))
-                .subscribe(to(BlockAddedEvent.class, bs -> {
+                .subscribe(to(EthStatusUpdated.class, data -> ethNodes.put(data.getChannel().getNode(), data.getMessage())))
+                .subscribe(to(PeerAddedToSyncPool.class, peer -> syncPeers.add(peer.getNode())))
+                .subscribe(to(BlockAdded.class, bs -> {
                     Block block = bs.getBlock();
                     List<TransactionReceipt> receipts = bs.getReceipts();
 

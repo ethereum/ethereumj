@@ -22,8 +22,8 @@ import org.ethereum.core.Transaction;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.publish.event.BlockAddedEvent;
-import org.ethereum.publish.event.SyncDoneEvent;
+import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.SyncDone;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.Collections;
@@ -42,8 +42,8 @@ public class TransactionBomb {
     public TransactionBomb(Ethereum ethereum) {
         this.ethereum = ethereum;
         this.ethereum
-                .subscribe(to(SyncDoneEvent.class, this::onSyncDone))
-                .subscribe(to(BlockAddedEvent.class, this::onBlock));
+                .subscribe(to(SyncDone.class, this::onSyncDone))
+                .subscribe(to(BlockAdded.class, this::onBlock));
     }
 
     public static void main(String[] args) {

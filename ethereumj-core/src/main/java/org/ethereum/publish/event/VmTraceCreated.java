@@ -1,6 +1,6 @@
 package org.ethereum.publish.event;
 
-public class VmTraceCreatedEvent extends Event<VmTraceCreatedEvent.Data> {
+public class VmTraceCreated extends Event<VmTraceCreated.Data> {
 
     public static class Data {
         private final String txHash;
@@ -20,7 +20,7 @@ public class VmTraceCreatedEvent extends Event<VmTraceCreatedEvent.Data> {
         }
     }
 
-    public VmTraceCreatedEvent(String txHash, String trace) {
+    public VmTraceCreated(String txHash, String trace) {
         super(new Data(txHash, trace));
     }
 }

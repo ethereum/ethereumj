@@ -34,8 +34,8 @@ import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.swarm.Util;
 import org.ethereum.net.swarm.bzz.BzzHandler;
 import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.TraceEvent;
-import org.ethereum.publish.event.message.PeerHandshakedEvent;
+import org.ethereum.publish.event.Trace;
+import org.ethereum.publish.event.message.PeerHandshaked;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -120,7 +120,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         logger.debug("P2P protocol activated");
         msgQueue.activate(ctx);
-        publisher.publish(new TraceEvent("P2P protocol activated"));
+        publisher.publish(new Trace("P2P protocol activated"));
         startTimers();
     }
 
@@ -131,7 +131,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         if (P2pMessageCodes.inRange(msg.getCommand().asByte()))
             logger.trace("P2PHandler invoke: [{}]", msg.getCommand());
 
-        publisher.publish(new TraceEvent(format("P2PHandler invoke: [%s]", msg.getCommand())));
+        publisher.publish(new Trace(format("P2PHandler invoke: [%s]", msg.getCommand())));
 
         switch (msg.getCommand()) {
             case HELLO:
@@ -243,7 +243,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         }
 
         //todo calculate the Offsets
-        publisher.publish(new PeerHandshakedEvent(channel, msg));
+        publisher.publish(new PeerHandshaked(channel, msg));
     }
 
     /**

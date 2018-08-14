@@ -23,7 +23,7 @@ import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
-import org.ethereum.publish.event.message.ReceivedMessageEvent;
+import org.ethereum.publish.event.message.MessageReceived;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.context.annotation.Bean;
@@ -99,13 +99,13 @@ public class FramingTest {
 
         final CountDownLatch semaphore = new CountDownLatch(2);
 
-        ethereum1.subscribe(to(ReceivedMessageEvent.class, messageData -> {
+        ethereum1.subscribe(to(MessageReceived.class, messageData -> {
             if (messageData.getMessage() instanceof StatusMessage) {
                 System.out.println("1: -> " + messageData.getMessage());
                 semaphore.countDown();
             }
         }));
-        ethereum2.subscribe(to(ReceivedMessageEvent.class, messageData -> {
+        ethereum2.subscribe(to(MessageReceived.class, messageData -> {
             Message message = messageData.getMessage();
             if (message instanceof StatusMessage) {
                 System.out.println("2: -> " + message);

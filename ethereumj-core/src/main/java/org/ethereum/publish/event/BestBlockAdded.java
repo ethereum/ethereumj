@@ -2,7 +2,7 @@ package org.ethereum.publish.event;
 
 import org.ethereum.core.BlockSummary;
 
-public class BestBlockAddedEvent extends Event<BestBlockAddedEvent.Data> {
+public class BestBlockAdded extends Event<BestBlockAdded.Data> {
 
     public static class Data {
         private final BlockSummary blockSummary;
@@ -22,7 +22,7 @@ public class BestBlockAddedEvent extends Event<BestBlockAddedEvent.Data> {
         }
     }
 
-    public BestBlockAddedEvent(BlockSummary blockSummary, boolean best) {
+    public BestBlockAdded(BlockSummary blockSummary, boolean best) {
         super(new Data(blockSummary, best));
     }
 }

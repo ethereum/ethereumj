@@ -26,8 +26,8 @@ import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.p2p.PingMessage;
 import org.ethereum.net.server.Channel;
 import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.TraceEvent;
-import org.ethereum.publish.event.message.SentMessageEvent;
+import org.ethereum.publish.event.Trace;
+import org.ethereum.publish.event.message.MessageSent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -129,7 +129,7 @@ public class MessageQueue {
 
     public void receivedMessage(Message msg) throws InterruptedException {
 
-        publisher.publish(new TraceEvent("[Recv: " + msg + "]"));
+        publisher.publish(new Trace("[Recv: " + msg + "]"));
 
         if (requestQueue.peek() != null) {
             MessageRoundtrip messageRoundtrip = requestQueue.peek();
@@ -168,7 +168,7 @@ public class MessageQueue {
 
             Message msg = messageRoundtrip.getMsg();
 
-            publisher.publish(new SentMessageEvent(channel, msg));
+            publisher.publish(new MessageSent(channel, msg));
 
             ctx.writeAndFlush(msg).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
 

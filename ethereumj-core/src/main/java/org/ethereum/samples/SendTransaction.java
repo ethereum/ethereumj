@@ -24,7 +24,7 @@ import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.publish.event.BlockAddedEvent;
+import org.ethereum.publish.event.BlockAdded;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.blockchain.EtherUtil;
 import org.spongycastle.util.encoders.Hex;
@@ -51,7 +51,7 @@ public class SendTransaction extends BasicSample {
     @Override
     public void onSyncDone() throws Exception {
         // when block arrives look for our included transactions
-        this.ethereum.subscribe(to(BlockAddedEvent.class, this::onBlock));
+        this.ethereum.subscribe(to(BlockAdded.class, this::onBlock));
 
         String toAddress = "";
         logger.info("Sending transaction to net and waiting for inclusion");

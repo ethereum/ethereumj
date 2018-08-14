@@ -27,7 +27,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.TraceEvent;
+import org.ethereum.publish.event.Trace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,7 +77,7 @@ public class PeerServer {
 
         ethereumChannelInitializer = ctx.getBean(EthereumChannelInitializer.class, "");
 
-        publisher.publish(new TraceEvent("Listening on port " + port));
+        publisher.publish(new Trace("Listening on port " + port));
 
 
         try {
