@@ -33,7 +33,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
  * In addition to {@link DefaultConfig} bootstraps validator registration contract.
@@ -43,7 +42,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  */
 @Configuration
 @Import(DefaultConfig.class)
-@EnableTransactionManagement
 @ComponentScan(
         basePackages = "org.ethereum",
         excludeFilters = { @ComponentScan.Filter(NoAutoscan.class),
