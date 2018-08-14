@@ -26,8 +26,8 @@ import org.ethereum.db.ContractDetails;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.publish.event.BestBlockAdded;
-import org.ethereum.publish.event.PendingTransactionsReceived;
+import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.PendingTransactionUpdated;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
@@ -38,7 +38,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 
-import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -49,6 +48,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static java.lang.Thread.sleep;
+import static org.ethereum.listener.EthereumListener.PendingTransactionState.NEW_PENDING;
 import static org.ethereum.publish.Subscription.to;
 
 /**
@@ -186,30 +186,28 @@ public class SyncWithLoadTest {
             }
         }
 
-        public void onPendingTransactionsReceived(List<Transaction> transactions) {
-            Random rnd = new Random();
-            Block bestBlock = ethereum.getBlockchain().getBestBlock();
-            for (Transaction tx : transactions) {
-                Block block = ethereum.getBlockchain().getBlockByNumber(rnd.nextInt((int) bestBlock.getNumber()));
-                Repository repository = ((Repository) ethereum.getRepository())
-                        .getSnapshotTo(block.getStateRoot())
-                        .startTracking();
-                try {
-                    TransactionExecutor executor = new TransactionExecutor
-                            (tx, block.getCoinbase(), repository, ethereum.getBlockchain().getBlockStore(),
-                                    programInvokeFactory, block, EthereumListener.STUB, 0)
-                            .withCommonConfig(commonConfig)
-                            .setLocalCall(true);
+        private void onPendingTransactionUpdated(PendingTransactionUpdated.Data data) {
+            Transaction tx = data.getReceipt().getTransaction();
+            Block block = data.getBlock();
+//            Block block = ethereum.getBlockchain().getBlockByNumber(new Random().nextInt((int) bestBlock.getNumber()));
+            Repository repository = ((Repository) ethereum.getRepository())
+                    .getSnapshotTo(block.getStateRoot())
+                    .startTracking();
+            try {
+                TransactionExecutor executor = new TransactionExecutor
+                        (tx, block.getCoinbase(), repository, ethereum.getBlockchain().getBlockStore(),
+                                programInvokeFactory, block, EthereumListener.STUB, 0)
+                        .withCommonConfig(commonConfig)
+                        .setLocalCall(true);
 
-                    executor.init();
-                    executor.execute();
-                    executor.go();
-                    executor.finalization();
+                executor.init();
+                executor.execute();
+                executor.go();
+                executor.finalization();
 
-                    executor.getReceipt();
-                } finally {
-                    repository.rollback();
-                }
+                executor.getReceipt();
+            } finally {
+                repository.rollback();
             }
         }
 
@@ -221,8 +219,9 @@ public class SyncWithLoadTest {
         public void run() {
             try {
                 this.ethereum
-                        .subscribe(to(BestBlockAdded.class, this::onBlock))
-                        .subscribe(to(PendingTransactionsReceived.class, this::onPendingTransactionsReceived));
+                        .subscribe(to(BlockAdded.class, this::onBlock))
+                        .subscribe(to(PendingTransactionUpdated.class, this::onPendingTransactionUpdated)
+                            .conditionally(data -> data.getState() == NEW_PENDING));
 
                 // Run 1-30 minutes
                 Random generator = new Random();

@@ -34,7 +34,7 @@ import org.ethereum.net.server.Channel;
 import org.ethereum.publish.BackwardCompatibilityEthereumListenerProxy;
 import org.ethereum.publish.Publisher;
 import org.ethereum.publish.Subscription;
-import org.ethereum.publish.event.BestBlockAdded;
+import org.ethereum.publish.event.BlockAdded;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +66,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     protected Block bestBlock;
 
     protected boolean processTransactions = false;
-    private Subscription<BestBlockAdded, BestBlockAdded.Data> bestBlockSub;
+    private Subscription<BlockAdded, BlockAdded.Data> bestBlockSub;
 
     protected EthHandler(EthVersion version) {
         this.version = version;
@@ -80,13 +80,13 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         this.blockchain = blockchain;
         this.bestBlock = blockStore.getBestBlock();
         this.listener = listener;
-        this.bestBlockSub = getPublisher().subscribe(BestBlockAdded.class, this::setBestBlock);
+        this.bestBlockSub = getPublisher().subscribe(BlockAdded.class, this::setBestBlock);
 
         // when sync enabled we delay transactions processing until sync is complete
         this.processTransactions = !config.isSyncEnabled();
     }
 
-    private void setBestBlock(BestBlockAdded.Data data) {
+    private void setBestBlock(BlockAdded.Data data) {
         this.bestBlock = data.getBlockSummary().getBlock();
     }
 

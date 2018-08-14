@@ -31,7 +31,7 @@ import org.ethereum.mine.MinerListener;
 import org.ethereum.net.eth.message.*;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.rlpx.Node;
-import org.ethereum.publish.event.BestBlockAdded;
+import org.ethereum.publish.event.BlockAdded;
 import org.ethereum.publish.event.PeerAddedToSyncPool;
 import org.ethereum.publish.event.SyncDone;
 import org.ethereum.publish.event.message.EthStatusUpdated;
@@ -124,7 +124,7 @@ public class BlockTxForwardTest {
                     .subscribe(to(SyncDone.class, syncState -> synced = true))
                     .subscribe(to(EthStatusUpdated.class, data -> ethNodes.put(data.getChannel().getNode(), data.getMessage())))
                     .subscribe(to(PeerAddedToSyncPool.class, peer -> syncPeers.add(peer.getNode())))
-                    .subscribe(to(BestBlockAdded.class, data -> {
+                    .subscribe(to(BlockAdded.class, data -> {
                         bestBlock = data.getBlockSummary().getBlock();
                         if (syncComplete) {
                             logger.info("New block: " + bestBlock.getShortDescr());
@@ -482,7 +482,7 @@ public class BlockTxForwardTest {
         Ethereum miner = EthereumFactory.createEthereum(MinerConfig.class);
 
         miner
-                .subscribe(to(BestBlockAdded.class, data -> {
+                .subscribe(to(BlockAdded.class, data -> {
                     Block block = data.getBlockSummary().getBlock();
                     if (block.getNumber() != 0L) {
                         blocks.put(Hex.toHexString(block.getHash()), Boolean.FALSE);

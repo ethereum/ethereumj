@@ -34,7 +34,7 @@ public final class Events {
     }
 
     public static Event onBlockAdded(BlockSummary summary, boolean isBest) {
-        return new BestBlockAdded(summary, isBest);
+        return new BlockAdded(summary, isBest);
     }
 
     public static Event onBlockAdded(BlockSummary summary) {

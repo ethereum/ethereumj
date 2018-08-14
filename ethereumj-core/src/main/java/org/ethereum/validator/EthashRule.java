@@ -22,7 +22,7 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.mine.EthashValidationHelper;
 import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.BestBlockAdded;
+import org.ethereum.publish.event.BlockAdded;
 import org.ethereum.publish.event.SyncDone;
 import org.ethereum.util.FastByteComparisons;
 import org.slf4j.Logger;
@@ -116,7 +116,7 @@ public class EthashRule extends BlockHeaderRule {
             if (this.chain == main && publisher != null) {
                 publisher
                         .subscribe(to(SyncDone.class, ss -> EthashRule.this.syncDone = true))
-                        .subscribe(to(BestBlockAdded.class, data -> {
+                        .subscribe(to(BlockAdded.class, data -> {
                             if (data.isBest()) {
                                 ethashHelper.preCache(data.getBlockSummary().getBlock().getNumber());
                             }

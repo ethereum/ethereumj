@@ -21,7 +21,7 @@ import org.ethereum.core.Transaction;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.publish.event.BestBlockAdded;
+import org.ethereum.publish.event.BlockAdded;
 import org.ethereum.publish.event.SyncDone;
 import org.spongycastle.util.encoders.Hex;
 
@@ -42,7 +42,7 @@ public class TransactionBomb {
         this.ethereum = ethereum;
         this.ethereum
                 .subscribe(to(SyncDone.class, this::onSyncDone))
-                .subscribe(to(BestBlockAdded.class, this::onBlock));
+                .subscribe(to(BlockAdded.class, this::onBlock));
     }
 
     public static void main(String[] args) {
@@ -58,7 +58,7 @@ public class TransactionBomb {
         System.err.println(" ~~~ SYNC DONE ~~~ ");
     }
 
-    public void onBlock(BestBlockAdded.Data data) {
+    public void onBlock(BlockAdded.Data data) {
         if (startedTxBomb){
             byte[] sender = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
             long nonce = ethereum.getRepository().getNonce(sender).longValue();

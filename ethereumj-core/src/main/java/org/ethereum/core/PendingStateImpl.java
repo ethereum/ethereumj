@@ -163,7 +163,7 @@ public class PendingStateImpl implements PendingState {
 
         if (!newPending.isEmpty()) {
             listener.onPendingTransactionsReceived(newPending);
-            listener.onPendingStateChanged(PendingStateImpl.this);
+            listener.onPendingStateChanged(this);
         }
 
         return newPending;

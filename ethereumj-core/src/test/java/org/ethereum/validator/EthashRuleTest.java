@@ -7,7 +7,7 @@ import org.ethereum.core.EventDispatchThread;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.mine.EthashValidationHelper;
 import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.BestBlockAdded;
+import org.ethereum.publish.event.BlockAdded;
 import org.ethereum.publish.event.SyncDone;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
@@ -68,7 +68,7 @@ public class EthashRuleTest {
         assertEquals(Success, rule.validate(partlyValidHeader));
 
         // trigger ethash cache
-        publisher.publish(new BestBlockAdded(dummySummaryNum_1, true));
+        publisher.publish(new BlockAdded(dummySummaryNum_1, true));
 
         assertEquals(Success, rule.validate(validHeader));
         assertNotEquals(Success, rule.validate(partlyValidHeader));
@@ -86,7 +86,7 @@ public class EthashRuleTest {
         EthashRule rule = new EthashRule(EthashRule.Mode.mixed, EthashRule.ChainType.main, publisher);
 
         // trigger ethash cache
-        publisher.publish(new BestBlockAdded(dummySummaryNum_1, true));
+        publisher.publish(new BlockAdded(dummySummaryNum_1, true));
 
         // check mixed mode randomness
         boolean fullCheckTriggered = false;
@@ -122,8 +122,8 @@ public class EthashRuleTest {
         // trigger cache
         for (int i = 0; i < 100; i++) {
             publisher
-                    .publish(new BestBlockAdded(dummySummaryNum_1, false))
-                    .publish(new BestBlockAdded(dummySummaryNum_1, true));
+                    .publish(new BlockAdded(dummySummaryNum_1, false))
+                    .publish(new BlockAdded(dummySummaryNum_1, true));
         }
 
         // must be triggered on best block only

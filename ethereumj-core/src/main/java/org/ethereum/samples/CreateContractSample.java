@@ -23,7 +23,7 @@ import org.ethereum.core.TransactionReceipt;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.publish.event.BestBlockAdded;
+import org.ethereum.publish.event.BlockAdded;
 import org.ethereum.solidity.compiler.CompilationResult;
 import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.ethereum.util.ByteUtil;
@@ -64,7 +64,7 @@ public class CreateContractSample extends TestNetSample {
     @Override
     public void onSyncDone() throws Exception {
         // when block arrives look for our included transactions
-        ethereum.subscribe(to(BestBlockAdded.class, this::onBlock));
+        ethereum.subscribe(to(BlockAdded.class, this::onBlock));
 
         logger.info("Compiling contract...");
         SolidityCompiler.Result result = compiler.compileSrc(contract.getBytes(), true, true,
@@ -126,7 +126,7 @@ public class CreateContractSample extends TestNetSample {
         return waitForTx(tx.getHash());
     }
 
-    private void onBlock(BestBlockAdded.Data data) {
+    private void onBlock(BlockAdded.Data data) {
         for (TransactionReceipt receipt : data.getBlockSummary().getReceipts()) {
 
             ByteArrayWrapper txHashW = new ByteArrayWrapper(receipt.getTransaction().getHash());

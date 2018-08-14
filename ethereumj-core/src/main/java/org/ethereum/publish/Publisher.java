@@ -2,8 +2,8 @@ package org.ethereum.publish;
 
 import org.ethereum.core.EventDispatchThread;
 import org.ethereum.publish.event.Event;
+import org.ethereum.publish.event.OneOffEvent;
 import org.ethereum.publish.event.SignalEvent;
-import org.ethereum.publish.event.Single;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +52,7 @@ import static java.util.stream.Collectors.toList;
  * @see Subscription
  * @see Event
  * @see SignalEvent
- * @see Single
+ * @see OneOffEvent
  *
  * @author Eugene Shevchenko
  */
@@ -106,7 +106,7 @@ public class Publisher {
                     .filter(subscription -> subscription.needUnsubscribeAfter(event))
                     .forEach(this::unsubscribe);
 
-            if (event instanceof Single) {
+            if (event instanceof OneOffEvent) {
                 subscriptionsByEvent.remove(event.getClass());
             }
 

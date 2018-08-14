@@ -5,5 +5,5 @@ package org.ethereum.publish.event;
  *
  * @author Eugene Shevchenko
  */
-public interface Single {
+public interface OneOffEvent {
 }

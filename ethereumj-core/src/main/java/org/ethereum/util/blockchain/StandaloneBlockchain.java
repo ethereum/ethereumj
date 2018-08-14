@@ -34,7 +34,7 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.mine.Ethash;
 import org.ethereum.publish.BackwardCompatibilityEthereumListenerProxy;
 import org.ethereum.publish.Subscription;
-import org.ethereum.publish.event.BestBlockAdded;
+import org.ethereum.publish.event.BlockAdded;
 import org.ethereum.publish.event.Event;
 import org.ethereum.solidity.compiler.CompilationResult;
 import org.ethereum.solidity.compiler.CompilationResult.ContractMetadata;
@@ -438,7 +438,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         if (blockchain == null) {
             blockchain = createBlockchain(genesis);
             blockchain.setMinerCoinbase(coinbase);
-            subscribe(to(BestBlockAdded.class, data -> lastSummary = data.getBlockSummary()));
+            subscribe(to(BlockAdded.class, data -> lastSummary = data.getBlockSummary()));
         }
         return blockchain;
     }

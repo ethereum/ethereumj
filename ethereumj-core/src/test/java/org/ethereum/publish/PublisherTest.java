@@ -2,7 +2,7 @@ package org.ethereum.publish;
 
 import org.ethereum.core.EventDispatchThread;
 import org.ethereum.publish.event.Event;
-import org.ethereum.publish.event.Single;
+import org.ethereum.publish.event.OneOffEvent;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -36,8 +36,8 @@ public class PublisherTest {
         }
     }
 
-    private class SingleStringEvent extends StringEvent implements Single {
-        SingleStringEvent(String payload) {
+    private class OneOffStringEvent extends StringEvent implements OneOffEvent {
+        OneOffStringEvent(String payload) {
             super(payload);
         }
     }
@@ -62,9 +62,9 @@ public class PublisherTest {
         final List<String> strings = new ArrayList<>();
 
         int subscribersCount = createPublisher()
-                .subscribe(to(SingleStringEvent.class, strings::add))
-                .publish(new SingleStringEvent(payload))
-                .subscribersCount(SingleStringEvent.class);
+                .subscribe(to(OneOffStringEvent.class, strings::add))
+                .publish(new OneOffStringEvent(payload))
+                .subscribersCount(OneOffStringEvent.class);
 
         assertEquals(0, subscribersCount);
         assertTrue(strings.contains(payload));

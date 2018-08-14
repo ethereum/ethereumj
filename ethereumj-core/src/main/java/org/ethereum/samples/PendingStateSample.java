@@ -21,8 +21,8 @@ import org.ethereum.core.*;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.publish.event.BestBlockAdded;
-import org.ethereum.publish.event.PendingTransactionsReceived;
+import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.PendingTransactionUpdated;
 import org.ethereum.util.ByteUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -30,6 +30,7 @@ import org.springframework.context.annotation.Bean;
 import java.math.BigInteger;
 import java.util.*;
 
+import static org.ethereum.listener.EthereumListener.PendingTransactionState.NEW_PENDING;
 import static org.ethereum.publish.Subscription.to;
 import static org.ethereum.util.ByteUtil.toHexString;
 
@@ -65,9 +66,10 @@ public class PendingStateSample extends TestNetSample {
     public void onSyncDone() {
         this.ethereum
                 // listening here when the PendingState is updated with new transactions
-                .subscribe(to(PendingTransactionsReceived.class, txs -> txs.forEach(this::onPendingTransactionReceived)))
+                .subscribe(to(PendingTransactionUpdated.class, data -> onPendingTransactionReceived(data.getReceipt().getTransaction()))
+                        .conditionally(data -> data.getState() == NEW_PENDING))
                 // when block arrives look for our included transactions
-                .subscribe(to(BestBlockAdded.class, this::onBlock));
+                .subscribe(to(BlockAdded.class, this::onBlock));
 
         new Thread(() -> {
             try {
@@ -140,7 +142,7 @@ public class PendingStateSample extends TestNetSample {
      * For each block we are looking for our transactions and clearing them
      * The actual receiver balance is confirmed upon block arrival
      */
-    public void onBlock(BestBlockAdded.Data data) {
+    public void onBlock(BlockAdded.Data data) {
         BlockSummary blockSummary = data.getBlockSummary();
         onBlock(blockSummary.getBlock(), blockSummary.getReceipts());
     }
