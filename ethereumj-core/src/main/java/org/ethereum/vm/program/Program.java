@@ -222,15 +222,15 @@ public class Program {
     }
 
     public void stackPush(byte[] data) {
-        stackPush(new DataWord(data));
+        stackPush(DataWord.of(data));
     }
 
     public void stackPushZero() {
-        stackPush(new DataWord(0));
+        stackPush(DataWord.of(0));
     }
 
     public void stackPushOne() {
-        DataWord stackWord = new DataWord(1);
+        DataWord stackWord = DataWord.of(1);
         stackPush(stackWord);
     }
 
@@ -463,7 +463,7 @@ public class Program {
         // [5] COOK THE INVOKE AND EXECUTE
         InternalTransaction internalTx = addInternalTx(nonce, getGasLimit(), senderAddress, null, endowment, programCode, "create");
         ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
-                this, new DataWord(newAddress), getOwnerAddress(), value, gasLimit,
+                this, DataWord.of(newAddress), getOwnerAddress(), value, gasLimit,
                 newBalance, null, track, this.invoke.getBlockStore(), false, byTestingSuite());
 
         ProgramResult result = ProgramResult.createEmpty();
@@ -520,7 +520,7 @@ public class Program {
                 track.commit();
 
             // IN SUCCESS PUSH THE ADDRESS INTO THE STACK
-            stackPush(new DataWord(newAddress));
+            stackPush(DataWord.of(newAddress));
         }
 
         // 5. REFUND THE REMAIN GAS
@@ -596,7 +596,7 @@ public class Program {
         ProgramResult result = null;
         if (isNotEmpty(programCode)) {
             ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
-                    this, new DataWord(contextAddress),
+                    this, DataWord.of(contextAddress),
                     msg.getType().callIsDelegate() ? getCallerAddress() : getOwnerAddress(),
                     msg.getType().callIsDelegate() ? getCallValue() : msg.getEndowment(),
                     msg.getGas(), contextBalance, data, track, this.invoke.getBlockStore(),
@@ -701,8 +701,8 @@ public class Program {
     }
 
     public void storageSave(byte[] key, byte[] val) {
-        DataWord keyWord = new DataWord(key);
-        DataWord valWord = new DataWord(val);
+        DataWord keyWord = DataWord.of(key);
+        DataWord valWord = DataWord.of(val);
         getStorage().addStorageRow(getOwnerAddress().getLast20Bytes(), keyWord, valWord);
     }
 
@@ -721,13 +721,13 @@ public class Program {
 
     public DataWord getBlockHash(int index) {
         return index < this.getNumber().longValue() && index >= Math.max(256, this.getNumber().intValue()) - 256 ?
-                new DataWord(this.invoke.getBlockStore().getBlockHashByNumber(index, getPrevHash().getData())) :
-                DataWord.zero();
+                DataWord.of(this.invoke.getBlockStore().getBlockHashByNumber(index, getPrevHash().getData())) :
+                DataWord.ZERO;
     }
 
     public DataWord getBalance(DataWord address) {
         BigInteger balance = getStorage().getBalance(address.getLast20Bytes());
-        return new DataWord(balance.toByteArray());
+        return DataWord.of(balance.toByteArray());
     }
 
     public DataWord getOriginAddress() {
@@ -747,7 +747,7 @@ public class Program {
     }
 
     public DataWord getGas() {
-        return new DataWord(invoke.getGasLong() - getResult().getGasUsed());
+        return DataWord.of(invoke.getGasLong() - getResult().getGasUsed());
     }
 
     public DataWord getCallValue() {
@@ -767,7 +767,7 @@ public class Program {
     }
 
     public DataWord getReturnDataBufferSize() {
-        return new DataWord(getReturnDataBufferSizeI());
+        return DataWord.of(getReturnDataBufferSizeI());
     }
 
     private int getReturnDataBufferSizeI() {
@@ -922,7 +922,7 @@ public class Program {
 
             // sophisticated assumption that msg.data != codedata
             // means we are calling the contract not creating it
-            byte[] txData = invoke.getDataCopy(DataWord.zero(), getDataSize());
+            byte[] txData = invoke.getDataCopy(DataWord.ZERO, getDataSize());
             if (!Arrays.equals(txData, ops))
                 globalOutput.append("\n  msg.data: ").append(Hex.toHexString(txData));
             globalOutput.append("\n\n  Spent Gas: ").append(getResult().getGasUsed());

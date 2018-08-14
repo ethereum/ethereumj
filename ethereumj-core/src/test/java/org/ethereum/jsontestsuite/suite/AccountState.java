@@ -75,7 +75,7 @@ public class AccountState {
 
             byte[] key = Utils.parseData(keyS);
             byte[] value = Utils.parseData(valS);
-            storage.put(new DataWord(key), new DataWord(value));
+            storage.put(DataWord.of(key), DataWord.of(value));
         }
     }
 

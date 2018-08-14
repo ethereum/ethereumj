@@ -57,7 +57,7 @@ public class ProgramTraceListener extends ProgramListenerAdaptor {
     @Override
     public void onStoragePut(DataWord key, DataWord value) {
         if (enabled) {
-            if (value.equals(DataWord.zero())) {
+            if (value.equals(DataWord.ZERO)) {
                 actions.addStorageRemove(key);
             } else {
                 actions.addStoragePut(key, value);

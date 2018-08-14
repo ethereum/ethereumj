@@ -64,7 +64,7 @@ public class TransactionStoreTest {
         Transaction tx1 = b2.getTransactionsList().get(0);
         TransactionInfo tx1Info = bc.getBlockchain().getTransactionInfo(tx1.getHash());
         byte[] executionResult = tx1Info.getReceipt().getExecutionResult();
-        Assert.assertArrayEquals(new DataWord(777).getData(), executionResult);
+        Assert.assertArrayEquals(DataWord.of(777).getData(), executionResult);
 
         System.out.println(txDb.keys().size());
         bc.getBlockchain().flush();
@@ -73,7 +73,7 @@ public class TransactionStoreTest {
         TransactionStore txStore = new TransactionStore(txDb);
         TransactionInfo tx1Info_ = txStore.get(tx1.getHash()).get(0);
         executionResult = tx1Info_.getReceipt().getExecutionResult();
-        Assert.assertArrayEquals(new DataWord(777).getData(), executionResult);
+        Assert.assertArrayEquals(DataWord.of(777).getData(), executionResult);
 
         TransactionInfo highIndex = new TransactionInfo(tx1Info.getReceipt(), tx1Info.getBlockHash(), 255);
         TransactionInfo highIndexCopy = new TransactionInfo(highIndex.getEncoded());

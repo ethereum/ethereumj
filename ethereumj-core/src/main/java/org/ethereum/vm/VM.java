@@ -254,13 +254,13 @@ public class VM {
 
                 // These all operate on memory and therefore potentially expand it:
                 case MSTORE:
-                    gasCost += calcMemGas(gasCosts, oldMemSize, memNeeded(stack.peek(), new DataWord(32)), 0);
+                    gasCost += calcMemGas(gasCosts, oldMemSize, memNeeded(stack.peek(), DataWord.of(32)), 0);
                     break;
                 case MSTORE8:
-                    gasCost += calcMemGas(gasCosts, oldMemSize, memNeeded(stack.peek(), new DataWord(1)), 0);
+                    gasCost += calcMemGas(gasCosts, oldMemSize, memNeeded(stack.peek(), DataWord.of(1)), 0);
                     break;
                 case MLOAD:
-                    gasCost += calcMemGas(gasCosts, oldMemSize, memNeeded(stack.peek(), new DataWord(32)), 0);
+                    gasCost += calcMemGas(gasCosts, oldMemSize, memNeeded(stack.peek(), DataWord.of(32)), 0);
                     break;
                 case RETURN:
                 case REVERT:
@@ -303,7 +303,7 @@ public class VM {
                     DataWord callAddressWord = stack.get(stack.size() - 2);
 
                     DataWord value = op.callHasValue() ?
-                            stack.get(stack.size() - 3) : DataWord.zero();
+                            stack.get(stack.size() - 3) : DataWord.ZERO;
 
                     //check to see if account does not exist and is not a precompiled contract
                     if (op == CALL) {
@@ -332,7 +332,7 @@ public class VM {
                     }
 
                     DataWord gasLeft = program.getGas();
-                    DataWord subResult = gasLeft.sub(new DataWord(gasCost));
+                    DataWord subResult = gasLeft.sub(DataWord.of(gasCost));
                     adjustedCallGas = blockchainConfig.getCallGas(op, callGasWord, subResult);
                     gasCost += adjustedCallGas.longValueSafe();
                     break;
@@ -518,11 +518,10 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = word1.value() + " < " + word2.value();
 
-                    DataWord andResult = word1.and(DataWord.zero());
                     if (word1.value().compareTo(word2.value()) == -1) {
-                        program.stackPush(andResult.insert(31, (byte) 1));
+                        program.stackPush(DataWord.ONE);
                     } else {
-                        program.stackPush(andResult);
+                        program.stackPush(DataWord.ZERO);
                     }
                     program.step();
                 }
@@ -535,11 +534,10 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = word1.sValue() + " < " + word2.sValue();
 
-                    DataWord andResult = word1.and(DataWord.zero());
                     if (word1.sValue().compareTo(word2.sValue()) == -1) {
-                        program.stackPush(andResult.insert(31, (byte) 1));
+                        program.stackPush(DataWord.ONE);
                     } else {
-                        program.stackPush(andResult);
+                        program.stackPush(DataWord.ZERO);
                     }
                     program.step();
                 }
@@ -552,11 +550,10 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = word1.sValue() + " > " + word2.sValue();
 
-                    DataWord andResult = word1.and(DataWord.zero());
                     if (word1.sValue().compareTo(word2.sValue()) == 1) {
-                        program.stackPush(andResult.insert(31, (byte) 1));
+                        program.stackPush(DataWord.ONE);
                     } else {
-                        program.stackPush(andResult);
+                        program.stackPush(DataWord.ZERO);
                     }
                     program.step();
                 }
@@ -569,11 +566,10 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = word1.value() + " > " + word2.value();
 
-                    DataWord andResult = word1.and(DataWord.zero());
                     if (word1.value().compareTo(word2.value()) == 1) {
-                        program.stackPush(andResult.insert(31, (byte) 1));
+                        program.stackPush(DataWord.ONE);
                     } else {
-                        program.stackPush(andResult);
+                        program.stackPush(DataWord.ZERO);
                     }
                     program.step();
                 }
@@ -586,11 +582,10 @@ public class VM {
                         hint = word1.value() + " == " + word2.value();
 
                     DataWord xorResult = word1.xor(word2);
-                    DataWord andResult = xorResult.and(DataWord.zero());
                     if (xorResult.isZero()) {
-                        program.stackPush(andResult.insert(31, (byte) 1));
+                        program.stackPush(DataWord.ONE);
                     } else {
-                        program.stackPush(andResult);
+                        program.stackPush(DataWord.ZERO);
                     }
                     program.step();
                 }
@@ -598,9 +593,9 @@ public class VM {
                 case ISZERO: {
                     DataWord word1 = program.stackPop();
                     if (word1.isZero()) {
-                        program.stackPush(word1.insert(31, (byte) 1));
+                        program.stackPush(DataWord.ONE);
                     } else {
-                        program.stackPush(word1.and(DataWord.zero()));
+                        program.stackPush(DataWord.ZERO);
                     }
 
                     if (logger.isInfoEnabled())
@@ -655,12 +650,12 @@ public class VM {
                     final DataWord result;
                     if (word1.value().compareTo(_32_) == -1) {
                         byte tmp = word2.getData()[word1.intValue()];
-                        DataWord andResult = word2.and(DataWord.zero());
+                        DataWord andResult = word2.and(DataWord.ZERO);
                         byte[] data = andResult.getData();
                         data[31] = tmp;
-                        result = new DataWord(data);
+                        result = DataWord.of(data);
                     } else {
-                        result = DataWord.zero();
+                        result = DataWord.ZERO;
                     }
 
                     if (logger.isInfoEnabled())
@@ -698,7 +693,7 @@ public class VM {
                     byte[] buffer = program.memoryChunk(memOffsetData.intValueSafe(), lengthData.intValueSafe());
 
                     byte[] encoded = sha3(buffer);
-                    DataWord word = new DataWord(encoded);
+                    DataWord word = DataWord.of(encoded);
 
                     if (logger.isInfoEnabled())
                         hint = word.toString();
@@ -837,7 +832,7 @@ public class VM {
                         DataWord address = program.stackPop();
                         length = program.getCodeAt(address).length;
                     }
-                    DataWord codeLength = new DataWord(length);
+                    DataWord codeLength = DataWord.of(length);
 
                     if (logger.isInfoEnabled())
                         hint = "size: " + length;
@@ -1051,7 +1046,7 @@ public class VM {
                         hint = "key: " + key + " value: " + val;
 
                     if (val == null)
-                        val = key.and(DataWord.zero());
+                        val = key.and(DataWord.ZERO);
 
                     program.stackPush(val);
                     program.step();
@@ -1100,7 +1095,7 @@ public class VM {
                 break;
                 case PC: {
                     int pc = program.getPC();
-                    DataWord pcWord = new DataWord(pc);
+                    DataWord pcWord = DataWord.of(pc);
 
                     if (logger.isInfoEnabled())
                         hint = pcWord.toString();
@@ -1111,7 +1106,7 @@ public class VM {
                 break;
                 case MSIZE: {
                     int memSize = program.getMemSize();
-                    DataWord wordMemSize = new DataWord(memSize);
+                    DataWord wordMemSize = DataWord.of(memSize);
 
                     if (logger.isInfoEnabled())
                         hint = "" + memSize;
@@ -1203,13 +1198,13 @@ public class VM {
                     program.stackPop(); // use adjustedCallGas instead of requested
                     DataWord codeAddress = program.stackPop();
                     DataWord value = op.callHasValue() ?
-                            program.stackPop() : DataWord.zero();
+                            program.stackPop() : DataWord.ZERO;
 
                     if (program.isStaticCall() && op == CALL && !value.isZero())
                         throw new Program.StaticCallModificationException();
 
                     if (!value.isZero()) {
-                        adjustedCallGas = adjustedCallGas.add(new DataWord(gasCosts.getSTIPEND_CALL()));
+                        adjustedCallGas = adjustedCallGas.add(DataWord.of(gasCosts.getSTIPEND_CALL()));
                     }
 
                     DataWord inDataOffs = program.stackPop();
@@ -1405,7 +1400,7 @@ public class VM {
                     break;
             }
             String addressString = toHexString(program.getOwnerAddress().getLast20Bytes());
-            String pcString = toHexString(new DataWord(program.getPC()).getNoLeadZeroesData());
+            String pcString = toHexString(DataWord.of(program.getPC()).getNoLeadZeroesData());
             String opString = toHexString(new byte[]{op.val()});
             String gasString = toHexString(program.getGas().getNoLeadZeroesData());
 

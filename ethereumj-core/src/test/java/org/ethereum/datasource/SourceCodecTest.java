@@ -37,15 +37,15 @@ public class SourceCodecTest {
     }
 
     private byte[] intToValue(int i) {
-        return (new DataWord(i)).getData();
+        return (DataWord.of(i)).getData();
     }
 
     private DataWord intToDataWord(int i) {
-        return new DataWord(i);
+        return DataWord.of(i);
     }
 
     private DataWord intToDataWordKey(int i) {
-        return new DataWord(intToKey(i));
+        return DataWord.of(intToKey(i));
     }
 
     private String str(Object obj) {

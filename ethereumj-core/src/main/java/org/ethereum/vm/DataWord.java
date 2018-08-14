@@ -33,6 +33,7 @@ import static org.ethereum.util.ByteUtil.toHexString;
 /**
  * DataWord is the 32-byte array representation of a 256-bit number
  * Calculations can be done on this word with other DataWords
+ * DataWord is immutable. Use one of `of` factories for instance creation.
  *
  * @author Roman Mandeleil
  * @since 01.06.2014
@@ -40,68 +41,78 @@ import static org.ethereum.util.ByteUtil.toHexString;
 public final class DataWord implements Comparable<DataWord> {
 
     /* Maximum value of the DataWord */
-    private static final BigInteger _2_256 = BigInteger.valueOf(2).pow(256);
-    private static final BigInteger MAX_VALUE = _2_256.subtract(BigInteger.ONE);
-    private static final DataWord ZERO = new DataWord(new byte[32]);      // don't push it in to the stack
-    private static final DataWord ZERO_EMPTY_ARRAY = new DataWord(new byte[0]);      // don't push it in to the stack
+    public static final BigInteger _2_256 = BigInteger.valueOf(2).pow(256);
+    public static final BigInteger MAX_VALUE = _2_256.subtract(BigInteger.ONE);
+    public static final DataWord ZERO = new DataWord(new byte[32]);
+    public static final DataWord ONE = new DataWord(new byte[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1});
 
     public static final long MEM_SIZE = 32 + 16 + 16;
 
     private final byte[] data;
 
-    public static DataWord zero() {
-        return new DataWord();
+    /**
+     * Unsafe private constructor
+     * Doesn't guarantee immutability if element of byte[] is changed later
+     * Use one of factory methods instead:
+     *  - {@link #of(byte[])}
+     *  - {@link #of(ByteArrayWrapper)}
+     *  - {@link #of(String)}
+     *  - {@link #of(long)}
+     *  - {@link #of(int)}
+     * @param data Byte Array[32] which is guaranteed to be immutable
+     */
+    private DataWord(byte[] data) {
+        if (data == null || data.length != 32) throw new RuntimeException("Input byte array should have 32 bytes in it!");
+        this.data = data;
     }
 
-    private DataWord() {
-        data = ZERO.getData();
-    }
+    public static DataWord of(byte[] data) {
+        if (data == null || data.length == 0) {
+            return DataWord.ZERO;
+        }
 
-    public DataWord(int num) {
-        this(ByteBuffer.allocate(4).putInt(num));
-    }
+        boolean allExceptLastIsZero = true;
+        for (int i = 0; i < (data.length - 1); ++i) {
+            if (data[i] != 0) {
+                allExceptLastIsZero = false;
+                break;
+            }
+        }
+        if (allExceptLastIsZero) {
+            if (data[data.length - 1] == 0) return DataWord.ZERO;
+            if (data[data.length - 1] == 1) return DataWord.ONE;
+        }
 
-    public DataWord(long num) {
-        this(ByteBuffer.allocate(8).putLong(num));
-    }
-
-    private DataWord(ByteBuffer buffer) {
-        final ByteBuffer data = ByteBuffer.allocate(32);
-        final byte[] array = buffer.array();
-        System.arraycopy(array, 0, data.array(), 32 - array.length, array.length);
-        this.data = data.array();
-    }
-
-    @JsonCreator
-    public DataWord(String data) {
-        this(Hex.decode(data));
-    }
-
-    public DataWord(ByteArrayWrapper wrappedData) {
-        this(wrappedData.getData());
-    }
-
-    public DataWord(byte[] data) {
-        if (data == null)
-            this.data = ByteUtil.EMPTY_BYTE_ARRAY;
-        else if (data.length == 32)
-            this.data = data;
+        if (data.length == 32)
+            return new DataWord(Arrays.copyOf(data, data.length));
         else if (data.length <= 32) {
             byte[] bytes = ZERO.getData();
             System.arraycopy(data, 0, bytes, 32 - data.length, data.length);
-            this.data = bytes;
-        } else
+            return new DataWord(bytes);
+        } else {
             throw new RuntimeException(String.format("Data word can't exceed 32 bytes: 0x%s", ByteUtil.toHexString(data)));
+        }
+    }
+
+    public static DataWord of(ByteArrayWrapper wrappedData) {
+        return of(wrappedData.getData());
+    }
+
+    @JsonCreator
+    public static DataWord of(String data) {
+        return of(Hex.decode(data));
+    }
+
+    public static DataWord of(int num) {
+        return of(ByteBuffer.allocate(4).putInt(num).array());
+    }
+
+    public static DataWord of(long num) {
+        return of(ByteBuffer.allocate(8).putLong(num).array());
     }
 
     public byte[] getData() {
         return Arrays.copyOf(data, data.length);
-    }
-
-    public DataWord insert(int index, byte element) {
-        byte[] newData = this.getData();
-        newData[index] = element;
-        return new DataWord(newData);
     }
 
     public byte[] getNoLeadZeroesData() {
@@ -223,7 +234,7 @@ public final class DataWord implements Comparable<DataWord> {
 
     public DataWord negate() {
 
-        if (this.isZero()) return zero();
+        if (this.isZero()) return ZERO;
 
         byte[] newData = this.getData();
         for (int i = 0; i < this.data.length; ++i) {
@@ -274,7 +285,7 @@ public final class DataWord implements Comparable<DataWord> {
     public DataWord div(DataWord word) {
 
         if (word.isZero()) {
-            return this.and(ZERO);
+            return ZERO;
         }
 
         BigInteger result = value().divide(word.value());
@@ -285,7 +296,7 @@ public final class DataWord implements Comparable<DataWord> {
     public DataWord sDiv(DataWord word) {
 
         if (word.isZero()) {
-            return this.and(ZERO);
+            return ZERO;
         }
 
         BigInteger result = sValue().divide(word.sValue());
@@ -308,7 +319,7 @@ public final class DataWord implements Comparable<DataWord> {
     public DataWord mod(DataWord word) {
 
         if (word.isZero()) {
-            return this.and(ZERO);
+            return ZERO;
         }
 
         BigInteger result = value().mod(word.value());
@@ -318,7 +329,7 @@ public final class DataWord implements Comparable<DataWord> {
     public DataWord sMod(DataWord word) {
 
         if (word.isZero()) {
-            return this.and(ZERO);
+            return ZERO;
         }
 
         BigInteger result = sValue().abs().mod(word.sValue().abs());
@@ -329,7 +340,7 @@ public final class DataWord implements Comparable<DataWord> {
 
     public DataWord addmod(DataWord word1, DataWord word2) {
         if (word2.isZero()) {
-            return zero();
+            return ZERO;
         }
 
         BigInteger result = value().add(word1.value()).mod(word2.value());
@@ -339,7 +350,7 @@ public final class DataWord implements Comparable<DataWord> {
     public DataWord mulmod(DataWord word1, DataWord word2) {
 
         if (this.isZero() || word1.isZero() || word2.isZero()) {
-            return zero();
+            return ZERO;
         }
 
         BigInteger result = value().multiply(word1.value()).mod(word2.value());
@@ -388,7 +399,7 @@ public final class DataWord implements Comparable<DataWord> {
         if (o == null) return -1;
         int result = FastByteComparisons.compareTo(
                 data, 0, data.length,
-                o.getData(), 0, o.getData().length);
+                o.data, 0, o.data.length);
         // Convert result into -1, 0 or 1 as is the convention
         return (int) Math.signum(result);
     }

@@ -155,31 +155,31 @@ public class RepoNewTest {
         RepositoryRoot repo = new RepositoryRoot(stateDb, null);
         byte[] addr1 = decode("aaaa");
         repo.createAccount(addr1);
-        repo.addStorageRow(addr1, new DataWord(1), new DataWord(111));
+        repo.addStorageRow(addr1, DataWord.of(1), DataWord.of(111));
         repo.commit();
 
         byte[] root1 = repo.getRoot();
         System.out.println(repo.dumpStateTrie());
 
         RepositoryRoot repo2 = new RepositoryRoot(stateDb, root1);
-        DataWord val1 = repo.getStorageValue(addr1, new DataWord(1));
-        assert new DataWord(111).equals(val1);
+        DataWord val1 = repo.getStorageValue(addr1, DataWord.of(1));
+        assert DataWord.of(111).equals(val1);
 
         Repository repo3 = repo2.startTracking();
-        repo3.addStorageRow(addr1, new DataWord(2), new DataWord(222));
-        repo3.addStorageRow(addr1, new DataWord(1), new DataWord(333));
-        assert new DataWord(333).equals(repo3.getStorageValue(addr1, new DataWord(1)));
-        assert new DataWord(222).equals(repo3.getStorageValue(addr1, new DataWord(2)));
-        assert new DataWord(111).equals(repo2.getStorageValue(addr1, new DataWord(1)));
-        Assert.assertNull(repo2.getStorageValue(addr1, new DataWord(2)));
+        repo3.addStorageRow(addr1, DataWord.of(2), DataWord.of(222));
+        repo3.addStorageRow(addr1, DataWord.of(1), DataWord.of(333));
+        assert DataWord.of(333).equals(repo3.getStorageValue(addr1, DataWord.of(1)));
+        assert DataWord.of(222).equals(repo3.getStorageValue(addr1, DataWord.of(2)));
+        assert DataWord.of(111).equals(repo2.getStorageValue(addr1, DataWord.of(1)));
+        Assert.assertNull(repo2.getStorageValue(addr1, DataWord.of(2)));
         repo3.commit();
-        assert new DataWord(333).equals(repo2.getStorageValue(addr1, new DataWord(1)));
-        assert new DataWord(222).equals(repo2.getStorageValue(addr1, new DataWord(2)));
+        assert DataWord.of(333).equals(repo2.getStorageValue(addr1, DataWord.of(1)));
+        assert DataWord.of(222).equals(repo2.getStorageValue(addr1, DataWord.of(2)));
         repo2.commit();
 
         RepositoryRoot repo4 = new RepositoryRoot(stateDb, repo2.getRoot());
-        assert new DataWord(333).equals(repo4.getStorageValue(addr1, new DataWord(1)));
-        assert new DataWord(222).equals(repo4.getStorageValue(addr1, new DataWord(2)));
+        assert DataWord.of(333).equals(repo4.getStorageValue(addr1, DataWord.of(1)));
+        assert DataWord.of(222).equals(repo4.getStorageValue(addr1, DataWord.of(2)));
     }
 
     @Test
@@ -188,9 +188,9 @@ public class RepoNewTest {
 
         Repository repo1 = repo.startTracking();
         byte[] addr2 = decode("bbbb");
-        repo1.addStorageRow(addr2, new DataWord(1), new DataWord(111));
+        repo1.addStorageRow(addr2, DataWord.of(1), DataWord.of(111));
         repo1.commit();
 
-        Assert.assertEquals(new DataWord(111), repo.getStorageValue(addr2, new DataWord(1)));
+        Assert.assertEquals(DataWord.of(111), repo.getStorageValue(addr2, DataWord.of(1)));
     }
 }

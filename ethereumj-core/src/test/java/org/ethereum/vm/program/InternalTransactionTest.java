@@ -33,8 +33,8 @@ public class InternalTransactionTest {
         int deep = Integer.MAX_VALUE;
         int index = Integer.MAX_VALUE;
         byte[] nonce = randomBytes(2);
-        DataWord gasPrice = DataWord.zero();
-        DataWord gasLimit = DataWord.zero();
+        DataWord gasPrice = DataWord.ZERO;
+        DataWord gasLimit = DataWord.ZERO;
         byte[] sendAddress = randomBytes(20);
         byte[] receiveAddress = randomBytes(20);
         byte[] value = randomBytes(2);

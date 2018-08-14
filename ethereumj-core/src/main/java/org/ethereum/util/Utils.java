@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
 import javax.swing.*;
 
 public class Utils {
-    private static final DataWord DIVISOR = new DataWord(64);
+    private static final DataWord DIVISOR = DataWord.of(64);
 
     private static SecureRandom random = new SecureRandom();
 
