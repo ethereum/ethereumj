@@ -895,8 +895,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                 receipt.setPostTxState(track.getRoot());
             }
 
-            stateLogger.info("block: [{}] executed tx: [{}] \n  state: [{}]", block.getNumber(), i,
-                    toHexString(track.getRoot()));
+            if (stateLogger.isInfoEnabled())
+                stateLogger.info("block: [{}] executed tx: [{}] \n  state: [{}]", block.getNumber(), i,
+                        toHexString(track.getRoot()));
 
             stateLogger.info("[{}] ", receipt.toString());
 
@@ -915,9 +916,10 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         Map<byte[], BigInteger> rewards = addReward(track, block, summaries);
 
-        stateLogger.info("applied reward for block: [{}]  \n  state: [{}]",
-                block.getNumber(),
-                toHexString(track.getRoot()));
+        if (stateLogger.isInfoEnabled())
+            stateLogger.info("applied reward for block: [{}]  \n  state: [{}]",
+                    block.getNumber(),
+                    toHexString(track.getRoot()));
 
 
         // TODO

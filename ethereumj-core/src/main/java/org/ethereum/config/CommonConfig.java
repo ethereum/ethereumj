@@ -36,7 +36,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.*;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -46,7 +45,6 @@ import java.util.Set;
 import static java.util.Arrays.asList;
 
 @Configuration
-@EnableTransactionManagement
 @ComponentScan(
         basePackages = "org.ethereum",
         excludeFilters = @ComponentScan.Filter(NoAutoscan.class))
