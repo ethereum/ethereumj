@@ -25,8 +25,10 @@ import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.leveldb.LevelDbDataSource;
 import org.ethereum.datasource.rocksdb.RocksDbDataSource;
 import org.ethereum.db.*;
+import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.handler.Eth63;
+import org.ethereum.publish.BackwardCompatibilityEthereumListenerProxy;
 import org.ethereum.publish.Publisher;
 import org.ethereum.sync.FastSyncManager;
 import org.ethereum.validator.*;
@@ -229,8 +231,14 @@ public class CommonConfig {
     }
 
     @Bean
-    public EthereumListener ethereumListener(Publisher publisher) {
-        return publisher.asListener();
+    public CompositeEthereumListener compositeEthereumListener(EventDispatchThread eventDispatchThread) {
+        return new CompositeEthereumListener(eventDispatchThread);
+    }
+
+    @Bean
+    @Primary
+    public EthereumListener ethereumListener(CompositeEthereumListener compositeListener, Publisher publisher) {
+        return new BackwardCompatibilityEthereumListenerProxy(compositeListener, publisher);
     }
 
     @Bean
