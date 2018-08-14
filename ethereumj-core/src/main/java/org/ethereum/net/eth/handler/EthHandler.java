@@ -21,9 +21,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
-import org.ethereum.core.BlockSummary;
 import org.ethereum.core.Blockchain;
 import org.ethereum.db.BlockStore;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessage;
@@ -31,10 +31,10 @@ import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.server.Channel;
+import org.ethereum.publish.BackwardCompatibilityEthereumListenerProxy;
 import org.ethereum.publish.Publisher;
 import org.ethereum.publish.Subscription;
-import org.ethereum.publish.event.BlockAdded;
-import org.ethereum.publish.event.Trace;
+import org.ethereum.publish.event.BestBlockAdded;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +53,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     protected SystemProperties config;
 
-    private Publisher publisher;
+    protected EthereumListener listener;
 
     protected Channel channel;
 
@@ -66,7 +66,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     protected Block bestBlock;
 
     protected boolean processTransactions = false;
-    private Subscription<BlockAdded, BlockSummary> bestBlockSub;
+    private Subscription<BestBlockAdded, BestBlockAdded.Data> bestBlockSub;
 
     protected EthHandler(EthVersion version) {
         this.version = version;
@@ -74,20 +74,20 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     protected EthHandler(final EthVersion version, final SystemProperties config,
                          final Blockchain blockchain, final BlockStore blockStore,
-                         final Publisher publisher) {
+                         final EthereumListener listener) {
         this.version = version;
         this.config = config;
         this.blockchain = blockchain;
         this.bestBlock = blockStore.getBestBlock();
-        this.publisher = publisher;
-        this.bestBlockSub = publisher.subscribe(BlockAdded.class, this::setBestBlock);
+        this.listener = listener;
+        this.bestBlockSub = getPublisher().subscribe(BestBlockAdded.class, this::setBestBlock);
 
         // when sync enabled we delay transactions processing until sync is complete
         this.processTransactions = !config.isSyncEnabled();
     }
 
-    private void setBestBlock(BlockSummary blockSummary) {
-        this.bestBlock = blockSummary.getBlock();
+    private void setBestBlock(BestBlockAdded.Data data) {
+        this.bestBlock = data.getBlockSummary().getBlock();
     }
 
     @Override
@@ -96,7 +96,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         if (EthMessageCodes.inRange(msg.getCommand().asByte(), version))
             logger.trace("EthHandler invoke: [{}]", msg.getCommand());
 
-        publisher.publish(new Trace(format("EthHandler invoke: [%s]", msg.getCommand())));
+        listener.trace(format("EthHandler invoke: [%s]", msg.getCommand()));
 
         channel.getNodeStatistics().ethInbound.add();
 
@@ -104,7 +104,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     }
 
     public Publisher getPublisher() {
-        return publisher;
+        return ((BackwardCompatibilityEthereumListenerProxy) listener).getPublisher();
     }
 
     @Override
@@ -116,13 +116,13 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
         logger.debug("handlerRemoved: kill timers in EthHandler");
-        publisher.unsubscribe(bestBlockSub);
+        getPublisher().unsubscribe(bestBlockSub);
         onShutdown();
     }
 
     public void activate() {
         logger.debug("ETH protocol activated");
-        publisher.publish(new Trace("ETH protocol activated"));
+        listener.trace("ETH protocol activated");
         sendStatus();
     }
 

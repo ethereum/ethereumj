@@ -107,7 +107,10 @@ public class FastSyncManager {
     DbFlushManager dbFlushManager;
 
     @Autowired
+    private EthereumListener listener;
+    @Autowired
     private Publisher publisher;
+
 
     @Autowired
     ApplicationContext applicationContext;
@@ -754,8 +757,7 @@ public class FastSyncManager {
         // prevent early state notification when sync is not yet done
         syncManager.setSyncDoneType(state);
         if (syncManager.isSyncDone()) {
-//            listener.onSyncDone(state);
-            publisher.publish(new SyncDone(state));
+            listener.onSyncDone(state);
         }
     }
 

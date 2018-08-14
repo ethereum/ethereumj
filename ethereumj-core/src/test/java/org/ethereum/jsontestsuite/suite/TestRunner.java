@@ -27,7 +27,7 @@ import org.ethereum.jsontestsuite.suite.builder.RepositoryBuilder;
 import org.ethereum.jsontestsuite.suite.model.BlockTck;
 import org.ethereum.jsontestsuite.suite.validators.BlockHeaderValidator;
 import org.ethereum.jsontestsuite.suite.validators.RepositoryValidator;
-import org.ethereum.publish.Publisher;
+import org.ethereum.publish.BackwardCompatibilityEthereumListenerProxy;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
@@ -90,11 +90,12 @@ public class TestRunner {
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 
-        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, new Publisher(EventDispatchThread.getDefault()))
+        BackwardCompatibilityEthereumListenerProxy listenerProxy = BackwardCompatibilityEthereumListenerProxy.createDefault();
+        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, listenerProxy)
                 .withParentBlockHeaderValidator(CommonConfig.getDefault().parentHeaderValidator());
         blockchain.byTest = true;
 
-        PendingStateImpl pendingState = new PendingStateImpl(new Publisher(EventDispatchThread.getDefault()));
+        PendingStateImpl pendingState = new PendingStateImpl(listenerProxy);
 
         blockchain.setBestBlock(genesis);
         blockchain.setTotalDifficulty(genesis.getDifficultyBI());

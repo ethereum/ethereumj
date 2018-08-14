@@ -19,9 +19,8 @@ package org.ethereum.net.shh;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.MessageQueue;
-import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.Trace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +45,7 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
     private BloomFilter peerBloomFilter = BloomFilter.createAll();
 
     @Autowired
-    private Publisher publisher;
+    private EthereumListener listener;
 
     @Autowired
     private WhisperImpl whisper;
@@ -66,11 +65,11 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
         if (ShhMessageCodes.inRange(msg.getCommand().asByte()))
             logger.info("ShhHandler invoke: [{}]", msg.getCommand());
 
-        publisher.publish(new Trace(format("ShhHandler invoke: [%s]", msg.getCommand())));
+        listener.trace(format("ShhHandler invoke: [%s]", msg.getCommand()));
 
         switch (msg.getCommand()) {
             case STATUS:
-                publisher.publish(new Trace("[Recv: " + msg + "]"));
+                listener.trace("[Recv: " + msg + "]");
                 break;
             case MESSAGE:
                 whisper.processEnvelope((ShhEnvelopeMessage) msg, this);
@@ -104,7 +103,7 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
 
     public void activate() {
         logger.info("SHH protocol activated");
-        publisher.publish(new Trace("SHH protocol activated"));
+        listener.trace("SHH protocol activated");
         whisper.addPeer(this);
         sendStatus();
         sendHostBloom();

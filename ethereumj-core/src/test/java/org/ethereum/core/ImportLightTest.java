@@ -27,7 +27,7 @@ import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.RepositoryRoot;
 import org.ethereum.mine.Ethash;
-import org.ethereum.publish.Publisher;
+import org.ethereum.publish.BackwardCompatibilityEthereumListenerProxy;
 import org.ethereum.publish.event.TransactionExecuted;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.blockchain.SolidityContract;
@@ -44,6 +44,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.*;
+
+import static org.ethereum.publish.Subscription.to;
 
 /**
  * Created by Anton Nashatyrev on 29.12.2015.
@@ -772,7 +774,7 @@ public class ImportLightTest {
         SolidityContract a = bc.submitNewContract(contractA, "A");
         bc.createBlock();
         final BigInteger[] refund = new BigInteger[1];
-        bc.subscribe(TransactionExecuted.class, tes -> refund[0] = tes.getGasRefund());
+        bc.subscribe(to(TransactionExecuted.class, tes -> refund[0] = tes.getGasRefund()));
         a.callFunction("f");
         bc.createBlock();
 
@@ -800,7 +802,7 @@ public class ImportLightTest {
         SolidityContract a = bc.submitNewContract(contractA, "A");
         bc.createBlock();
         final List<LogInfo> logs = new ArrayList<>();
-        bc.subscribe(TransactionExecuted.class, tes -> logs.addAll(tes.getLogs()));
+        bc.subscribe(to(TransactionExecuted.class, tes -> logs.addAll(tes.getLogs())));
         a.callFunction("f");
         bc.createBlock();
 
@@ -885,14 +887,15 @@ public class ImportLightTest {
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 
-        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, new Publisher(EventDispatchThread.getDefault()))
+        BackwardCompatibilityEthereumListenerProxy listenerProxy = BackwardCompatibilityEthereumListenerProxy.createDefault();
+        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, listenerProxy)
                 .withParentBlockHeaderValidator(new CommonConfig().parentHeaderValidator());
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
 
         blockchain.byTest = true;
 
-        PendingStateImpl pendingState = new PendingStateImpl(new Publisher(EventDispatchThread.getDefault()));
+        PendingStateImpl pendingState = new PendingStateImpl(listenerProxy);
 
         pendingState.setBlockchain(blockchain);
         blockchain.setPendingState(pendingState);

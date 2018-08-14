@@ -32,9 +32,9 @@ import org.ethereum.db.PruneManager;
 import org.ethereum.db.RepositoryRoot;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.mine.Ethash;
-import org.ethereum.publish.Publisher;
+import org.ethereum.publish.BackwardCompatibilityEthereumListenerProxy;
 import org.ethereum.publish.Subscription;
-import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.BestBlockAdded;
 import org.ethereum.publish.event.Event;
 import org.ethereum.solidity.compiler.CompilationResult;
 import org.ethereum.solidity.compiler.CompilationResult.ContractMetadata;
@@ -54,8 +54,8 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Consumer;
 
+import static org.ethereum.publish.Subscription.to;
 import static org.ethereum.util.ByteUtil.wrap;
 
 /**
@@ -67,7 +67,6 @@ public class StandaloneBlockchain implements LocalBlockchain {
     private byte[] coinbase;
     private BlockchainImpl blockchain;
     private PendingStateImpl pendingState;
-    private Publisher publisher;
     private ECKey txSender;
     private long gasPrice;
     private long gasLimit;
@@ -86,6 +85,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
     private PruneManager pruneManager;
 
     private BlockSummary lastSummary;
+    private final BackwardCompatibilityEthereumListenerProxy listenerProxy;
 
     class PendingTx {
         ECKey sender;
@@ -136,7 +136,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         setSender(ECKey.fromPrivate(Hex.decode("3ec771c31cac8c0dba77a69e503765701d3c2bb62435888d4ffa38fed60c445c")));
 //        withAccountBalance(txSender.getAddress(), new BigInteger("100000000000000000000000000"));
 
-        publisher = new Publisher(EventDispatchThread.getDefault());
+        listenerProxy = BackwardCompatibilityEthereumListenerProxy.createDefault();
     }
 
     public StandaloneBlockchain withGenesis(Genesis genesis) {
@@ -438,28 +438,23 @@ public class StandaloneBlockchain implements LocalBlockchain {
         if (blockchain == null) {
             blockchain = createBlockchain(genesis);
             blockchain.setMinerCoinbase(coinbase);
-            subscribe(BlockAdded.class, blockSummary -> lastSummary = blockSummary);
+            subscribe(to(BestBlockAdded.class, data -> lastSummary = data.getBlockSummary()));
         }
         return blockchain;
     }
 
     /**
      * @param listener
-     * @deprecated use {@link #subscribe(Class, Consumer)} instead.
+     * @deprecated use {@link #subscribe(Subscription)} instead.
      */
     @Deprecated
     public void addEthereumListener(EthereumListener listener) {
         getBlockchain();
-        publisher.subscribeListener(listener);
+        listenerProxy.addListener(listener);
     }
 
     public <E extends Event<P>, P> StandaloneBlockchain subscribe(Subscription<E, P> subscription) {
-        publisher.subscribe(subscription);
-        return this;
-    }
-
-    public <E extends Event<P>, P> StandaloneBlockchain subscribe(Class<E> eventType, Consumer<P> handler) {
-        publisher.subscribe(eventType, handler);
+        listenerProxy.getPublisher().subscribe(subscription);
         return this;
     }
 
@@ -498,7 +493,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 
-        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, publisher)
+        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, listenerProxy)
                 .withSyncManager(new SyncManager());
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
@@ -506,7 +501,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
         blockchain.byTest = true;
 
-        pendingState = new PendingStateImpl(publisher);
+        pendingState = new PendingStateImpl(listenerProxy);
 
         pendingState.setBlockchain(blockchain);
         blockchain.setPendingState(pendingState);

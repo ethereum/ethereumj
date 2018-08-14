@@ -21,10 +21,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.PeerSource;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.rlpx.*;
 import org.ethereum.net.rlpx.discover.table.NodeTable;
-import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.NodeDiscovered;
 import org.ethereum.util.CollectionUtils;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,7 +60,7 @@ public class NodeManager implements Consumer<DiscoveryEvent>{
 
     PeerConnectionTester peerConnectionManager;
     PeerSource peerSource;
-    Publisher publisher;
+    EthereumListener listener;
     SystemProperties config = SystemProperties.getDefault();
 
     Consumer<DiscoveryEvent> messageSender;
@@ -85,10 +84,10 @@ public class NodeManager implements Consumer<DiscoveryEvent>{
     private ScheduledExecutorService pongTimer;
 
     @Autowired
-    public NodeManager(SystemProperties config, Publisher publisher,
+    public NodeManager(SystemProperties config, EthereumListener listener,
                        ApplicationContext ctx, PeerConnectionTester peerConnectionManager) {
         this.config = config;
-        this.publisher = publisher;
+        this.listener = listener;
         this.peerConnectionManager = peerConnectionManager;
 
         PERSIST = config.peerDiscoveryPersist();
@@ -197,14 +196,14 @@ public class NodeManager implements Consumer<DiscoveryEvent>{
             nodeHandlerMap.put(key, ret);
             logger.debug(" +++ New node: " + ret + " " + n);
             if (!n.isDiscoveryNode() && !n.getHexId().equals(homeNode.getHexId())) {
-                publisher.publish(new NodeDiscovered(ret.getNode()));
+                listener.onNodeDiscovered(ret.getNode());
             }
         } else if (ret.getNode().isDiscoveryNode() && !n.isDiscoveryNode()) {
             // we found discovery node with same host:port,
             // replace node with correct nodeId
             ret.node = n;
             if (!n.getHexId().equals(homeNode.getHexId())) {
-                publisher.publish(new NodeDiscovered(ret.getNode()));
+                listener.onNodeDiscovered(ret.getNode());
             }
             logger.debug(" +++ Found real nodeId for discovery endpoint {}", n);
         }

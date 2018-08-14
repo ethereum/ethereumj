@@ -21,7 +21,7 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.RepositoryRoot;
-import org.ethereum.publish.Publisher;
+import org.ethereum.publish.BackwardCompatibilityEthereumListenerProxy;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.junit.Before;
@@ -124,14 +124,15 @@ public class PendingStateLongRunTest {
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 
-        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, new Publisher(EventDispatchThread.getDefault()))
+        BackwardCompatibilityEthereumListenerProxy listenerProxy = BackwardCompatibilityEthereumListenerProxy.createDefault();
+        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, listenerProxy)
                 .withParentBlockHeaderValidator(new CommonConfig().parentHeaderValidator());
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
 
         blockchain.byTest = true;
 
-        PendingStateImpl pendingState = new PendingStateImpl(new Publisher(EventDispatchThread.getDefault()));
+        PendingStateImpl pendingState = new PendingStateImpl(listenerProxy);
 
         pendingState.setBlockchain(blockchain);
         blockchain.setPendingState(pendingState);

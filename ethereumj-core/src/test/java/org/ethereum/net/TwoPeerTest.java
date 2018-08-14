@@ -31,7 +31,7 @@ import org.ethereum.net.eth.message.BlockHeadersMessage;
 import org.ethereum.net.eth.message.GetBlockBodiesMessage;
 import org.ethereum.net.eth.message.GetBlockHeadersMessage;
 import org.ethereum.net.server.Channel;
-import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.BestBlockAdded;
 import org.ethereum.publish.event.message.EthStatusUpdated;
 import org.ethereum.util.RLP;
 import org.junit.Ignore;
@@ -231,8 +231,8 @@ public class TwoPeerTest {
             System.out.println("==== Got the Channel: " + data.getChannel());
         }));
 
-        ethereum2.subscribe(to(BlockAdded.class, blockSummary -> {
-            Block block = blockSummary.getBlock();
+        ethereum2.subscribe(to(BestBlockAdded.class, data -> {
+            Block block = data.getBlockSummary().getBlock();
             if (block.getNumber() == 4) {
                 semaphore.countDown();
             }

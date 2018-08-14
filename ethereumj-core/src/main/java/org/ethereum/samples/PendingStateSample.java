@@ -21,7 +21,7 @@ import org.ethereum.core.*;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.BestBlockAdded;
 import org.ethereum.publish.event.PendingTransactionsReceived;
 import org.ethereum.util.ByteUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,7 +67,7 @@ public class PendingStateSample extends TestNetSample {
                 // listening here when the PendingState is updated with new transactions
                 .subscribe(to(PendingTransactionsReceived.class, txs -> txs.forEach(this::onPendingTransactionReceived)))
                 // when block arrives look for our included transactions
-                .subscribe(to(BlockAdded.class, this::onBlock));
+                .subscribe(to(BestBlockAdded.class, this::onBlock));
 
         new Thread(() -> {
             try {
@@ -140,7 +140,8 @@ public class PendingStateSample extends TestNetSample {
      * For each block we are looking for our transactions and clearing them
      * The actual receiver balance is confirmed upon block arrival
      */
-    public void onBlock(BlockSummary blockSummary) {
+    public void onBlock(BestBlockAdded.Data data) {
+        BlockSummary blockSummary = data.getBlockSummary();
         onBlock(blockSummary.getBlock(), blockSummary.getReceipts());
     }
 

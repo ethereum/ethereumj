@@ -17,14 +17,13 @@
  */
 package org.ethereum.samples;
 
-import org.ethereum.core.BlockSummary;
 import org.ethereum.core.CallTransaction;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.BestBlockAdded;
 import org.ethereum.solidity.compiler.CompilationResult;
 import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.ethereum.util.ByteUtil;
@@ -65,7 +64,7 @@ public class CreateContractSample extends TestNetSample {
     @Override
     public void onSyncDone() throws Exception {
         // when block arrives look for our included transactions
-        ethereum.subscribe(to(BlockAdded.class, this::onBlock));
+        ethereum.subscribe(to(BestBlockAdded.class, this::onBlock));
 
         logger.info("Compiling contract...");
         SolidityCompiler.Result result = compiler.compileSrc(contract.getBytes(), true, true,
@@ -127,8 +126,8 @@ public class CreateContractSample extends TestNetSample {
         return waitForTx(tx.getHash());
     }
 
-    private void onBlock(BlockSummary blockSummary) {
-        for (TransactionReceipt receipt : blockSummary.getReceipts()) {
+    private void onBlock(BestBlockAdded.Data data) {
+        for (TransactionReceipt receipt : data.getBlockSummary().getReceipts()) {
 
             ByteArrayWrapper txHashW = new ByteArrayWrapper(receipt.getTransaction().getHash());
             if (txWaiters.containsKey(txHashW)) {

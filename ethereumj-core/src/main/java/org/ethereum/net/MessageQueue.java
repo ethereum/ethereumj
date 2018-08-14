@@ -19,15 +19,13 @@ package org.ethereum.net;
 
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.message.EthMessage;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.p2p.PingMessage;
 import org.ethereum.net.server.Channel;
-import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.Trace;
-import org.ethereum.publish.event.message.MessageSent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,16 +40,16 @@ import static org.ethereum.net.message.StaticMessages.DISCONNECT_MESSAGE;
 
 /**
  * This class contains the logic for sending messages in a queue
- *
+ * <p>
  * Messages open by send and answered by receive of appropriate message
- *      PING by PONG
- *      GET_PEERS by PEERS
- *      GET_TRANSACTIONS by TRANSACTIONS
- *      GET_BLOCK_HASHES by BLOCK_HASHES
- *      GET_BLOCKS by BLOCKS
- *
+ * PING by PONG
+ * GET_PEERS by PEERS
+ * GET_TRANSACTIONS by TRANSACTIONS
+ * GET_BLOCK_HASHES by BLOCK_HASHES
+ * GET_BLOCKS by BLOCKS
+ * <p>
  * The following messages will not be answered:
- *      PONG, PEERS, HELLO, STATUS, TRANSACTIONS, BLOCKS
+ * PONG, PEERS, HELLO, STATUS, TRANSACTIONS, BLOCKS
  *
  * @author Roman Mandeleil
  */
@@ -74,7 +72,7 @@ public class MessageQueue {
     private ChannelHandlerContext ctx = null;
 
     @Autowired
-    private Publisher publisher;
+    private EthereumListener listener;
     boolean hasPing = false;
     private ScheduledFuture<?> timerTask;
     private Channel channel;
@@ -128,8 +126,7 @@ public class MessageQueue {
     }
 
     public void receivedMessage(Message msg) throws InterruptedException {
-
-        publisher.publish(new Trace("[Recv: " + msg + "]"));
+        listener.trace("[Recv: " + msg + "]");
 
         if (requestQueue.peek() != null) {
             MessageRoundtrip messageRoundtrip = requestQueue.peek();
@@ -168,7 +165,7 @@ public class MessageQueue {
 
             Message msg = messageRoundtrip.getMsg();
 
-            publisher.publish(new MessageSent(channel, msg));
+            listener.onSendMessage(channel, msg);
 
             ctx.writeAndFlush(msg).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
 

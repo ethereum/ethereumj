@@ -22,6 +22,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.client.ConfigCapabilities;
@@ -33,9 +34,6 @@ import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.swarm.Util;
 import org.ethereum.net.swarm.bzz.BzzHandler;
-import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.Trace;
-import org.ethereum.publish.event.message.PeerHandshaked;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,7 +86,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     private int ethOutbound;
 
     @Autowired
-    private Publisher publisher;
+    private EthereumListener listener;
 
     @Autowired
     ConfigCapabilities configCapabilities;
@@ -120,7 +118,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         logger.debug("P2P protocol activated");
         msgQueue.activate(ctx);
-        publisher.publish(new Trace("P2P protocol activated"));
+        listener.trace("P2P protocol activated");
         startTimers();
     }
 
@@ -131,7 +129,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         if (P2pMessageCodes.inRange(msg.getCommand().asByte()))
             logger.trace("P2PHandler invoke: [{}]", msg.getCommand());
 
-        publisher.publish(new Trace(format("P2PHandler invoke: [%s]", msg.getCommand())));
+        listener.trace(format("P2PHandler invoke: [%s]", msg.getCommand()));
 
         switch (msg.getCommand()) {
             case HELLO:
@@ -243,7 +241,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         }
 
         //todo calculate the Offsets
-        publisher.publish(new PeerHandshaked(channel, msg));
+        listener.onHandShakePeer(channel, msg);
     }
 
     /**

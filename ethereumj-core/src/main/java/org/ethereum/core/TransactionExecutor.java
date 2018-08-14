@@ -23,9 +23,7 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.TransactionExecuted;
-import org.ethereum.publish.event.VmTraceCreated;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.util.ByteArraySet;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
@@ -77,7 +75,7 @@ public class TransactionExecutor {
     private ProgramResult result = new ProgramResult();
     private Block currentBlock;
 
-    private final Publisher publisher;
+    private final EthereumListener listener;
 
     private VM vm;
     private Program program;
@@ -95,12 +93,12 @@ public class TransactionExecutor {
     public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
                                ProgramInvokeFactory programInvokeFactory, Block currentBlock) {
 
-        this(tx, coinbase, track, blockStore, programInvokeFactory, currentBlock, new Publisher(EventDispatchThread.getDefault()), 0);
+        this(tx, coinbase, track, blockStore, programInvokeFactory, currentBlock, EthereumListener.STUB, 0);
     }
 
     public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
                                ProgramInvokeFactory programInvokeFactory, Block currentBlock,
-                               Publisher publisher, long gasUsedInTheBlock) {
+                               EthereumListener listener, long gasUsedInTheBlock) {
 
         this.tx = tx;
         this.coinbase = coinbase;
@@ -109,7 +107,7 @@ public class TransactionExecutor {
         this.blockStore = blockStore;
         this.programInvokeFactory = programInvokeFactory;
         this.currentBlock = currentBlock;
-        this.publisher = publisher;
+        this.listener = listener;
         this.gasUsedInTheBlock = gasUsedInTheBlock;
         this.m_endGas = toBI(tx.getGasLimit());
         withCommonConfig(CommonConfig.getDefault());
@@ -454,7 +452,7 @@ public class TransactionExecutor {
         }
 
 
-        publisher.publish(new TransactionExecuted(summary));
+        listener.onTransactionExecuted(summary);
 
         if (config.vmTrace() && program != null && result != null) {
             String trace = program.getTrace()
@@ -469,7 +467,7 @@ public class TransactionExecutor {
 
             String txHash = toHexString(tx.getHash());
             saveProgramTraceFile(config, txHash, trace);
-            publisher.publish(new VmTraceCreated(txHash, trace));
+            listener.onVMTraceCreated(txHash, trace);
         }
         return summary;
     }

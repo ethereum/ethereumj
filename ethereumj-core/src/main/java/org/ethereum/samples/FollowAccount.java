@@ -21,7 +21,7 @@ import org.ethereum.core.Block;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.facade.Repository;
-import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.BestBlockAdded;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -32,7 +32,7 @@ public class FollowAccount {
 
     public static void main(String[] args) {
         Ethereum ethereum = EthereumFactory.createEthereum();
-        ethereum.subscribe(to(BlockAdded.class, blockSummary -> {
+        ethereum.subscribe(to(BestBlockAdded.class, data -> {
             byte[] cow = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
 
             // Get snapshot some time ago - 10% blocks ago
@@ -48,7 +48,7 @@ public class FollowAccount {
             BigInteger nonce = repository.getNonce(cow);
 
             System.err.printf(" #%d [cd2a3d9] => snapshot_nonce:%d latest_nonce:%d\n",
-                    blockSummary.getBlock().getNumber(), nonce_, nonce);
+                    data.getBlockSummary().getBlock().getNumber(), nonce_, nonce);
         }));
     }
 }

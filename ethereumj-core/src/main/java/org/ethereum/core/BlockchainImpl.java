@@ -24,11 +24,8 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.*;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
-import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.BestBlockAdded;
-import org.ethereum.publish.event.BlockAdded;
-import org.ethereum.publish.event.Trace;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
@@ -123,7 +120,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private BigInteger totalDifficulty = ZERO;
 
     @Autowired
-    private Publisher publisher;
+    private EthereumListener listenerProxy;
 
     @Autowired
     ProgramInvokeFactory programInvokeFactory;
@@ -186,11 +183,11 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     //todo: autowire over constructor
-    public BlockchainImpl(final BlockStore blockStore, final Repository repository, Publisher publisher) {
+    public BlockchainImpl(final BlockStore blockStore, final Repository repository, EthereumListener listener) {
         this.blockStore = blockStore;
         this.repository = repository;
         this.adminInfo = new AdminInfo();
-        this.publisher = publisher;
+        this.listenerProxy = listener;
         this.parentHeaderValidator = null;
         this.transactionStore = new TransactionStore(new HashMapDB());
         this.eventDispatchThread = EventDispatchThread.getDefault();
@@ -205,11 +202,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     public BlockchainImpl withAdminInfo(AdminInfo adminInfo) {
         this.adminInfo = adminInfo;
-        return this;
-    }
-
-    public BlockchainImpl withPublisher(Publisher publisher) {
-        this.publisher = publisher;
         return this;
     }
 
@@ -454,10 +446,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         }
 
         if (ret.isSuccessful()) {
-            publisher
-                    .publish(new BlockAdded(summary))
-                    .publish(new BestBlockAdded(summary, ret == IMPORTED_BEST))
-                    .publish(new Trace(format("Block chain size: [ %d ]", this.getSize())));
+            listenerProxy.onBlock(summary, ret == IMPORTED_BEST);
+            listenerProxy.trace(format("Block chain size: [ %d ]", this.getSize()));
 
             if (ret == IMPORTED_BEST) {
                 eventDispatchThread.invokeLater(() -> pendingState.processBest(block, summary.getReceipts()));
@@ -876,7 +866,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
             Repository txTrack = track.startTracking();
             TransactionExecutor executor = new TransactionExecutor(tx, block.getCoinbase(),
-                    txTrack, blockStore, programInvokeFactory, block, publisher, totalGasUsed)
+                    txTrack, blockStore, programInvokeFactory, block, listenerProxy, totalGasUsed)
                     .withCommonConfig(commonConfig);
 
             executor.init();

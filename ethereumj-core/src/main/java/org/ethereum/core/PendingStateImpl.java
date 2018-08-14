@@ -23,11 +23,8 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.TransactionStore;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListener.PendingTransactionState;
-import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.PendingStateChanged;
-import org.ethereum.publish.event.PendingTransactionUpdated;
-import org.ethereum.publish.event.PendingTransactionsReceived;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
@@ -71,7 +68,7 @@ public class PendingStateImpl implements PendingState {
     @Autowired
     CommonConfig commonConfig = CommonConfig.getDefault();
 
-    private Publisher publisher;
+    private EthereumListener listener;
 
     @Autowired
     private BlockchainImpl blockchain;
@@ -99,8 +96,8 @@ public class PendingStateImpl implements PendingState {
     private Block best = null;
 
     @Autowired
-    public PendingStateImpl(final Publisher publisher) {
-        this.publisher = publisher;
+    public PendingStateImpl(final EthereumListener listener) {
+        this.listener = listener;
 //        this.repository = blockchain.getRepository();
     }
 
@@ -165,9 +162,8 @@ public class PendingStateImpl implements PendingState {
                 transactions.size(), unknownTx, newPending, receivedTxs.size());
 
         if (!newPending.isEmpty()) {
-            this.publisher
-                    .publish(new PendingTransactionsReceived(newPending))
-                    .publish(new PendingStateChanged(PendingStateImpl.this));
+            listener.onPendingTransactionsReceived(newPending);
+            listener.onPendingStateChanged(PendingStateImpl.this);
         }
 
         return newPending;
@@ -197,7 +193,7 @@ public class PendingStateImpl implements PendingState {
                     ByteUtil.byteArrayToLong(txReceipt.getTransaction().getNonce()),
                     block.getShortDescr(), txReceipt.getError()));
         }
-        publisher.publish(new PendingTransactionUpdated(block, txReceipt, state));
+        listener.onPendingTransactionUpdate(txReceipt, state, block);
     }
 
     /**
@@ -316,7 +312,7 @@ public class PendingStateImpl implements PendingState {
 
         updateState(newBlock);
 
-        publisher.publish(new PendingStateChanged(PendingStateImpl.this));
+        listener.onPendingStateChanged(PendingStateImpl.this);
     }
 
     private void processBestInternal(Block block, List<TransactionReceipt> receipts) {
@@ -405,7 +401,7 @@ public class PendingStateImpl implements PendingState {
 
         TransactionExecutor executor = new TransactionExecutor(
                 tx, best.getCoinbase(), getRepository(),
-                blockStore, programInvokeFactory, createFakePendingBlock(), new Publisher(EventDispatchThread.getDefault()), 0)
+                blockStore, programInvokeFactory, createFakePendingBlock(), EthereumListener.STUB, 0)
                 .withCommonConfig(commonConfig);
 
         executor.init();

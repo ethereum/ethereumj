@@ -20,7 +20,6 @@ package org.ethereum.longrun;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
-import org.ethereum.core.BlockSummary;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
@@ -28,7 +27,7 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
-import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.BestBlockAdded;
 import org.ethereum.publish.event.PeerAddedToSyncPool;
 import org.ethereum.publish.event.SyncDone;
 import org.ethereum.publish.event.message.EthStatusUpdated;
@@ -109,7 +108,7 @@ class BasicNode implements Runnable {
         // adding the main EthereumJ callback to be notified on different kind of events
         this.ethereum
                 .subscribe(to(SyncDone.class, this::onSyncDone))
-                .subscribe(to(BlockAdded.class, this::onBlock))
+                .subscribe(to(BestBlockAdded.class, this::onBlock))
                 .subscribe(to(EthStatusUpdated.class, this::onEthStatusUpdated))
                 .subscribe(to(PeerAddedToSyncPool.class, this::onPeerAddedToSyncPool));
 
@@ -192,8 +191,8 @@ class BasicNode implements Runnable {
         syncPeers.add(peer.getNode());
     }
 
-    public void onBlock(BlockSummary blockSummary) {
-        Block block = blockSummary.getBlock();
+    public void onBlock(BestBlockAdded.Data data) {
+        Block block = data.getBlockSummary().getBlock();
         bestBlock = block;
 
         if (syncComplete) {

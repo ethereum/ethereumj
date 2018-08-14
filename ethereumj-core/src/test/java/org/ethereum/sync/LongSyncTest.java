@@ -33,7 +33,7 @@ import org.ethereum.net.eth.message.GetBlockBodiesMessage;
 import org.ethereum.net.eth.message.GetBlockHeadersMessage;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.rlpx.Node;
-import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.BestBlockAdded;
 import org.ethereum.publish.event.PeerAddedToSyncPool;
 import org.ethereum.publish.event.message.EthStatusUpdated;
 import org.ethereum.publish.event.message.MessageReceived;
@@ -161,8 +161,8 @@ public class LongSyncTest {
         // A == b10, B == genesis
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereumB.subscribe(to(BlockAdded.class, blockSummary -> {
-            if (blockSummary.getBlock().isEqual(b10)) {
+        ethereumB.subscribe(to(BestBlockAdded.class, data -> {
+            if (data.getBlockSummary().getBlock().isEqual(b10)) {
                 semaphore.countDown();
             }
         }));

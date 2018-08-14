@@ -30,7 +30,7 @@ import org.ethereum.net.eth.handler.EthHandler;
 import org.ethereum.net.eth.message.*;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.rlpx.Node;
-import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.BestBlockAdded;
 import org.ethereum.publish.event.PeerAddedToSyncPool;
 import org.ethereum.publish.event.message.EthStatusUpdated;
 import org.ethereum.publish.event.message.MessageReceived;
@@ -160,8 +160,8 @@ public class ShortSyncTest {
         // A == b10, B == genesis
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereumB.subscribe(to(BlockAdded.class, blockSummary -> semaphore.countDown())
-                .conditionally(blockSummary -> blockSummary.getBlock().isEqual(b10)));
+        ethereumB.subscribe(to(BestBlockAdded.class, data -> semaphore.countDown())
+                .conditionally(data -> data.getBlockSummary().getBlock().isEqual(b10)));
 
         ethA.sendNewBlock(b10);
 
@@ -192,8 +192,8 @@ public class ShortSyncTest {
         // A == b8', B == genesis
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereumB.subscribe(to(BlockAdded.class, blockSummary -> semaphore.countDown())
-                .conditionally(blockSummary -> blockSummary.getBlock().isEqual(b8_)));
+        ethereumB.subscribe(to(BestBlockAdded.class, data -> semaphore.countDown())
+                .conditionally(data -> data.getBlockSummary().getBlock().isEqual(b8_)));
 
         ethA.sendNewBlock(b8_);
 
@@ -228,8 +228,8 @@ public class ShortSyncTest {
         // A == b10, B == b8'
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereumB.subscribe(to(BlockAdded.class, blockSummary -> {
-            Block block = blockSummary.getBlock();
+        ethereumB.subscribe(to(BestBlockAdded.class, data -> {
+            Block block = data.getBlockSummary().getBlock();
             if (block.isEqual(b10)) {
                 semaphore.countDown();
             }
@@ -273,8 +273,8 @@ public class ShortSyncTest {
         // A == b5, B == b9
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereumB.subscribe(to(BlockAdded.class, blockSummary -> semaphore.countDown())
-                .conditionally(blockSummary -> blockSummary.getBlock().equals(b10)));
+        ethereumB.subscribe(to(BestBlockAdded.class, blockSummary -> semaphore.countDown())
+                .conditionally(data -> data.getBlockSummary().getBlock().equals(b10)));
 
         ethA.sendNewBlockHashes(b5);
 
@@ -322,8 +322,8 @@ public class ShortSyncTest {
 
         final CountDownLatch semaphore = new CountDownLatch(1);
         final CountDownLatch semaphoreB8_ = new CountDownLatch(1);
-        ethereumB.subscribe(to(BlockAdded.class, blockSummary -> {
-            Block block = blockSummary.getBlock();
+        ethereumB.subscribe(to(BestBlockAdded.class, data -> {
+            Block block = data.getBlockSummary().getBlock();
             if (block.isEqual(b10)) {
                 semaphore.countDown();
             }
@@ -382,8 +382,8 @@ public class ShortSyncTest {
 
         final CountDownLatch semaphore = new CountDownLatch(1);
         final CountDownLatch semaphoreB7 = new CountDownLatch(1);
-        ethereumB.subscribe(to(BlockAdded.class, blockSummary -> {
-            Block block = blockSummary.getBlock();
+        ethereumB.subscribe(to(BestBlockAdded.class, data -> {
+            Block block = data.getBlockSummary().getBlock();
             if (block.isEqual(b7)) {
                 semaphoreB7.countDown();
             }
@@ -453,8 +453,8 @@ public class ShortSyncTest {
         }));
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereumB.subscribe(to(BlockAdded.class, blockSummary -> {
-            Block block = blockSummary.getBlock();
+        ethereumB.subscribe(to(BestBlockAdded.class, data -> {
+            Block block = data.getBlockSummary().getBlock();
             if (block.isEqual(b10)) {
                 semaphore.countDown();
             }
@@ -501,8 +501,8 @@ public class ShortSyncTest {
 
         final CountDownLatch semaphore = new CountDownLatch(1);
         final CountDownLatch semaphoreB7_ = new CountDownLatch(1);
-        ethereumB.subscribe(to(BlockAdded.class, blockSummary -> {
-            Block block = blockSummary.getBlock();
+        ethereumB.subscribe(to(BestBlockAdded.class, data -> {
+            Block block = data.getBlockSummary().getBlock();
             if (block.isEqual(b7_)) {
                 // it's time to do a re-branch
                 for (Block b : mainB1B10) {
@@ -604,8 +604,8 @@ public class ShortSyncTest {
         }
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereumB.subscribe(to(BlockAdded.class, blockSummary -> {
-            Block block = blockSummary.getBlock();
+        ethereumB.subscribe(to(BestBlockAdded.class, data -> {
+            Block block = data.getBlockSummary().getBlock();
             if (block.isEqual(b10)) {
                 semaphore.countDown();
             }
@@ -699,8 +699,8 @@ public class ShortSyncTest {
         LongSyncTest.SysPropConfigA.eth62 = null;
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereumB.subscribe(to(BlockAdded.class, blockSummary -> {
-            Block block = blockSummary.getBlock();
+        ethereumB.subscribe(to(BestBlockAdded.class, data -> {
+            Block block = data.getBlockSummary().getBlock();
             if (block.isEqual(b10)) {
                 semaphore.countDown();
             }
@@ -760,8 +760,8 @@ public class ShortSyncTest {
 
         final CountDownLatch semaphore1 = new CountDownLatch(1);
         final CountDownLatch semaphore2 = new CountDownLatch(1);
-        ethereumB.subscribe(to(BlockAdded.class, blockSummary -> {
-            if (blockSummary.getBlock().isEqual(b6_)) {
+        ethereumB.subscribe(to(BestBlockAdded.class, data -> {
+            if (data.getBlockSummary().getBlock().isEqual(b6_)) {
                 if (semaphore1.getCount() > 0) {
                     semaphore1.countDown();
                 } else {

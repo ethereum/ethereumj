@@ -24,14 +24,13 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.*;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
-import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.message.EthStatusUpdated;
 import org.ethereum.sync.PeerState;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.SyncStatistics;
@@ -127,14 +126,14 @@ public class Eth62 extends EthHandler {
 
     @Autowired
     public Eth62(final SystemProperties config, final Blockchain blockchain,
-                 final BlockStore blockStore, Publisher publisher) {
-        this(version, config, blockchain, blockStore, publisher);
+                 final BlockStore blockStore, EthereumListener listener) {
+        this(version, config, blockchain, blockStore, listener);
     }
 
     Eth62(final EthVersion version, final SystemProperties config,
           final Blockchain blockchain, final BlockStore blockStore,
-          final Publisher publisher) {
-        super(version, config, blockchain, blockStore, publisher);
+          final EthereumListener listener) {
+        super(version, config, blockchain, blockStore, listener);
     }
 
     @Override
@@ -340,7 +339,7 @@ public class Eth62 extends EthHandler {
 
             // basic checks passed, update statistics
             channel.getNodeStatistics().ethHandshake(msg);
-            getPublisher().publish(new EthStatusUpdated(channel, msg));
+            listener.onEthStatusUpdated(channel, msg);
 
             if (peerDiscoveryMode) {
                 loggerNet.trace("Peer discovery mode: STATUS received, disconnecting...");

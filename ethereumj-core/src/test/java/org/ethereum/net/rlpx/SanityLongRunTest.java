@@ -27,7 +27,7 @@ import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.shh.MessageWatcher;
 import org.ethereum.net.shh.WhisperMessage;
-import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.BestBlockAdded;
 import org.ethereum.publish.event.message.MessageReceived;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -129,7 +129,7 @@ public class SanityLongRunTest {
         final CountDownLatch semaphoreFirstBlock = new CountDownLatch(1);
 
         AtomicInteger blocksCnt = new AtomicInteger();
-        ethereum2.subscribe(to(BlockAdded.class, blockSummary -> {
+        ethereum2.subscribe(to(BestBlockAdded.class, data -> {
             blocksCnt.addAndGet(1);
             if (blocksCnt.get() % 1000 == 0 || blocksCnt.get() == 1) {
                 System.out.println("=== Blocks imported: " + blocksCnt);

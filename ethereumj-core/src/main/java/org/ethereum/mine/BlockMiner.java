@@ -38,7 +38,9 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static java.lang.Math.max;
 import static org.ethereum.publish.Subscription.to;
@@ -51,8 +53,6 @@ import static org.ethereum.publish.Subscription.to;
 @Component
 public class BlockMiner {
     private static final Logger logger = LoggerFactory.getLogger("mine");
-
-    private static ExecutorService executor = Executors.newSingleThreadExecutor();
 
     private Blockchain blockchain;
 
@@ -81,8 +81,6 @@ public class BlockMiner {
     private int UNCLE_LIST_LIMIT;
     private int UNCLE_GENERATION_LIMIT;
 
-    private final Publisher publisher;
-
     @Autowired
     public BlockMiner(final SystemProperties config, Publisher publisher,
                       final Blockchain blockchain, final BlockStore blockStore,
@@ -97,7 +95,8 @@ public class BlockMiner {
         this.minBlockTimeout = config.getMineMinBlockTimeoutMsec();
         this.cpuThreads = config.getMineCpuThreads();
         this.fullMining = config.isMineFullDataset();
-        this.publisher = publisher
+
+        publisher
                 .subscribe(to(PendingStateChanged.class, ps -> onPendingStateChanged()))
                 .subscribe(to(SyncDone.class, s -> {
                     if (config.minerStart() && config.isSyncEnabled()) {

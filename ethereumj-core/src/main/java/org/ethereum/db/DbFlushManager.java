@@ -35,6 +35,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
 
+import static org.ethereum.publish.Subscription.to;
+
 /**
  * Created by Anton Nashatyrev on 01.12.2016.
  */
@@ -73,12 +75,12 @@ public class DbFlushManager {
     public void setPublisher(Publisher publisher) {
         if (!flushAfterSyncDone) return;
 
-        publisher.subscribe(SyncDone.class, state -> {
+        publisher.subscribe(to(SyncDone.class, state -> {
             if (state == EthereumListener.SyncState.COMPLETE) {
                 logger.info("DbFlushManager: long sync done, flushing each block now");
                 syncDone = true;
             }
-        });
+        }));
     }
 
     public void setSizeThreshold(long sizeThreshold) {

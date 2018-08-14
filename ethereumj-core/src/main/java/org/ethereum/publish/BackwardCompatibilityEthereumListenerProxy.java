@@ -22,6 +22,14 @@ public class BackwardCompatibilityEthereumListenerProxy implements EthereumListe
         this.publisher = publisher;
     }
 
+    public CompositeEthereumListener getCompositeListener() {
+        return compositeListener;
+    }
+
+    public Publisher getPublisher() {
+        return publisher;
+    }
+
     public void addListener(EthereumListener listener) {
         this.compositeListener.addListener(listener);
     }
@@ -70,6 +78,7 @@ public class BackwardCompatibilityEthereumListenerProxy implements EthereumListe
     @Override
     public void onBlock(BlockSummary blockSummary, boolean best) {
         compositeListener.onBlock(blockSummary, best);
+        compositeListener.onBlock(blockSummary);
         publisher.publish(Events.onBlockAdded(blockSummary, best));
     }
 
@@ -123,5 +132,13 @@ public class BackwardCompatibilityEthereumListenerProxy implements EthereumListe
     public void onPeerAddedToSyncPool(Channel peer) {
         compositeListener.onPeerAddedToSyncPool(peer);
         publisher.publish(Events.onPeerAddedToSyncPool(peer));
+    }
+
+    public static BackwardCompatibilityEthereumListenerProxy createDefault() {
+        EventDispatchThread eventDispatchThread = EventDispatchThread.getDefault();
+        CompositeEthereumListener compositeEthereumListener = new CompositeEthereumListener(eventDispatchThread);
+        Publisher publisher = new Publisher(eventDispatchThread);
+
+        return new BackwardCompatibilityEthereumListenerProxy(compositeEthereumListener, publisher);
     }
 }

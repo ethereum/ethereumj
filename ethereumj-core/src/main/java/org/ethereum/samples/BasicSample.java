@@ -25,12 +25,13 @@ import ch.qos.logback.core.filter.Filter;
 import ch.qos.logback.core.spi.FilterReply;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockSummary;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.rlpx.Node;
-import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.BestBlockAdded;
 import org.ethereum.publish.event.NodeDiscovered;
 import org.ethereum.publish.event.PeerAddedToSyncPool;
 import org.ethereum.publish.event.SyncDone;
@@ -140,9 +141,10 @@ public class BasicSample implements Runnable {
                         .conditionally(node -> nodesDiscovered.size() < 1000))
                 .subscribe(to(EthStatusUpdated.class, data -> ethNodes.put(data.getChannel().getNode(), data.getMessage())))
                 .subscribe(to(PeerAddedToSyncPool.class, peer -> syncPeers.add(peer.getNode())))
-                .subscribe(to(BlockAdded.class, bs -> {
-                    Block block = bs.getBlock();
-                    List<TransactionReceipt> receipts = bs.getReceipts();
+                .subscribe(to(BestBlockAdded.class, data -> {
+                    BlockSummary blockSummary = data.getBlockSummary();
+                    Block block = blockSummary.getBlock();
+                    List<TransactionReceipt> receipts = blockSummary.getReceipts();
 
                     bestBlock = block;
                     txCount += receipts.size();

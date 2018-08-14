@@ -19,13 +19,16 @@ package org.ethereum.net.eth.handler;
 
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.Blockchain;
+import org.ethereum.core.BlockchainImpl;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.BlockStoreDummy;
 import org.ethereum.net.eth.message.EthMessage;
 import org.ethereum.net.eth.message.GetBlockBodiesMessage;
 import org.ethereum.net.eth.message.GetBlockHeadersMessage;
-import org.ethereum.publish.Publisher;
+import org.ethereum.publish.BackwardCompatibilityEthereumListenerProxy;
 import org.ethereum.sync.SyncManager;
 import org.junit.Before;
 import org.junit.Test;
@@ -93,7 +96,7 @@ public class LockBlockchainTest {
         };
 
         SysPropConfig1.testHandler = new Eth62(SysPropConfig1.props, blockchain, blockStoreDummy,
-                new Publisher(EventDispatchThread.getDefault())) {
+                BackwardCompatibilityEthereumListenerProxy.createDefault()) {
             {
                 this.blockstore = blockStoreDummy;
                 this.syncManager = Mockito.mock(SyncManager.class);

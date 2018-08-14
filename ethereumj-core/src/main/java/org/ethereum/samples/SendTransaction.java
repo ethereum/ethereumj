@@ -17,14 +17,13 @@
  */
 package org.ethereum.samples;
 
-import org.ethereum.core.BlockSummary;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.BestBlockAdded;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.blockchain.EtherUtil;
 import org.spongycastle.util.encoders.Hex;
@@ -51,7 +50,7 @@ public class SendTransaction extends BasicSample {
     @Override
     public void onSyncDone() throws Exception {
         // when block arrives look for our included transactions
-        this.ethereum.subscribe(to(BlockAdded.class, this::onBlock));
+        this.ethereum.subscribe(to(BestBlockAdded.class, this::onBlock));
 
         String toAddress = "";
         logger.info("Sending transaction to net and waiting for inclusion");
@@ -59,8 +58,8 @@ public class SendTransaction extends BasicSample {
         logger.info("Transaction included!");
     }
 
-    private void onBlock(BlockSummary blockSummary) {
-        for (TransactionReceipt receipt : blockSummary.getReceipts()) {
+    private void onBlock(BestBlockAdded.Data data) {
+        for (TransactionReceipt receipt : data.getBlockSummary().getReceipts()) {
             ByteArrayWrapper txHashW = new ByteArrayWrapper(receipt.getTransaction().getHash());
             if (txWaiters.containsKey(txHashW)) {
                 txWaiters.put(txHashW, receipt);

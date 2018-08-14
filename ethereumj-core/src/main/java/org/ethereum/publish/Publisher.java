@@ -1,17 +1,9 @@
 package org.ethereum.publish;
 
-import org.ethereum.core.*;
-import org.ethereum.listener.EthereumListener;
-import org.ethereum.net.eth.message.StatusMessage;
-import org.ethereum.net.message.Message;
-import org.ethereum.net.p2p.HelloMessage;
-import org.ethereum.net.rlpx.Node;
-import org.ethereum.net.server.Channel;
-import org.ethereum.publish.event.*;
-import org.ethereum.publish.event.message.EthStatusUpdated;
-import org.ethereum.publish.event.message.PeerHandshaked;
-import org.ethereum.publish.event.message.MessageReceived;
-import org.ethereum.publish.event.message.MessageSent;
+import org.ethereum.core.EventDispatchThread;
+import org.ethereum.publish.event.Event;
+import org.ethereum.publish.event.SignalEvent;
+import org.ethereum.publish.event.Single;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +18,6 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.toList;
-import static org.ethereum.publish.Subscription.to;
 
 /**
  * Event publisher that uses pub/sub model to deliver event messages.<br>
@@ -199,128 +190,5 @@ public class Publisher {
         return subscriptionsByEvent.values().stream()
                 .mapToInt(List::size)
                 .sum();
-    }
-
-    /**
-     * Method that subscribes all {@link EthereumListener} callbacks to corresponding events.
-     * Avoid using this method directly, because it creates unnecessary stub {@link Subscription}s.
-     * Uses for backward compatibility only and will be removed in future releases.
-     *
-     * @param listener highly likely {@link org.ethereum.listener.EthereumListenerAdapter} subclass.
-     */
-    public void subscribeListener(EthereumListener listener) {
-        this
-                .subscribe(to(Trace.class, listener::trace))
-                .subscribe(to(NodeDiscovered.class, listener::onNodeDiscovered))
-                .subscribe(to(PeerHandshaked.class, data -> listener.onHandShakePeer(data.getChannel(), data.getMessage())))
-                .subscribe(to(EthStatusUpdated.class, data -> listener.onEthStatusUpdated(data.getChannel(), data.getMessage())))
-                .subscribe(to(MessageReceived.class, data -> listener.onRecvMessage(data.getChannel(), data.getMessage())))
-                .subscribe(to(MessageSent.class, data -> listener.onSendMessage(data.getChannel(), data.getMessage())))
-                .subscribe(to(BlockAdded.class, listener::onBlock))
-                .subscribe(to(BestBlockAdded.class, data -> listener.onBlock(data.getBlockSummary(), data.isBest())))
-                .subscribe(to(PeerDisconnected.class, data -> listener.onPeerDisconnect(data.getHost(), data.getPort())))
-                .subscribe(to(PendingTransactionsReceived.class, listener::onPendingTransactionsReceived))
-                .subscribe(to(PendingStateChanged.class, listener::onPendingStateChanged))
-                .subscribe(to(PendingTransactionUpdated.class, data -> listener.onPendingTransactionUpdate(data.getReceipt(), data.getState(), data.getBlock())))
-                .subscribe(to(SyncDone.class, listener::onSyncDone))
-                .subscribe(to(NoConnections.class, data -> listener.onNoConnections()))
-                .subscribe(to(VmTraceCreated.class, data -> listener.onVMTraceCreated(data.getTxHash(), data.getTrace())))
-                .subscribe(to(TransactionExecuted.class, listener::onTransactionExecuted))
-                .subscribe(to(PeerAddedToSyncPool.class, listener::onPeerAddedToSyncPool));
-    }
-
-    /**
-     * Creates backward compatibility adaptor for {@link EthereumListener}.
-     * Uses for backward compatibility only and will be removed in future releases.
-     *
-     * @return instance of EthereumListener that proxies all method invokes to publishing corresponding events.
-     */
-    public EthereumListener asListener() {
-        return new EthereumListener() {
-            @Override
-            public void trace(String output) {
-                publish(new Trace(output));
-            }
-
-            @Override
-            public void onNodeDiscovered(Node node) {
-                publish(new NodeDiscovered(node));
-            }
-
-            @Override
-            public void onHandShakePeer(Channel channel, HelloMessage helloMessage) {
-                publish(new PeerHandshaked(channel, helloMessage));
-            }
-
-            @Override
-            public void onEthStatusUpdated(Channel channel, StatusMessage status) {
-                publish(new EthStatusUpdated(channel, status));
-            }
-
-            @Override
-            public void onRecvMessage(Channel channel, Message message) {
-                publish(new MessageReceived(channel, message));
-            }
-
-            @Override
-            public void onSendMessage(Channel channel, Message message) {
-                publish(new MessageSent(channel, message));
-            }
-
-            @Override
-            public void onBlock(BlockSummary blockSummary) {
-                publish(new BlockAdded(blockSummary));
-            }
-
-            @Override
-            public void onBlock(BlockSummary blockSummary, boolean best) {
-                publish(new BestBlockAdded(blockSummary, best));
-            }
-
-            @Override
-            public void onPeerDisconnect(String host, long port) {
-                publish(new PeerDisconnected(host, port));
-            }
-
-            @Override
-            public void onPendingTransactionsReceived(List<Transaction> transactions) {
-                publish(new PendingTransactionsReceived(transactions));
-            }
-
-            @Override
-            public void onPendingStateChanged(PendingState pendingState) {
-                publish(new PendingStateChanged(pendingState));
-            }
-
-            @Override
-            public void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state, Block block) {
-                publish(new PendingTransactionUpdated(block, txReceipt, state));
-            }
-
-            @Override
-            public void onSyncDone(SyncState state) {
-                publish(new SyncDone(state));
-            }
-
-            @Override
-            public void onNoConnections() {
-                publish(new NoConnections());
-            }
-
-            @Override
-            public void onVMTraceCreated(String transactionHash, String trace) {
-                publish(new VmTraceCreated(transactionHash, trace));
-            }
-
-            @Override
-            public void onTransactionExecuted(TransactionExecutionSummary summary) {
-                publish(new TransactionExecuted(summary));
-            }
-
-            @Override
-            public void onPeerAddedToSyncPool(Channel peer) {
-                publish(new PeerAddedToSyncPool(peer));
-            }
-        };
     }
 }

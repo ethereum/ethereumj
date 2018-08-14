@@ -38,7 +38,7 @@ import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
 import org.ethereum.publish.Publisher;
 import org.ethereum.publish.Subscription;
-import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.BestBlockAdded;
 import org.ethereum.publish.event.Event;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.util.ByteUtil;
@@ -64,6 +64,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import static org.ethereum.publish.Subscription.to;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
@@ -122,9 +123,9 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
 
     @PostConstruct
     public void init() {
-        publisher.subscribe(BlockAdded.class, blockSummary -> {
-            blockSummary.getBlock().getTransactionsList().forEach(gasPriceTracker::onTransaction);
-        });
+        publisher.subscribe(to(BestBlockAdded.class, data -> {
+            data.getBlockSummary().getBlock().getTransactionsList().forEach(gasPriceTracker::onTransaction);
+        }));
     }
 
     @Override
@@ -173,7 +174,7 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
 
     @Override
     public void addListener(EthereumListener listener) {
-        worldManager.getPublisher().subscribeListener(listener);
+        worldManager.addListener(listener);
     }
 
     @Override
@@ -266,7 +267,7 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
                 Repository txTrack = track.startTracking();
                 org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor(
                         tx, block.getCoinbase(), txTrack, worldManager.getBlockStore(),
-                        programInvokeFactory, block, worldManager.getPublisher(), 0)
+                        programInvokeFactory, block, worldManager.getListener(), 0)
                         .withCommonConfig(commonConfig);
 
                 executor.init();
@@ -298,7 +299,7 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
         try {
             org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor
                     (tx, block.getCoinbase(), repository, worldManager.getBlockStore(),
-                            programInvokeFactory, block, new Publisher(EventDispatchThread.getDefault()), 0)
+                            programInvokeFactory, block, EthereumListener.STUB, 0)
                     .withCommonConfig(commonConfig)
                     .setLocalCall(true);
 

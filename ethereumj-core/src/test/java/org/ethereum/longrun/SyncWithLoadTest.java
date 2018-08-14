@@ -25,8 +25,8 @@ import org.ethereum.core.*;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.listener.EthereumListener;
+import org.ethereum.publish.event.BestBlockAdded;
 import org.ethereum.publish.event.PendingTransactionsReceived;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.util.FastByteComparisons;
@@ -197,7 +197,7 @@ public class SyncWithLoadTest {
                 try {
                     TransactionExecutor executor = new TransactionExecutor
                             (tx, block.getCoinbase(), repository, ethereum.getBlockchain().getBlockStore(),
-                                    programInvokeFactory, block, new Publisher(EventDispatchThread.getDefault()), 0)
+                                    programInvokeFactory, block, EthereumListener.STUB, 0)
                             .withCommonConfig(commonConfig)
                             .setLocalCall(true);
 
@@ -221,7 +221,7 @@ public class SyncWithLoadTest {
         public void run() {
             try {
                 this.ethereum
-                        .subscribe(to(BlockAdded.class, this::onBlock))
+                        .subscribe(to(BestBlockAdded.class, this::onBlock))
                         .subscribe(to(PendingTransactionsReceived.class, this::onPendingTransactionsReceived));
 
                 // Run 1-30 minutes
