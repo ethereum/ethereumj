@@ -48,7 +48,6 @@ import static java.util.stream.Collectors.toList;
  * }
  * </p>
  *
- * @see EventDispatchThread
  * @see Subscription
  * @see Event
  * @see SignalEvent

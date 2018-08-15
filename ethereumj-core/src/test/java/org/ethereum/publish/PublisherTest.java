@@ -114,6 +114,22 @@ public class PublisherTest {
     }
 
     @Test
+    public void testOneOffSubscription() {
+        AtomicInteger actual = new AtomicInteger();
+        final int expected = 5;
+
+        Publisher publisher = createPublisher()
+                .subscribe(to(IntEvent.class, actual::set)
+                        .oneOff(num -> num == expected));
+
+        IntStream.rangeClosed(1, 10)
+                .mapToObj(IntEvent::new)
+                .forEach(publisher::publish);
+
+        assertEquals(expected, actual.get());
+    }
+
+    @Test
     public void testPublishing() {
 
         AtomicLong longEvenSum = new AtomicLong();

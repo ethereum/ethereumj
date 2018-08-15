@@ -62,6 +62,19 @@ public class Subscription<E extends Event<D>, D> {
     }
 
     /**
+     * Optionally adds {@link #conditionally(Function)} and {@link #unsubscribeAfter(Function)} clauses with the same
+     * condition. It helps achieve specific behavior, when subscriber consumes and then unsubscribe from event source.
+     *
+     * @param condition
+     * @return current {@link Subscription} instance to support fluent API.
+     */
+    public Subscription<E, D> oneOff(Function<D, Boolean> condition) {
+        return this
+                .conditionally(condition)
+                .unsubscribeAfter(condition);
+    }
+
+    /**
      * Tests specified event whether it should be consumed.
      *
      * @param event event to test;
