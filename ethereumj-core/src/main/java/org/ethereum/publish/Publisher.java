@@ -14,7 +14,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
-import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.toList;
@@ -60,22 +59,28 @@ public class Publisher {
     private static final Logger log = LoggerFactory.getLogger("events");
 
     private class Command implements Runnable {
-        private final List<Subscription> subscriptions;
+        private final Subscription subscription;
         private final Event event;
 
-        private Command(List<Subscription> subscriptions, Event event) {
-            this.subscriptions = subscriptions;
+        private Command(Subscription subscription, Event event) {
+            this.subscription = subscription;
             this.event = event;
         }
 
         @Override
         public void run() {
-            subscriptions.forEach(subscription -> subscription.handle(event));
+            try {
+                subscription.handle(event);
+            } finally {
+                if (subscription.needUnsubscribeAfter(event)) {
+                    Publisher.this.unsubscribe(subscription);
+                }
+            }
         }
 
         @Override
         public String toString() {
-            return format("%s: consumed by %d subscriber(s).", event, subscriptions.size());
+            return event.toString();
         }
     }
 
@@ -94,25 +99,13 @@ public class Publisher {
      * @return current {@link Publisher} instance to support fluent API.
      */
     public Publisher publish(Event event) {
-        List<Subscription> subscriptions = subscriptionsByEvent.getOrDefault(event.getClass(), emptyList());
-        if (!subscriptions.isEmpty()) {
+        subscriptionsByEvent.getOrDefault(event.getClass(), emptyList()).stream()
+                .filter(subscription -> subscription.matches(event))
+                .map(subscription -> new Command(subscription, event))
+                .forEach(executor::execute);
 
-            List<Subscription> toHandle = subscriptions.stream()
-                    .filter(subscription -> subscription.matches(event))
-                    .collect(toList());
-
-            subscriptions.stream()
-                    .filter(subscription -> subscription.needUnsubscribeAfter(event))
-                    .forEach(this::unsubscribe);
-
-            if (event instanceof OneOffEvent) {
-                subscriptionsByEvent.remove(event.getClass());
-            }
-
-
-            if (!toHandle.isEmpty()) {
-                executor.execute(new Command(toHandle, event));
-            }
+        if (event instanceof OneOffEvent) {
+            subscriptionsByEvent.remove(event.getClass());
         }
 
         return this;
@@ -135,21 +128,6 @@ public class Publisher {
             subscriptions.add(subscription);
         }
         return this;
-    }
-
-    /**
-     * Creates {@link Subscription} from specified parameters and adds it to current publisher.
-     *
-     * @param eventType even's type to subscribe;
-     * @param handler   callback that will be invoked after event will be published;
-     * @param <E>       event's type;
-     * @param <P>       payload of specified event;
-     * @return created {@link Subscription} instance.
-     */
-    public <E extends Event<P>, P> Subscription<E, P> subscribe(Class<E> eventType, Consumer<P> handler) {
-        Subscription<E, P> subscription = new Subscription<>(eventType, handler);
-        subscribe(subscription);
-        return subscription;
     }
 
     /**

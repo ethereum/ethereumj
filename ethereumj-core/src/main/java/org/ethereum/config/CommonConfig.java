@@ -28,7 +28,7 @@ import org.ethereum.db.*;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.handler.Eth63;
-import org.ethereum.publish.BackwardCompatibilityEthereumListenerProxy;
+import org.ethereum.listener.BackwardCompatibilityEthereumListenerProxy;
 import org.ethereum.publish.Publisher;
 import org.ethereum.sync.FastSyncManager;
 import org.ethereum.validator.*;

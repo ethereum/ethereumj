@@ -21,7 +21,7 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.RepositoryRoot;
-import org.ethereum.publish.BackwardCompatibilityEthereumListenerProxy;
+import org.ethereum.listener.BackwardCompatibilityEthereumListenerProxy;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.junit.Before;

@@ -130,6 +130,26 @@ public class PublisherTest {
     }
 
     @Test
+    public void testLifeCycleSubscription() {
+        AtomicInteger actual = new AtomicInteger();
+        final int expected = 5;
+
+        Publisher publisher = createPublisher()
+                .subscribe(LifeCycleSubscription.to(IntEvent.class, (num, lc) -> {
+                    if (num == expected) {
+                        actual.set(num);
+                        lc.unsubscribe();
+                    }
+                }));
+
+        IntStream.rangeClosed(1, 10)
+                .mapToObj(IntEvent::new)
+                .forEach(publisher::publish);
+
+        assertEquals(expected, actual.get());
+    }
+
+    @Test
     public void testPublishing() {
 
         AtomicLong longEvenSum = new AtomicLong();

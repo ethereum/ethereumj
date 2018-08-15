@@ -27,7 +27,7 @@ import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.RepositoryRoot;
 import org.ethereum.mine.Ethash;
-import org.ethereum.publish.BackwardCompatibilityEthereumListenerProxy;
+import org.ethereum.listener.BackwardCompatibilityEthereumListenerProxy;
 import org.ethereum.publish.event.TransactionExecuted;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.blockchain.SolidityContract;

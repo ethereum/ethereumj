@@ -28,7 +28,7 @@ import org.ethereum.db.BlockStoreDummy;
 import org.ethereum.net.eth.message.EthMessage;
 import org.ethereum.net.eth.message.GetBlockBodiesMessage;
 import org.ethereum.net.eth.message.GetBlockHeadersMessage;
-import org.ethereum.publish.BackwardCompatibilityEthereumListenerProxy;
+import org.ethereum.listener.BackwardCompatibilityEthereumListenerProxy;
 import org.ethereum.sync.SyncManager;
 import org.junit.Before;
 import org.junit.Test;

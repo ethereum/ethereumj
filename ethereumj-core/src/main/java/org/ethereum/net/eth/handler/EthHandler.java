@@ -31,7 +31,7 @@ import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.server.Channel;
-import org.ethereum.publish.BackwardCompatibilityEthereumListenerProxy;
+import org.ethereum.listener.BackwardCompatibilityEthereumListenerProxy;
 import org.ethereum.publish.Publisher;
 import org.ethereum.publish.Subscription;
 import org.ethereum.publish.event.BlockAdded;
@@ -80,7 +80,8 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         this.blockchain = blockchain;
         this.bestBlock = blockStore.getBestBlock();
         this.listener = listener;
-        this.bestBlockSub = getPublisher().subscribe(BlockAdded.class, this::setBestBlock);
+        this.bestBlockSub = Subscription.to(BlockAdded.class, this::setBestBlock);
+        getPublisher().subscribe(this.bestBlockSub);
 
         // when sync enabled we delay transactions processing until sync is complete
         this.processTransactions = !config.isSyncEnabled();

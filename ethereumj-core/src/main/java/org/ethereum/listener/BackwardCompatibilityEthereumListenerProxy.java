@@ -1,13 +1,12 @@
-package org.ethereum.publish;
+package org.ethereum.listener;
 
 import org.ethereum.core.*;
-import org.ethereum.listener.CompositeEthereumListener;
-import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
+import org.ethereum.publish.Publisher;
 import org.ethereum.publish.event.Events;
 
 import java.util.List;

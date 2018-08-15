@@ -27,7 +27,7 @@ import org.ethereum.jsontestsuite.suite.builder.RepositoryBuilder;
 import org.ethereum.jsontestsuite.suite.model.BlockTck;
 import org.ethereum.jsontestsuite.suite.validators.BlockHeaderValidator;
 import org.ethereum.jsontestsuite.suite.validators.RepositoryValidator;
-import org.ethereum.publish.BackwardCompatibilityEthereumListenerProxy;
+import org.ethereum.listener.BackwardCompatibilityEthereumListenerProxy;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;

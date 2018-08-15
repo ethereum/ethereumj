@@ -32,7 +32,7 @@ import org.ethereum.db.PruneManager;
 import org.ethereum.db.RepositoryRoot;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.mine.Ethash;
-import org.ethereum.publish.BackwardCompatibilityEthereumListenerProxy;
+import org.ethereum.listener.BackwardCompatibilityEthereumListenerProxy;
 import org.ethereum.publish.Subscription;
 import org.ethereum.publish.event.BlockAdded;
 import org.ethereum.publish.event.Event;

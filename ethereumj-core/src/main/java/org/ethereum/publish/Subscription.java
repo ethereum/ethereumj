@@ -4,6 +4,7 @@ import org.ethereum.publish.event.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -25,7 +26,7 @@ public class Subscription<E extends Event<D>, D> {
     private Function<D, Boolean> handleCondition;
     private Function<D, Boolean> unsubscribeCondition;
 
-    public Subscription(Class<E> eventType, Consumer<D> consumer) {
+    Subscription(Class<E> eventType, Consumer<D> consumer) {
         this.eventType = eventType;
         this.consumer = consumer;
     }
@@ -91,10 +92,14 @@ public class Subscription<E extends Event<D>, D> {
      */
     void handle(E event) {
         try {
-            consumer.accept(event.getPayload());
+            handlePayload(event.getPayload());
         } catch (Throwable e) {
             log.error(eventType.getSimpleName() + " handling error: ", e);
         }
+    }
+
+    protected void handlePayload(D payload) {
+        consumer.accept(payload);
     }
 
     /**

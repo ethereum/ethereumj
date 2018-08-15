@@ -28,7 +28,7 @@ import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.rlpx.discover.UDPListener;
 import org.ethereum.net.server.ChannelManager;
-import org.ethereum.publish.BackwardCompatibilityEthereumListenerProxy;
+import org.ethereum.listener.BackwardCompatibilityEthereumListenerProxy;
 import org.ethereum.publish.Publisher;
 import org.ethereum.publish.event.Event;
 import org.ethereum.sync.FastSyncManager;
