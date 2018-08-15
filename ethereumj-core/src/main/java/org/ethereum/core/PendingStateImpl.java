@@ -33,9 +33,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
 
-import static org.ethereum.listener.EthereumListener.PendingTransactionState.*;
+import static org.ethereum.listener.EthereumListener.PendingTransactionState.DROPPED;
+import static org.ethereum.listener.EthereumListener.PendingTransactionState.INCLUDED;
+import static org.ethereum.listener.EthereumListener.PendingTransactionState.NEW_PENDING;
+import static org.ethereum.listener.EthereumListener.PendingTransactionState.PENDING;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
