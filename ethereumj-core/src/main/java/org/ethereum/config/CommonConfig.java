@@ -195,13 +195,14 @@ public class CommonConfig {
     }
 
     public void fastSyncCleanUp() {
+        if (!systemProperties().isSyncEnabled()) return;
         byte[] fastsyncStageBytes = blockchainDB().get(FastSyncManager.FASTSYNC_DB_KEY_SYNC_STAGE);
         if (fastsyncStageBytes == null) return; // no uncompleted fast sync
         if (!systemProperties().blocksLoader().isEmpty()) return; // blocks loader enabled
 
         EthereumListener.SyncState syncStage = EthereumListener.SyncState.values()[fastsyncStageBytes[0]];
 
-        if ((systemProperties().isSyncEnabled() && !systemProperties().isFastSyncEnabled()) || syncStage == EthereumListener.SyncState.UNSECURE) {
+        if (!systemProperties().isFastSyncEnabled() || syncStage == EthereumListener.SyncState.UNSECURE) {
             // we need to cleanup state/blocks/tranasaction DBs when previous fast sync was not complete:
             // - if we now want to do regular sync
             // - if the first fastsync stage was not complete (thus DBs are not in consistent state)
