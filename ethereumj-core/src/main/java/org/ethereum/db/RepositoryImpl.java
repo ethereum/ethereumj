@@ -46,7 +46,7 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
     @Autowired
     protected SystemProperties config = SystemProperties.getDefault();
 
-    protected RepositoryImpl() {
+    public RepositoryImpl() {
     }
 
     public RepositoryImpl(Source<byte[], AccountState> accountStateCache, Source<byte[], byte[]> codeCache,

@@ -17,6 +17,18 @@
  */
 package org.ethereum.vm.program;
 
+import static java.lang.StrictMath.min;
+import static java.lang.String.format;
+import static java.math.BigInteger.ZERO;
+import static org.apache.commons.lang3.ArrayUtils.*;
+import static org.ethereum.util.BIUtil.*;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.util.ByteUtil.toHexString;
+
+import java.io.ByteArrayOutputStream;
+import java.math.BigInteger;
+import java.util.*;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
@@ -30,31 +42,23 @@ import org.ethereum.util.ByteArraySet;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.Utils;
-import org.ethereum.vm.*;
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.MessageCall;
+import org.ethereum.vm.OpCode;
 import org.ethereum.vm.PrecompiledContracts.PrecompiledContract;
+import org.ethereum.vm.VM;
 import org.ethereum.vm.program.invoke.ProgramInvoke;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.ethereum.vm.program.listener.CompositeProgramListener;
 import org.ethereum.vm.program.listener.ProgramListenerAware;
 import org.ethereum.vm.program.listener.ProgramStorageChangeListener;
-import org.ethereum.vm.trace.ProgramTraceListener;
+import org.ethereum.vm.trace.DefaultProgramTrace;
 import org.ethereum.vm.trace.ProgramTrace;
+import org.ethereum.vm.trace.ProgramTraceListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-
-import java.io.ByteArrayOutputStream;
-import java.math.BigInteger;
-import java.util.*;
-
-import static java.lang.StrictMath.min;
-import static java.lang.String.format;
-import static java.math.BigInteger.ZERO;
-import static org.apache.commons.lang3.ArrayUtils.*;
-import static org.ethereum.util.BIUtil.*;
-import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * @author Roman Mandeleil
@@ -65,14 +69,14 @@ public class Program {
     private static final Logger logger = LoggerFactory.getLogger("VM");
 
     /**
-     * This attribute defines the number of recursive calls allowed in the EVM
-     * Note: For the JVM to reach this level without a StackOverflow exception,
-     * ethereumj may need to be started with a JVM argument to increase
-     * the stack size. For example: -Xss10m
+     * This attribute defines the number of recursive calls allowed in the EVM Note:
+     * For the JVM to reach this level without a StackOverflow exception, ethereumj
+     * may need to be started with a JVM argument to increase the stack size. For
+     * example: -Xss10m
      */
     private static final int MAX_DEPTH = 1024;
 
-    //Max size for stack checks
+    // Max size for stack checks
     private static final int MAX_STACKSIZE = 1024;
 
     private Transaction transaction;
@@ -85,13 +89,13 @@ public class Program {
     private ProgramStorageChangeListener storageDiffListener = new ProgramStorageChangeListener();
     private CompositeProgramListener programListener = new CompositeProgramListener();
 
-    private Stack stack;
-    private Memory memory;
-    private Storage storage;
+    private Stack stack = new NullStack();
+    private Memory memory = new NullMemory();
+    private Storage storage = new NullStorage();
     private byte[] returnDataBuffer;
 
     private ProgramResult result = new ProgramResult();
-    private ProgramTrace trace = new ProgramTrace();
+    private ProgramTrace trace = new DefaultProgramTrace();
 
     private byte[] codeHash;
     private byte[] ops;
@@ -109,31 +113,79 @@ public class Program {
 
     private final BlockchainConfig blockchainConfig;
 
-    public Program(byte[] ops, ProgramInvoke programInvoke) {
-        this(ops, programInvoke, null);
-    }
-
-    public Program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction) {
-        this(ops, programInvoke, transaction, SystemProperties.getDefault());
-    }
-
-    public Program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction, SystemProperties config) {
+    /**
+     * Create a new Program. Use {@link ProgramFactory} to create programs.
+     * 
+     * @param ops
+     *            Ops.
+     * @param programInvoke
+     *            Program invoke.
+     * @param transaction
+     *            Transaction.
+     * @param config
+     *            Config
+     */
+    Program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction, SystemProperties config) {
         this(null, ops, programInvoke, transaction, config);
     }
 
-    public Program(byte[] codeHash, byte[] ops, ProgramInvoke programInvoke, Transaction transaction, SystemProperties config) {
+    /**
+     * Create a new Program. Use {@link ProgramFactory} to create programs.
+     * 
+     * @param codeHash
+     *            Code hash.
+     * @param ops
+     *            Ops.
+     * @param programInvoke
+     *            Program invoke.
+     * @param transaction
+     *            Transaction.
+     * @param config
+     *            Config
+     */
+    public Program(byte[] codeHash, byte[] ops, ProgramInvoke programInvoke, Transaction transaction,
+            SystemProperties config) {
+        this(codeHash, ops, programInvoke, transaction, config, new DefaultMemory(), new DefaultStack(),
+                new DefaultStorage(programInvoke), new DefaultProgramTrace(config, programInvoke));
+    }
+
+    /**
+     * Create a new Program. Use {@link ProgramFactory} to create programs.
+     * 
+     * @param codeHash
+     *            Code hash.
+     * @param ops
+     *            Ops.
+     * @param programInvoke
+     *            Program invoke.
+     * @param transaction
+     *            Transaction.
+     * @param config
+     *            Config
+     * @param memory
+     *            Memory.
+     * @param stack
+     *            Stack.
+     * @param storage
+     *            Storage.
+     * @param trace
+     *            Trace.
+     */
+    Program(byte[] codeHash, byte[] ops, ProgramInvoke programInvoke, Transaction transaction, SystemProperties config,
+            Memory memory, Stack stack, Storage storage, ProgramTrace trace) {
         this.config = config;
         this.invoke = programInvoke;
         this.transaction = transaction;
 
-        this.codeHash = codeHash == null || FastByteComparisons.equal(HashUtil.EMPTY_DATA_HASH, codeHash) ? null : codeHash;
+        this.codeHash = codeHash == null || FastByteComparisons.equal(HashUtil.EMPTY_DATA_HASH, codeHash) ? null
+                : codeHash;
         this.ops = nullToEmpty(ops);
 
         traceListener = new ProgramTraceListener(config.vmTrace());
-        this.memory = setupProgramListener(new Memory());
-        this.stack = setupProgramListener(new Stack());
-        this.storage = setupProgramListener(new Storage(programInvoke));
-        this.trace = new ProgramTrace(config, programInvoke);
+        this.memory = setupProgramListener(memory);
+        this.stack = setupProgramListener(stack);
+        this.storage = setupProgramListener(storage);
+        this.trace = trace;
         this.blockchainConfig = config.getBlockchainConfig().getConfigForBlock(programInvoke.getNumber().longValue());
     }
 
@@ -162,8 +214,8 @@ public class Program {
         return invoke.getCallDeep();
     }
 
-    private InternalTransaction addInternalTx(byte[] nonce, DataWord gasLimit, byte[] senderAddress, byte[] receiveAddress,
-                                              BigInteger value, byte[] data, String note) {
+    private InternalTransaction addInternalTx(byte[] nonce, DataWord gasLimit, byte[] senderAddress,
+            byte[] receiveAddress, BigInteger value, byte[] data, String note) {
 
         InternalTransaction result = null;
         if (transaction != null) {
@@ -235,7 +287,7 @@ public class Program {
     }
 
     public void stackPush(DataWord stackWord) {
-        verifyStackOverflow(0, 1); //Sanity Check
+        verifyStackOverflow(0, 1); // Sanity Check
         stack.push(stackWord);
     }
 
@@ -282,7 +334,8 @@ public class Program {
 
         byte[] data = Arrays.copyOfRange(ops, pc, pc + n);
         pc += n;
-        if (pc >= ops.length) stop();
+        if (pc >= ops.length)
+            stop();
 
         return data;
     }
@@ -294,9 +347,10 @@ public class Program {
     /**
      * Verifies that the stack is at least <code>stackSize</code>
      *
-     * @param stackSize int
-     * @throws StackTooSmallException If the stack is
-     *                                smaller than <code>stackSize</code>
+     * @param stackSize
+     *            int
+     * @throws StackTooSmallException
+     *             If the stack is smaller than <code>stackSize</code>
      */
     public void verifyStackSize(int stackSize) {
         if (stack.size() < stackSize) {
@@ -335,14 +389,16 @@ public class Program {
     /**
      * Allocates a piece of memory and stores value at given offset address
      *
-     * @param addr      is the offset address
-     * @param allocSize size of memory needed to write
-     * @param value     the data to write to memory
+     * @param addr
+     *            is the offset address
+     * @param allocSize
+     *            size of memory needed to write
+     * @param value
+     *            the data to write to memory
      */
     public void memorySave(int addr, int allocSize, byte[] value) {
         memory.extendAndWrite(addr, allocSize, value);
     }
-
 
     public DataWord memoryLoad(DataWord addr) {
         return memory.readWord(addr.intValue());
@@ -357,16 +413,17 @@ public class Program {
     }
 
     /**
-     * Allocates extra memory in the program for
-     * a specified size, calculated from a given offset
+     * Allocates extra memory in the program for a specified size, calculated from a
+     * given offset
      *
-     * @param offset the memory address offset
-     * @param size   the number of bytes to allocate
+     * @param offset
+     *            the memory address offset
+     * @param size
+     *            the number of bytes to allocate
      */
     public void allocateMemory(int offset, int size) {
         memory.extend(offset, size);
     }
-
 
     public void suicide(DataWord obtainerAddress) {
 
@@ -418,7 +475,7 @@ public class Program {
             logger.info("creating a new contract inside contract run: [{}]", toHexString(senderAddress));
 
         BlockchainConfig blockchainConfig = config.getBlockchainConfig().getConfigForBlock(getNumber().longValue());
-        //  actual gas subtract
+        // actual gas subtract
         DataWord gasLimit = blockchainConfig.getCreateGas(getGas());
         spendGas(gasLimit.longValue(), "internal call");
 
@@ -431,8 +488,7 @@ public class Program {
 
         if (byTestingSuite()) {
             // This keeps track of the contracts created for a test
-            getResult().addCallCreate(programCode, EMPTY_BYTE_ARRAY,
-                    gasLimit.getNoLeadZeroesData(),
+            getResult().addCallCreate(programCode, EMPTY_BYTE_ARRAY, gasLimit.getNoLeadZeroesData(),
                     value.getNoLeadZeroesData());
         }
 
@@ -444,7 +500,7 @@ public class Program {
 
         Repository track = getStorage().startTracking();
 
-        //In case of hashing collisions, check for any balance before createAccount()
+        // In case of hashing collisions, check for any balance before createAccount()
         BigInteger oldBalance = track.getBalance(newAddress);
         track.createAccount(newAddress);
         if (blockchainConfig.eip161()) {
@@ -459,12 +515,12 @@ public class Program {
             newBalance = track.addBalance(newAddress, endowment);
         }
 
-
         // [5] COOK THE INVOKE AND EXECUTE
-        InternalTransaction internalTx = addInternalTx(nonce, getGasLimit(), senderAddress, null, endowment, programCode, "create");
-        ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
-                this, new DataWord(newAddress), getOwnerAddress(), value, gasLimit,
-                newBalance, null, track, this.invoke.getBlockStore(), false, byTestingSuite());
+        InternalTransaction internalTx = addInternalTx(nonce, getGasLimit(), senderAddress, null, endowment,
+                programCode, "create");
+        ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(this, new DataWord(newAddress),
+                getOwnerAddress(), value, gasLimit, newBalance, null, track, this.invoke.getBlockStore(), false,
+                byTestingSuite());
 
         ProgramResult result = ProgramResult.createEmpty();
 
@@ -472,7 +528,9 @@ public class Program {
             result.setException(new BytecodeExecutionException("Trying to create a contract with existing contract address: 0x" + toHexString(newAddress)));
         } else if (isNotEmpty(programCode)) {
             VM vm = new VM(config);
-            Program program = new Program(programCode, programInvoke, internalTx, config).withCommonConfig(commonConfig);
+            Program program = ProgramFactory.create().withOps(programCode).withProgramInvoke(programInvoke)
+                    .withTransaction(internalTx).withConfig(config).getProgram().withCommonConfig(commonConfig);
+
             vm.play(program);
             result = program.getResult();
         }
@@ -490,9 +548,9 @@ public class Program {
                 track.saveCode(newAddress, EMPTY_BYTE_ARRAY);
             }
         } else if (getLength(code) > blockchainConfig.getConstants().getMAX_CONTRACT_SZIE()) {
-            result.setException(Program.Exception.notEnoughSpendingGas("Contract size too large: " + getLength(result.getHReturn()),
-                    storageCost, this));
-        } else if (!result.isRevert()){
+            result.setException(Program.Exception.notEnoughSpendingGas(
+                    "Contract size too large: " + getLength(result.getHReturn()), storageCost, this));
+        } else if (!result.isRevert()) {
             result.spendGas(storageCost);
             track.saveCode(newAddress, code);
         }
@@ -538,10 +596,11 @@ public class Program {
     /**
      * That method is for internal code invocations
      * <p/>
-     * - Normal calls invoke a specified contract which updates itself
-     * - Stateless calls invoke code from another contract, within the context of the caller
+     * - Normal calls invoke a specified contract which updates itself - Stateless
+     * calls invoke code from another contract, within the context of the caller
      *
-     * @param msg is the message call object
+     * @param msg
+     *            is the message call object
      */
     public void callToAddress(MessageCall msg) {
         returnDataBuffer = null; // reset return buffer right before the call
@@ -574,16 +633,13 @@ public class Program {
             return;
         }
 
-
         // FETCH THE CODE
         byte[] programCode = getStorage().isExist(codeAddress) ? getStorage().getCode(codeAddress) : EMPTY_BYTE_ARRAY;
-
 
         BigInteger contextBalance = ZERO;
         if (byTestingSuite()) {
             // This keeps track of the calls created for a test
-            getResult().addCallCreate(data, contextAddress,
-                    msg.getGas().getNoLeadZeroesData(),
+            getResult().addCallCreate(data, contextAddress, msg.getGas().getNoLeadZeroesData(),
                     msg.getEndowment().getNoLeadZeroesData());
         } else {
             track.addBalance(senderAddress, endowment.negate());
@@ -591,19 +647,20 @@ public class Program {
         }
 
         // CREATE CALL INTERNAL TRANSACTION
-        InternalTransaction internalTx = addInternalTx(null, getGasLimit(), senderAddress, contextAddress, endowment, data, "call");
+        InternalTransaction internalTx = addInternalTx(null, getGasLimit(), senderAddress, contextAddress, endowment,
+                data, "call");
 
         ProgramResult result = null;
         if (isNotEmpty(programCode)) {
-            ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
-                    this, new DataWord(contextAddress),
+            ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(this, new DataWord(contextAddress),
                     msg.getType().callIsDelegate() ? getCallerAddress() : getOwnerAddress(),
-                    msg.getType().callIsDelegate() ? getCallValue() : msg.getEndowment(),
-                    msg.getGas(), contextBalance, data, track, this.invoke.getBlockStore(),
-                    msg.getType().callIsStatic() || isStaticCall(), byTestingSuite());
+                    msg.getType().callIsDelegate() ? getCallValue() : msg.getEndowment(), msg.getGas(), contextBalance,
+                    data, track, this.invoke.getBlockStore(), msg.getType().callIsStatic() || isStaticCall(),
+                    byTestingSuite());
 
             VM vm = new VM(config);
-            Program program = new Program(getStorage().getCodeHash(codeAddress), programCode, programInvoke, internalTx, config).withCommonConfig(commonConfig);
+            Program program = new Program(getStorage().getCodeHash(codeAddress), programCode, programInvoke, internalTx,
+                    config).withCommonConfig(commonConfig);
             vm.play(program);
             result = program.getResult();
 
@@ -720,9 +777,9 @@ public class Program {
     }
 
     public DataWord getBlockHash(int index) {
-        return index < this.getNumber().longValue() && index >= Math.max(256, this.getNumber().intValue()) - 256 ?
-                new DataWord(this.invoke.getBlockStore().getBlockHashByNumber(index, getPrevHash().getData())).clone() :
-                DataWord.ZERO.clone();
+        return index < this.getNumber().longValue() && index >= Math.max(256, this.getNumber().intValue()) - 256
+                ? new DataWord(this.invoke.getBlockStore().getBlockHashByNumber(index, getPrevHash().getData())).clone()
+                : DataWord.ZERO.clone();
     }
 
     public DataWord getBalance(DataWord address) {
@@ -775,9 +832,10 @@ public class Program {
     }
 
     public byte[] getReturnDataBufferData(DataWord off, DataWord size) {
-        if ((long) off.intValueSafe() + size.intValueSafe() > getReturnDataBufferSizeI()) return null;
-        return returnDataBuffer == null ? new byte[0] :
-                Arrays.copyOfRange(returnDataBuffer, off.intValueSafe(), off.intValueSafe() + size.intValueSafe());
+        if ((long) off.intValueSafe() + size.intValueSafe() > getReturnDataBufferSizeI())
+            return null;
+        return returnDataBuffer == null ? new byte[0]
+                : Arrays.copyOfRange(returnDataBuffer, off.intValueSafe(), off.intValueSafe() + size.intValueSafe());
     }
 
     public DataWord storageLoad(DataWord key) {
@@ -836,13 +894,14 @@ public class Program {
             StringBuilder stackData = new StringBuilder();
             for (int i = 0; i < stack.size(); ++i) {
                 stackData.append(" ").append(stack.get(i));
-                if (i < stack.size() - 1) stackData.append("\n");
+                if (i < stack.size() - 1)
+                    stackData.append("\n");
             }
 
-            if (stackData.length() > 0) stackData.insert(0, "\n");
+            if (stackData.length() > 0)
+                stackData.insert(0, "\n");
 
-            ContractDetails contractDetails = getStorage().
-                    getContractDetails(getOwnerAddress().getLast20Bytes());
+            ContractDetails contractDetails = getStorage().getContractDetails(getOwnerAddress().getLast20Bytes());
             StringBuilder storageData = new StringBuilder();
             if (contractDetails != null) {
                 try {
@@ -861,10 +920,7 @@ public class Program {
             StringBuilder memoryData = new StringBuilder();
             StringBuilder oneLine = new StringBuilder();
             if (memory.size() > 320)
-                memoryData.append("... Memory Folded.... ")
-                        .append("(")
-                        .append(memory.size())
-                        .append(") bytes");
+                memoryData.append("... Memory Folded.... ").append("(").append(memory.size()).append(") bytes");
             else
                 for (int i = 0; i < memory.size(); ++i) {
 
@@ -872,15 +928,17 @@ public class Program {
                     oneLine.append(ByteUtil.oneByteToHexString(value)).append(" ");
 
                     if ((i + 1) % 16 == 0) {
-                        String tmp = format("[%4s]-[%4s]", Integer.toString(i - 15, 16),
-                                Integer.toString(i, 16)).replace(" ", "0");
+                        String tmp = format("[%4s]-[%4s]", Integer.toString(i - 15, 16), Integer.toString(i, 16))
+                                .replace(" ", "0");
                         memoryData.append("").append(tmp).append(" ");
                         memoryData.append(oneLine);
-                        if (i < memory.size()) memoryData.append("\n");
+                        if (i < memory.size())
+                            memoryData.append("\n");
                         oneLine.setLength(0);
                     }
                 }
-            if (memoryData.length() > 0) memoryData.insert(0, "\n");
+            if (memoryData.length() > 0)
+                memoryData.insert(0, "\n");
 
             StringBuilder opsString = new StringBuilder();
             for (int i = 0; i < ops.length; ++i) {
@@ -894,20 +952,21 @@ public class Program {
                     opsString.append(" >>").append(tmpString).append("");
 
             }
-            if (pc >= ops.length) opsString.append(" >>");
-            if (opsString.length() > 0) opsString.insert(0, "\n ");
+            if (pc >= ops.length)
+                opsString.append(" >>");
+            if (opsString.length() > 0)
+                opsString.insert(0, "\n ");
 
             logger.trace(" -- OPS --     {}", opsString);
             logger.trace(" -- STACK --   {}", stackData);
             logger.trace(" -- MEMORY --  {}", memoryData);
             logger.trace(" -- STORAGE -- {}\n", storageData);
-            logger.trace("\n  Spent Gas: [{}]/[{}]\n  Left Gas:  [{}]\n",
-                    getResult().getGasUsed(),
-                    invoke.getGas().longValue(),
-                    getGas().longValue());
+            logger.trace("\n  Spent Gas: [{}]/[{}]\n  Left Gas:  [{}]\n", getResult().getGasUsed(),
+                    invoke.getGas().longValue(), getGas().longValue());
 
             StringBuilder globalOutput = new StringBuilder("\n");
-            if (stackData.length() > 0) stackData.append("\n");
+            if (stackData.length() > 0)
+                stackData.append("\n");
 
             if (pc != 0)
                 globalOutput.append("[Op: ").append(OpCode.code(lastOp).name()).append("]\n");
@@ -918,8 +977,7 @@ public class Program {
             globalOutput.append(" -- STORAGE -- ").append(storageData).append("\n");
 
             if (getResult().getHReturn() != null)
-                globalOutput.append("\n  HReturn: ").append(
-                        Hex.toHexString(getResult().getHReturn()));
+                globalOutput.append("\n  HReturn: ").append(Hex.toHexString(getResult().getHReturn()));
 
             // sophisticated assumption that msg.data != codedata
             // means we are calling the contract not creating it
@@ -969,14 +1027,16 @@ public class Program {
                 }
                 binData.write(code[index]);
                 index++;
-                if (index < code.length) continue;
+                if (index < code.length)
+                    continue;
             }
 
             if (binDataStartPC != -1) {
                 sb.append(formatBinData(binData.toByteArray(), binDataStartPC));
                 binDataStartPC = -1;
                 binData = new ByteArrayOutputStream();
-                if (index == code.length) continue;
+                if (index == code.length)
+                    continue;
             }
 
             sb.append(Utils.align("" + Integer.toHexString(index) + ":", ' ', 8, false));
@@ -1074,9 +1134,10 @@ public class Program {
                     gotos.add(jumpPC);
                 }
             }
-            if (it.getCurOpcode() == OpCode.JUMP || it.getCurOpcode() == OpCode.RETURN ||
-                    it.getCurOpcode() == OpCode.STOP) {
-                if (gotos.isEmpty()) break;
+            if (it.getCurOpcode() == OpCode.JUMP || it.getCurOpcode() == OpCode.RETURN
+                    || it.getCurOpcode() == OpCode.STOP) {
+                if (gotos.isEmpty())
+                    break;
                 it.setPC(gotos.pollFirst());
             }
         } while (it.next());
@@ -1117,7 +1178,6 @@ public class Program {
         return sb.toString();
     }
 
-
     public void addListener(ProgramOutListener listener) {
         this.listener = listener;
     }
@@ -1148,7 +1208,6 @@ public class Program {
         byte[] codeAddress = msg.getCodeAddress().getLast20Bytes();
         byte[] contextAddress = msg.getType().callIsStateless() ? senderAddress : codeAddress;
 
-
         BigInteger endowment = msg.getEndowment().value();
         BigInteger senderBalance = track.getBalance(senderAddress);
         if (senderBalance.compareTo(endowment) < 0) {
@@ -1157,28 +1216,24 @@ public class Program {
             return;
         }
 
-        byte[] data = this.memoryChunk(msg.getInDataOffs().intValue(),
-                msg.getInDataSize().intValue());
+        byte[] data = this.memoryChunk(msg.getInDataOffs().intValue(), msg.getInDataSize().intValue());
 
         // Charge for endowment - is not reversible by rollback
         transfer(track, senderAddress, contextAddress, msg.getEndowment().value());
 
         if (byTestingSuite()) {
             // This keeps track of the calls created for a test
-            this.getResult().addCallCreate(data,
-                    msg.getCodeAddress().getLast20Bytes(),
-                    msg.getGas().getNoLeadZeroesData(),
-                    msg.getEndowment().getNoLeadZeroesData());
+            this.getResult().addCallCreate(data, msg.getCodeAddress().getLast20Bytes(),
+                    msg.getGas().getNoLeadZeroesData(), msg.getEndowment().getNoLeadZeroesData());
 
             stackPushOne();
             return;
         }
 
-
         long requiredGas = contract.getGasForData(data);
         if (requiredGas > msg.getGas().longValue()) {
 
-            this.refundGas(0, "call pre-compiled"); //matches cpp logic
+            this.refundGas(0, "call pre-compiled"); // matches cpp logic
             this.stackPushZero();
             track.rollback();
         } else {
@@ -1213,9 +1268,9 @@ public class Program {
     }
 
     /**
-     * Denotes problem when executing Ethereum bytecode.
-     * From blockchain and peer perspective this is quite normal situation
-     * and doesn't mean exceptional situation in terms of the program execution
+     * Denotes problem when executing Ethereum bytecode. From blockchain and peer
+     * perspective this is quite normal situation and doesn't mean exceptional
+     * situation in terms of the program execution
      */
     @SuppressWarnings("serial")
     public static class BytecodeExecutionException extends RuntimeException {
@@ -1259,7 +1314,8 @@ public class Program {
     @SuppressWarnings("serial")
     public static class ReturnDataCopyIllegalBoundsException extends BytecodeExecutionException {
         public ReturnDataCopyIllegalBoundsException(DataWord off, DataWord size, long returnDataSize) {
-            super(String.format("Illegal RETURNDATACOPY arguments: offset (%s) + size (%s) > RETURNDATASIZE (%d)", off, size, returnDataSize));
+            super(String.format("Illegal RETURNDATACOPY arguments: offset (%s) + size (%s) > RETURNDATASIZE (%d)", off,
+                    size, returnDataSize));
         }
     }
 
@@ -1270,11 +1326,11 @@ public class Program {
         }
     }
 
-
     public static class Exception {
 
         public static OutOfGasException notEnoughOpGas(OpCode op, long opGas, long programGas) {
-            return new OutOfGasException("Not enough gas for '%s' operation executing: opGas[%d], programGas[%d];", op, opGas, programGas);
+            return new OutOfGasException("Not enough gas for '%s' operation executing: opGas[%d], programGas[%d];", op,
+                    opGas, programGas);
         }
 
         public static OutOfGasException notEnoughOpGas(OpCode op, DataWord opGas, DataWord programGas) {
@@ -1291,7 +1347,8 @@ public class Program {
         }
 
         public static OutOfGasException gasOverflow(BigInteger actualGas, BigInteger gasLimit) {
-            return new OutOfGasException("Gas value overflow: actualGas[%d], gasLimit[%d];", actualGas.longValue(), gasLimit.longValue());
+            return new OutOfGasException("Gas value overflow: actualGas[%d], gasLimit[%d];", actualGas.longValue(),
+                    gasLimit.longValue());
         }
 
         public static IllegalOperationException invalidOpCode(byte... opCode) {
@@ -1327,6 +1384,5 @@ public class Program {
     public void initMem(byte[] data) {
         this.memory.write(0, data, data.length, false);
     }
-
 
 }

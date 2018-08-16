@@ -17,34 +17,9 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
-import org.ethereum.config.CommonConfig;
-import org.ethereum.config.SystemProperties;
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockchainImpl;
-import org.ethereum.core.ImportResult;
-import org.ethereum.core.PendingStateImpl;
-import org.ethereum.core.Repository;
-import org.ethereum.datasource.inmem.HashMapDB;
-import org.ethereum.db.*;
-import org.ethereum.jsontestsuite.suite.builder.BlockBuilder;
-import org.ethereum.jsontestsuite.suite.builder.RepositoryBuilder;
-import org.ethereum.jsontestsuite.suite.model.BlockTck;
-import org.ethereum.jsontestsuite.suite.validators.BlockHeaderValidator;
-import org.ethereum.jsontestsuite.suite.validators.RepositoryValidator;
-import org.ethereum.listener.EthereumListenerAdapter;
-import org.ethereum.util.ByteUtil;
-import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
-import org.ethereum.vm.DataWord;
-import org.ethereum.vm.LogInfo;
-import org.ethereum.vm.VM;
-import org.ethereum.vm.program.Program;
-import org.ethereum.vm.program.invoke.ProgramInvoke;
-import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
-import org.ethereum.vm.program.invoke.ProgramInvokeImpl;
-import org.ethereum.vm.trace.ProgramTrace;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
+import static org.ethereum.crypto.HashUtil.shortHash;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.vm.VMUtils.saveProgramTraceFile;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -53,9 +28,39 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import static org.ethereum.crypto.HashUtil.shortHash;
-import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.ethereum.vm.VMUtils.saveProgramTraceFile;
+import org.ethereum.config.CommonConfig;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockchainImpl;
+import org.ethereum.core.ImportResult;
+import org.ethereum.core.PendingStateImpl;
+import org.ethereum.core.Repository;
+import org.ethereum.datasource.inmem.HashMapDB;
+import org.ethereum.db.BlockStoreDummy;
+import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.ContractDetails;
+import org.ethereum.db.IndexedBlockStore;
+import org.ethereum.db.RepositoryRoot;
+import org.ethereum.jsontestsuite.suite.builder.BlockBuilder;
+import org.ethereum.jsontestsuite.suite.builder.RepositoryBuilder;
+import org.ethereum.jsontestsuite.suite.model.BlockTck;
+import org.ethereum.jsontestsuite.suite.validators.BlockHeaderValidator;
+import org.ethereum.jsontestsuite.suite.validators.RepositoryValidator;
+import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.LogInfo;
+import org.ethereum.vm.VM;
+import org.ethereum.vm.program.Program;
+import org.ethereum.vm.program.ProgramFactory;
+import org.ethereum.vm.program.invoke.ProgramInvoke;
+import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
+import org.ethereum.vm.program.invoke.ProgramInvokeImpl;
+import org.ethereum.vm.trace.DefaultProgramTrace;
+import org.ethereum.vm.trace.ProgramTrace;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * @author Roman Mandeleil
@@ -224,7 +229,10 @@ public class TestRunner {
             /* 3. Create Program - exec.code */
             /* 4. run VM */
             VM vm = new VM();
-            Program program = new Program(exec.getCode(), programInvoke);
+            Program program = ProgramFactory.create()
+        	    .withOps(exec.getCode())
+        	    .withProgramInvoke(programInvoke)
+        	    .getProgram();
             boolean vmDidThrowAnEception = false;
             RuntimeException e = null;
             try {

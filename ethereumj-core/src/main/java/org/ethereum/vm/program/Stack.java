@@ -1,5 +1,5 @@
 /*
- * Copyright (c) [2016] [ <ether.camp> ]
+ * Copyright (c) [2018] [ <ether.camp> ]
  * This file is part of the ethereumJ library.
  *
  * The ethereumJ library is free software: you can redistribute it and/or modify
@@ -17,40 +17,24 @@
  */
 package org.ethereum.vm.program;
 
+import java.util.List;
+
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.program.listener.ProgramListener;
 import org.ethereum.vm.program.listener.ProgramListenerAware;
 
-public class Stack extends java.util.Stack<DataWord> implements ProgramListenerAware {
+public interface Stack extends ProgramListenerAware, List<DataWord> {
+    void setProgramListener(ProgramListener listener);
 
-    private ProgramListener programListener;
+    DataWord pop();
 
-    @Override
-    public void setProgramListener(ProgramListener listener) {
-        this.programListener = listener;
-    }
+    DataWord push(DataWord item);
 
-    @Override
-    public synchronized DataWord pop() {
-        if (programListener != null) programListener.onStackPop();
-        return super.pop();
-    }
+    void swap(int from, int to);
 
-    @Override
-    public DataWord push(DataWord item) {
-        if (programListener != null) programListener.onStackPush(item);
-        return super.push(item);
-    }
+    DataWord peek();
 
-    public void swap(int from, int to) {
-        if (isAccessible(from) && isAccessible(to) && (from != to)) {
-            if (programListener != null) programListener.onStackSwap(from, to);
-            DataWord tmp = get(from);
-            set(from, set(to, tmp));
-        }
-    }
+    int size();
 
-    private boolean isAccessible(int from) {
-        return from >= 0 && from < size();
-    }
+    DataWord get(int index);
 }

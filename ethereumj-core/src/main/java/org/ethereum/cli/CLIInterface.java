@@ -1,5 +1,5 @@
 /*
- * Copyright (c) [2016] [ <ether.camp> ]
+ * Copyright (c) [2018] [ <ether.camp> ]
  * This file is part of the ethereumJ library.
  *
  * The ethereumJ library is free software: you can redistribute it and/or modify
@@ -19,6 +19,10 @@ package org.ethereum.cli;
 
 import org.apache.commons.lang3.BooleanUtils;
 import org.ethereum.config.SystemProperties;
+import org.ethereum.vm.program.NullMemory;
+import org.ethereum.vm.program.NullStack;
+import org.ethereum.vm.program.NullStorage;
+import org.ethereum.vm.trace.NullProgramTrace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -53,6 +57,14 @@ public class CLIInterface {
 
                 // process simple option
                 if (processConnectOnly(arg, cliOptions))
+                    continue;
+                if (processNoMemory(arg, cliOptions))
+                    continue;
+                if (processNoStack(arg, cliOptions))
+                    continue;
+                if (processNoStorage(arg, cliOptions))
+                    continue;
+                if (processNoTrace(arg, cliOptions))
                     continue;
 
                 // possible additional parameter
@@ -89,6 +101,70 @@ public class CLIInterface {
 
             System.exit(1);
         }
+    }
+
+    /**
+     * Run without memory if --nomemory is given.
+     * 
+     * @param  arg        Argument.
+     * @param  cliOptions CLI options.
+     * @return            The argument was found.
+     */
+    private static boolean processNoMemory(String arg, Map<String, Object> cliOptions) {
+        if (!"--nomemory".equals(arg)) {
+            return false;
+        }
+
+        cliOptions.put(SystemProperties.PROPERTY_VM_PROGRAM_MEMORY, new NullMemory());
+        return true;
+    }
+
+    /**
+     * Run without stack if --nostack is given.
+     * 
+     * @param  arg        Argument.
+     * @param  cliOptions CLI options.
+     * @return            The argument was found.
+     */
+    private static boolean processNoStack(String arg, Map<String, Object> cliOptions) {
+        if (!"--nostack".equals(arg)) {
+            return false;
+        }
+
+        cliOptions.put(SystemProperties.PROPERTY_VM_PROGRAM_STACK, new NullStack());
+        return true;
+    }
+
+    /**
+     * Run without storage if --nostorage is given.
+     * 
+     * @param  arg        Argument.
+     * @param  cliOptions CLI options.
+     * @return            The argument was found.
+     */
+    private static boolean processNoStorage(String arg, Map<String, Object> cliOptions) {
+        if (!"--nostorage".equals(arg)) {
+            return false;
+        }
+
+        cliOptions.put(SystemProperties.PROPERTY_VM_PROGRAM_STORAGE, new NullStorage());
+        return true;
+    }
+
+    /**
+     * Run without trace if --notrace is given.
+     * 
+     * @param  arg        Argument.
+     * @param  cliOptions CLI options.
+     * @return            The argument was found.
+     */
+    private static boolean processNoTrace(String arg, Map<String, Object> cliOptions) {
+        if (!"--notrace".equals(arg)) {
+            return false;
+        }
+
+        cliOptions.put(SystemProperties.PROPERTY_VM_PROGRAM_TRACE, new NullProgramTrace());
+        return true;
     }
 
     private static boolean processConnectOnly(String arg, Map<String, Object> cliOptions) {
@@ -166,6 +242,10 @@ public class CLIInterface {
     private static void printHelp() {
 
         System.out.println("--help                -- this help message ");
+        System.out.println("--nomemory            -- run vm without memory module ");
+        System.out.println("--nostack             -- run vm without stack module ");
+        System.out.println("--nostorage           -- run vm without storage module ");
+        System.out.println("--notrace             -- run vm without trace module ");
         System.out.println("-reset <yes/no>       -- reset yes/no the all database ");
         System.out.println("-db <db>              -- to setup the path for the database directory ");
         System.out.println("-listen  <port>       -- port to listen on for incoming connections ");

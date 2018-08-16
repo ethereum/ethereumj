@@ -19,6 +19,7 @@ package org.ethereum.vm;
 
 import org.ethereum.core.Repository;
 import org.ethereum.vm.program.Program;
+import org.ethereum.vm.program.ProgramFactory;
 import org.ethereum.vm.program.Program.BadJumpDestinationException;
 import org.ethereum.vm.program.Program.StackTooSmallException;
 
@@ -57,7 +58,7 @@ public class VMTest {
     public void testPUSH1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0xa0"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0xa0")).withProgramInvoke(invoke).getProgram();
         String expected = "00000000000000000000000000000000000000000000000000000000000000A0";
 
         program.fullTrace();
@@ -70,7 +71,7 @@ public class VMTest {
     public void testPUSH2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0xa0b0"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0xa0b0")).withProgramInvoke(invoke).getProgram();
         String expected = "000000000000000000000000000000000000000000000000000000000000A0B0";
 
         program.fullTrace();
@@ -83,7 +84,7 @@ public class VMTest {
     public void testPUSH3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH3 0xA0B0C0"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH3 0xA0B0C0")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000000000000000000000A0B0C0";
 
         program.fullTrace();
@@ -96,7 +97,7 @@ public class VMTest {
     public void testPUSH4() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH4 0xA0B0C0D0"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH4 0xA0B0C0D0")).withProgramInvoke(invoke).getProgram();
         String expected = "00000000000000000000000000000000000000000000000000000000A0B0C0D0";
 
         program.fullTrace();
@@ -109,7 +110,7 @@ public class VMTest {
     public void testPUSH5() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH5 0xA0B0C0D0E0"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH5 0xA0B0C0D0E0")).withProgramInvoke(invoke).getProgram();
         String expected = "000000000000000000000000000000000000000000000000000000A0B0C0D0E0";
 
         program.fullTrace();
@@ -122,7 +123,7 @@ public class VMTest {
     public void testPUSH6() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH6 0xA0B0C0D0E0F0"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH6 0xA0B0C0D0E0F0")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000000000000000A0B0C0D0E0F0";
 
         program.fullTrace();
@@ -135,7 +136,7 @@ public class VMTest {
     public void testPUSH7() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH7 0xA0B0C0D0E0F0A1"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH7 0xA0B0C0D0E0F0A1")).withProgramInvoke(invoke).getProgram();
         String expected = "00000000000000000000000000000000000000000000000000A0B0C0D0E0F0A1";
 
         program.fullTrace();
@@ -148,7 +149,7 @@ public class VMTest {
     public void testPUSH8() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH8 0xA0B0C0D0E0F0A1B1"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH8 0xA0B0C0D0E0F0A1B1")).withProgramInvoke(invoke).getProgram();
         String expected = "000000000000000000000000000000000000000000000000A0B0C0D0E0F0A1B1";
 
         program.fullTrace();
@@ -161,7 +162,7 @@ public class VMTest {
     public void testPUSH9() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH9 0xA0B0C0D0E0F0A1B1C1"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH9 0xA0B0C0D0E0F0A1B1C1")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000000000A0B0C0D0E0F0A1B1C1";
 
         program.fullTrace();
@@ -175,7 +176,7 @@ public class VMTest {
     public void testPUSH10() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH10 0xA0B0C0D0E0F0A1B1C1D1"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH10 0xA0B0C0D0E0F0A1B1C1D1")).withProgramInvoke(invoke).getProgram();
         String expected = "00000000000000000000000000000000000000000000A0B0C0D0E0F0A1B1C1D1";
 
         program.fullTrace();
@@ -188,7 +189,7 @@ public class VMTest {
     public void testPUSH11() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH11 0xA0B0C0D0E0F0A1B1C1D1E1"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH11 0xA0B0C0D0E0F0A1B1C1D1E1")).withProgramInvoke(invoke).getProgram();
         String expected = "000000000000000000000000000000000000000000A0B0C0D0E0F0A1B1C1D1E1";
 
         program.fullTrace();
@@ -201,7 +202,7 @@ public class VMTest {
     public void testPUSH12() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH12 0xA0B0C0D0E0F0A1B1C1D1E1F1"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH12 0xA0B0C0D0E0F0A1B1C1D1E1F1")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000A0B0C0D0E0F0A1B1C1D1E1F1";
 
         program.fullTrace();
@@ -214,7 +215,7 @@ public class VMTest {
     public void testPUSH13() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH13 0xA0B0C0D0E0F0A1B1C1D1E1F1A2"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH13 0xA0B0C0D0E0F0A1B1C1D1E1F1A2")).withProgramInvoke(invoke).getProgram();
         String expected = "00000000000000000000000000000000000000A0B0C0D0E0F0A1B1C1D1E1F1A2";
 
         program.fullTrace();
@@ -227,7 +228,7 @@ public class VMTest {
     public void testPUSH14() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH14 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH14 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2")).withProgramInvoke(invoke).getProgram();
         String expected = "000000000000000000000000000000000000A0B0C0D0E0F0A1B1C1D1E1F1A2B2";
 
         program.fullTrace();
@@ -240,7 +241,7 @@ public class VMTest {
     public void testPUSH15() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH15 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH15 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000A0B0C0D0E0F0A1B1C1D1E1F1A2B2C2";
 
         program.fullTrace();
@@ -253,7 +254,7 @@ public class VMTest {
     public void testPUSH16() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH16 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH16 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2")).withProgramInvoke(invoke).getProgram();
         String expected = "00000000000000000000000000000000A0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2";
 
         program.fullTrace();
@@ -266,7 +267,7 @@ public class VMTest {
     public void testPUSH17() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH17 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH17 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2")).withProgramInvoke(invoke).getProgram();
         String expected = "000000000000000000000000000000A0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2";
 
         program.fullTrace();
@@ -279,7 +280,7 @@ public class VMTest {
     public void testPUSH18() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH18 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH18 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000A0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2";
 
         program.fullTrace();
@@ -292,7 +293,7 @@ public class VMTest {
     public void testPUSH19() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH19 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH19 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3")).withProgramInvoke(invoke).getProgram();
         String expected = "00000000000000000000000000A0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3";
 
         program.fullTrace();
@@ -305,7 +306,7 @@ public class VMTest {
     public void testPUSH20() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH20 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH20 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3")).withProgramInvoke(invoke).getProgram();
         String expected = "000000000000000000000000A0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3";
 
         program.fullTrace();
@@ -318,7 +319,7 @@ public class VMTest {
     public void testPUSH21() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH21 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH21 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000A0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3";
 
         program.fullTrace();
@@ -331,7 +332,7 @@ public class VMTest {
     public void testPUSH22() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH22 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH22 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3")).withProgramInvoke(invoke).getProgram();
         String expected = "00000000000000000000A0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3";
 
         program.fullTrace();
@@ -344,7 +345,7 @@ public class VMTest {
     public void testPUSH23() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH23 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH23 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3")).withProgramInvoke(invoke).getProgram();
         String expected = "000000000000000000A0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3";
 
         program.fullTrace();
@@ -357,7 +358,7 @@ public class VMTest {
     public void testPUSH24() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH24 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH24 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000A0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3";
 
         program.fullTrace();
@@ -370,7 +371,7 @@ public class VMTest {
     public void testPUSH25() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH25 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH25 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4")).withProgramInvoke(invoke).getProgram();
         String expected = "00000000000000A0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4";
 
         program.fullTrace();
@@ -383,7 +384,7 @@ public class VMTest {
     public void testPUSH26() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH26 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH26 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4")).withProgramInvoke(invoke).getProgram();
         String expected = "000000000000A0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4";
 
         program.fullTrace();
@@ -396,7 +397,7 @@ public class VMTest {
     public void testPUSH27() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH27 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH27 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000A0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4";
 
         program.fullTrace();
@@ -409,7 +410,7 @@ public class VMTest {
     public void testPUSH28() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH28 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH28 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4")).withProgramInvoke(invoke).getProgram();
         String expected = "00000000A0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4";
 
         program.fullTrace();
@@ -422,7 +423,7 @@ public class VMTest {
     public void testPUSH29() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH29 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH29 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4")).withProgramInvoke(invoke).getProgram();
         String expected = "000000A0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4";
 
         program.fullTrace();
@@ -435,7 +436,7 @@ public class VMTest {
     public void testPUSH30() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH30 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH30 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4")).withProgramInvoke(invoke).getProgram();
         String expected = "0000A0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4";
 
         program.fullTrace();
@@ -448,7 +449,7 @@ public class VMTest {
     public void testPUSH31() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH31 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH31 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1")).withProgramInvoke(invoke).getProgram();
         String expected = "00A0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1";
 
         program.fullTrace();
@@ -461,7 +462,7 @@ public class VMTest {
     public void testPUSH32() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B1"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH32 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B1")).withProgramInvoke(invoke).getProgram();
         String expected = "A0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B1";
 
         program.fullTrace();
@@ -474,7 +475,7 @@ public class VMTest {
     public void testPUSHN_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0xAA"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0xAA")).withProgramInvoke(invoke).getProgram();
         String expected = "000000000000000000000000000000000000000000000000000000000000AA00";
 
         program.fullTrace();
@@ -488,7 +489,7 @@ public class VMTest {
     public void testPUSHN_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0xAABB"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH32 0xAABB")).withProgramInvoke(invoke).getProgram();
         String expected = "AABB000000000000000000000000000000000000000000000000000000000000";
 
         program.fullTrace();
@@ -502,7 +503,7 @@ public class VMTest {
     public void testAND_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x0A PUSH1 0x0A AND"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x0A PUSH1 0x0A AND")).withProgramInvoke(invoke).getProgram();
         String expected = "000000000000000000000000000000000000000000000000000000000000000A";
 
         vm.step(program);
@@ -516,7 +517,7 @@ public class VMTest {
     public void testAND_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0xC0 PUSH1 0x0A AND"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0xC0 PUSH1 0x0A AND")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -530,7 +531,7 @@ public class VMTest {
     public void testAND_3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0xC0 AND"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0xC0 AND")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -544,7 +545,7 @@ public class VMTest {
     public void testOR_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0xF0 PUSH1 0x0F OR"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0xF0 PUSH1 0x0F OR")).withProgramInvoke(invoke).getProgram();
         String expected = "00000000000000000000000000000000000000000000000000000000000000FF";
 
         vm.step(program);
@@ -558,7 +559,7 @@ public class VMTest {
     public void testOR_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0xC3 PUSH1 0x3C OR"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0xC3 PUSH1 0x3C OR")).withProgramInvoke(invoke).getProgram();
         String expected = "00000000000000000000000000000000000000000000000000000000000000FF";
 
         vm.step(program);
@@ -572,7 +573,7 @@ public class VMTest {
     public void testOR_3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0xC0 OR"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0xC0 OR")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -586,7 +587,7 @@ public class VMTest {
     public void testXOR_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0xFF PUSH1 0xFF XOR"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0xFF PUSH1 0xFF XOR")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -600,7 +601,7 @@ public class VMTest {
     public void testXOR_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x0F PUSH1 0xF0 XOR"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x0F PUSH1 0xF0 XOR")).withProgramInvoke(invoke).getProgram();
         String expected = "00000000000000000000000000000000000000000000000000000000000000FF";
 
         vm.step(program);
@@ -615,7 +616,7 @@ public class VMTest {
     public void testXOR_3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0xC0 XOR"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0xC0 XOR")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -629,7 +630,7 @@ public class VMTest {
     public void testBYTE_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH6 0xAABBCCDDEEFF PUSH1 0x1E BYTE"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH6 0xAABBCCDDEEFF PUSH1 0x1E BYTE")).withProgramInvoke(invoke).getProgram();
         String expected = "00000000000000000000000000000000000000000000000000000000000000EE";
 
         vm.step(program);
@@ -643,7 +644,7 @@ public class VMTest {
     public void testBYTE_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH6 0xAABBCCDDEEFF PUSH1 0x20 BYTE"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH6 0xAABBCCDDEEFF PUSH1 0x20 BYTE")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -657,7 +658,7 @@ public class VMTest {
     public void testBYTE_3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH6 0xAABBCCDDEE3A PUSH1 0x1F BYTE"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH6 0xAABBCCDDEE3A PUSH1 0x1F BYTE")).withProgramInvoke(invoke).getProgram();
         String expected = "000000000000000000000000000000000000000000000000000000000000003A";
 
         vm.step(program);
@@ -672,7 +673,7 @@ public class VMTest {
     public void testBYTE_4() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH6 0xAABBCCDDEE3A BYTE"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH6 0xAABBCCDDEE3A BYTE")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -686,7 +687,7 @@ public class VMTest {
     public void testISZERO_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x00 ISZERO"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x00 ISZERO")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -699,7 +700,7 @@ public class VMTest {
     public void testISZERO_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x2A ISZERO"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x2A ISZERO")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -712,7 +713,7 @@ public class VMTest {
     public void testISZERO_3() {
 
         VM vm = new VM();
-        program = new Program(compile("ISZERO"), invoke);
+        program = ProgramFactory.create().withOps(compile("ISZERO")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -726,7 +727,7 @@ public class VMTest {
     public void testEQ_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x2A PUSH1 0x2A EQ"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x2A PUSH1 0x2A EQ")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -740,7 +741,7 @@ public class VMTest {
     public void testEQ_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH3 0x2A3B4C PUSH3 0x2A3B4C EQ"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH3 0x2A3B4C PUSH3 0x2A3B4C EQ")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -754,7 +755,7 @@ public class VMTest {
     public void testEQ_3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH3 0x2A3B5C PUSH3 0x2A3B4C EQ"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH3 0x2A3B5C PUSH3 0x2A3B4C EQ")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -768,7 +769,7 @@ public class VMTest {
     public void testEQ_4() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH3 0x2A3B4C EQ"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH3 0x2A3B4C EQ")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -782,7 +783,7 @@ public class VMTest {
     public void testGT_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x01 PUSH1 0x02 GT"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x01 PUSH1 0x02 GT")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -796,7 +797,7 @@ public class VMTest {
     public void testGT_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x01 PUSH2 0x0F00 GT"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x01 PUSH2 0x0F00 GT")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -810,7 +811,7 @@ public class VMTest {
     public void testGT_3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH4 0x01020304 PUSH2 0x0F00 GT"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH4 0x01020304 PUSH2 0x0F00 GT")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -824,7 +825,7 @@ public class VMTest {
     public void testGT_4() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH3 0x2A3B4C GT"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH3 0x2A3B4C GT")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -838,7 +839,7 @@ public class VMTest {
     public void testSGT_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x01 PUSH1 0x02 SGT"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x01 PUSH1 0x02 SGT")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -852,9 +853,9 @@ public class VMTest {
     public void testSGT_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x000000000000000000000000000000000000000000000000000000000000001E " + //   30
+        program = ProgramFactory.create().withOps(compile("PUSH32 0x000000000000000000000000000000000000000000000000000000000000001E " + //   30
                 "PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56 " + // -170
-                "SGT"), invoke);
+                "SGT")).withProgramInvoke(invoke).getProgram();
 
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
@@ -869,9 +870,9 @@ public class VMTest {
     public void testSGT_3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56 " + // -170
+        program = ProgramFactory.create().withOps(compile("PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56 " + // -170
                 "PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF57 " + // -169
-                "SGT"), invoke);
+                "SGT")).withProgramInvoke(invoke).getProgram();
 
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
@@ -886,8 +887,8 @@ public class VMTest {
     public void testSGT_4() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56 " + // -170
-                "SGT"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56 " + // -170
+                "SGT")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -901,7 +902,7 @@ public class VMTest {
     public void testLT_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x01 PUSH1 0x02 LT"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x01 PUSH1 0x02 LT")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -915,7 +916,7 @@ public class VMTest {
     public void testLT_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x01 PUSH2 0x0F00 LT"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x01 PUSH2 0x0F00 LT")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -929,7 +930,7 @@ public class VMTest {
     public void testLT_3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH4 0x01020304 PUSH2 0x0F00 LT"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH4 0x01020304 PUSH2 0x0F00 LT")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -943,7 +944,7 @@ public class VMTest {
     public void testLT_4() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH3 0x2A3B4C LT"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH3 0x2A3B4C LT")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -957,7 +958,7 @@ public class VMTest {
     public void testSLT_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x01 PUSH1 0x02 SLT"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x01 PUSH1 0x02 SLT")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -971,9 +972,9 @@ public class VMTest {
     public void testSLT_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x000000000000000000000000000000000000000000000000000000000000001E " + //   30
+        program = ProgramFactory.create().withOps(compile("PUSH32 0x000000000000000000000000000000000000000000000000000000000000001E " + //   30
                 "PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56 " + // -170
-                "SLT"), invoke);
+                "SLT")).withProgramInvoke(invoke).getProgram();
 
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
@@ -988,9 +989,9 @@ public class VMTest {
     public void testSLT_3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56 " + // -170
+        program = ProgramFactory.create().withOps(compile("PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56 " + // -170
                 "PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF57 " + // -169
-                "SLT"), invoke);
+                "SLT")).withProgramInvoke(invoke).getProgram();
 
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
@@ -1005,8 +1006,8 @@ public class VMTest {
     public void testSLT_4() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56 " + // -170
-                "SLT"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56 " + // -170
+                "SLT")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -1020,7 +1021,7 @@ public class VMTest {
     public void testNOT_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x01 NOT"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x01 NOT")).withProgramInvoke(invoke).getProgram();
         String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE";
 
         vm.step(program);
@@ -1033,7 +1034,7 @@ public class VMTest {
     public void testNOT_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0xA003 NOT"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0xA003 NOT")).withProgramInvoke(invoke).getProgram();
         String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5FFC";
 
         vm.step(program);
@@ -1047,7 +1048,7 @@ public class VMTest {
     public void testBNOT_4() {
 
         VM vm = new VM();
-        program = new Program(compile("NOT"), invoke);
+        program = ProgramFactory.create().withOps(compile("NOT")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -1060,7 +1061,7 @@ public class VMTest {
     public void testNOT_5() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x00 NOT"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x00 NOT")).withProgramInvoke(invoke).getProgram();
         String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
 
         vm.step(program);
@@ -1074,7 +1075,7 @@ public class VMTest {
     public void testPOP_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x0000 PUSH1 0x01 PUSH3 0x000002 POP"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0x0000 PUSH1 0x01 PUSH3 0x000002 POP")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -1089,7 +1090,7 @@ public class VMTest {
     public void testPOP_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x0000 PUSH1 0x01 PUSH3 0x000002 POP POP"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0x0000 PUSH1 0x01 PUSH3 0x000002 POP POP")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -1105,7 +1106,7 @@ public class VMTest {
     public void testPOP_3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x0000 PUSH1 0x01 PUSH3 0x000002 POP POP POP POP"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0x0000 PUSH1 0x01 PUSH3 0x000002 POP POP POP POP")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -1142,7 +1143,7 @@ public class VMTest {
 
         programCode += "DUP" + n;
 
-        program = new Program(compile(programCode), invoke);
+        program = ProgramFactory.create().withOps(compile(programCode)).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000000000000000000000000012";
         int expectedLen = n + 1;
 
@@ -1162,7 +1163,7 @@ public class VMTest {
     public void testDUPN_2() {
 
         VM vm = new VM();
-        program = new Program(compile("DUP1"), invoke);
+        program = ProgramFactory.create().withOps(compile("DUP1")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
         } finally {
@@ -1195,7 +1196,7 @@ public class VMTest {
 
         programCode += "SWAP" + n;
 
-        program = new Program(compile(programCode), invoke);
+        program = ProgramFactory.create().withOps(compile(programCode)).withProgramInvoke(invoke).getProgram();
 
         for (int i = 0; i < n + 2; ++i) {
             vm.step(program);
@@ -1209,7 +1210,7 @@ public class VMTest {
     public void testSWAPN_2() {
 
         VM vm = new VM();
-        program = new Program(compile("SWAP1"), invoke);
+        program = ProgramFactory.create().withOps(compile("SWAP1")).withProgramInvoke(invoke).getProgram();
 
         try {
             vm.step(program);
@@ -1222,7 +1223,7 @@ public class VMTest {
     public void testMSTORE_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000000000000000000000001234";
 
         vm.step(program);
@@ -1237,7 +1238,10 @@ public class VMTest {
     public void tesLog0() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE PUSH1 0x20 PUSH1 0x00 LOG0"), invoke);
+        program = ProgramFactory.create()
+            .withOps(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE PUSH1 0x20 PUSH1 0x00 LOG0"))
+            .withProgramInvoke(invoke)
+            .getProgram();
 
         vm.step(program);
         vm.step(program);
@@ -1259,7 +1263,11 @@ public class VMTest {
     public void tesLog1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE PUSH2 0x9999 PUSH1 0x20 PUSH1 0x00 LOG1"), invoke);
+        program = ProgramFactory.create()
+            .withOps(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE PUSH2 0x9999 PUSH1 0x20 PUSH1 0x00 LOG1"))
+            .withProgramInvoke(invoke)
+            .getProgram();
+
 
         vm.step(program);
         vm.step(program);
@@ -1282,7 +1290,10 @@ public class VMTest {
     public void tesLog2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE PUSH2 0x9999 PUSH2 0x6666 PUSH1 0x20 PUSH1 0x00 LOG2"), invoke);
+        program = ProgramFactory.create()
+            .withOps(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE PUSH2 0x9999 PUSH2 0x6666 PUSH1 0x20 PUSH1 0x00 LOG2"))
+            .withProgramInvoke(invoke)
+            .getProgram();
 
         vm.step(program);
         vm.step(program);
@@ -1306,7 +1317,10 @@ public class VMTest {
     public void tesLog3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE PUSH2 0x9999 PUSH2 0x6666 PUSH2 0x3333 PUSH1 0x20 PUSH1 0x00 LOG3"), invoke);
+        program = ProgramFactory.create()
+            .withOps(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE PUSH2 0x9999 PUSH2 0x6666 PUSH2 0x3333 PUSH1 0x20 PUSH1 0x00 LOG3"))
+            .withProgramInvoke(invoke)
+            .getProgram();
 
         vm.step(program);
         vm.step(program);
@@ -1332,7 +1346,10 @@ public class VMTest {
     public void tesLog4() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE PUSH2 0x9999 PUSH2 0x6666 PUSH2 0x3333 PUSH2 0x5555 PUSH1 0x20 PUSH1 0x00 LOG4"), invoke);
+        program = ProgramFactory.create()
+            .withOps(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE PUSH2 0x9999 PUSH2 0x6666 PUSH2 0x3333 PUSH2 0x5555 PUSH1 0x20 PUSH1 0x00 LOG4"))
+            .withProgramInvoke(invoke)
+            .getProgram();
 
         vm.step(program);
         vm.step(program);
@@ -1359,7 +1376,7 @@ public class VMTest {
     public void testMSTORE_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE PUSH2 0x5566 PUSH1 0x20 MSTORE"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE PUSH2 0x5566 PUSH1 0x20 MSTORE")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000000000000000000000001234" +
                 "0000000000000000000000000000000000000000000000000000000000005566";
 
@@ -1377,7 +1394,7 @@ public class VMTest {
     public void testMSTORE_3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE PUSH2 0x5566 PUSH1 0x20 MSTORE PUSH2 0x8888 PUSH1 0x00 MSTORE"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE PUSH2 0x5566 PUSH1 0x20 MSTORE PUSH2 0x8888 PUSH1 0x00 MSTORE")).withProgramInvoke(invoke).getProgram();
         String expected = "0000000000000000000000000000000000000000000000000000000000008888" +
                 "0000000000000000000000000000000000000000000000000000000000005566";
 
@@ -1398,7 +1415,7 @@ public class VMTest {
     public void testMSTORE_4() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x1234 PUSH1 0xA0 MSTORE"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0x1234 PUSH1 0xA0 MSTORE")).withProgramInvoke(invoke).getProgram();
         String expected = "" +
                 "0000000000000000000000000000000000000000000000000000000000000000" +
                 "0000000000000000000000000000000000000000000000000000000000000000" +
@@ -1418,7 +1435,7 @@ public class VMTest {
     public void testMSTORE_5() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x1234 MSTORE"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0x1234 MSTORE")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -1431,7 +1448,7 @@ public class VMTest {
     public void testMLOAD_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x00 MLOAD"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x00 MLOAD")).withProgramInvoke(invoke).getProgram();
         String m_expected = "0000000000000000000000000000000000000000000000000000000000000000";
         String s_expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
@@ -1446,7 +1463,7 @@ public class VMTest {
     public void testMLOAD_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x22 MLOAD"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x22 MLOAD")).withProgramInvoke(invoke).getProgram();
         String m_expected = "0000000000000000000000000000000000000000000000000000000000000000" +
                 "0000000000000000000000000000000000000000000000000000000000000000" +
                 "0000000000000000000000000000000000000000000000000000000000000000";
@@ -1464,7 +1481,7 @@ public class VMTest {
     public void testMLOAD_3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x20 MLOAD"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x20 MLOAD")).withProgramInvoke(invoke).getProgram();
         String m_expected = "0000000000000000000000000000000000000000000000000000000000000000" +
                 "0000000000000000000000000000000000000000000000000000000000000000";
         String s_expected = "0000000000000000000000000000000000000000000000000000000000000000";
@@ -1480,7 +1497,7 @@ public class VMTest {
     public void testMLOAD_4() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x1234 PUSH1 0x20 MSTORE PUSH1 0x20 MLOAD"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0x1234 PUSH1 0x20 MSTORE PUSH1 0x20 MLOAD")).withProgramInvoke(invoke).getProgram();
         String m_expected = "0000000000000000000000000000000000000000000000000000000000000000" +
                 "0000000000000000000000000000000000000000000000000000000000001234";
         String s_expected = "0000000000000000000000000000000000000000000000000000000000001234";
@@ -1499,7 +1516,7 @@ public class VMTest {
     public void testMLOAD_5() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x1234 PUSH1 0x20 MSTORE PUSH1 0x1F MLOAD"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0x1234 PUSH1 0x20 MSTORE PUSH1 0x1F MLOAD")).withProgramInvoke(invoke).getProgram();
         String m_expected = "0000000000000000000000000000000000000000000000000000000000000000" +
                 "0000000000000000000000000000000000000000000000000000000000001234";
         String s_expected = "0000000000000000000000000000000000000000000000000000000000000012";
@@ -1518,7 +1535,7 @@ public class VMTest {
     public void testMLOAD_6() {
 
         VM vm = new VM();
-        program = new Program(compile("MLOAD"), invoke);
+        program = ProgramFactory.create().withOps(compile("MLOAD")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
         } finally {
@@ -1530,7 +1547,7 @@ public class VMTest {
     public void testMSTORE8_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x11 PUSH1 0x00 MSTORE8"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x11 PUSH1 0x00 MSTORE8")).withProgramInvoke(invoke).getProgram();
         String m_expected = "1100000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -1545,7 +1562,7 @@ public class VMTest {
     public void testMSTORE8_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x22 PUSH1 0x01 MSTORE8"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x22 PUSH1 0x01 MSTORE8")).withProgramInvoke(invoke).getProgram();
         String m_expected = "0022000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -1559,7 +1576,7 @@ public class VMTest {
     public void testMSTORE8_3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x22 PUSH1 0x21 MSTORE8"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x22 PUSH1 0x21 MSTORE8")).withProgramInvoke(invoke).getProgram();
         String m_expected = "0000000000000000000000000000000000000000000000000000000000000000" +
                 "0022000000000000000000000000000000000000000000000000000000000000";
 
@@ -1574,7 +1591,7 @@ public class VMTest {
     public void testMSTORE8_4() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x22 MSTORE8"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x22 MSTORE8")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -1588,7 +1605,7 @@ public class VMTest {
 
         VM vm = new VM();
 
-        program = new Program(compile("PUSH1 0x22 PUSH1 0xAA SSTORE"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x22 PUSH1 0xAA SSTORE")).withProgramInvoke(invoke).getProgram();
         String s_expected_key = "00000000000000000000000000000000000000000000000000000000000000AA";
         String s_expected_val = "0000000000000000000000000000000000000000000000000000000000000022";
 
@@ -1608,7 +1625,7 @@ public class VMTest {
 
         VM vm = new VM();
 
-        program = new Program(compile("PUSH1 0x22 PUSH1 0xAA SSTORE PUSH1 0x22 PUSH1 0xBB SSTORE"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x22 PUSH1 0xAA SSTORE PUSH1 0x22 PUSH1 0xBB SSTORE")).withProgramInvoke(invoke).getProgram();
         String s_expected_key = "00000000000000000000000000000000000000000000000000000000000000BB";
         String s_expected_val = "0000000000000000000000000000000000000000000000000000000000000022";
 
@@ -1630,7 +1647,7 @@ public class VMTest {
     public void testSSTORE_3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x22 SSTORE"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x22 SSTORE")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -1643,7 +1660,7 @@ public class VMTest {
     public void testSLOAD_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0xAA SLOAD"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0xAA SLOAD")).withProgramInvoke(invoke).getProgram();
         String s_expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -1656,7 +1673,7 @@ public class VMTest {
     public void testSLOAD_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x22 PUSH1 0xAA SSTORE PUSH1 0xAA SLOAD"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x22 PUSH1 0xAA SSTORE PUSH1 0xAA SLOAD")).withProgramInvoke(invoke).getProgram();
         String s_expected = "0000000000000000000000000000000000000000000000000000000000000022";
 
         vm.step(program);
@@ -1672,7 +1689,7 @@ public class VMTest {
     public void testSLOAD_3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x22 PUSH1 0xAA SSTORE PUSH1 0x33 PUSH1 0xCC SSTORE PUSH1 0xCC SLOAD"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x22 PUSH1 0xAA SSTORE PUSH1 0x33 PUSH1 0xCC SSTORE PUSH1 0xCC SLOAD")).withProgramInvoke(invoke).getProgram();
         String s_expected = "0000000000000000000000000000000000000000000000000000000000000033";
 
         vm.step(program);
@@ -1691,7 +1708,7 @@ public class VMTest {
     public void testSLOAD_4() {
 
         VM vm = new VM();
-        program = new Program(compile("SLOAD"), invoke);
+        program = ProgramFactory.create().withOps(compile("SLOAD")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
         } finally {
@@ -1703,7 +1720,7 @@ public class VMTest {
     public void testPC_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PC"), invoke);
+        program = ProgramFactory.create().withOps(compile("PC")).withProgramInvoke(invoke).getProgram();
         String s_expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -1716,7 +1733,7 @@ public class VMTest {
     public void testPC_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x22 PUSH1 0xAA MSTORE PUSH1 0xAA SLOAD PC"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x22 PUSH1 0xAA MSTORE PUSH1 0xAA SLOAD PC")).withProgramInvoke(invoke).getProgram();
         String s_expected = "0000000000000000000000000000000000000000000000000000000000000008";
 
         vm.step(program);
@@ -1733,7 +1750,7 @@ public class VMTest {
     public void testJUMP_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0xAA PUSH1 0xBB PUSH1 0x0E JUMP PUSH1 0xCC PUSH1 0xDD PUSH1 0xEE JUMPDEST PUSH1 0xFF"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0xAA PUSH1 0xBB PUSH1 0x0E JUMP PUSH1 0xCC PUSH1 0xDD PUSH1 0xEE JUMPDEST PUSH1 0xFF")).withProgramInvoke(invoke).getProgram();
         String s_expected = "00000000000000000000000000000000000000000000000000000000000000FF";
 
         vm.step(program);
@@ -1749,7 +1766,7 @@ public class VMTest {
     public void testJUMP_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x0C PUSH1 0x0C SWAP1 JUMP PUSH1 0xCC PUSH1 0xDD PUSH1 0xEE PUSH1 0xFF"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x0C PUSH1 0x0C SWAP1 JUMP PUSH1 0xCC PUSH1 0xDD PUSH1 0xEE PUSH1 0xFF")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -1765,7 +1782,7 @@ public class VMTest {
     public void testJUMPI_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x01 PUSH1 0x05 JUMPI JUMPDEST PUSH1 0xCC"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x01 PUSH1 0x05 JUMPI JUMPDEST PUSH1 0xCC")).withProgramInvoke(invoke).getProgram();
         String s_expected = "00000000000000000000000000000000000000000000000000000000000000CC";
 
         vm.step(program);
@@ -1782,7 +1799,7 @@ public class VMTest {
     public void testJUMPI_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH4 0x00000000 PUSH1 0x44 JUMPI PUSH1 0xCC PUSH1 0xDD"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH4 0x00000000 PUSH1 0x44 JUMPI PUSH1 0xCC PUSH1 0xDD")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "00000000000000000000000000000000000000000000000000000000000000DD";
         String s_expected_2 = "00000000000000000000000000000000000000000000000000000000000000CC";
 
@@ -1803,7 +1820,7 @@ public class VMTest {
     public void testJUMPI_3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x01 JUMPI"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x01 JUMPI")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -1816,7 +1833,7 @@ public class VMTest {
     public void testJUMPI_4() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x01 PUSH1 0x22 SWAP1 SWAP1 JUMPI"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x01 PUSH1 0x22 SWAP1 SWAP1 JUMPI")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -1832,7 +1849,7 @@ public class VMTest {
     public void testJUMPDEST_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x23 PUSH1 0x08 JUMP PUSH1 0x01 JUMPDEST PUSH1 0x02 SSTORE"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x23 PUSH1 0x08 JUMP PUSH1 0x01 JUMPDEST PUSH1 0x02 SSTORE")).withProgramInvoke(invoke).getProgram();
 
         String s_expected_key = "0000000000000000000000000000000000000000000000000000000000000002";
         String s_expected_val = "0000000000000000000000000000000000000000000000000000000000000023";
@@ -1855,7 +1872,7 @@ public class VMTest {
     public void testJUMPDEST_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x23 PUSH1 0x01 PUSH1 0x09 JUMPI PUSH1 0x01 JUMPDEST PUSH1 0x02 SSTORE"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x23 PUSH1 0x01 PUSH1 0x09 JUMPI PUSH1 0x01 JUMPDEST PUSH1 0x02 SSTORE")).withProgramInvoke(invoke).getProgram();
 
         String s_expected_key = "0000000000000000000000000000000000000000000000000000000000000002";
         String s_expected_val = "0000000000000000000000000000000000000000000000000000000000000023";
@@ -1880,7 +1897,10 @@ public class VMTest {
     public void testADD_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x02 PUSH1 0x02 ADD"), invoke);
+        program = ProgramFactory.create()
+            .withOps(compile("PUSH1 0x02 PUSH1 0x02 ADD"))
+            .withProgramInvoke(invoke)
+            .getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000004";
 
         vm.step(program);
@@ -1895,7 +1915,7 @@ public class VMTest {
     public void testADD_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x1002 PUSH1 0x02 ADD"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0x1002 PUSH1 0x02 ADD")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000001004";
 
         vm.step(program);
@@ -1910,7 +1930,7 @@ public class VMTest {
     public void testADD_3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x1002 PUSH6 0x123456789009 ADD"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0x1002 PUSH6 0x123456789009 ADD")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "000000000000000000000000000000000000000000000000000012345678A00B";
 
         vm.step(program);
@@ -1925,7 +1945,7 @@ public class VMTest {
     public void testADD_4() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x1234 ADD"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0x1234 ADD")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -1937,7 +1957,7 @@ public class VMTest {
     @Test // ADDMOD OP mal
     public void testADDMOD_1() {
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x02 PUSH1 0x02 PUSH1 0x03 ADDMOD"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x02 PUSH1 0x02 PUSH1 0x03 ADDMOD")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -1953,7 +1973,7 @@ public class VMTest {
     @Test // ADDMOD OP
     public void testADDMOD_2() {
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x1000 PUSH1 0x02 PUSH2 0x1002 ADDMOD PUSH1 0x00"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0x1000 PUSH1 0x02 PUSH2 0x1002 ADDMOD PUSH1 0x00")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000004";
 
         vm.step(program);
@@ -1969,7 +1989,7 @@ public class VMTest {
     @Test // ADDMOD OP
     public void testADDMOD_3() {
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x1002 PUSH6 0x123456789009 PUSH1 0x02 ADDMOD"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0x1002 PUSH6 0x123456789009 PUSH1 0x02 ADDMOD")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "000000000000000000000000000000000000000000000000000000000000093B";
 
         vm.step(program);
@@ -1985,7 +2005,7 @@ public class VMTest {
     @Test(expected = StackTooSmallException.class) // ADDMOD OP mal
     public void testADDMOD_4() {
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x1234 ADDMOD"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0x1234 ADDMOD")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -1998,7 +2018,7 @@ public class VMTest {
     public void testMUL_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x03 PUSH1 0x02 MUL"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x03 PUSH1 0x02 MUL")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000006";
 
         vm.step(program);
@@ -2013,7 +2033,7 @@ public class VMTest {
     public void testMUL_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH3 0x222222 PUSH1 0x03 MUL"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH3 0x222222 PUSH1 0x03 MUL")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000666666";
 
         vm.step(program);
@@ -2028,7 +2048,7 @@ public class VMTest {
     public void testMUL_3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH3 0x222222 PUSH3 0x333333 MUL"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH3 0x222222 PUSH3 0x333333 MUL")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "000000000000000000000000000000000000000000000000000006D3A05F92C6";
 
         vm.step(program);
@@ -2043,7 +2063,7 @@ public class VMTest {
     public void testMUL_4() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x01 MUL"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x01 MUL")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -2055,7 +2075,7 @@ public class VMTest {
     @Test // MULMOD OP
     public void testMULMOD_1() {
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x03 PUSH1 0x02 PUSH1 0x04 MULMOD"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x03 PUSH1 0x02 PUSH1 0x04 MULMOD")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000002";
 
         vm.step(program);
@@ -2070,7 +2090,7 @@ public class VMTest {
     @Test // MULMOD OP
     public void testMULMOD_2() {
         VM vm = new VM();
-        program = new Program(compile("PUSH3 0x222222 PUSH1 0x03 PUSH1 0x04 MULMOD"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH3 0x222222 PUSH1 0x03 PUSH1 0x04 MULMOD")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "000000000000000000000000000000000000000000000000000000000000000C";
 
         vm.step(program);
@@ -2085,7 +2105,7 @@ public class VMTest {
     @Test // MULMOD OP
     public void testMULMOD_3() {
         VM vm = new VM();
-        program = new Program(compile("PUSH3 0x222222 PUSH3 0x333333 PUSH3 0x444444 MULMOD"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH3 0x222222 PUSH3 0x333333 PUSH3 0x444444 MULMOD")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -2100,7 +2120,7 @@ public class VMTest {
     @Test(expected = StackTooSmallException.class) // MULMOD OP mal
     public void testMULMOD_4() {
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x01 MULMOD"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x01 MULMOD")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -2113,7 +2133,7 @@ public class VMTest {
     public void testDIV_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x02 PUSH1 0x04 DIV"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x02 PUSH1 0x04 DIV")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000002";
 
         vm.step(program);
@@ -2128,7 +2148,7 @@ public class VMTest {
     public void testDIV_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x33 PUSH1 0x99 DIV"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x33 PUSH1 0x99 DIV")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000003";
 
         vm.step(program);
@@ -2144,7 +2164,7 @@ public class VMTest {
     public void testDIV_3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x22 PUSH1 0x99 DIV"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x22 PUSH1 0x99 DIV")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000004";
 
         vm.step(program);
@@ -2159,7 +2179,7 @@ public class VMTest {
     public void testDIV_4() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x15 PUSH1 0x99 DIV"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x15 PUSH1 0x99 DIV")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000007";
 
         vm.step(program);
@@ -2175,7 +2195,7 @@ public class VMTest {
     public void testDIV_5() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x04 PUSH1 0x07 DIV"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x04 PUSH1 0x07 DIV")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -2190,7 +2210,7 @@ public class VMTest {
     public void testDIV_6() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x07 DIV"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x07 DIV")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -2203,7 +2223,7 @@ public class VMTest {
     public void testSDIV_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x03E8 PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC18 SDIV"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0x03E8 PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC18 SDIV")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
 
         vm.step(program);
@@ -2218,7 +2238,7 @@ public class VMTest {
     public void testSDIV_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0xFF PUSH1 0xFF SDIV"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0xFF PUSH1 0xFF SDIV")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -2233,7 +2253,7 @@ public class VMTest {
     public void testSDIV_3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x00 PUSH1 0xFF SDIV"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x00 PUSH1 0xFF SDIV")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -2248,7 +2268,7 @@ public class VMTest {
     public void testSDIV_4() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0xFF SDIV"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0xFF SDIV")).withProgramInvoke(invoke).getProgram();
 
         try {
             vm.step(program);
@@ -2262,7 +2282,7 @@ public class VMTest {
     public void testSUB_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x04 PUSH1 0x06 SUB"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x04 PUSH1 0x06 SUB")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000002";
 
         vm.step(program);
@@ -2277,7 +2297,7 @@ public class VMTest {
     public void testSUB_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x4444 PUSH2 0x6666 SUB"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0x4444 PUSH2 0x6666 SUB")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000002222";
 
         vm.step(program);
@@ -2292,7 +2312,7 @@ public class VMTest {
     public void testSUB_3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x4444 PUSH4 0x99996666 SUB"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0x4444 PUSH4 0x99996666 SUB")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000099992222";
 
         vm.step(program);
@@ -2307,7 +2327,7 @@ public class VMTest {
     public void testSUB_4() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH4 0x99996666 SUB"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH4 0x99996666 SUB")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -2320,7 +2340,7 @@ public class VMTest {
     public void testMSIZE_1() {
 
         VM vm = new VM();
-        program = new Program(compile("MSIZE"), invoke);
+        program = ProgramFactory.create().withOps(compile("MSIZE")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -2333,7 +2353,7 @@ public class VMTest {
     public void testMSIZE_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x20 PUSH1 0x30 MSTORE MSIZE"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x20 PUSH1 0x30 MSTORE MSIZE")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000060";
 
         vm.step(program);
@@ -2350,7 +2370,7 @@ public class VMTest {
     public void testSTOP_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x20 PUSH1 0x30 PUSH1 0x10 PUSH1 0x30 PUSH1 0x11 PUSH1 0x23 STOP"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x20 PUSH1 0x30 PUSH1 0x10 PUSH1 0x30 PUSH1 0x11 PUSH1 0x23 STOP")).withProgramInvoke(invoke).getProgram();
         int expectedSteps = 7;
 
         int i = 0;
@@ -2367,7 +2387,7 @@ public class VMTest {
     public void testEXP_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x03 PUSH1 0x02 EXP"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x03 PUSH1 0x02 EXP")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000008";
 
         vm.step(program);
@@ -2386,7 +2406,7 @@ public class VMTest {
     public void testEXP_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x00 PUSH3 0x123456 EXP"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x00 PUSH3 0x123456 EXP")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -2405,7 +2425,7 @@ public class VMTest {
     public void testEXP_3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x1122 PUSH1 0x01 EXP"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0x1122 PUSH1 0x01 EXP")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -2424,7 +2444,7 @@ public class VMTest {
     public void testEXP_4() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH3 0x123456 EXP"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH3 0x123456 EXP")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -2437,7 +2457,7 @@ public class VMTest {
     public void testRETURN_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE PUSH1 0x20 PUSH1 0x00 RETURN"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE PUSH1 0x20 PUSH1 0x00 RETURN")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000001234";
 
         vm.step(program);
@@ -2456,7 +2476,7 @@ public class VMTest {
     public void testRETURN_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE PUSH1 0x20 PUSH1 0x1F RETURN"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0x1234 PUSH1 0x00 MSTORE PUSH1 0x20 PUSH1 0x1F RETURN")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "3400000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -2475,9 +2495,9 @@ public class VMTest {
 
         VM vm = new VM();
         program =
-                new Program(compile
-                        ("PUSH32 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B1 PUSH1 0x00 MSTORE PUSH1 0x20 PUSH1 0x00 RETURN"),
-                        invoke);
+                ProgramFactory.create().withOps(compile
+                        ("PUSH32 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B1 PUSH1 0x00 MSTORE PUSH1 0x20 PUSH1 0x00 RETURN"))
+                        .withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "A0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B1";
 
         vm.step(program);
@@ -2497,9 +2517,9 @@ public class VMTest {
 
         VM vm = new VM();
         program =
-                new Program(compile
-                        ("PUSH32 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B1 PUSH1 0x00 MSTORE PUSH1 0x20 PUSH1 0x10 RETURN"),
-                        invoke);
+                ProgramFactory.create().withOps(compile
+                        ("PUSH32 0xA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B1 PUSH1 0x00 MSTORE PUSH1 0x20 PUSH1 0x10 RETURN"))
+                        .withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B100000000000000000000000000000000";
 
         vm.step(program);
@@ -2519,7 +2539,7 @@ public class VMTest {
 
         VM vm = new VM();
         program =
-                new Program(compile("PUSH1 0x03 PUSH1 0x07 PUSH1 0x00 CODECOPY SLT CALLVALUE JUMP"), invoke);
+                ProgramFactory.create().withOps(compile("PUSH1 0x03 PUSH1 0x07 PUSH1 0x00 CODECOPY SLT CALLVALUE JUMP")).withProgramInvoke(invoke).getProgram();
         String m_expected_1 = "1234560000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -2538,9 +2558,9 @@ public class VMTest {
 
         VM vm = new VM();
         program =
-                new Program(compile
-                        ("PUSH1 0x5E PUSH1 0x07 PUSH1 0x00 CODECOPY PUSH1 0x00 PUSH1 0x5f SSTORE PUSH1 0x14 PUSH1 0x00 SLOAD PUSH1 0x1e PUSH1 0x20 SLOAD PUSH4 0xabcddcba PUSH1 0x40 SLOAD JUMPDEST MLOAD PUSH1 0x20 ADD PUSH1 0x0a MSTORE SLOAD MLOAD PUSH1 0x40 ADD PUSH1 0x14 MSTORE SLOAD MLOAD PUSH1 0x60 ADD PUSH1 0x1e MSTORE  SLOAD MLOAD PUSH1 0x80 ADD PUSH1 0x28 MSTORE SLOAD PUSH1 0xa0 MSTORE SLOAD PUSH1 0x16 PUSH1 0x48 PUSH1 0x00 CODECOPY PUSH1 0x16 PUSH1 0x00 CALLCODE PUSH1 0x00 PUSH1 0x3f SSTORE PUSH2 0x03e7 JUMP PUSH1 0x00 SLOAD PUSH1 0x00 MSTORE8 PUSH1 0x20 MUL CALLDATALOAD PUSH1 0x20 SLOAD"),
-                        invoke);
+                ProgramFactory.create().withOps(compile
+                        ("PUSH1 0x5E PUSH1 0x07 PUSH1 0x00 CODECOPY PUSH1 0x00 PUSH1 0x5f SSTORE PUSH1 0x14 PUSH1 0x00 SLOAD PUSH1 0x1e PUSH1 0x20 SLOAD PUSH4 0xabcddcba PUSH1 0x40 SLOAD JUMPDEST MLOAD PUSH1 0x20 ADD PUSH1 0x0a MSTORE SLOAD MLOAD PUSH1 0x40 ADD PUSH1 0x14 MSTORE SLOAD MLOAD PUSH1 0x60 ADD PUSH1 0x1e MSTORE  SLOAD MLOAD PUSH1 0x80 ADD PUSH1 0x28 MSTORE SLOAD PUSH1 0xa0 MSTORE SLOAD PUSH1 0x16 PUSH1 0x48 PUSH1 0x00 CODECOPY PUSH1 0x16 PUSH1 0x00 CALLCODE PUSH1 0x00 PUSH1 0x3f SSTORE PUSH2 0x03e7 JUMP PUSH1 0x00 SLOAD PUSH1 0x00 MSTORE8 PUSH1 0x20 MUL CALLDATALOAD PUSH1 0x20 SLOAD"))
+                        .withProgramInvoke(invoke).getProgram();
         String m_expected_1 =
                 "6000605F556014600054601E60205463ABCDDCBA6040545B51602001600A5254516040016014525451606001601E5254516080016028525460A052546016604860003960166000F26000603F556103E756600054600053602002356020540000";
 
@@ -2564,9 +2584,9 @@ public class VMTest {
 
         VM vm = new VM();
         program =
-                new Program(Hex.decode
-                        ("605E60076000396000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e75660005460005360200235"),
-                        invoke);
+                ProgramFactory.create().withOps(Hex.decode
+                        ("605E60076000396000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e75660005460005360200235"))
+                        .withProgramInvoke(invoke).getProgram();
 
         vm.step(program);
         vm.step(program);
@@ -2582,9 +2602,9 @@ public class VMTest {
 
         VM vm = new VM();
         program =
-                new Program(Hex.decode
-                        ("605E60076000396000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e756600054600053602002351234"),
-                        invoke);
+                ProgramFactory.create().withOps(Hex.decode
+                        ("605E60076000396000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e756600054600053602002351234"))
+                        .withProgramInvoke(invoke).getProgram();
 
         vm.step(program);
         vm.step(program);
@@ -2600,9 +2620,9 @@ public class VMTest {
 
         VM vm = new VM();
         program =
-                new Program(Hex.decode
-                        ("611234600054615566602054607060006020396000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e756600054600053602002351234"),
-                        invoke);
+                ProgramFactory.create().withOps(Hex.decode
+                        ("611234600054615566602054607060006020396000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e756600054600053602002351234"))
+                        .withProgramInvoke(invoke).getProgram();
 
         vm.step(program);
         vm.step(program);
@@ -2624,9 +2644,9 @@ public class VMTest {
 
         VM vm = new VM();
         program =
-                new Program(Hex.decode
-                        ("605E6007396000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e756600054600053602002351234"),
-                        invoke);
+                ProgramFactory.create().withOps(Hex.decode
+                        ("605E6007396000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e756600054600053602002351234"))
+                        .withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -2641,7 +2661,7 @@ public class VMTest {
 
         VM vm = new VM();
         program =
-                new Program(Hex.decode("60036007600073471FD3AD3E9EEADEEC4608B92D16CE6B500704CC3C123456"), invoke);
+                ProgramFactory.create().withOps(Hex.decode("60036007600073471FD3AD3E9EEADEEC4608B92D16CE6B500704CC3C123456")).withProgramInvoke(invoke).getProgram();
         String m_expected_1 = "6000600000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -2658,9 +2678,9 @@ public class VMTest {
 
         VM vm = new VM();
         program =
-                new Program(Hex.decode
-                        ("603E6007600073471FD3AD3E9EEADEEC4608B92D16CE6B500704CC3C6000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e75660005460005360200235602054"),
-                        invoke);
+                ProgramFactory.create().withOps(Hex.decode
+                        ("603E6007600073471FD3AD3E9EEADEEC4608B92D16CE6B500704CC3C6000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e75660005460005360200235602054"))
+                        .withProgramInvoke(invoke).getProgram();
         String m_expected_1 =
                 "6000605F556014600054601E60205463ABCDDCBA6040545B51602001600A5254516040016014525451606001601E5254516080016028525460A0525460160000";
 
@@ -2677,9 +2697,9 @@ public class VMTest {
     public void testEXTCODECOPY_3() {
         VM vm = new VM();
         program =
-                new Program(Hex.decode
-                        ("605E6007600073471FD3AD3E9EEADEEC4608B92D16CE6B500704CC3C6000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e75660005460005360200235"),
-                        invoke);
+                ProgramFactory.create().withOps(Hex.decode
+                        ("605E6007600073471FD3AD3E9EEADEEC4608B92D16CE6B500704CC3C6000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e75660005460005360200235"))
+                        .withProgramInvoke(invoke).getProgram();
 
         String m_expected_1 =
                 "6000605F556014600054601E60205463ABCDDCBA6040545B51602001600A5254516040016014525451606001601E5254516080016028525460A052546016604860003960166000F26000603F556103E756600054600053602002350000000000";
@@ -2697,9 +2717,9 @@ public class VMTest {
     public void testEXTCODECOPY_4() {
         VM vm = new VM();
         program =
-                new Program(Hex.decode
-                        ("611234600054615566602054603E6000602073471FD3AD3E9EEADEEC4608B92D16CE6B500704CC3C6000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e756600054600053602002351234"),
-                        invoke);
+                ProgramFactory.create().withOps(Hex.decode
+                        ("611234600054615566602054603E6000602073471FD3AD3E9EEADEEC4608B92D16CE6B500704CC3C6000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e756600054600053602002351234"))
+                        .withProgramInvoke(invoke).getProgram();
 
         vm.step(program);
         vm.step(program);
@@ -2721,8 +2741,8 @@ public class VMTest {
     public void testEXTCODECOPY_5() {
         VM vm = new VM();
         program =
-                new Program(Hex.decode("605E600773471FD3AD3E9EEADEEC4608B92D16CE6B500704CC3C"),
-                        invoke);
+                ProgramFactory.create().withOps(Hex.decode("605E600773471FD3AD3E9EEADEEC4608B92D16CE6B500704CC3C"))
+                        .withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);
@@ -2739,9 +2759,9 @@ public class VMTest {
 
         VM vm = new VM();
         program =
-                new Program(Hex.decode
-                        ("385E60076000396000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e75660005460005360200235"),
-                        invoke);
+                ProgramFactory.create().withOps(Hex.decode
+                        ("385E60076000396000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e75660005460005360200235"))
+                        .withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000062";
 
         vm.step(program);
@@ -2755,9 +2775,9 @@ public class VMTest {
     public void testEXTCODESIZE_1() {
         VM vm = new VM();
         program =
-                new Program(Hex.decode
-                        ("73471FD3AD3E9EEADEEC4608B92D16CE6B500704CC395E60076000396000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e75660005460005360200235"),
-                        invoke); // Push address on the stack and perform EXTCODECOPY
+                ProgramFactory.create().withOps(Hex.decode
+                        ("73471FD3AD3E9EEADEEC4608B92D16CE6B500704CC395E60076000396000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e75660005460005360200235"))
+                        .withProgramInvoke(invoke).getProgram(); // Push address on the stack and perform EXTCODECOPY
         String s_expected_1 = "000000000000000000000000471FD3AD3E9EEADEEC4608B92D16CE6B500704CC";
 
         vm.step(program);
@@ -2769,7 +2789,7 @@ public class VMTest {
     @Test // MOD OP
     public void testMOD_1() {
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x03 PUSH1 0x04 MOD"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x03 PUSH1 0x04 MOD")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -2783,7 +2803,7 @@ public class VMTest {
     @Test // MOD OP
     public void testMOD_2() {
         VM vm = new VM();
-        program = new Program(compile("PUSH2 0x012C PUSH2 0x01F4 MOD"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH2 0x012C PUSH2 0x01F4 MOD")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "00000000000000000000000000000000000000000000000000000000000000C8";
 
         vm.step(program);
@@ -2797,7 +2817,7 @@ public class VMTest {
     @Test // MOD OP
     public void testMOD_3() {
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x04 PUSH1 0x02 MOD"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x04 PUSH1 0x02 MOD")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000002";
 
         vm.step(program);
@@ -2812,7 +2832,7 @@ public class VMTest {
     public void testMOD_4() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x04 MOD"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x04 MOD")).withProgramInvoke(invoke).getProgram();
 
         try {
             vm.step(program);
@@ -2826,7 +2846,7 @@ public class VMTest {
     @Test // SMOD OP
     public void testSMOD_1() {
         VM vm = new VM();
-        program = new Program(compile("PUSH1 0x03 PUSH1 0x04 SMOD"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH1 0x03 PUSH1 0x04 SMOD")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -2840,9 +2860,9 @@ public class VMTest {
     @Test // SMOD OP
     public void testSMOD_2() {
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE2 " + //  -30
+        program = ProgramFactory.create().withOps(compile("PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE2 " + //  -30
                 "PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56 " + // -170
-                "SMOD"), invoke);
+                "SMOD")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEC";
 
         vm.step(program);
@@ -2856,9 +2876,9 @@ public class VMTest {
     @Test // SMOD OP
     public void testSMOD_3() {
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x000000000000000000000000000000000000000000000000000000000000001E " + //   30
+        program = ProgramFactory.create().withOps(compile("PUSH32 0x000000000000000000000000000000000000000000000000000000000000001E " + //   30
                 "PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56 " + // -170
-                "SMOD"), invoke);
+                "SMOD")).withProgramInvoke(invoke).getProgram();
         String s_expected_1 = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEC";
 
         vm.step(program);
@@ -2872,8 +2892,8 @@ public class VMTest {
     @Test(expected = StackTooSmallException.class) // SMOD OP mal
     public void testSMOD_4() {
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x000000000000000000000000000000000000000000000000000000000000001E " + //   30
-                "SMOD"), invoke);
+        program = ProgramFactory.create().withOps(compile("PUSH32 0x000000000000000000000000000000000000000000000000000000000000001E " + //   30
+                "SMOD")).withProgramInvoke(invoke).getProgram();
         try {
             vm.step(program);
             vm.step(program);

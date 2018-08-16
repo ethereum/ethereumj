@@ -1,5 +1,5 @@
 /*
- * Copyright (c) [2016] [ <ether.camp> ]
+ * Copyright (c) [2018] [ <ether.camp> ]
  * This file is part of the ethereumJ library.
  *
  * The ethereumJ library is free software: you can redistribute it and/or modify
@@ -17,104 +17,36 @@
  */
 package org.ethereum.vm.trace;
 
-import org.ethereum.config.SystemProperties;
-import org.ethereum.vm.DataWord;
-import org.ethereum.vm.OpCode;
-import org.ethereum.vm.program.invoke.ProgramInvoke;
-import org.spongycastle.util.encoders.Hex;
-
-import java.util.ArrayList;
 import java.util.List;
 
-import static java.lang.String.format;
-import static org.ethereum.util.ByteUtil.toHexString;
-import static org.ethereum.vm.trace.Serializers.serializeFieldsOnly;
+import org.ethereum.vm.DataWord;
 
-public class ProgramTrace {
+public interface ProgramTrace {
 
-    private List<Op> ops = new ArrayList<>();
-    private String result;
-    private String error;
-    private String contractAddress;
+    List<Op> getOps();
 
-    public ProgramTrace() {
-        this(null, null);
-    }
+    void setOps(List<Op> ops);
 
-    public ProgramTrace(SystemProperties config, ProgramInvoke programInvoke) {
-        if (programInvoke != null && config.vmTrace()) {
-            contractAddress = Hex.toHexString(programInvoke.getOwnerAddress().getLast20Bytes());
-        }
-    }
+    String getResult();
 
-    public List<Op> getOps() {
-        return ops;
-    }
+    void setResult(String result);
 
-    public void setOps(List<Op> ops) {
-        this.ops = ops;
-    }
+    String getError();
 
-    public String getResult() {
-        return result;
-    }
+    void setError(String error);
 
-    public void setResult(String result) {
-        this.result = result;
-    }
+    String getContractAddress();
 
-    public String getError() {
-        return error;
-    }
+    void setContractAddress(String contractAddress);
 
-    public void setError(String error) {
-        this.error = error;
-    }
+    ProgramTrace result(byte[] result);
 
-    public String getContractAddress() {
-        return contractAddress;
-    }
+    ProgramTrace error(Exception error);
 
-    public void setContractAddress(String contractAddress) {
-        this.contractAddress = contractAddress;
-    }
+    Op addOp(byte code, int pc, int deep, DataWord gas, OpActions actions);
 
-    public ProgramTrace result(byte[] result) {
-        setResult(toHexString(result));
-        return this;
-    }
+    void merge(ProgramTrace programTrace);
 
-    public ProgramTrace error(Exception error) {
-        setError(error == null ? "" : format("%s: %s", error.getClass(), error.getMessage()));
-        return this;
-    }
+    String asJsonString(boolean formatted);
 
-    public Op addOp(byte code, int pc, int deep, DataWord gas, OpActions actions) {
-        Op op = new Op();
-        op.setActions(actions);
-        op.setCode(OpCode.code(code));
-        op.setDeep(deep);
-        op.setGas(gas.value());
-        op.setPc(pc);
-
-        ops.add(op);
-
-        return op;
-    }
-
-    /**
-     * Used for merging sub calls execution.
-     */
-    public void merge(ProgramTrace programTrace) {
-        this.ops.addAll(programTrace.ops);
-    }
-
-    public String asJsonString(boolean formatted) {
-        return serializeFieldsOnly(this, formatted);
-    }
-
-    @Override
-    public String toString() {
-        return asJsonString(true);
-    }
 }
