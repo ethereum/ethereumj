@@ -44,7 +44,7 @@ public final class DataWord implements Comparable<DataWord> {
     public static final BigInteger _2_256 = BigInteger.valueOf(2).pow(256);
     public static final BigInteger MAX_VALUE = _2_256.subtract(BigInteger.ONE);
     public static final DataWord ZERO = new DataWord(new byte[32]);
-    public static final DataWord ONE = new DataWord(new byte[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1});
+    public static final DataWord ONE = DataWord.of((byte) 1);
 
     public static final long MEM_SIZE = 32 + 16 + 16;
 
@@ -52,7 +52,7 @@ public final class DataWord implements Comparable<DataWord> {
 
     /**
      * Unsafe private constructor
-     * Doesn't guarantee immutability if element of byte[] is changed later
+     * Doesn't guarantee immutability if byte[] contents are changed later
      * Use one of factory methods instead:
      *  - {@link #of(byte[])}
      *  - {@link #of(ByteArrayWrapper)}
