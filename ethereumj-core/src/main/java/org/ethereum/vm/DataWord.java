@@ -118,12 +118,26 @@ public final class DataWord implements Comparable<DataWord> {
         return of(ByteBuffer.allocate(8).putLong(num).array());
     }
 
+    /**
+     * Returns instance data
+     * Actually copy of internal byte array is provided
+     * in order to protect DataWord immutability
+     * @return instance data
+     */
     public byte[] getData() {
         return Arrays.copyOf(data, data.length);
     }
 
+    /**
+     * Returns copy of instance data
+     * @return copy of instance data
+     */
+    private byte[] copyData() {
+        return Arrays.copyOf(data, data.length);
+    }
+
     public byte[] getNoLeadZeroesData() {
-        return ByteUtil.stripLeadingZeroes(getData());
+        return ByteUtil.stripLeadingZeroes(copyData());
     }
 
     public byte[] getLast20Bytes() {
@@ -216,7 +230,7 @@ public final class DataWord implements Comparable<DataWord> {
     }
 
     public DataWord and(DataWord word) {
-        byte[] newData = this.getData();
+        byte[] newData = this.copyData();
         for (int i = 0; i < this.data.length; ++i) {
             newData[i] &= word.data[i];
         }
@@ -224,7 +238,7 @@ public final class DataWord implements Comparable<DataWord> {
     }
 
     public DataWord or(DataWord word) {
-        byte[] newData = this.getData();
+        byte[] newData = this.copyData();
         for (int i = 0; i < this.data.length; ++i) {
             newData[i] |= word.data[i];
         }
@@ -232,7 +246,7 @@ public final class DataWord implements Comparable<DataWord> {
     }
 
     public DataWord xor(DataWord word) {
-        byte[] newData = this.getData();
+        byte[] newData = this.copyData();
         for (int i = 0; i < this.data.length; ++i) {
             newData[i] ^= word.data[i];
         }
@@ -243,7 +257,7 @@ public final class DataWord implements Comparable<DataWord> {
 
         if (this.isZero()) return ZERO;
 
-        byte[] newData = this.getData();
+        byte[] newData = this.copyData();
         for (int i = 0; i < this.data.length; ++i) {
             newData[i] = (byte) ~this.data[i];
         }
@@ -415,7 +429,7 @@ public final class DataWord implements Comparable<DataWord> {
         if (0 > k || k > 31)
             throw new IndexOutOfBoundsException();
         byte mask = this.sValue().testBit((k * 8) + 7) ? (byte) 0xff : 0;
-        byte[] newData = this.getData();
+        byte[] newData = this.copyData();
         for (int i = 31; i > k; i--) {
             newData[31 - i] = mask;
         }
