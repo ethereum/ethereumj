@@ -201,7 +201,7 @@ public class CommonConfig {
 
         EthereumListener.SyncState syncStage = EthereumListener.SyncState.values()[fastsyncStageBytes[0]];
 
-        if (!systemProperties().isFastSyncEnabled() || syncStage == EthereumListener.SyncState.UNSECURE) {
+        if ((systemProperties().isSyncEnabled() && !systemProperties().isFastSyncEnabled()) || syncStage == EthereumListener.SyncState.UNSECURE) {
             // we need to cleanup state/blocks/tranasaction DBs when previous fast sync was not complete:
             // - if we now want to do regular sync
             // - if the first fastsync stage was not complete (thus DBs are not in consistent state)
