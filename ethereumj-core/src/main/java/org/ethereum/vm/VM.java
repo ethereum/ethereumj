@@ -650,10 +650,7 @@ public class VM {
                     final DataWord result;
                     if (word1.value().compareTo(_32_) == -1) {
                         byte tmp = word2.getData()[word1.intValue()];
-                        DataWord andResult = word2.and(DataWord.ZERO);
-                        byte[] data = andResult.getData();
-                        data[31] = tmp;
-                        result = DataWord.of(data);
+                        result = DataWord.of(tmp);
                     } else {
                         result = DataWord.ZERO;
                     }

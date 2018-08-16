@@ -103,6 +103,13 @@ public final class DataWord implements Comparable<DataWord> {
         return of(Hex.decode(data));
     }
 
+    public static DataWord of(byte num) {
+        byte[] bb = new byte[32];
+        bb[31] = num;
+        return new DataWord(bb);
+
+    }
+
     public static DataWord of(int num) {
         return of(ByteBuffer.allocate(4).putInt(num).array());
     }
