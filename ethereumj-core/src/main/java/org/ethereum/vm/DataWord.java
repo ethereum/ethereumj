@@ -86,7 +86,7 @@ public final class DataWord implements Comparable<DataWord> {
         if (data.length == 32)
             return new DataWord(Arrays.copyOf(data, data.length));
         else if (data.length <= 32) {
-            byte[] bytes = ZERO.getData();
+            byte[] bytes = new byte[32];
             System.arraycopy(data, 0, bytes, 32 - data.length, data.length);
             return new DataWord(bytes);
         } else {
