@@ -19,14 +19,27 @@ package org.ethereum.sharding.config;
 
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
+import org.ethereum.crypto.HashUtil;
+import org.ethereum.datasource.AbstractCachedSource;
+import org.ethereum.datasource.AsyncWriteCache;
 import org.ethereum.datasource.BatchSourceWriter;
+import org.ethereum.datasource.DbSettings;
 import org.ethereum.datasource.DbSource;
+import org.ethereum.datasource.MemSizeEstimator;
+import org.ethereum.datasource.Source;
 import org.ethereum.datasource.WriteCache;
+import org.ethereum.datasource.XorDataSource;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.TransactionStore;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.manager.WorldManager;
+import org.ethereum.sharding.processing.BeaconChain;
+import org.ethereum.sharding.processing.BeaconChainFactory;
+import org.ethereum.sharding.processing.db.BeaconStore;
+import org.ethereum.sharding.processing.db.IndexedBeaconStore;
+import org.ethereum.sharding.processing.state.BeaconStateRepository;
+import org.ethereum.sharding.processing.state.StateRepository;
 import org.ethereum.sharding.service.ValidatorRepositoryImpl;
 import org.ethereum.sharding.service.ValidatorService;
 import org.ethereum.sharding.crypto.DepositAuthority;
@@ -41,6 +54,7 @@ import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 
 /**
@@ -101,6 +115,60 @@ public class BeaconConfig {
     public DepositContract depositContract() {
         return new DepositContract(depositContractConfig.getAddress(), depositContractConfig.getBin(),
                 depositContractConfig.getAbi());
+    }
+
+    @Bean
+    public BeaconStore beaconStore() {
+        Source<byte[], byte[]> blockSrc = cachedBeaconChainSource("block");
+        Source<byte[], byte[]> indexSrc = cachedBeaconChainSource("index");
+        return new IndexedBeaconStore(blockSrc, indexSrc);
+    }
+
+    @Bean
+    public StateRepository beaconStateRepository() {
+        Source<byte[], byte[]> src = cachedBeaconChainSource("state");
+        return new BeaconStateRepository(src);
+    }
+
+    @Bean
+    public BeaconChain beaconChain() {
+        return BeaconChainFactory.create(commonConfig.dbFlushManager(), beaconStore(), beaconStateRepository());
+    }
+
+    @Bean
+    @Scope("prototype")
+    public Source<byte[], byte[]> cachedBeaconChainSource(String name) {
+        AbstractCachedSource<byte[], byte[]> writeCache = new AsyncWriteCache<byte[], byte[]>(beaconChainSource(name)) {
+            @Override
+            protected WriteCache<byte[], byte[]> createCache(Source<byte[], byte[]> source) {
+                WriteCache.BytesKey<byte[]> ret = new WriteCache.BytesKey<>(source, WriteCache.CacheType.SIMPLE);
+                ret.withSizeEstimators(MemSizeEstimator.ByteArrayEstimator, MemSizeEstimator.ByteArrayEstimator);
+                ret.setFlushSource(true);
+                return ret;
+            }
+        }.withName(name);
+        commonConfig.dbFlushManager().addCache(writeCache);
+        return writeCache;
+    }
+
+    @Bean
+    @Scope("prototype")
+    public Source<byte[], byte[]> beaconChainSource(String name) {
+        return new XorDataSource<>(beaconChainDbCache(), HashUtil.sha3(name.getBytes()));
+    }
+
+    @Bean
+    public AbstractCachedSource<byte[], byte[]> beaconChainDbCache() {
+        WriteCache.BytesKey<byte[]> ret = new WriteCache.BytesKey<>(
+                new BatchSourceWriter<>(beaconChainDB()), WriteCache.CacheType.SIMPLE);
+        ret.setFlushSource(true);
+        return ret;
+    }
+
+    @Bean
+    public DbSource<byte[]> beaconChainDB() {
+        DbSettings settings = DbSettings.newInstance();
+        return commonConfig.keyValueDataSource("beaconchain", settings);
     }
 
     public DepositAuthority depositAuthority() {
