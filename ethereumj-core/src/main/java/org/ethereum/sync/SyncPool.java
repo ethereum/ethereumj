@@ -70,7 +70,7 @@ public class SyncPool {
     private BigInteger lowerUsefulDifficulty = BigInteger.ZERO;
 
     @Autowired
-    private EthereumListener listener;
+    private EthereumListener ethereumListener;
 
     @Autowired
     private NodeManager nodeManager;
@@ -339,7 +339,7 @@ public class SyncPool {
 
         for (Channel channel : filtered) {
             if (!activePeers.contains(channel)) {
-                listener.onPeerAddedToSyncPool(channel);
+                ethereumListener.onPeerAddedToSyncPool(channel);
             }
         }
         if (logger.isTraceEnabled())

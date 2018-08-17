@@ -8,14 +8,27 @@ import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
 import org.ethereum.publish.Publisher;
 import org.ethereum.publish.event.Events;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+/**
+ * Backward compatibility component that holds old and new event publishing implementations.<br>
+ * Proxies all events to both implementations.
+ * Will be removed after {@link EthereumListener} eviction.
+ *
+ * @author Eugene Shevchenko
+ */
+@Primary
+@Component
 public class BackwardCompatibilityEthereumListenerProxy implements EthereumListener {
 
     private final CompositeEthereumListener compositeListener;
     private final Publisher publisher;
 
+    @Autowired
     public BackwardCompatibilityEthereumListenerProxy(CompositeEthereumListener listener, Publisher publisher) {
         this.compositeListener = listener;
         this.publisher = publisher;

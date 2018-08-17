@@ -29,9 +29,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 
 /**
+ * @deprecated use {@link org.ethereum.publish.Publisher} instead.
  * @author Roman Mandeleil
  * @since 12.11.2014
  */
+@Deprecated
 public class CompositeEthereumListener implements EthereumListener {
 
     private static abstract class RunnableInfo implements Runnable {

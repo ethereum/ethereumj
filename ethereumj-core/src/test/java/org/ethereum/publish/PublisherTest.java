@@ -42,7 +42,6 @@ public class PublisherTest {
         }
     }
 
-
     @Test
     public void testDuplicateSubscription() {
         Subscription<IntEvent, Integer> subscription = Subscription.to(IntEvent.class, System.out::print);
@@ -54,7 +53,6 @@ public class PublisherTest {
 
         assertEquals(1, subscribersCount);
     }
-
 
     @Test
     public void testSingleEvent() {

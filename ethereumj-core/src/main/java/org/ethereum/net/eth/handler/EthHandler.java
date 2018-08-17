@@ -53,7 +53,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     protected SystemProperties config;
 
-    protected EthereumListener listener;
+    protected EthereumListener ethereumListener;
 
     protected Channel channel;
 
@@ -64,9 +64,9 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     protected boolean peerDiscoveryMode = false;
 
     protected Block bestBlock;
+    private Subscription<BlockAdded, BlockAdded.Data> bestBlockSub;
 
     protected boolean processTransactions = false;
-    private Subscription<BlockAdded, BlockAdded.Data> bestBlockSub;
 
     protected EthHandler(EthVersion version) {
         this.version = version;
@@ -79,7 +79,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         this.config = config;
         this.blockchain = blockchain;
         this.bestBlock = blockStore.getBestBlock();
-        this.listener = listener;
+        this.ethereumListener = listener;
         this.bestBlockSub = Subscription.to(BlockAdded.class, this::setBestBlock);
         getPublisher().subscribe(this.bestBlockSub);
 
@@ -97,7 +97,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         if (EthMessageCodes.inRange(msg.getCommand().asByte(), version))
             logger.trace("EthHandler invoke: [{}]", msg.getCommand());
 
-        listener.trace(format("EthHandler invoke: [%s]", msg.getCommand()));
+        ethereumListener.trace(String.format("EthHandler invoke: [%s]", msg.getCommand()));
 
         channel.getNodeStatistics().ethInbound.add();
 
@@ -105,7 +105,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     }
 
     public Publisher getPublisher() {
-        return ((BackwardCompatibilityEthereumListenerProxy) listener).getPublisher();
+        return ((BackwardCompatibilityEthereumListenerProxy) ethereumListener).getPublisher();
     }
 
     @Override
@@ -123,7 +123,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     public void activate() {
         logger.debug("ETH protocol activated");
-        listener.trace("ETH protocol activated");
+        ethereumListener.trace("ETH protocol activated");
         sendStatus();
     }
 

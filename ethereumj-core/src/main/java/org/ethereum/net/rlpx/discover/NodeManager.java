@@ -38,6 +38,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import static java.lang.Math.min;
+
 /**
  * The central class for Peer Discovery machinery.
  *
@@ -60,7 +62,7 @@ public class NodeManager implements Consumer<DiscoveryEvent>{
 
     PeerConnectionTester peerConnectionManager;
     PeerSource peerSource;
-    EthereumListener listener;
+    EthereumListener ethereumListener;
     SystemProperties config = SystemProperties.getDefault();
 
     Consumer<DiscoveryEvent> messageSender;
@@ -84,10 +86,10 @@ public class NodeManager implements Consumer<DiscoveryEvent>{
     private ScheduledExecutorService pongTimer;
 
     @Autowired
-    public NodeManager(SystemProperties config, EthereumListener listener,
+    public NodeManager(SystemProperties config, EthereumListener ethereumListener,
                        ApplicationContext ctx, PeerConnectionTester peerConnectionManager) {
         this.config = config;
-        this.listener = listener;
+        this.ethereumListener = ethereumListener;
         this.peerConnectionManager = peerConnectionManager;
 
         PERSIST = config.peerDiscoveryPersist();
@@ -196,14 +198,14 @@ public class NodeManager implements Consumer<DiscoveryEvent>{
             nodeHandlerMap.put(key, ret);
             logger.debug(" +++ New node: " + ret + " " + n);
             if (!n.isDiscoveryNode() && !n.getHexId().equals(homeNode.getHexId())) {
-                listener.onNodeDiscovered(ret.getNode());
+                ethereumListener.onNodeDiscovered(ret.getNode());
             }
         } else if (ret.getNode().isDiscoveryNode() && !n.isDiscoveryNode()) {
             // we found discovery node with same host:port,
             // replace node with correct nodeId
             ret.node = n;
             if (!n.getHexId().equals(homeNode.getHexId())) {
-                listener.onNodeDiscovered(ret.getNode());
+                ethereumListener.onNodeDiscovered(ret.getNode());
             }
             logger.debug(" +++ Found real nodeId for discovery endpoint {}", n);
         }

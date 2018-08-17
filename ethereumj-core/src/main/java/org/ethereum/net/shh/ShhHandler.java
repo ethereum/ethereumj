@@ -17,17 +17,18 @@
  */
 package org.ethereum.net.shh;
 
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.MessageQueue;
+
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
-import static java.lang.String.format;
 
 /**
  * Process the messages between peers with 'shh' capability on the network.
@@ -45,7 +46,7 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
     private BloomFilter peerBloomFilter = BloomFilter.createAll();
 
     @Autowired
-    private EthereumListener listener;
+    private EthereumListener ethereumListener;
 
     @Autowired
     private WhisperImpl whisper;
@@ -65,11 +66,11 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
         if (ShhMessageCodes.inRange(msg.getCommand().asByte()))
             logger.info("ShhHandler invoke: [{}]", msg.getCommand());
 
-        listener.trace(format("ShhHandler invoke: [%s]", msg.getCommand()));
+        ethereumListener.trace(String.format("ShhHandler invoke: [%s]", msg.getCommand()));
 
         switch (msg.getCommand()) {
             case STATUS:
-                listener.trace("[Recv: " + msg + "]");
+                ethereumListener.trace("[Recv: " + msg + "]");
                 break;
             case MESSAGE:
                 whisper.processEnvelope((ShhEnvelopeMessage) msg, this);
@@ -103,7 +104,7 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
 
     public void activate() {
         logger.info("SHH protocol activated");
-        listener.trace("SHH protocol activated");
+        ethereumListener.trace("SHH protocol activated");
         whisper.addPeer(this);
         sendStatus();
         sendHostBloom();

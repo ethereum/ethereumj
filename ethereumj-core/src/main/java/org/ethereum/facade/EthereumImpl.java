@@ -20,9 +20,15 @@ package org.ethereum.facade;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockSummary;
+import org.ethereum.core.CallTransaction;
+import org.ethereum.core.ImportResult;
 import org.ethereum.core.PendingState;
 import org.ethereum.core.Repository;
+import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionExecutionSummary;
+import org.ethereum.core.TransactionReceipt;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.GasPriceTracker;
@@ -39,7 +45,6 @@ import org.ethereum.net.submit.TransactionTask;
 import org.ethereum.publish.Publisher;
 import org.ethereum.publish.Subscription;
 import org.ethereum.publish.event.BlockAdded;
-import org.ethereum.publish.event.Event;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.program.ProgramResult;
@@ -112,9 +117,6 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
     private GasPriceTracker gasPriceTracker = new GasPriceTracker();
 
     @Autowired
-    private Publisher publisher;
-
-    @Autowired
     public EthereumImpl(final SystemProperties config) {
         this.config = config;
         System.out.println();
@@ -123,9 +125,7 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
 
     @PostConstruct
     public void init() {
-        publisher.subscribe(to(BlockAdded.class, data -> {
-            data.getBlockSummary().getBlock().getTransactionsList().forEach(gasPriceTracker::onTransaction);
-        }));
+        worldManager.subscribe(to(BlockAdded.class, data -> gasPriceTracker.onBlock(data.getBlockSummary())));
     }
 
     @Override
@@ -178,7 +178,7 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
     }
 
     @Override
-    public <E extends Event<P>, P> Publisher subscribe(Subscription<E, P> subscription) {
+    public Publisher subscribe(Subscription subscription) {
         return worldManager.getPublisher().subscribe(subscription);
     }
 

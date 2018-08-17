@@ -339,7 +339,7 @@ public class Eth62 extends EthHandler {
 
             // basic checks passed, update statistics
             channel.getNodeStatistics().ethHandshake(msg);
-            listener.onEthStatusUpdated(channel, msg);
+            ethereumListener.onEthStatusUpdated(channel, msg);
 
             if (peerDiscoveryMode) {
                 loggerNet.trace("Peer discovery mode: STATUS received, disconnecting...");

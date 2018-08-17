@@ -30,8 +30,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
 
-import static java.lang.String.format;
-
 /**
  * Process the messages between peers with 'bzz' capability on the network.
  */
@@ -50,7 +48,7 @@ public class BzzHandler extends SimpleChannelInboundHandler<BzzMessage>
     BzzProtocol bzzProtocol;
 
     @Autowired
-    private EthereumListener listener;
+    EthereumListener ethereumListener;
 
     @Autowired
     NetStore netStore;
@@ -70,7 +68,7 @@ public class BzzHandler extends SimpleChannelInboundHandler<BzzMessage>
         if (BzzMessageCodes.inRange(msg.getCommand().asByte()))
             logger.debug("BzzHandler invoke: [{}]", msg.getCommand());
 
-        listener.trace(format("BzzHandler invoke: [%s]", msg.getCommand()));
+        ethereumListener.trace(String.format("BzzHandler invoke: [%s]", msg.getCommand()));
 
         if (bzzProtocol != null) {
             bzzProtocol.accept(msg);
@@ -97,7 +95,7 @@ public class BzzHandler extends SimpleChannelInboundHandler<BzzMessage>
 
     public void activate() {
         logger.info("BZZ protocol activated");
-        listener.trace("BZZ protocol activated");
+        ethereumListener.trace("BZZ protocol activated");
         createBzzProtocol();
         this.active = true;
     }

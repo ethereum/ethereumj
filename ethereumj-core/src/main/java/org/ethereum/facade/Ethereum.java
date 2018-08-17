@@ -70,14 +70,12 @@ public interface Ethereum {
      * Adds subscription for specific event.
      *
      * @param subscription
-     * @param <E>          event type to listen;
-     * @param <P>          {@link Event} payload type, which will be passed to subscription handler;
      * @return publisher instance to support fluent API.
      * @see Subscription
      * @see Publisher
      * @see Event
      */
-    <E extends Event<P>, P> Publisher subscribe(Subscription<E, P> subscription);
+    Publisher subscribe(Subscription subscription);
 
     PeerClient getDefaultPeer();
 
@@ -228,7 +226,8 @@ public interface Ethereum {
     void initSyncing();
 
     /**
-     * @deprecated Calculates a 'reasonable' Gas price based on statistics of the latest transaction's Gas prices
+     * @deprecated
+     * Calculates a 'reasonable' Gas price based on statistics of the latest transaction's Gas prices
      * Normally the price returned should be sufficient to execute a transaction since ~25% of the latest
      * transactions were executed at this or lower price.
      * If the transaction is wanted to be executed promptly with higher chances the returned price might

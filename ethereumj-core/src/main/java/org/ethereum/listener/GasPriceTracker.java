@@ -17,6 +17,7 @@
  */
 package org.ethereum.listener;
 
+import org.ethereum.core.BlockSummary;
 import org.ethereum.core.Transaction;
 import org.ethereum.util.ByteUtil;
 
@@ -40,7 +41,13 @@ public class GasPriceTracker {
 
     private long lastVal;
 
-    public void onTransaction(Transaction tx) {
+    public void onBlock(BlockSummary blockSummary) {
+        for (Transaction tx : blockSummary.getBlock().getTransactionsList()) {
+            onTransaction(tx);
+        }
+    }
+
+    private void onTransaction(Transaction tx) {
         if (idx == -1) {
             idx = window.length - 1;
             filled = true;

@@ -36,6 +36,9 @@ import java.util.List;
  */
 public interface EthereumListener {
 
+    /**
+     * Will be extracted to separate enum in future releases after {@link EthereumListener} eviction.
+     */
     enum PendingTransactionState {
         /**
          * Transaction may be dropped due to:
@@ -76,6 +79,9 @@ public interface EthereumListener {
         }
     }
 
+    /**
+     * Will be extracted to separate enum in future releases after {@link EthereumListener} eviction.
+     */
     enum SyncState {
         /**
          * When doing fast sync UNSECURE sync means that the full state is downloaded,

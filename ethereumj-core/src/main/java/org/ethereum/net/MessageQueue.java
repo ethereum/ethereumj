@@ -25,6 +25,7 @@ import org.ethereum.net.message.Message;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.p2p.PingMessage;
+import org.ethereum.net.p2p.PongMessage;
 import org.ethereum.net.server.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,14 +41,14 @@ import static org.ethereum.net.message.StaticMessages.DISCONNECT_MESSAGE;
 
 /**
  * This class contains the logic for sending messages in a queue
- * <p>
+ *
  * Messages open by send and answered by receive of appropriate message
  * PING by PONG
  * GET_PEERS by PEERS
  * GET_TRANSACTIONS by TRANSACTIONS
  * GET_BLOCK_HASHES by BLOCK_HASHES
  * GET_BLOCKS by BLOCKS
- * <p>
+ *
  * The following messages will not be answered:
  * PONG, PEERS, HELLO, STATUS, TRANSACTIONS, BLOCKS
  *
@@ -72,7 +73,7 @@ public class MessageQueue {
     private ChannelHandlerContext ctx = null;
 
     @Autowired
-    private EthereumListener listener;
+    EthereumListener ethereumListener;
     boolean hasPing = false;
     private ScheduledFuture<?> timerTask;
     private Channel channel;
@@ -126,7 +127,8 @@ public class MessageQueue {
     }
 
     public void receivedMessage(Message msg) throws InterruptedException {
-        listener.trace("[Recv: " + msg + "]");
+
+        ethereumListener.trace("[Recv: " + msg + "]");
 
         if (requestQueue.peek() != null) {
             MessageRoundtrip messageRoundtrip = requestQueue.peek();
@@ -165,7 +167,7 @@ public class MessageQueue {
 
             Message msg = messageRoundtrip.getMsg();
 
-            listener.onSendMessage(channel, msg);
+            ethereumListener.onSendMessage(channel, msg);
 
             ctx.writeAndFlush(msg).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
 

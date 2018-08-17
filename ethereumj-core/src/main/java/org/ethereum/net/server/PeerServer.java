@@ -17,6 +17,9 @@
  */
 package org.ethereum.net.server;
 
+import org.ethereum.config.SystemProperties;
+import org.ethereum.listener.EthereumListener;
+
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
@@ -25,10 +28,10 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
-import org.ethereum.config.SystemProperties;
-import org.ethereum.listener.EthereumListener;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -51,7 +54,7 @@ public class PeerServer {
 
     private ApplicationContext ctx;
 
-    private EthereumListener listener;
+    private EthereumListener ethereumListener;
 
     public EthereumChannelInitializer ethereumChannelInitializer;
 
@@ -63,10 +66,10 @@ public class PeerServer {
 
     @Autowired
     public PeerServer(final SystemProperties config, final ApplicationContext ctx,
-                      final EthereumListener listener) {
+                      final EthereumListener ethereumListener) {
         this.ctx = ctx;
         this.config = config;
-        this.listener = listener;
+        this.ethereumListener = ethereumListener;
     }
 
     public void start(int port) {
@@ -76,7 +79,8 @@ public class PeerServer {
 
         ethereumChannelInitializer = ctx.getBean(EthereumChannelInitializer.class, "");
 
-        listener.trace("Listening on port " + port);
+        ethereumListener.trace("Listening on port " + port);
+
 
         try {
             ServerBootstrap b = new ServerBootstrap();

@@ -333,25 +333,21 @@ public class BlockMiner {
             l.miningStarted();
         }
     }
-
     protected void fireMinerStopped() {
         for (MinerListener l : listeners) {
             l.miningStopped();
         }
     }
-
     protected void fireBlockStarted(Block b) {
         for (MinerListener l : listeners) {
             l.blockMiningStarted(b);
         }
     }
-
     protected void fireBlockCancelled(Block b) {
         for (MinerListener l : listeners) {
             l.blockMiningCanceled(b);
         }
     }
-
     protected void fireBlockMined(Block b) {
         for (MinerListener l : listeners) {
             l.blockMined(b);

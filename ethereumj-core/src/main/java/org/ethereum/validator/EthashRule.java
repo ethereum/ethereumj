@@ -73,17 +73,9 @@ public class EthashRule extends BlockHeaderRule {
     }
 
     public enum ChainType {
-        main, /**
-         * main chain, cache updates are stick to best block events, requires listener
-         */
-        direct, /**
-         * side chain, cache is triggered each validation attempt, no listener required
-         */
-        reverse;
-
-        /**
-         * side chain with reverted validation order
-         */
+        main,       /** main chain, cache updates are stick to best block events, requires listener */
+        direct,     /** side chain, cache is triggered each validation attempt, no listener required */
+        reverse;    /** side chain with reverted validation order */
 
         public boolean isSide() {
             return this == reverse || this == direct;

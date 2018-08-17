@@ -70,7 +70,6 @@ import java.util.Stack;
 
 import static java.lang.Math.max;
 import static java.lang.Runtime.getRuntime;
-import static java.lang.String.format;
 import static java.math.BigInteger.ONE;
 import static java.math.BigInteger.ZERO;
 import static java.util.Collections.emptyList;
@@ -141,7 +140,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private BigInteger totalDifficulty = ZERO;
 
     @Autowired
-    private EthereumListener listenerProxy;
+    private EthereumListener listener;
 
     @Autowired
     ProgramInvokeFactory programInvokeFactory;
@@ -191,9 +190,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     private Stack<State> stateStack = new Stack<>();
 
-    /**
-     * Tests only
-     **/
+    /** Tests only **/
     public BlockchainImpl() {
     }
 
@@ -208,7 +205,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         this.blockStore = blockStore;
         this.repository = repository;
         this.adminInfo = new AdminInfo();
-        this.listenerProxy = listener;
+        this.listener = listener;
         this.parentHeaderValidator = null;
         this.transactionStore = new TransactionStore(new HashMapDB());
         this.eventDispatchThread = EventDispatchThread.getDefault();
@@ -467,8 +464,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         }
 
         if (ret.isSuccessful()) {
-            listenerProxy.onBlock(summary, ret == IMPORTED_BEST);
-            listenerProxy.trace(format("Block chain size: [ %d ]", this.getSize()));
+            listener.onBlock(summary, ret == IMPORTED_BEST);
+            listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
 
             if (ret == IMPORTED_BEST) {
                 eventDispatchThread.invokeLater(() -> pendingState.processBest(block, summary.getReceipts()));
@@ -864,7 +861,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         if (!block.isGenesis() && !config.blockChainOnly()) {
             return applyBlock(track, block);
-        } else {
+        }
+        else {
             return new BlockSummary(block, new HashMap<byte[], BigInteger>(), new ArrayList<TransactionReceipt>(), new ArrayList<TransactionExecutionSummary>());
         }
     }
@@ -887,7 +885,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
             Repository txTrack = track.startTracking();
             TransactionExecutor executor = new TransactionExecutor(tx, block.getCoinbase(),
-                    txTrack, blockStore, programInvokeFactory, block, listenerProxy, totalGasUsed)
+                    txTrack, blockStore, programInvokeFactory, block, listener, totalGasUsed)
                     .withCommonConfig(commonConfig);
 
             executor.init();
@@ -1227,7 +1225,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     /**
      * Searches block in blockStore, if it's not found there
      * and headerStore is defined, searches blockHeader in it.
-     *
      * @param number block number
      * @return Block header
      */
@@ -1247,7 +1244,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     /**
      * Searches block in blockStore, if it's not found there
      * and headerStore is defined, searches blockHeader in it.
-     *
      * @param hash block hash
      * @return Block header
      */

@@ -24,11 +24,15 @@ import org.ethereum.datasource.*;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.leveldb.LevelDbDataSource;
 import org.ethereum.datasource.rocksdb.RocksDbDataSource;
-import org.ethereum.db.*;
+import org.ethereum.db.DbFlushManager;
+import org.ethereum.db.HeaderStore;
+import org.ethereum.db.PeerSource;
+import org.ethereum.db.RepositoryRoot;
+import org.ethereum.db.RepositoryWrapper;
+import org.ethereum.db.StateSource;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.handler.Eth63;
-import org.ethereum.listener.BackwardCompatibilityEthereumListenerProxy;
 import org.ethereum.publish.Publisher;
 import org.ethereum.sync.FastSyncManager;
 import org.ethereum.validator.*;
@@ -37,7 +41,12 @@ import org.ethereum.vm.program.ProgramPrecompile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Scope;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -233,12 +242,6 @@ public class CommonConfig {
     @Bean
     public CompositeEthereumListener compositeEthereumListener(EventDispatchThread eventDispatchThread) {
         return new CompositeEthereumListener(eventDispatchThread);
-    }
-
-    @Bean
-    @Primary
-    public EthereumListener ethereumListener(CompositeEthereumListener compositeListener, Publisher publisher) {
-        return new BackwardCompatibilityEthereumListenerProxy(compositeListener, publisher);
     }
 
     @Bean

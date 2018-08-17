@@ -72,7 +72,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
     private EthVersion ethVersion;
 
     @Autowired
-    private EthereumListener listener;
+    EthereumListener ethereumListener;
 
     private SystemProperties config;
 
@@ -166,7 +166,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
             return null;
         }
 
-        listener.onRecvMessage(channel, msg);
+        ethereumListener.onRecvMessage(channel, msg);
 
         channel.getNodeStatistics().rlpxInMessages.add();
         return msg;
@@ -175,8 +175,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
     @Override
     protected void encode(ChannelHandlerContext ctx, Message msg, List<Object> out) throws Exception {
         String output = String.format("To: \t%s \tSend: \t%s", ctx.channel().remoteAddress(), msg);
-
-        listener.trace(output);
+        ethereumListener.trace(output);
 
         if (loggerNet.isDebugEnabled())
             loggerNet.debug("To:   {}    Send:  {}", channel, msg);
