@@ -38,7 +38,7 @@ public class ReadWriteCacheTest {
     }
 
     private byte[] intToValue(int i) {
-        return (new DataWord(i)).getData();
+        return (DataWord.of(i)).getData();
     }
 
     private String str(Object obj) {

@@ -100,7 +100,7 @@ public class LogFilter {
                 boolean orMatches = false;
                 DataWord logTopic = logTopics.get(i);
                 for (byte[] orTopic : orTopics) {
-                    if (new DataWord(orTopic).equals(logTopic)) {
+                    if (DataWord.of(orTopic).equals(logTopic)) {
                         orMatches = true;
                         break;
                     }

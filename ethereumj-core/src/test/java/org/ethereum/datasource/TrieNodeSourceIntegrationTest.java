@@ -101,8 +101,8 @@ public class TrieNodeSourceIntegrationTest {
 
         assertNull(trieNodeSource.get(Hex.decode("4b7fc4d98630bae2133ad002f743124f2ef5d8167f094af0c2b82d3476604055")));
 
-        repository.addStorageRow(addr1, new DataWord(k1), new DataWord(v1));
-        repository.addStorageRow(addr2, new DataWord(k1), new DataWord(v1));
+        repository.addStorageRow(addr1, DataWord.of(k1), DataWord.of(v1));
+        repository.addStorageRow(addr2, DataWord.of(k1), DataWord.of(v1));
         flushChanges();
 
         // Logically we must get a node with key 4b7fc4d98630bae2133ad002f743124f2ef5d8167f094af0c2b82d3476604055
@@ -126,7 +126,7 @@ public class TrieNodeSourceIntegrationTest {
                 Hex.toHexString(trieNodeSource.get(Hex.decode("4b7fc4d98630bae2133ad002f743124f2ef5d8167f094af0c2b82d3476604055"))));
 
         // one of that storage rows is gonna be removed
-        repository.addStorageRow(addr1, new DataWord(k1), DataWord.ZERO);
+        repository.addStorageRow(addr1, DataWord.of(k1), DataWord.ZERO);
         flushChanges();
 
         // state doesn't contain a copy of node that belongs to addr1
@@ -139,7 +139,7 @@ public class TrieNodeSourceIntegrationTest {
                 Hex.toHexString(trieNodeSource.get(Hex.decode("4b7fc4d98630bae2133ad002f743124f2ef5d8167f094af0c2b82d3476604055"))));
 
         // remove a copy of value stick to addr2
-        repository.addStorageRow(addr2, new DataWord(k1), DataWord.ZERO);
+        repository.addStorageRow(addr2, DataWord.of(k1), DataWord.ZERO);
         flushChanges();
 
         // no source can resolve any of those keys
