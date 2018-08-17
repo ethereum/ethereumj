@@ -259,7 +259,7 @@ public class CommonConfig {
                 new Serializer<byte[], byte[]>() {
                     public byte[] serialize(byte[] object) {
                         DataWord ret = DataWord.of(object);
-                        DataWord addResult = ret.add(DataWord.of(1));
+                        DataWord addResult = ret.add(DataWord.ONE);
                         return addResult.getLast20Bytes();
                     }
                     public byte[] deserialize(byte[] stream) {

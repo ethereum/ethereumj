@@ -226,11 +226,11 @@ public class Program {
     }
 
     public void stackPushZero() {
-        stackPush(DataWord.of(0));
+        stackPush(DataWord.ZERO);
     }
 
     public void stackPushOne() {
-        DataWord stackWord = DataWord.of(1);
+        DataWord stackWord = DataWord.ONE;
         stackPush(stackWord);
     }
 

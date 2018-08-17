@@ -28,6 +28,7 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
+import static org.ethereum.util.ByteUtil.numberOfLeadingZeros;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
@@ -71,14 +72,9 @@ public final class DataWord implements Comparable<DataWord> {
             return DataWord.ZERO;
         }
 
-        boolean allExceptLastIsZero = true;
-        for (int i = 0; i < (data.length - 1); ++i) {
-            if (data[i] != 0) {
-                allExceptLastIsZero = false;
-                break;
-            }
-        }
-        if (allExceptLastIsZero) {
+        int leadingZeroBits = numberOfLeadingZeros(data);
+        int valueBits = 8 * data.length - leadingZeroBits;
+        if (valueBits <= 8) {
             if (data[data.length - 1] == 0) return DataWord.ZERO;
             if (data[data.length - 1] == 1) return DataWord.ONE;
         }
@@ -215,10 +211,8 @@ public final class DataWord implements Comparable<DataWord> {
     }
 
     public boolean isZero() {
-        for (byte tmp : data) {
-            if (tmp != 0) return false;
-        }
-        return true;
+        if (this == ZERO) return true;
+        return this.compareTo(ZERO) == 0;
     }
 
     // only in case of signed operation

@@ -257,7 +257,7 @@ public class VM {
                     gasCost += calcMemGas(gasCosts, oldMemSize, memNeeded(stack.peek(), DataWord.of(32)), 0);
                     break;
                 case MSTORE8:
-                    gasCost += calcMemGas(gasCosts, oldMemSize, memNeeded(stack.peek(), DataWord.of(1)), 0);
+                    gasCost += calcMemGas(gasCosts, oldMemSize, memNeeded(stack.peek(), DataWord.ONE), 0);
                     break;
                 case MLOAD:
                     gasCost += calcMemGas(gasCosts, oldMemSize, memNeeded(stack.peek(), DataWord.of(32)), 0);
