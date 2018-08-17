@@ -107,11 +107,11 @@ public final class DataWord implements Comparable<DataWord> {
     }
 
     public static DataWord of(int num) {
-        return of(ByteBuffer.allocate(4).putInt(num).array());
+        return of(ByteBuffer.allocate(Integer.BYTES).putInt(num).array());
     }
 
     public static DataWord of(long num) {
-        return of(ByteBuffer.allocate(8).putLong(num).array());
+        return of(ByteBuffer.allocate(Long.BYTES).putLong(num).array());
     }
 
     /**
