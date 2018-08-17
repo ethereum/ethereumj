@@ -1085,7 +1085,7 @@ public class RLP {
     /**
      * A handy shortcut for {@link #encodeElement(byte[])} + {@link #encodeList(byte[]...)}
      * <p>
-     * gEncodes each data element and wraps them all into a list.
+     * Encodes each data element and wraps them all into a list.
      */
     public static byte[] wrapList(byte[] ... data) {
         byte[][] elements = new byte[data.length][];
