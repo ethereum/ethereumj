@@ -155,7 +155,7 @@ public class RepoNewTest {
         RepositoryRoot repo = new RepositoryRoot(stateDb, null);
         byte[] addr1 = decode("aaaa");
         repo.createAccount(addr1);
-        repo.addStorageRow(addr1, DataWord.of(1), DataWord.of(111));
+        repo.addStorageRow(addr1, DataWord.ONE, DataWord.of(111));
         repo.commit();
 
         byte[] root1 = repo.getRoot();
