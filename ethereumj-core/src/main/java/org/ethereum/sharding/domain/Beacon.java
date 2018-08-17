@@ -109,6 +109,10 @@ public class Beacon {
                 + Hex.toHexString(getParentHash()).substring(0,6) + ")";
     }
 
+    public boolean isGenesis() {
+        return this.number == 0L;
+    }
+
     public static final Serializer<Beacon, byte[]> Serializer = new Serializer<Beacon, byte[]>() {
         @Override
         public byte[] serialize(Beacon block) {

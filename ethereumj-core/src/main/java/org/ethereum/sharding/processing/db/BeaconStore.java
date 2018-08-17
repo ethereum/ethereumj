@@ -31,6 +31,8 @@ public interface BeaconStore {
 
     Beacon getCanonicalHead();
 
+    Beacon getCanonicalByNumber(long number);
+
     BigInteger getCanonicalHeadScore();
 
     Beacon getByHash(byte[] hash);

@@ -23,7 +23,6 @@ import org.ethereum.datasource.Serializer;
 import org.ethereum.datasource.Source;
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
@@ -57,6 +56,16 @@ public class IndexedBeaconStore implements BeaconStore {
     @Override
     public synchronized Beacon getCanonicalHead() {
         ChainItem head = getCanonicalHeadItem();
+        if (head != null) {
+            return blocks.get(head.getHash());
+        }
+
+        return null;
+    }
+
+    @Override
+    public Beacon getCanonicalByNumber(long number) {
+        ChainItem head = getCanonicalItem(number);
         if (head != null) {
             return blocks.get(head.getHash());
         }
@@ -100,6 +109,10 @@ public class IndexedBeaconStore implements BeaconStore {
 
     @Override
     public synchronized void save(Beacon block, BigInteger chainScore, boolean canonical) {
+        ChainItem parent = getChainItemByHash(block.getParentHash());
+        if (parent != null && canonical && !parent.isCanonical())
+            throw new RuntimeException("Consistency breaking save: parent item is not from canonical chain");
+
         ChainItem item = new ChainItem(chainScore, block.getHash(), block.getParentHash(), canonical);
         putIndexItem(block.getNumber(), item);
         blocks.put(block.getHash(), block);
@@ -173,8 +186,9 @@ public class IndexedBeaconStore implements BeaconStore {
     private void putInGeneration(ChainItem newItem, List<ChainItem> generation) {
         for (int i = 0; i < generation.size(); i++) {
             ChainItem item = generation.get(i);
-            if (equal(item.getHash(), newItem.getHash()))
+            if (equal(item.getHash(), newItem.getHash())) {
                 generation.set(i, newItem);
+            }
         }
 
         generation.add(newItem);
