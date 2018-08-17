@@ -25,6 +25,8 @@ import org.ethereum.sharding.domain.Beacon;
  */
 public interface BeaconChain {
 
+    void init();
+
     Beacon getCanonicalHead();
 
     ProcessingResult insert(Beacon block);

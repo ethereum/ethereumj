@@ -50,7 +50,6 @@ public class ValidatorServiceImpl implements ValidatorService {
     private static final int RANDAO_ROUNDS = 30 * 24 * 3600 / 5; // 30 days of block proposing in solo mode
 
     Ethereum ethereum;
-    DbFlushManager dbFlushManager;
     DepositContract depositContract;
     ValidatorConfig config;
     Randao randao;
@@ -58,12 +57,11 @@ public class ValidatorServiceImpl implements ValidatorService {
 
     private State state = Undefined;
 
-    public ValidatorServiceImpl(Ethereum ethereum, DbFlushManager dbFlushManager, ValidatorConfig config,
-                                DepositContract depositContract, DepositAuthority depositAuthority, Randao randao) {
+    public ValidatorServiceImpl(Ethereum ethereum, ValidatorConfig config, DepositContract depositContract,
+                                DepositAuthority depositAuthority, Randao randao) {
         assert config.isEnabled();
 
         this.ethereum = ethereum;
-        this.dbFlushManager = dbFlushManager;
         this.config = config;
         this.depositContract = depositContract;
         this.depositAuthority = depositAuthority;
@@ -99,9 +97,7 @@ public class ValidatorServiceImpl implements ValidatorService {
     byte[] initRandao() {
         // generate randao images
         randao.generate(RANDAO_ROUNDS);
-        byte[] ret = randao.reveal();
-        dbFlushManager.flush();
-        return ret;
+        return randao.reveal();
     }
 
     void deposit(byte[] randao) {

@@ -33,14 +33,14 @@ import org.ethereum.sharding.processing.validation.StateValidator;
  */
 public class BeaconChainFactory {
 
-    public static BeaconChain create(DbFlushManager flushManager, BeaconStore store, StateRepository repository) {
+    public static BeaconChain create(DbFlushManager beaconDbFlusher, BeaconStore store, StateRepository repository) {
 
         StateTransition transitionFunction = new NoTransition();
         BeaconValidator beaconValidator = new BeaconValidator(store);
         StateValidator stateValidator = new StateValidator();
         ScoreFunction scoreFunction = new NumberAsScore();
 
-        return new BeaconChainImpl(flushManager, store, transitionFunction,
+        return new BeaconChainImpl(beaconDbFlusher, store, transitionFunction,
                 repository, beaconValidator, stateValidator, scoreFunction);
     }
 }

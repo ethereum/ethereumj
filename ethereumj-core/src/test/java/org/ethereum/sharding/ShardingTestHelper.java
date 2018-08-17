@@ -163,7 +163,7 @@ public class ShardingTestHelper {
         standaloneBlockchain.createBlock();
 
         Randao randao = sharding.randao = new Randao(new HashMapDB<>());
-        sharding.validatorService = new ValidatorServiceImpl(ethereum, dbFlushManager, sharding.validatorConfig,
+        sharding.validatorService = new ValidatorServiceImpl(ethereum, sharding.validatorConfig,
                 sharding.depositContract, authority, randao);
 
         sharding.validatorRepository = new ValidatorRepositoryImpl(standaloneBlockchain.getBlockchain().getBlockStore(),
@@ -173,7 +173,7 @@ public class ShardingTestHelper {
     }
 
     public static ValidatorService brandNewValidatorService(ShardingBootstrap bootstrap) {
-        return new ValidatorServiceImpl(bootstrap.ethereum, bootstrap.flushManager,
+        return new ValidatorServiceImpl(bootstrap.ethereum,
                 bootstrap.validatorConfig, bootstrap.depositContract, bootstrap.depositAuthority, bootstrap.randao);
     }
 

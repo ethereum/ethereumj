@@ -156,6 +156,14 @@ public class IndexedBeaconStore implements BeaconStore {
         }
     }
 
+    @Override
+    public void flush() {
+        blocks.flush();
+        index.flush();
+        blockSrc.flush();
+        indexSrc.flush();
+    }
+
     private void putIndexItem(long number, ChainItem newItem) {
         List<ChainItem> generation = getGenerationByNumber(number);
         putInGeneration(newItem, generation == null ? generation = new ArrayList<>() : generation);

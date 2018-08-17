@@ -31,7 +31,6 @@ import org.ethereum.sharding.processing.validation.ValidationResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 
 /**
@@ -42,7 +41,7 @@ public class BeaconChainImpl implements BeaconChain {
 
     private static final Logger logger = LoggerFactory.getLogger("beacon");
 
-    DbFlushManager dbFlushManager;
+    DbFlushManager beaconDbFlusher;
     BeaconStore store;
 
     StateTransition transitionFunction;
@@ -53,11 +52,11 @@ public class BeaconChainImpl implements BeaconChain {
 
     private ChainHead canonicalHead;
 
-    public BeaconChainImpl(DbFlushManager dbFlushManager, BeaconStore store,
+    public BeaconChainImpl(DbFlushManager beaconDbFlusher, BeaconStore store,
                            StateTransition transitionFunction, StateRepository repository,
                            BeaconValidator beaconValidator, StateValidator stateValidator,
                            ScoreFunction scoreFunction) {
-        this.dbFlushManager = dbFlushManager;
+        this.beaconDbFlusher = beaconDbFlusher;
         this.store = store;
         this.transitionFunction = transitionFunction;
         this.repository = repository;
@@ -66,7 +65,7 @@ public class BeaconChainImpl implements BeaconChain {
         this.scoreFunction = scoreFunction;
     }
 
-    @PostConstruct
+    @Override
     public void init() {
         if (store.getCanonicalHead() == null)
             insertGenesis();
@@ -81,7 +80,7 @@ public class BeaconChainImpl implements BeaconChain {
         repository.insert(genesis.getState());
         repository.commit();
 
-        dbFlushManager.flushSync();
+        beaconDbFlusher.flushSync();
     }
 
     @Override
@@ -109,7 +108,7 @@ public class BeaconChainImpl implements BeaconChain {
 
         ChainHead newHead = new ChainHead(block, chainScore, newState);
 
-        dbFlushManager.commit(() -> {
+        beaconDbFlusher.commit(() -> {
 
             // save state
             repository.insert(newHead.state);

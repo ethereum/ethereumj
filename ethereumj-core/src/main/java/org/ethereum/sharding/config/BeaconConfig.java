@@ -34,6 +34,7 @@ import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.TransactionStore;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.manager.WorldManager;
+import org.ethereum.sharding.manager.ShardingWorldManager;
 import org.ethereum.sharding.processing.BeaconChain;
 import org.ethereum.sharding.processing.BeaconChainFactory;
 import org.ethereum.sharding.processing.db.BeaconStore;
@@ -49,6 +50,7 @@ import org.ethereum.sharding.util.Randao;
 import org.ethereum.sharding.service.ValidatorRepository;
 import org.ethereum.sharding.service.ValidatorServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
@@ -56,6 +58,8 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.type.AnnotatedTypeMetadata;
+
+import java.util.Collections;
 
 /**
  * In addition to {@link ShardingConfig} bootstraps beacon chain processing.
@@ -83,13 +87,16 @@ public class BeaconConfig {
     DepositContractConfig depositContractConfig;
 
     @Autowired
-    DbFlushManager dbFlushManager;
-
-    @Autowired
     BlockStore blockStore;
 
     @Autowired
     TransactionStore txStore;
+
+    @Autowired
+    ShardingWorldManager shardingWorldManager;
+
+    @Autowired
+    SystemProperties systemProperties;
 
     @Bean
     public ValidatorConfig validatorConfig() {
@@ -98,12 +105,15 @@ public class BeaconConfig {
 
     @Bean
     public ValidatorService validatorService() {
+        ValidatorService validatorService;
         if (validatorConfig().isEnabled()) {
-            return new ValidatorServiceImpl(ethereum, dbFlushManager, validatorConfig(),
+            validatorService = new ValidatorServiceImpl(ethereum, validatorConfig(),
                     depositContract(), depositAuthority(), randao());
         } else {
-            return new ValidatorService() {};
+            validatorService = new ValidatorService() {};
         }
+        shardingWorldManager.setValidatorService(validatorService);
+        return validatorService;
     }
 
     @Bean
@@ -119,20 +129,23 @@ public class BeaconConfig {
 
     @Bean
     public BeaconStore beaconStore() {
-        Source<byte[], byte[]> blockSrc = cachedBeaconChainSource("block");
-        Source<byte[], byte[]> indexSrc = cachedBeaconChainSource("index");
+        Source<byte[], byte[]> blockSrc = cachedBeaconChainSource("beacon_block");
+        Source<byte[], byte[]> indexSrc = cachedBeaconChainSource("beacon_index");
         return new IndexedBeaconStore(blockSrc, indexSrc);
     }
 
     @Bean
     public StateRepository beaconStateRepository() {
-        Source<byte[], byte[]> src = cachedBeaconChainSource("state");
+        Source<byte[], byte[]> src = cachedBeaconChainSource("beacon_state");
         return new BeaconStateRepository(src);
     }
 
     @Bean
     public BeaconChain beaconChain() {
-        return BeaconChainFactory.create(commonConfig.dbFlushManager(), beaconStore(), beaconStateRepository());
+        BeaconChain beaconChain = BeaconChainFactory.create(
+                beaconDbFlusher(), beaconStore(), beaconStateRepository());
+        shardingWorldManager.setBeaconChain(beaconChain);
+        return beaconChain;
     }
 
     @Bean
@@ -147,7 +160,7 @@ public class BeaconConfig {
                 return ret;
             }
         }.withName(name);
-        commonConfig.dbFlushManager().addCache(writeCache);
+        beaconDbFlusher().addCache(writeCache);
         return writeCache;
     }
 
@@ -171,6 +184,16 @@ public class BeaconConfig {
         return commonConfig.keyValueDataSource("beaconchain", settings);
     }
 
+    private DbFlushManager beaconDbFlusher;
+    public DbFlushManager beaconDbFlusher() {
+        if (beaconDbFlusher != null)
+            return beaconDbFlusher;
+
+        beaconDbFlusher = new DbFlushManager(systemProperties, Collections.emptySet(), beaconChainDbCache());
+        shardingWorldManager.setBeaconDbFlusher(beaconDbFlusher);
+        return beaconDbFlusher;
+    }
+
     public DepositAuthority depositAuthority() {
         return new UnsecuredDepositAuthority(validatorConfig());
     }
@@ -180,7 +203,6 @@ public class BeaconConfig {
         WriteCache.BytesKey<byte[]> cache = new WriteCache.BytesKey<>(
                 new BatchSourceWriter<>(src), WriteCache.CacheType.SIMPLE);
         cache.setFlushSource(true);
-        dbFlushManager.addCache(cache);
 
         return new Randao(cache);
     }

@@ -44,4 +44,6 @@ public interface BeaconStore {
     void save(Beacon block, BigInteger chainScore, boolean canonical);
 
     void reorgTo(Beacon block);
+
+    void flush();
 }

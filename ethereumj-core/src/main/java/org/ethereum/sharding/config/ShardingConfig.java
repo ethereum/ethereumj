@@ -28,6 +28,7 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.sharding.manager.ShardingWorldManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -67,7 +68,7 @@ public class ShardingConfig {
     DbFlushManager dbFlushManager;
 
     @Bean
-    public WorldManager worldManager() {
+    public ShardingWorldManager worldManager() {
         return new ShardingWorldManager(systemProperties, repository,
                 ethereumListener, blockchain, blockStore, depositContractConfig(), dbFlushManager);
     }
