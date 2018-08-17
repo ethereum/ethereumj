@@ -64,7 +64,7 @@ public class IndexedBeaconStore implements BeaconStore {
     }
 
     @Override
-    public Beacon getCanonicalByNumber(long number) {
+    public synchronized Beacon getCanonicalByNumber(long number) {
         ChainItem head = getCanonicalItem(number);
         if (head != null) {
             return blocks.get(head.getHash());
