@@ -108,23 +108,23 @@ public class ProgramInvokeImpl implements ProgramInvoke {
                              Repository repository, BlockStore blockStore) {
 
         // Transaction env
-        this.address = new DataWord(address);
-        this.origin = new DataWord(origin);
-        this.caller = new DataWord(caller);
-        this.balance = new DataWord(balance);
-        this.gasPrice = new DataWord(gasPrice);
-        this.gas = new DataWord(gas);
+        this.address = DataWord.of(address);
+        this.origin = DataWord.of(origin);
+        this.caller = DataWord.of(caller);
+        this.balance = DataWord.of(balance);
+        this.gasPrice = DataWord.of(gasPrice);
+        this.gas = DataWord.of(gas);
         this.gasLong = this.gas.longValueSafe();
-        this.callValue = new DataWord(callValue);
+        this.callValue = DataWord.of(callValue);
         this.msgData = msgData;
 
         // last Block env
-        this.prevHash = new DataWord(lastHash);
-        this.coinbase = new DataWord(coinbase);
-        this.timestamp = new DataWord(timestamp);
-        this.number = new DataWord(number);
-        this.difficulty = new DataWord(difficulty);
-        this.gaslimit = new DataWord(gaslimit);
+        this.prevHash = DataWord.of(lastHash);
+        this.coinbase = DataWord.of(coinbase);
+        this.timestamp = DataWord.of(timestamp);
+        this.number = DataWord.of(number);
+        this.difficulty = DataWord.of(difficulty);
+        this.gaslimit = DataWord.of(gaslimit);
 
         this.repository = repository;
         this.blockStore = blockStore;
@@ -187,13 +187,13 @@ public class ProgramInvokeImpl implements ProgramInvoke {
 
         if (msgData == null || index >= msgData.length
                 || tempIndex.compareTo(MAX_MSG_DATA) == 1)
-            return new DataWord();
+            return DataWord.ZERO;
         if (index + size > msgData.length)
             size = msgData.length - index;
 
         byte[] data = new byte[32];
         System.arraycopy(msgData, index, data, 0, size);
-        return new DataWord(data);
+        return DataWord.of(data);
     }
 
     /*  CALLDATASIZE */
@@ -201,7 +201,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
 
         if (msgData == null || msgData.length == 0) return DataWord.ZERO;
         int size = msgData.length;
-        return new DataWord(size);
+        return DataWord.of(size);
     }
 
     /*  CALLDATACOPY */

@@ -327,7 +327,7 @@ public class TestRunner {
                             }
 
                             Map<DataWord, DataWord> testStorage = contractDetails.getStorage();
-                            DataWord actualValue = testStorage.get(new DataWord(storageKey.getData()));
+                            DataWord actualValue = testStorage.get(DataWord.of(storageKey.getData()));
 
                             if (actualValue == null ||
                                     !Arrays.equals(expectedStValue, actualValue.getData())) {

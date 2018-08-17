@@ -222,15 +222,15 @@ public class Program {
     }
 
     public void stackPush(byte[] data) {
-        stackPush(new DataWord(data));
+        stackPush(DataWord.of(data));
     }
 
     public void stackPushZero() {
-        stackPush(new DataWord(0));
+        stackPush(DataWord.ZERO);
     }
 
     public void stackPushOne() {
-        DataWord stackWord = new DataWord(1);
+        DataWord stackWord = DataWord.ONE;
         stackPush(stackWord);
     }
 
@@ -463,7 +463,7 @@ public class Program {
         // [5] COOK THE INVOKE AND EXECUTE
         InternalTransaction internalTx = addInternalTx(nonce, getGasLimit(), senderAddress, null, endowment, programCode, "create");
         ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
-                this, new DataWord(newAddress), getOwnerAddress(), value, gasLimit,
+                this, DataWord.of(newAddress), getOwnerAddress(), value, gasLimit,
                 newBalance, null, track, this.invoke.getBlockStore(), false, byTestingSuite());
 
         ProgramResult result = ProgramResult.createEmpty();
@@ -520,7 +520,7 @@ public class Program {
                 track.commit();
 
             // IN SUCCESS PUSH THE ADDRESS INTO THE STACK
-            stackPush(new DataWord(newAddress));
+            stackPush(DataWord.of(newAddress));
         }
 
         // 5. REFUND THE REMAIN GAS
@@ -596,7 +596,7 @@ public class Program {
         ProgramResult result = null;
         if (isNotEmpty(programCode)) {
             ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
-                    this, new DataWord(contextAddress),
+                    this, DataWord.of(contextAddress),
                     msg.getType().callIsDelegate() ? getCallerAddress() : getOwnerAddress(),
                     msg.getType().callIsDelegate() ? getCallValue() : msg.getEndowment(),
                     msg.getGas(), contextBalance, data, track, this.invoke.getBlockStore(),
@@ -701,8 +701,8 @@ public class Program {
     }
 
     public void storageSave(byte[] key, byte[] val) {
-        DataWord keyWord = new DataWord(key);
-        DataWord valWord = new DataWord(val);
+        DataWord keyWord = DataWord.of(key);
+        DataWord valWord = DataWord.of(val);
         getStorage().addStorageRow(getOwnerAddress().getLast20Bytes(), keyWord, valWord);
     }
 
@@ -716,30 +716,30 @@ public class Program {
     }
 
     public DataWord getOwnerAddress() {
-        return invoke.getOwnerAddress().clone();
+        return invoke.getOwnerAddress();
     }
 
     public DataWord getBlockHash(int index) {
         return index < this.getNumber().longValue() && index >= Math.max(256, this.getNumber().intValue()) - 256 ?
-                new DataWord(this.invoke.getBlockStore().getBlockHashByNumber(index, getPrevHash().getData())).clone() :
-                DataWord.ZERO.clone();
+                DataWord.of(this.invoke.getBlockStore().getBlockHashByNumber(index, getPrevHash().getData())) :
+                DataWord.ZERO;
     }
 
     public DataWord getBalance(DataWord address) {
         BigInteger balance = getStorage().getBalance(address.getLast20Bytes());
-        return new DataWord(balance.toByteArray());
+        return DataWord.of(balance.toByteArray());
     }
 
     public DataWord getOriginAddress() {
-        return invoke.getOriginAddress().clone();
+        return invoke.getOriginAddress();
     }
 
     public DataWord getCallerAddress() {
-        return invoke.getCallerAddress().clone();
+        return invoke.getCallerAddress();
     }
 
     public DataWord getGasPrice() {
-        return invoke.getMinGasPrice().clone();
+        return invoke.getMinGasPrice();
     }
 
     public long getGasLong() {
@@ -747,15 +747,15 @@ public class Program {
     }
 
     public DataWord getGas() {
-        return new DataWord(invoke.getGasLong() - getResult().getGasUsed());
+        return DataWord.of(invoke.getGasLong() - getResult().getGasUsed());
     }
 
     public DataWord getCallValue() {
-        return invoke.getCallValue().clone();
+        return invoke.getCallValue();
     }
 
     public DataWord getDataSize() {
-        return invoke.getDataSize().clone();
+        return invoke.getDataSize();
     }
 
     public DataWord getDataValue(DataWord index) {
@@ -767,7 +767,7 @@ public class Program {
     }
 
     public DataWord getReturnDataBufferSize() {
-        return new DataWord(getReturnDataBufferSizeI());
+        return DataWord.of(getReturnDataBufferSizeI());
     }
 
     private int getReturnDataBufferSizeI() {
@@ -781,24 +781,23 @@ public class Program {
     }
 
     public DataWord storageLoad(DataWord key) {
-        DataWord ret = getStorage().getStorageValue(getOwnerAddress().getLast20Bytes(), key.clone());
-        return ret == null ? null : ret.clone();
+        return getStorage().getStorageValue(getOwnerAddress().getLast20Bytes(), key);
     }
 
     public DataWord getPrevHash() {
-        return invoke.getPrevHash().clone();
+        return invoke.getPrevHash();
     }
 
     public DataWord getCoinbase() {
-        return invoke.getCoinbase().clone();
+        return invoke.getCoinbase();
     }
 
     public DataWord getTimestamp() {
-        return invoke.getTimestamp().clone();
+        return invoke.getTimestamp();
     }
 
     public DataWord getNumber() {
-        return invoke.getNumber().clone();
+        return invoke.getNumber();
     }
 
     public BlockchainConfig getBlockchainConfig() {
@@ -806,11 +805,11 @@ public class Program {
     }
 
     public DataWord getDifficulty() {
-        return invoke.getDifficulty().clone();
+        return invoke.getDifficulty();
     }
 
     public DataWord getGasLimit() {
-        return invoke.getGaslimit().clone();
+        return invoke.getGaslimit();
     }
 
     public boolean isStaticCall() {

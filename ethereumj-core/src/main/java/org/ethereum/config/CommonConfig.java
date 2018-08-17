@@ -208,6 +208,7 @@ public class CommonConfig {
     }
 
     public void fastSyncCleanUp() {
+        if (!systemProperties().isSyncEnabled()) return;
         byte[] fastsyncStageBytes = blockchainDB().get(FastSyncManager.FASTSYNC_DB_KEY_SYNC_STAGE);
         if (fastsyncStageBytes == null) return; // no uncompleted fast sync
         if (!systemProperties().blocksLoader().isEmpty()) return; // blocks loader enabled
@@ -275,9 +276,9 @@ public class CommonConfig {
         return new SourceCodec<byte[], ProgramPrecompile, byte[], byte[]>(source,
                 new Serializer<byte[], byte[]>() {
                     public byte[] serialize(byte[] object) {
-                        DataWord ret = new DataWord(object);
-                        ret.add(new DataWord(1));
-                        return ret.getLast20Bytes();
+                        DataWord ret = DataWord.of(object);
+                        DataWord addResult = ret.add(DataWord.ONE);
+                        return addResult.getLast20Bytes();
                     }
 
                     public byte[] deserialize(byte[] stream) {

@@ -37,11 +37,11 @@ public class ObjectDataSourceTest {
     }
 
     private byte[] intToValue(int i) {
-        return (new DataWord(i)).getData();
+        return (DataWord.of(i)).getData();
     }
 
     private DataWord intToDataWord(int i) {
-        return new DataWord(i);
+        return DataWord.of(i);
     }
 
     private String str(Object obj) {

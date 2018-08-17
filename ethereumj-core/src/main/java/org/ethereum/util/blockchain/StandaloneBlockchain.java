@@ -712,12 +712,12 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
         @Override
         public byte[] getStorageSlot(long slot) {
-            return getStorageSlot(new DataWord(slot).getData());
+            return getStorageSlot(DataWord.of(slot).getData());
         }
 
         @Override
         public byte[] getStorageSlot(byte[] slot) {
-            DataWord ret = getBlockchain().getRepository().getContractDetails(contractAddr).get(new DataWord(slot));
+            DataWord ret = getBlockchain().getRepository().getContractDetails(contractAddr).get(DataWord.of(slot));
             return ret.getData();
         }
     }

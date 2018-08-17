@@ -55,8 +55,8 @@ public class AccountBuilder {
         for (String keyTck : storageTck.keySet()) {
             String valueTck = storageTck.get(keyTck);
 
-            DataWord key = new DataWord(parseData(keyTck));
-            DataWord value = new DataWord(parseData(valueTck));
+            DataWord key = DataWord.of(parseData(keyTck));
+            DataWord value = DataWord.of(parseData(valueTck));
 
             storage.put(key, value);
         }

@@ -118,7 +118,7 @@ public class Storage implements Repository, ProgramListenerAware {
     }
 
     private boolean canListenTrace(byte[] address) {
-        return (programListener != null) && this.address.equals(new DataWord(address));
+        return (programListener != null) && this.address.equals(DataWord.of(address));
     }
 
     @Override

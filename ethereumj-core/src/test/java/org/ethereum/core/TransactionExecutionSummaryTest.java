@@ -138,11 +138,11 @@ public class TransactionExecutionSummaryTest {
     }
 
     private static DataWord randomDataWord() {
-        return new DataWord(randomBytes(32));
+        return DataWord.of(randomBytes(32));
     }
 
     private static DataWord randomAddress() {
-        return new DataWord(randomBytes(20));
+        return DataWord.of(randomBytes(20));
     }
 
     private static List<DataWord> randomDataWords(int count) {
