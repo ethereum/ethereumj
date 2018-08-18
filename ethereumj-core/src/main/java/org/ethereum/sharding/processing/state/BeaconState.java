@@ -17,7 +17,10 @@
  */
 package org.ethereum.sharding.processing.state;
 
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.Serializer;
+
+import static org.ethereum.crypto.HashUtil.blake2b;
 
 /**
  * @author Mikhail Kalinin
@@ -32,7 +35,7 @@ public class BeaconState {
     }
 
     public byte[] getHash() {
-        return new byte[] {};
+        return blake2b(getEncoded());
     }
 
     public byte[] getEncoded() {

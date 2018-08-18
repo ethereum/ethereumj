@@ -95,6 +95,10 @@ public class Beacon {
         return FastByteComparisons.equal(this.getHash(), other.getHash());
     }
 
+    public void setStateHash(byte[] stateHash) {
+        this.stateHash = stateHash;
+    }
+
     @Override
     public boolean equals(Object other) {
         if (this == other) return true;

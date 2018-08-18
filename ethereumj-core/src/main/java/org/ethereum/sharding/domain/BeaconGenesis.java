@@ -35,6 +35,7 @@ public class BeaconGenesis extends Beacon {
 
     private BeaconGenesis() {
         super(NULL, NULL, NULL, NULL, SLOT);
+        setStateHash(getState().getHash());
     }
 
     public static BeaconGenesis instance() {

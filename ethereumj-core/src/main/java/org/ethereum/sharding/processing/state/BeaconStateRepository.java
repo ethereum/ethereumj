@@ -47,5 +47,6 @@ public class BeaconStateRepository implements StateRepository {
 
     @Override
     public void commit() {
+        stateDS.flush();
     }
 }
