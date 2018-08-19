@@ -20,10 +20,23 @@ package org.ethereum.sharding.processing.validation;
 import org.ethereum.sharding.domain.Beacon;
 
 /**
+ * An abstract interface for beacon chain blocks validation rule.
+ *
+ * @see BeaconValidator
+ * @see StateValidator
+ * @see ValidationResult
+ *
  * @author Mikhail Kalinin
  * @since 14.08.2018
  */
 public interface ValidationRule<T> {
 
+    /**
+     * Accepts block and data which block is validated against.
+     *
+     * @param block the block
+     * @param data data that are a part of validation process
+     * @return {@link ValidationResult}
+     */
     ValidationResult apply(Beacon block, T data);
 }

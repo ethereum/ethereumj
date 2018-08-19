@@ -17,15 +17,32 @@
  */
 package org.ethereum.sharding.processing.state;
 
+import javax.annotation.Nullable;
+
 /**
+ * An API to the beacon state repository.
+ *
+ * <p>
+ *     The repository is a kv storage with a state hash treated as a key.
+ *
  * @author Mikhail Kalinin
  * @since 15.08.2018
  */
 public interface StateRepository {
 
+    /**
+     * Inserts new state into repository.
+     */
     void insert(BeaconState state);
 
+    /**
+     * Returns beacon state with specific hash.
+     */
+    @Nullable
     BeaconState get(byte[] hash);
 
+    /**
+     * Flushes changes to underlying sources.
+     */
     void commit();
 }

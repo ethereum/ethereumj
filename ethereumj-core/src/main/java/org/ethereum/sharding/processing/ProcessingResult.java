@@ -20,6 +20,8 @@ package org.ethereum.sharding.processing;
 import org.ethereum.sharding.processing.validation.ValidationResult;
 
 /**
+ * The result of processing a certain block.
+ *
  * @author Mikhail Kalinin
  * @since 16.08.2018
  */

@@ -21,6 +21,8 @@ import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.processing.state.BeaconState;
 
 /**
+ * A dummy transition function. Does nothing but returning an empty beacon state.
+ *
  * @author Mikhail Kalinin
  * @since 16.08.2018
  */

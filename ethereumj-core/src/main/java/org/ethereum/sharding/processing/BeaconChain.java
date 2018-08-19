@@ -18,16 +18,38 @@
 package org.ethereum.sharding.processing;
 
 import org.ethereum.sharding.domain.Beacon;
+import org.ethereum.sharding.processing.consensus.ScoreFunction;
+import org.ethereum.sharding.processing.consensus.StateTransition;
+import org.ethereum.validator.ValidationRule;
 
 /**
+ * Responsible for validating, importing and storing blocks of the beacon chain.
+ *
  * @author Mikhail Kalinin
  * @since 14.08.2018
  */
 public interface BeaconChain {
 
+    /**
+     * Initializes inner state.
+     * In case if db is empty populates it with initial data like genesis and initial state.
+     */
     void init();
 
+    /**
+     * Returns a block that is a head of canonical chain.
+     */
     Beacon getCanonicalHead();
 
+    /**
+     * Inserts a block into a chain.
+     * This process includes block validation, processing, fork choice, db storage and some more actions.
+     *
+     * @return result of block import, check {@link ProcessingResult} for details.
+     *
+     * @see ValidationRule
+     * @see ScoreFunction
+     * @see StateTransition
+     */
     ProcessingResult insert(Beacon block);
 }

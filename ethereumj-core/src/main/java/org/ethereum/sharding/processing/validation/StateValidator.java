@@ -27,6 +27,8 @@ import static org.ethereum.sharding.processing.validation.ValidationResult.State
 import static org.ethereum.sharding.processing.validation.ValidationResult.Success;
 
 /**
+ * Claims produced state is in consensus with state specified by processed block.
+ *
  * @author Mikhail Kalinin
  * @since 16.08.2018
  */

@@ -29,6 +29,8 @@ import java.math.BigInteger;
 import static org.ethereum.crypto.HashUtil.blake2b;
 
 /**
+ * Beacon chain block structure.
+ *
  * @author Mikhail Kalinin
  * @since 14.08.2018
  */

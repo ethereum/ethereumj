@@ -22,6 +22,8 @@ import org.ethereum.sharding.processing.state.BeaconState;
 import java.math.BigInteger;
 
 /**
+ * A special beacon chain block that is the first block of the chain.
+ *
  * @author Mikhail Kalinin
  * @since 14.08.2018
  */

@@ -28,6 +28,12 @@ import org.ethereum.sharding.processing.validation.BeaconValidator;
 import org.ethereum.sharding.processing.validation.StateValidator;
 
 /**
+ * A factory that creates {@link BeaconChain} instance.
+ *
+ * <p>
+ *     Instantiates strategy implementations that beacon chain depends on,
+ *     after that creates beacon chain itself.
+ *
  * @author Mikhail Kalinin
  * @since 16.08.2018
  */

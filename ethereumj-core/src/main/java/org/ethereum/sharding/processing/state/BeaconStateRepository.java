@@ -22,6 +22,8 @@ import org.ethereum.datasource.Source;
 import org.ethereum.sharding.processing.db.BeaconStore;
 
 /**
+ * Default implementation of {@link StateRepository}.
+ *
  * @author Mikhail Kalinin
  * @since 16.08.2018
  */

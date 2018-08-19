@@ -23,10 +23,29 @@ import org.ethereum.sharding.domain.Beacon;
 import java.math.BigInteger;
 
 /**
+ * A function that takes beacon chain block and state that block produces and returns a score of that block.
+ *
+ * <p>
+ *     Basically, this function represents a fork choice rule.
+ *
+ * <p>
+ *     When score is calculated it's added to the total score of the chain that block does belong to,
+ *     and next it is compared to total score of canonical chain,
+ *     if calculated total score is greater than canonical total score then beacon chain reorgs to the new block.
+ *
+ *     Check {@link org.ethereum.sharding.processing.db.BeaconStore#reorgTo(Beacon)} for details.
+ *
+ * @see Beacon
+ * @see BeaconState
+ *
  * @author Mikhail Kalinin
  * @since 15.08.2018
  */
 public interface ScoreFunction {
 
+    /**
+     * Calculates block score, accepts block and state.
+     * The state is a result of applying {@link StateTransition} function to the block.
+     */
     BigInteger apply(Beacon block, BeaconState state);
 }

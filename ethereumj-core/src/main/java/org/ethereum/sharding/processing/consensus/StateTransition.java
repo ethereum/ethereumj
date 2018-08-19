@@ -21,10 +21,25 @@ import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.domain.Beacon;
 
 /**
+ * A heart of beacon chain block processing.
+ *
+ * <p>
+ *     Produces new beacon chain state by taking current state and applying a block to it.
+ *
+ * @see BeaconState
+ * @see Beacon
+ *
  * @author Mikhail Kalinin
  * @since 14.08.2018
  */
 public interface StateTransition {
 
+    /**
+     * Produces new beacon chain state.
+     *
+     * @param block block that is the source of transition
+     * @param to a state to make a transition from
+     * @return new beacon state
+     */
     BeaconState applyBlock(Beacon block, BeaconState to);
 }

@@ -35,6 +35,16 @@ import static java.lang.Math.max;
 import static org.ethereum.util.FastByteComparisons.equal;
 
 /**
+ * Default implementation of {@link BeaconStore}.
+ *
+ * <p>
+ *     It maintains two sources. One is for plain blocks that are accessible by hashes.
+ * <p>
+ *     Second source provides a storage for meta data like forks, canonical chain and block score.
+ *     This meta data is accessible by block number which makes number-based lookups possible.
+ *
+ *     Check {@link org.ethereum.sharding.processing.db.IndexedBeaconStore.ChainItem} for details.
+ *
  * @author Mikhail Kalinin
  * @since 14.08.2018
  */

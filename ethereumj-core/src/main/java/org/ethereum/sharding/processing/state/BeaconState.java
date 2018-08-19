@@ -17,12 +17,13 @@
  */
 package org.ethereum.sharding.processing.state;
 
-import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.Serializer;
 
 import static org.ethereum.crypto.HashUtil.blake2b;
 
 /**
+ * Beacon state data structure.
+ *
  * @author Mikhail Kalinin
  * @since 14.08.2018
  */

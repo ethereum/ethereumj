@@ -18,6 +18,8 @@
 package org.ethereum.sharding.processing.validation;
 
 /**
+ * Enumerates possible results of beacon blocks validation.
+ *
  * @author Mikhail Kalinin
  * @since 16.08.2018
  */

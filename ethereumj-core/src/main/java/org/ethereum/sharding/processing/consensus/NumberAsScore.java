@@ -23,6 +23,8 @@ import org.ethereum.sharding.processing.state.BeaconState;
 import java.math.BigInteger;
 
 /**
+ * Trivial {@link ScoreFunction} that treats block's number as a score of that block.
+ *
  * @author Mikhail Kalinin
  * @since 16.08.2018
  */

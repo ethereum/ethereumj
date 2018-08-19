@@ -34,6 +34,8 @@ import org.slf4j.LoggerFactory;
 import java.math.BigInteger;
 
 /**
+ * This is default and likely the only implementation of {@link BeaconChain}
+ *
  * @author Mikhail Kalinin
  * @since 14.08.2018
  */
