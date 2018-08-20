@@ -304,30 +304,18 @@ public class GitHubBlockStateTest {
     @Test
     @Ignore("Broken tests format, delayed until resolved")
     public void stExtCodeHashCallCode() throws IOException {
-        BlockchainTestSuite.runSingle(
-                "GeneralStateTests/stExtCodeHash/extCodeHashCallCode_d0g0v0.json",
-                "10ab37c095bb87d2e781bcf112b6104912fccb44",
-                GitHubJSONTestSuite.Network.Constantinople
-        );
-        BlockchainTestSuite.runSingle(
-                "GeneralStateTests/stExtCodeHash/extCodeHashCallCode_d0g0v0.json",
-                "10ab37c095bb87d2e781bcf112b6104912fccb44",
-                GitHubJSONTestSuite.Network.Byzantium
-        );
+        String commit = "10ab37c095bb87d2e781bcf112b6104912fccb44";
+        String filePath = "GeneralStateTests/stExtCodeHash/extCodeHashCallCode_d0g0v0.json";
+        BlockchainTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Constantinople);
+        BlockchainTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Byzantium);
     }
 
     @Test
     @Ignore("Broken tests format, delayed until resolved")
     public void stExtCodeHashCall() throws IOException {
-        BlockchainTestSuite.runSingle(
-                "GeneralStateTests/stExtCodeHash/extCodeHashCall_d0g0v0.json",
-                "10ab37c095bb87d2e781bcf112b6104912fccb44",
-                GitHubJSONTestSuite.Network.Constantinople
-        );
-        BlockchainTestSuite.runSingle(
-                "GeneralStateTests/stExtCodeHash/extCodeHashCall_d0g0v0.json",
-                "10ab37c095bb87d2e781bcf112b6104912fccb44",
-                GitHubJSONTestSuite.Network.Byzantium
-        );
+        String commit = "10ab37c095bb87d2e781bcf112b6104912fccb44";
+        String filePath = "GeneralStateTests/stExtCodeHash/extCodeHashCall_d0g0v0.json";
+        BlockchainTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Constantinople);
+        BlockchainTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Byzantium);
     }
 }
