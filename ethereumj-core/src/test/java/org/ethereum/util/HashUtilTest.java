@@ -104,7 +104,7 @@ public class HashUtilTest {
 
     @Test
     public void testBlake2b() {
-        String expected = "3b223264fdff2876594f9109f3f66c1ba86fa064a3355bd41dba53fd142c8317";
+        String expected = "aa99f4a69a46c7f453f4907aff67fb5942337f0eac1a1cc1c58067068fc97b9e";
         String result = Hex.toHexString(HashUtil.blake2b("blake2b-test".getBytes()));
         assertEquals(expected, result);
     }

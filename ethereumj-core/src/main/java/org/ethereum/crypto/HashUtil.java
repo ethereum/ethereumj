@@ -31,6 +31,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.Provider;
 import java.security.Security;
+import java.util.Arrays;
 import java.util.Random;
 
 import static java.util.Arrays.copyOfRange;
@@ -248,9 +249,9 @@ public class HashUtil {
 
     public static byte[] blake2b(byte[] data) {
         try {
-            MessageDigest digest = MessageDigest.getInstance("BLAKE2B-256");
+            MessageDigest digest = MessageDigest.getInstance("BLAKE2B-512");
             digest.update(data);
-            return digest.digest();
+            return Arrays.copyOf(digest.digest(), 32);
         } catch (NoSuchAlgorithmException e) {
             LOG.error("Can't find such algorithm", e);
             throw new RuntimeException(e);
