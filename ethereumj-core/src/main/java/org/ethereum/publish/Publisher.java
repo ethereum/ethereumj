@@ -1,22 +1,21 @@
 package org.ethereum.publish;
 
+import org.apache.commons.lang3.text.StrBuilder;
 import org.ethereum.core.EventDispatchThread;
 import org.ethereum.publish.event.Event;
 import org.ethereum.publish.event.OneOffEvent;
-import org.ethereum.publish.event.SignalEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
-import java.util.function.Consumer;
 
 import static java.util.Collections.emptyList;
 import static java.util.Objects.nonNull;
-import static java.util.stream.Collectors.toList;
 
 /**
  * Event publisher that uses pub/sub model to deliver event messages.<br>
@@ -49,7 +48,6 @@ import static java.util.stream.Collectors.toList;
  *
  * @see Subscription
  * @see Event
- * @see SignalEvent
  * @see OneOffEvent
  *
  * @author Eugene Shevchenko
@@ -99,10 +97,15 @@ public class Publisher {
      * @return current {@link Publisher} instance to support fluent API.
      */
     public Publisher publish(Event event) {
-        subscriptionsByEvent.getOrDefault(event.getClass(), emptyList()).stream()
+        List<Subscription> subscriptions = subscriptionsByEvent.getOrDefault(event.getClass(), emptyList());
+        subscriptions.stream()
                 .filter(subscription -> subscription.matches(event))
                 .map(subscription -> new Command(subscription, event))
                 .forEach(executor::execute);
+
+        subscriptions.stream()
+                .filter(subscription -> subscription.needUnsubscribeAfter(event))
+                .forEach(this::unsubscribe);
 
         if (event instanceof OneOffEvent) {
             subscriptionsByEvent.remove(event.getClass());
@@ -126,6 +129,7 @@ public class Publisher {
             log.warn("Specified subscription already exists {}.", subscription.getEventType().getSimpleName());
         } else {
             subscriptions.add(subscription);
+            log.debug("{} added to publisher.", subscription);
         }
         return this;
     }
@@ -140,6 +144,7 @@ public class Publisher {
         List<Subscription> subscriptions = subscriptionsByEvent.get(subscription.getEventType());
         if (nonNull(subscriptions)) {
             subscriptions.remove(subscription);
+            log.debug("{} removed from publisher.", subscription);
             if (subscriptions.isEmpty()) {
                 subscriptionsByEvent.remove(subscription.getEventType());
             }
@@ -167,5 +172,31 @@ public class Publisher {
         return subscriptionsByEvent.values().stream()
                 .mapToInt(List::size)
                 .sum();
+    }
+
+    /**
+     * Gets events set subscribed via current publisher.
+     *
+     * @return all events which have subscribers.
+     */
+    public Set<Class<? extends Event>> events() {
+        return subscriptionsByEvent.keySet();
+    }
+
+    @Override
+    public String toString() {
+        StrBuilder builder = new StrBuilder("Publisher info:\n");
+        if (subscriptionsByEvent.isEmpty()) {
+            builder.append("\tempty.\n");
+        } else {
+            subscriptionsByEvent.forEach((type, subscriptions) -> builder
+                    .append("\t- ")
+                    .append(type.getSimpleName())
+                    .append(": ")
+                    .append(subscriptions.size())
+                    .append(" subscription(s);\n"));
+        }
+
+        return builder.toString();
     }
 }

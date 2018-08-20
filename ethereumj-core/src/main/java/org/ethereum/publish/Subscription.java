@@ -4,7 +4,6 @@ import org.ethereum.publish.event.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -123,5 +122,10 @@ public class Subscription<E extends Event<D>, D> {
      */
     public static <E extends Event<D>, D> Subscription<E, D> to(Class<E> eventType, Consumer<D> consumer) {
         return new Subscription<>(eventType, consumer);
+    }
+
+    @Override
+    public String toString() {
+        return eventType.getSimpleName() + " subscription";
     }
 }
