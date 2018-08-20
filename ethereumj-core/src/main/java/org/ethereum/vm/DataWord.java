@@ -25,9 +25,10 @@ import org.ethereum.util.FastByteComparisons;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 
+import static org.ethereum.util.ByteUtil.intToBytes;
+import static org.ethereum.util.ByteUtil.longToBytes;
 import static org.ethereum.util.ByteUtil.numberOfLeadingZeros;
 import static org.ethereum.util.ByteUtil.toHexString;
 
@@ -107,11 +108,11 @@ public final class DataWord implements Comparable<DataWord> {
     }
 
     public static DataWord of(int num) {
-        return of(ByteBuffer.allocate(Integer.BYTES).putInt(num).array());
+        return of(intToBytes(num));
     }
 
     public static DataWord of(long num) {
-        return of(ByteBuffer.allocate(Long.BYTES).putLong(num).array());
+        return of(longToBytes(num));
     }
 
     /**
