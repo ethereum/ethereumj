@@ -300,4 +300,34 @@ public class GitHubBlockStateTest {
     public void stCodeCopyTest() throws IOException {
         suite.runAll("stCodeCopyTest");
     }
+
+    @Test
+    @Ignore("Broken tests format, delayed until resolved")
+    public void stExtCodeHashCallCode() throws IOException {
+        BlockchainTestSuite.runSingle(
+                "GeneralStateTests/stExtCodeHash/extCodeHashCallCode_d0g0v0.json",
+                "10ab37c095bb87d2e781bcf112b6104912fccb44",
+                GitHubJSONTestSuite.Network.Constantinople
+        );
+        BlockchainTestSuite.runSingle(
+                "GeneralStateTests/stExtCodeHash/extCodeHashCallCode_d0g0v0.json",
+                "10ab37c095bb87d2e781bcf112b6104912fccb44",
+                GitHubJSONTestSuite.Network.Byzantium
+        );
+    }
+
+    @Test
+    @Ignore("Broken tests format, delayed until resolved")
+    public void stExtCodeHashCall() throws IOException {
+        BlockchainTestSuite.runSingle(
+                "GeneralStateTests/stExtCodeHash/extCodeHashCall_d0g0v0.json",
+                "10ab37c095bb87d2e781bcf112b6104912fccb44",
+                GitHubJSONTestSuite.Network.Constantinople
+        );
+        BlockchainTestSuite.runSingle(
+                "GeneralStateTests/stExtCodeHash/extCodeHashCall_d0g0v0.json",
+                "10ab37c095bb87d2e781bcf112b6104912fccb44",
+                GitHubJSONTestSuite.Network.Byzantium
+        );
+    }
 }

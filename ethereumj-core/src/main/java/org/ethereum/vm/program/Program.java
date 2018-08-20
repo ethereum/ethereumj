@@ -715,6 +715,11 @@ public class Program {
         return nullToEmpty(code);
     }
 
+    public byte[] getCodeHashAt(DataWord address) {
+        byte[] code = invoke.getRepository().getCodeHash(address.getLast20Bytes());
+        return nullToEmpty(code);
+    }
+
     public DataWord getOwnerAddress() {
         return invoke.getOwnerAddress();
     }
