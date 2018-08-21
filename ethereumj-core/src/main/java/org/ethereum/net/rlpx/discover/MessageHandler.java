@@ -52,7 +52,7 @@ public class MessageHandler extends SimpleChannelInboundHandler<DiscoveryEvent>
         try {
             nodeManager.handleInbound(event);
         } catch (Throwable t) {
-            logger.error("Failed to process incoming message: {}", event.getMessage(), t);
+            logger.info("Failed to process incoming message: {}, caused by: {}", event.getMessage(), t.toString());
         }
     }
 
