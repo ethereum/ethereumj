@@ -882,17 +882,7 @@ public class VM {
                 break;
                 case EXTCODEHASH: {
                     DataWord address = program.stackPop();
-                    PrecompiledContracts.PrecompiledContract contract =
-                            PrecompiledContracts.getContractForAddress(address, blockchainConfig);
-
-                    byte[] codeHash;
-                    // The EXTCODEHASH of an precompiled contract is either c5d246... or 0
-                    if (contract != null) {
-                        codeHash = EMPTY_DATA_HASH;
-                    } else {
-                        codeHash = program.getCodeHashAt(address);
-                    }
-
+                    byte[] codeHash = program.getCodeHashAt(address);
                     program.stackPush(codeHash);
                     program.step();
                 }
