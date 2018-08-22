@@ -196,7 +196,7 @@ public class SyncWithLoadTest {
             try {
                 TransactionExecutor executor = new TransactionExecutor
                         (tx, block.getCoinbase(), repository, ethereum.getBlockchain().getBlockStore(),
-                                programInvokeFactory, block, EthereumListener.STUB, 0)
+                                programInvokeFactory, block, EthereumListener.EMPTY, 0)
                         .withCommonConfig(commonConfig)
                         .setLocalCall(true);
 

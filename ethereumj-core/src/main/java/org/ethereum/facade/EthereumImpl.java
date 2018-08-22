@@ -299,7 +299,7 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
         try {
             org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor
                     (tx, block.getCoinbase(), repository, worldManager.getBlockStore(),
-                            programInvokeFactory, block, EthereumListener.STUB, 0)
+                            programInvokeFactory, block, EthereumListener.EMPTY, 0)
                     .withCommonConfig(commonConfig)
                     .setLocalCall(true);
 
