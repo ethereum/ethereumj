@@ -137,7 +137,7 @@ public class BasicSample implements Runnable {
         // adding the main EthereumJ callback to be notified on different kind of events
         this.ethereum
                 .subscribe(to(SyncDone.class, syncState -> synced = true))
-                .subscribe(to(NodeDiscovered.class, nodesDiscovered::add)
+                .subscribe(to(NodeDiscovered.class, node -> nodesDiscovered.add(node))
                         .conditionally(node -> nodesDiscovered.size() < 1000))
                 .subscribe(to(EthStatusUpdated.class, data -> ethNodes.put(data.getChannel().getNode(), data.getMessage())))
                 .subscribe(to(PeerAddedToSyncPool.class, peer -> syncPeers.add(peer.getNode())))

@@ -69,7 +69,7 @@ public class PendingStateSample extends TestNetSample {
                 .subscribe(to(PendingTransactionUpdated.class, data -> onPendingTransactionReceived(data.getReceipt().getTransaction()))
                         .conditionally(data -> data.getState() == NEW_PENDING))
                 // when block arrives look for our included transactions
-                .subscribe(to(BlockAdded.class, this::onBlock));
+                .subscribe(to(BlockAdded.class, d -> onBlock(d)));
 
         new Thread(() -> {
             try {

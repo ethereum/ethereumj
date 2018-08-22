@@ -4,6 +4,7 @@ import org.ethereum.publish.event.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -20,14 +21,30 @@ public class Subscription<E extends Event<D>, D> {
 
     private final static Logger log = LoggerFactory.getLogger("event");
 
+    public static class LifeCycle {
+        private final Subscription subscription;
+
+        private LifeCycle(Subscription subscription) {
+            this.subscription = subscription;
+        }
+
+        public void unsubscribe() {
+            subscription.unsubscribeAfter(data -> true);
+        }
+    }
+
+
     private final Class<E> eventType;
-    private final Consumer<D> consumer;
+    private final BiConsumer<D, LifeCycle> biConsumer;
+    private final LifeCycle lifeCycle;
+
     private Function<D, Boolean> handleCondition;
     private Function<D, Boolean> unsubscribeCondition;
 
-    Subscription(Class<E> eventType, Consumer<D> consumer) {
+    Subscription(Class<E> eventType, BiConsumer<D, LifeCycle> biConsumer) {
         this.eventType = eventType;
-        this.consumer = consumer;
+        this.lifeCycle = new LifeCycle(this);
+        this.biConsumer = biConsumer;
     }
 
     /**
@@ -98,7 +115,7 @@ public class Subscription<E extends Event<D>, D> {
     }
 
     protected void handlePayload(D payload) {
-        consumer.accept(payload);
+        biConsumer.accept(payload, lifeCycle);
     }
 
     /**
@@ -111,6 +128,10 @@ public class Subscription<E extends Event<D>, D> {
         return nonNull(unsubscribeCondition) && unsubscribeCondition.apply(event.getPayload());
     }
 
+    public static <E extends Event<D>, D> Subscription<E, D> to(Class<E> eventType, BiConsumer<D, LifeCycle> biConsumer) {
+        return new Subscription<>(eventType, biConsumer);
+    }
+
     /**
      * Short static alias for {@link Subscription} constructor.
      *
@@ -121,7 +142,7 @@ public class Subscription<E extends Event<D>, D> {
      * @return new {@link Subscription} instance.
      */
     public static <E extends Event<D>, D> Subscription<E, D> to(Class<E> eventType, Consumer<D> consumer) {
-        return new Subscription<>(eventType, consumer);
+        return new Subscription<>(eventType, (payload, lifeCycle) -> consumer.accept(payload));
     }
 
     @Override

@@ -42,7 +42,7 @@ public class PublisherTest {
         final List<String> strings = new ArrayList<>();
 
         int subscribersCount = createPublisher()
-                .subscribe(to(Events.OneOffStringEvent.class, strings::add))
+                .subscribe(to(Events.OneOffStringEvent.class, s -> strings.add(s)))
                 .publish(new Events.OneOffStringEvent(payload))
                 .subscribersCount(Events.OneOffStringEvent.class);
 
@@ -115,7 +115,7 @@ public class PublisherTest {
         final int expected = 5;
 
         Publisher publisher = createPublisher()
-                .subscribe(LifeCycleSubscription.to(Events.IntEvent.class, (num, lc) -> {
+                .subscribe(to(Events.IntEvent.class, (num, lc) -> {
                     if (num == expected) {
                         actual.set(num);
                         lc.unsubscribe();
@@ -146,7 +146,7 @@ public class PublisherTest {
         Publisher publisher = createPublisher()
                 .subscribe(to(Events.IntEvent.class, firstIntSum::getAndAdd))
                 .subscribe(to(Events.IntEvent.class, secondIntSum::getAndAdd))
-                .subscribe(to(Events.StringEvent.class, expectedStrings::add))
+                .subscribe(to(Events.StringEvent.class, s -> expectedStrings.add(s)))
                 .subscribe(to(Events.LongEvent.class, longEvenSum::getAndAdd)
                         .conditionally(PublisherTest::isEven));
 
@@ -206,7 +206,7 @@ public class PublisherTest {
                         .unsubscribeAfter(s -> s.startsWith("z")))
                 .addGenFunction(r -> to(Events.IntEvent.class, i -> sleepSilent(r.nextInt(10)))
                         .unsubscribeAfter(i -> i < r.nextInt(limit)))
-                .addGenFunction(r -> LifeCycleSubscription.to(Events.IntEvent.class, (i, lifeCycle) -> {
+                .addGenFunction(r -> to(Events.IntEvent.class, (i, lifeCycle) -> {
                     sleepSilent(r.nextInt(10));
                     if (i < r.nextInt(limit)) {
                         lifeCycle.unsubscribe();
