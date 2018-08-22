@@ -83,8 +83,7 @@ public class RLPXTest {
         int port = 30303;
 
         byte[] part1 = sha3("007".getBytes(Charset.forName("UTF-8")));
-        byte[] part2 = sha3("007".getBytes(Charset.forName("UTF-8")));
-        byte[] id = merge(part1, part2);
+        byte[] id = ECKey.fromPrivate(part1).getNodeId();
 
         Node node = new Node(id, ip, port);
 
@@ -146,7 +145,7 @@ public class RLPXTest {
     @Test
     public void test6() {
 
-        byte[] id_1 = sha3("+++".getBytes(Charset.forName("UTF-8")));
+        byte[] id_1 = ECKey.fromPrivate(sha3("+++".getBytes(Charset.forName("UTF-8")))).getNodeId();
         String host_1 = "85.65.19.231";
         int port_1 = 30303;
 
@@ -260,6 +259,16 @@ public class RLPXTest {
         assertEquals("0.0.0.0", msg1.getFromHost());
         assertEquals(13272, msg1.getToPort());
         assertEquals("58.136.8.186", msg1.getToHost());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidNodeId() {
+        byte[] id_1 = sha3("+++".getBytes(Charset.forName("UTF-8")));
+        String host_1 = "85.65.19.231";
+        int port_1 = 30303;
+
+        Node node_1 = new Node(id_1, host_1 , port_1);
+        new Node(node_1.getRLP());
     }
 }
 
