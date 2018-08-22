@@ -37,6 +37,8 @@ import java.net.InetAddress;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * @author Roman Mandeleil
@@ -76,6 +78,16 @@ public interface Ethereum {
      * @see Event
      */
     Publisher subscribe(Subscription subscription);
+
+    /**
+     * More convenient version of {@link #subscribe(Subscription)}
+     */
+    <T> Publisher subscribe(Class<? extends Event<T>> type, Consumer<T> handler);
+
+    /**
+     * More convenient version of {@link #subscribe(Subscription)}
+     */
+    <T> Publisher subscribe(Class<? extends Event<T>> type, BiConsumer<T, Subscription.LifeCycle> handler);
 
     PeerClient getDefaultPeer();
 

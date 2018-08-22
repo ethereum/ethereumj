@@ -45,6 +45,7 @@ import org.ethereum.net.submit.TransactionTask;
 import org.ethereum.publish.Publisher;
 import org.ethereum.publish.Subscription;
 import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.Event;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.program.ProgramResult;
@@ -68,6 +69,8 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import static org.ethereum.publish.Subscription.to;
 import static org.ethereum.util.ByteUtil.toHexString;
@@ -180,6 +183,16 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
     @Override
     public Publisher subscribe(Subscription subscription) {
         return worldManager.getPublisher().subscribe(subscription);
+    }
+
+    @Override
+    public <T> Publisher subscribe(Class<? extends Event<T>> type, Consumer<T> handler) {
+        return subscribe(to(type, handler));
+    }
+
+    @Override
+    public <T> Publisher subscribe(Class<? extends Event<T>> type, BiConsumer<T, Subscription.LifeCycle> handler) {
+        return subscribe(to(type, handler));
     }
 
     @Override
