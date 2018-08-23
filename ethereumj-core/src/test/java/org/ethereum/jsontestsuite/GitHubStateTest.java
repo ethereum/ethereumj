@@ -301,5 +301,24 @@ public class GitHubStateTest {
     public void stCodeCopyTest() throws IOException {
         suite.runAll("stCodeCopyTest");
     }
+
+
+    @Test
+    @Ignore("Fails on pre-configured commit, update after test is merged in develop of Github tests")
+    public void stExtCodeHashCallCode() throws IOException {
+        String commit = "10ab37c095bb87d2e781bcf112b6104912fccb44";
+        String filePath = "stExtCodeHash/extCodeHashCallCode.json";
+        GeneralStateTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Constantinople);
+        GeneralStateTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Byzantium);
+    }
+
+    @Test
+    @Ignore("Fails on pre-configured commit, update after test is merged in develop of Github tests")
+    public void stExtCodeHashCall() throws IOException {
+        String commit = "10ab37c095bb87d2e781bcf112b6104912fccb44";
+        String filePath = "stExtCodeHash/extCodeHashCall.json";
+        GeneralStateTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Constantinople);
+        GeneralStateTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Byzantium);
+    }
 }
 
