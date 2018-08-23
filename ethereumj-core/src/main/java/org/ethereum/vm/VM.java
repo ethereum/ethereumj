@@ -107,6 +107,9 @@ public class VM {
         put(RETURNDATASIZE, BlockchainConfig::eip211);
         put(STATICCALL, BlockchainConfig::eip214);
         put(EXTCODEHASH, BlockchainConfig::eip1052);
+        put(SHL, BlockchainConfig::eip145);
+        put(SHR, BlockchainConfig::eip145);
+        put(SAR, BlockchainConfig::eip145);
     }};
 
     private final SystemProperties config;
@@ -662,6 +665,61 @@ public class VM {
                         result = DataWord.of(tmp);
                     } else {
                         result = DataWord.ZERO;
+                    }
+
+                    if (logger.isInfoEnabled())
+                        hint = "" + result.value();
+
+                    program.stackPush(result);
+                    program.step();
+                }
+                break;
+                case SHL: {
+                    DataWord word1 = program.stackPop();
+                    DataWord word2 = program.stackPop();
+                    final DataWord result;
+                    if (word1.value().compareTo(BigInteger.valueOf(256)) < 0) {
+                        result = word2.shiftLeft(word1);
+                    } else {
+                        result = DataWord.ZERO;
+                    }
+
+                    if (logger.isInfoEnabled())
+                        hint = "" + result.value();
+
+                    program.stackPush(result);
+                    program.step();
+                }
+                break;
+                case SHR: {
+                    DataWord word1 = program.stackPop();
+                    DataWord word2 = program.stackPop();
+                    final DataWord result;
+                    if (word1.value().compareTo(BigInteger.valueOf(256)) < 0) {
+                        result = word2.shiftRight(word1);
+                    } else {
+                        result = DataWord.ZERO;
+                    }
+
+                    if (logger.isInfoEnabled())
+                        hint = "" + result.value();
+
+                    program.stackPush(result);
+                    program.step();
+                }
+                break;
+                case SAR: {
+                    DataWord word1 = program.stackPop();
+                    DataWord word2 = program.stackPop();
+                    final DataWord result;
+                    if (word1.value().compareTo(BigInteger.valueOf(256)) < 0) {
+                        result = word2.shiftRightSigned(word1);
+                    } else {
+                        if (word2.isNegative()) {
+                            result = DataWord.ONE.negate();
+                        } else {
+                            result = DataWord.ZERO;
+                        }
                     }
 
                     if (logger.isInfoEnabled())

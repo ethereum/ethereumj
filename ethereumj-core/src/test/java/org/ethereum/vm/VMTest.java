@@ -682,6 +682,537 @@ public class VMTest {
         }
     }
 
+    @Test  // SHL OP
+    public void testSHL_1() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH1 0x00 SHL"), invoke);
+        String expected = "0000000000000000000000000000000000000000000000000000000000000001";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SHL OP
+    public void testSHL_2() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH1 0x01 SHL"), invoke);
+        String expected = "0000000000000000000000000000000000000000000000000000000000000002";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SHL OP
+    public void testSHL_3() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH1 0xff SHL"), invoke);
+        String expected = "8000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SHL OP
+    public void testSHL_4() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH2 0x0100 SHL"), invoke);
+        String expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SHL OP
+    public void testSHL_5() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH2 0x0101 SHL"), invoke);
+        String expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SHL OP
+    public void testSHL_6() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0x00 SHL"), invoke);
+        String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SHL OP
+    public void testSHL_7() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0x01 SHL"), invoke);
+        String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SHL OP
+    public void testSHL_8() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0xff SHL"), invoke);
+        String expected = "8000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SHL OP
+    public void testSHL_9() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH2 0x0100 SHL"), invoke);
+        String expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SHL OP
+    public void testSHL_10() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000000 PUSH1 0x01 SHL"), invoke);
+        String expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SHL OP
+    public void testSHL_11() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0x01 SHL"), invoke);
+        String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SHR OP
+    public void testSHR_1() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH1 0x00 SHR"), invoke);
+        String expected = "0000000000000000000000000000000000000000000000000000000000000001";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SHR OP
+    public void testSHR_2() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH1 0x01 SHR"), invoke);
+        String expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SHR OP
+    public void testSHR_3() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x8000000000000000000000000000000000000000000000000000000000000000 PUSH1 0x01 SHR"), invoke);
+        String expected = "4000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SHR OP
+    public void testSHR_4() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x8000000000000000000000000000000000000000000000000000000000000000 PUSH1 0xff SHR"), invoke);
+        String expected = "0000000000000000000000000000000000000000000000000000000000000001";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SHR OP
+    public void testSHR_5() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x8000000000000000000000000000000000000000000000000000000000000000 PUSH2 0x0100 SHR"), invoke);
+        String expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SHR OP
+    public void testSHR_6() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x8000000000000000000000000000000000000000000000000000000000000000 PUSH2 0x0101 SHR"), invoke);
+        String expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SHR OP
+    public void testSHR_7() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0x00 SHR"), invoke);
+        String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SHR OP
+    public void testSHR_8() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0x01 SHR"), invoke);
+        String expected = "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SHR OP
+    public void testSHR_9() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0xff SHR"), invoke);
+        String expected = "0000000000000000000000000000000000000000000000000000000000000001";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SHR OP
+    public void testSHR_10() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH2 0x0100 SHR"), invoke);
+        String expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SHR OP
+    public void testSHR_11() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000000 PUSH1 0x01 SHR"), invoke);
+        String expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+    @Test  // SAR OP
+    public void testSAR_1() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH1 0x00 SAR"), invoke);
+        String expected = "0000000000000000000000000000000000000000000000000000000000000001";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SAR OP
+    public void testSAR_2() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH1 0x01 SAR"), invoke);
+        String expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SAR OP
+    public void testSAR_3() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x8000000000000000000000000000000000000000000000000000000000000000 PUSH1 0x01 SAR"), invoke);
+        String expected = "C000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SAR OP
+    public void testSAR_4() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x8000000000000000000000000000000000000000000000000000000000000000 PUSH1 0xff SAR"), invoke);
+        String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SAR OP
+    public void testSAR_5() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x8000000000000000000000000000000000000000000000000000000000000000 PUSH2 0x0100 SAR"), invoke);
+        String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SAR OP
+    public void testSAR_6() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x8000000000000000000000000000000000000000000000000000000000000000 PUSH2 0x0101 SAR"), invoke);
+        String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SAR OP
+    public void testSAR_7() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0x00 SAR"), invoke);
+        String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SAR OP
+    public void testSAR_8() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0x01 SAR"), invoke);
+        String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SAR OP
+    public void testSAR_9() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0xff SAR"), invoke);
+        String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SAR OP
+    public void testSAR_10() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH2 0x0100 SAR"), invoke);
+        String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SAR OP
+    public void testSAR_11() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000000 PUSH1 0x01 SAR"), invoke);
+        String expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SAR OP
+    public void testSAR_12() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x4000000000000000000000000000000000000000000000000000000000000000 PUSH1 0xfe SAR"), invoke);
+        String expected = "0000000000000000000000000000000000000000000000000000000000000001";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SAR OP
+    public void testSAR_13() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0xf8 SAR"), invoke);
+        String expected = "000000000000000000000000000000000000000000000000000000000000007F";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SAR OP
+    public void testSAR_14() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0xfe SAR"), invoke);
+        String expected = "0000000000000000000000000000000000000000000000000000000000000001";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SAR OP
+    public void testSAR_15() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0xff SAR"), invoke);
+        String expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
+    @Test  // SAR OP
+    public void testSAR_16() {
+
+        VM vm = new VM();
+        program = new Program(compile("PUSH32 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH2 0x0100 SAR"), invoke);
+        String expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
     @Test  // ISZERO OP
     public void testISZERO_1() {
 

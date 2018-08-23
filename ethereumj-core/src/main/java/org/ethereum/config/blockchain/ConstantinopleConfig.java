@@ -38,4 +38,9 @@ public class ConstantinopleConfig extends ByzantiumConfig {
     public boolean eip1052() {
         return true;
     }
+
+    @Override
+    public boolean eip145() {
+        return true;
+    }
 }

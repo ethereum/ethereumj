@@ -165,6 +165,12 @@ public interface BlockchainConfig {
     boolean eip658();
 
     /**
+     * EIP145: https://eips.ethereum.org/EIPS/eip-145
+     * Bitwise shifting instructions in EVM
+     */
+    boolean eip145();
+
+    /**
      * EIP1052: https://eips.ethereum.org/EIPS/eip-1052
      * EXTCODEHASH opcode
      */

@@ -249,19 +249,8 @@ public final class DataWord implements Comparable<DataWord> {
     }
 
     public DataWord negate() {
-
         if (this.isZero()) return ZERO;
-
-        byte[] newData = this.copyData();
-        for (int i = 0; i < this.data.length; ++i) {
-            newData[i] = (byte) ~this.data[i];
-        }
-
-        for (int i = this.data.length - 1; i >= 0; --i) {
-            newData[i] = (byte) (1 + this.data[i] & 0xFF);
-            if (newData[i] != 0) break;
-        }
-        return new DataWord(newData);
+        return bnot().add(DataWord.ONE);
     }
 
     public DataWord bnot() {
@@ -370,6 +359,36 @@ public final class DataWord implements Comparable<DataWord> {
         }
 
         BigInteger result = value().multiply(word1.value()).mod(word2.value());
+        return new DataWord(ByteUtil.copyToArray(result.and(MAX_VALUE)));
+    }
+
+    /**
+     * Shift left, both this and input arg are treated as unsigned
+     * @param arg
+     * @return this << arg
+     */
+    public DataWord shiftLeft(DataWord arg) {
+        BigInteger result = value().shiftLeft(arg.value().intValue());
+        return new DataWord(ByteUtil.copyToArray(result.and(MAX_VALUE)));
+    }
+
+    /**
+     * Shift right, both this and input arg are treated as unsigned
+     * @param arg
+     * @return this >> arg
+     */
+    public DataWord shiftRight(DataWord arg) {
+        BigInteger result = value().shiftRight(arg.value().intValue());
+        return new DataWord(ByteUtil.copyToArray(result.and(MAX_VALUE)));
+    }
+
+    /**
+     * Shift right, this is signed, while input arg is treated as unsigned
+     * @param arg
+     * @return this >> arg
+     */
+    public DataWord shiftRightSigned(DataWord arg) {
+        BigInteger result = sValue().shiftRight(arg.value().intValue());
         return new DataWord(ByteUtil.copyToArray(result.and(MAX_VALUE)));
     }
 
