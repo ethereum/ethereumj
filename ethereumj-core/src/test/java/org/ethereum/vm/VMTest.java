@@ -17,6 +17,9 @@
  */
 package org.ethereum.vm;
 
+import org.ethereum.config.SystemProperties;
+import org.ethereum.config.blockchain.ConstantinopleConfig;
+import org.ethereum.config.blockchain.DaoHFConfig;
 import org.ethereum.core.Repository;
 import org.ethereum.vm.program.Program;
 import org.ethereum.vm.program.Program.BadJumpDestinationException;
@@ -42,6 +45,9 @@ public class VMTest {
 
     private ProgramInvokeMockImpl invoke;
     private Program program;
+    private static final SystemProperties constantinopleConfig = new SystemProperties(){{
+        setBlockchainConfig(new ConstantinopleConfig(new DaoHFConfig()));
+    }};
 
     @Before
     public void setup() {
@@ -686,7 +692,7 @@ public class VMTest {
     public void testSHL_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH1 0x00 SHL"), invoke);
+        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH1 0x00 SHL"), invoke, constantinopleConfig);
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -700,7 +706,7 @@ public class VMTest {
     public void testSHL_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH1 0x01 SHL"), invoke);
+        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH1 0x01 SHL"), invoke, constantinopleConfig);
         String expected = "0000000000000000000000000000000000000000000000000000000000000002";
 
         vm.step(program);
@@ -714,7 +720,7 @@ public class VMTest {
     public void testSHL_3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH1 0xff SHL"), invoke);
+        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH1 0xff SHL"), invoke, constantinopleConfig);
         String expected = "8000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -728,7 +734,7 @@ public class VMTest {
     public void testSHL_4() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH2 0x0100 SHL"), invoke);
+        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH2 0x0100 SHL"), invoke, constantinopleConfig);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -742,7 +748,7 @@ public class VMTest {
     public void testSHL_5() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH2 0x0101 SHL"), invoke);
+        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH2 0x0101 SHL"), invoke, constantinopleConfig);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -756,7 +762,7 @@ public class VMTest {
     public void testSHL_6() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0x00 SHL"), invoke);
+        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0x00 SHL"), invoke, constantinopleConfig);
         String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
 
         vm.step(program);
@@ -770,7 +776,7 @@ public class VMTest {
     public void testSHL_7() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0x01 SHL"), invoke);
+        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0x01 SHL"), invoke, constantinopleConfig);
         String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE";
 
         vm.step(program);
@@ -784,7 +790,7 @@ public class VMTest {
     public void testSHL_8() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0xff SHL"), invoke);
+        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0xff SHL"), invoke, constantinopleConfig);
         String expected = "8000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -798,7 +804,7 @@ public class VMTest {
     public void testSHL_9() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH2 0x0100 SHL"), invoke);
+        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH2 0x0100 SHL"), invoke, constantinopleConfig);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -812,7 +818,7 @@ public class VMTest {
     public void testSHL_10() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000000 PUSH1 0x01 SHL"), invoke);
+        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000000 PUSH1 0x01 SHL"), invoke, constantinopleConfig);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -826,7 +832,7 @@ public class VMTest {
     public void testSHL_11() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0x01 SHL"), invoke);
+        program = new Program(compile("PUSH32 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0x01 SHL"), invoke, constantinopleConfig);
         String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE";
 
         vm.step(program);
@@ -840,7 +846,7 @@ public class VMTest {
     public void testSHR_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH1 0x00 SHR"), invoke);
+        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH1 0x00 SHR"), invoke, constantinopleConfig);
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -854,7 +860,7 @@ public class VMTest {
     public void testSHR_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH1 0x01 SHR"), invoke);
+        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH1 0x01 SHR"), invoke, constantinopleConfig);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -868,7 +874,7 @@ public class VMTest {
     public void testSHR_3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x8000000000000000000000000000000000000000000000000000000000000000 PUSH1 0x01 SHR"), invoke);
+        program = new Program(compile("PUSH32 0x8000000000000000000000000000000000000000000000000000000000000000 PUSH1 0x01 SHR"), invoke, constantinopleConfig);
         String expected = "4000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -882,7 +888,7 @@ public class VMTest {
     public void testSHR_4() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x8000000000000000000000000000000000000000000000000000000000000000 PUSH1 0xff SHR"), invoke);
+        program = new Program(compile("PUSH32 0x8000000000000000000000000000000000000000000000000000000000000000 PUSH1 0xff SHR"), invoke, constantinopleConfig);
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -896,7 +902,7 @@ public class VMTest {
     public void testSHR_5() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x8000000000000000000000000000000000000000000000000000000000000000 PUSH2 0x0100 SHR"), invoke);
+        program = new Program(compile("PUSH32 0x8000000000000000000000000000000000000000000000000000000000000000 PUSH2 0x0100 SHR"), invoke, constantinopleConfig);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -910,7 +916,7 @@ public class VMTest {
     public void testSHR_6() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x8000000000000000000000000000000000000000000000000000000000000000 PUSH2 0x0101 SHR"), invoke);
+        program = new Program(compile("PUSH32 0x8000000000000000000000000000000000000000000000000000000000000000 PUSH2 0x0101 SHR"), invoke, constantinopleConfig);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -924,7 +930,7 @@ public class VMTest {
     public void testSHR_7() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0x00 SHR"), invoke);
+        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0x00 SHR"), invoke, constantinopleConfig);
         String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
 
         vm.step(program);
@@ -938,7 +944,7 @@ public class VMTest {
     public void testSHR_8() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0x01 SHR"), invoke);
+        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0x01 SHR"), invoke, constantinopleConfig);
         String expected = "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
 
         vm.step(program);
@@ -952,7 +958,7 @@ public class VMTest {
     public void testSHR_9() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0xff SHR"), invoke);
+        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0xff SHR"), invoke, constantinopleConfig);
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -966,7 +972,7 @@ public class VMTest {
     public void testSHR_10() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH2 0x0100 SHR"), invoke);
+        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH2 0x0100 SHR"), invoke, constantinopleConfig);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -980,7 +986,7 @@ public class VMTest {
     public void testSHR_11() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000000 PUSH1 0x01 SHR"), invoke);
+        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000000 PUSH1 0x01 SHR"), invoke, constantinopleConfig);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -993,7 +999,7 @@ public class VMTest {
     public void testSAR_1() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH1 0x00 SAR"), invoke);
+        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH1 0x00 SAR"), invoke, constantinopleConfig);
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -1007,7 +1013,7 @@ public class VMTest {
     public void testSAR_2() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH1 0x01 SAR"), invoke);
+        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000001 PUSH1 0x01 SAR"), invoke, constantinopleConfig);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -1021,7 +1027,7 @@ public class VMTest {
     public void testSAR_3() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x8000000000000000000000000000000000000000000000000000000000000000 PUSH1 0x01 SAR"), invoke);
+        program = new Program(compile("PUSH32 0x8000000000000000000000000000000000000000000000000000000000000000 PUSH1 0x01 SAR"), invoke, constantinopleConfig);
         String expected = "C000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -1035,7 +1041,7 @@ public class VMTest {
     public void testSAR_4() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x8000000000000000000000000000000000000000000000000000000000000000 PUSH1 0xff SAR"), invoke);
+        program = new Program(compile("PUSH32 0x8000000000000000000000000000000000000000000000000000000000000000 PUSH1 0xff SAR"), invoke, constantinopleConfig);
         String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
 
         vm.step(program);
@@ -1049,7 +1055,7 @@ public class VMTest {
     public void testSAR_5() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x8000000000000000000000000000000000000000000000000000000000000000 PUSH2 0x0100 SAR"), invoke);
+        program = new Program(compile("PUSH32 0x8000000000000000000000000000000000000000000000000000000000000000 PUSH2 0x0100 SAR"), invoke, constantinopleConfig);
         String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
 
         vm.step(program);
@@ -1063,7 +1069,7 @@ public class VMTest {
     public void testSAR_6() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x8000000000000000000000000000000000000000000000000000000000000000 PUSH2 0x0101 SAR"), invoke);
+        program = new Program(compile("PUSH32 0x8000000000000000000000000000000000000000000000000000000000000000 PUSH2 0x0101 SAR"), invoke, constantinopleConfig);
         String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
 
         vm.step(program);
@@ -1077,7 +1083,7 @@ public class VMTest {
     public void testSAR_7() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0x00 SAR"), invoke);
+        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0x00 SAR"), invoke, constantinopleConfig);
         String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
 
         vm.step(program);
@@ -1091,7 +1097,7 @@ public class VMTest {
     public void testSAR_8() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0x01 SAR"), invoke);
+        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0x01 SAR"), invoke, constantinopleConfig);
         String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
 
         vm.step(program);
@@ -1105,7 +1111,7 @@ public class VMTest {
     public void testSAR_9() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0xff SAR"), invoke);
+        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0xff SAR"), invoke, constantinopleConfig);
         String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
 
         vm.step(program);
@@ -1119,7 +1125,7 @@ public class VMTest {
     public void testSAR_10() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH2 0x0100 SAR"), invoke);
+        program = new Program(compile("PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH2 0x0100 SAR"), invoke, constantinopleConfig);
         String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
 
         vm.step(program);
@@ -1133,7 +1139,7 @@ public class VMTest {
     public void testSAR_11() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000000 PUSH1 0x01 SAR"), invoke);
+        program = new Program(compile("PUSH32 0x0000000000000000000000000000000000000000000000000000000000000000 PUSH1 0x01 SAR"), invoke, constantinopleConfig);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -1147,7 +1153,7 @@ public class VMTest {
     public void testSAR_12() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x4000000000000000000000000000000000000000000000000000000000000000 PUSH1 0xfe SAR"), invoke);
+        program = new Program(compile("PUSH32 0x4000000000000000000000000000000000000000000000000000000000000000 PUSH1 0xfe SAR"), invoke, constantinopleConfig);
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -1161,7 +1167,7 @@ public class VMTest {
     public void testSAR_13() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0xf8 SAR"), invoke);
+        program = new Program(compile("PUSH32 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0xf8 SAR"), invoke, constantinopleConfig);
         String expected = "000000000000000000000000000000000000000000000000000000000000007F";
 
         vm.step(program);
@@ -1175,7 +1181,7 @@ public class VMTest {
     public void testSAR_14() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0xfe SAR"), invoke);
+        program = new Program(compile("PUSH32 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0xfe SAR"), invoke, constantinopleConfig);
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -1189,7 +1195,7 @@ public class VMTest {
     public void testSAR_15() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0xff SAR"), invoke);
+        program = new Program(compile("PUSH32 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH1 0xff SAR"), invoke, constantinopleConfig);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -1203,7 +1209,7 @@ public class VMTest {
     public void testSAR_16() {
 
         VM vm = new VM();
-        program = new Program(compile("PUSH32 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH2 0x0100 SAR"), invoke);
+        program = new Program(compile("PUSH32 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff PUSH2 0x0100 SAR"), invoke, constantinopleConfig);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
