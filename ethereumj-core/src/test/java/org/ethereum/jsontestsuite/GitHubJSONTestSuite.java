@@ -334,6 +334,7 @@ public class GitHubJSONTestSuite {
                 case EIP150:    return new Eip150HFConfig(new DaoHFConfig());
                 case EIP158:    return new Eip160HFConfig(new DaoHFConfig());
                 case Byzantium:    return new ByzantiumConfig(new DaoHFConfig());
+                case Constantinople: return new ConstantinopleConfig(new DaoHFConfig());
 
                 case FrontierToHomesteadAt5: return new BaseNetConfig() {{
                     add(0, new FrontierConfig());

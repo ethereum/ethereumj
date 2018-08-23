@@ -29,9 +29,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 
+import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.vm.OpCode.*;
@@ -95,6 +99,16 @@ public class VM {
     private boolean vmTrace;
     private long dumpBlock;
 
+    private static final Map<OpCode, Function<BlockchainConfig, Boolean>> opValidators = new HashMap<OpCode, Function<BlockchainConfig, Boolean>>()
+    {{
+        put(DELEGATECALL, (config) -> config.getConstants().hasDelegateCallOpcode());
+        put(REVERT, BlockchainConfig::eip206);
+        put(RETURNDATACOPY, BlockchainConfig::eip211);
+        put(RETURNDATASIZE, BlockchainConfig::eip211);
+        put(STATICCALL, BlockchainConfig::eip214);
+        put(EXTCODEHASH, BlockchainConfig::eip1052);
+    }};
+
     private final SystemProperties config;
 
     public VM() {
@@ -146,6 +160,21 @@ public class VM {
         return !program.getStorage().isExist(addr) || program.getStorage().getAccountState(addr).isEmpty();
     }
 
+    /**
+     * Validates whether operation is allowed
+     * with current blockchain config
+     * @param op        VM operation
+     * @param program   Current program
+     */
+    private void validateOp(OpCode op, Program program) {
+        if (!(opValidators.containsKey(op))) return;
+
+        BlockchainConfig blockchainConfig = program.getBlockchainConfig();
+        if (!opValidators.get(op).apply(blockchainConfig)) {
+            throw Program.Exception.invalidOpCode(program.getCurrentOp());
+        }
+    }
+
     public void step(Program program) {
 
         if (vmTrace) {
@@ -160,30 +189,7 @@ public class VM {
                 throw Program.Exception.invalidOpCode(program.getCurrentOp());
             }
 
-            switch (op) {
-                case DELEGATECALL:
-                    if (!blockchainConfig.getConstants().hasDelegateCallOpcode()) {
-                        // opcode since Homestead release only
-                        throw Program.Exception.invalidOpCode(program.getCurrentOp());
-                    }
-                    break;
-                case REVERT:
-                    if (!blockchainConfig.eip206()) {
-                        throw Program.Exception.invalidOpCode(program.getCurrentOp());
-                    }
-                    break;
-                case RETURNDATACOPY:
-                case RETURNDATASIZE:
-                    if (!blockchainConfig.eip211()) {
-                        throw Program.Exception.invalidOpCode(program.getCurrentOp());
-                    }
-                    break;
-                case STATICCALL:
-                    if (!blockchainConfig.eip214()) {
-                        throw Program.Exception.invalidOpCode(program.getCurrentOp());
-                    }
-                    break;
-            }
+            validateOp(op, program);
 
             program.setLastOp(op.val());
             program.verifyStackSize(op.require());
@@ -291,6 +297,9 @@ public class VM {
                     gasCost = gasCosts.getEXT_CODE_COPY() + calcMemGas(gasCosts, oldMemSize,
                             memNeeded(stack.get(stack.size() - 2), stack.get(stack.size() - 4)),
                             stack.get(stack.size() - 4).longValueSafe());
+                    break;
+                case EXTCODEHASH:
+                    gasCost = gasCosts.getEXT_CODE_HASH();
                     break;
                 case CALL:
                 case CALLCODE:
@@ -871,6 +880,13 @@ public class VM {
                     program.step();
                 }
                 break;
+                case EXTCODEHASH: {
+                    DataWord address = program.stackPop();
+                    byte[] codeHash = program.getCodeHashAt(address);
+                    program.stackPush(codeHash);
+                    program.step();
+                }
+                break;
                 case GASPRICE: {
                     DataWord gasPrice = program.getGasPrice();
 
@@ -1314,7 +1330,7 @@ public class VM {
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);
         } catch (StackOverflowError soe) {
-            logger.error("\n !!! StackOverflowError: update your java run command with -Xss2M (-Xss4M for tests) !!!\n", soe);
+            logger.error("\n !!! StackOverflowError: update your java run command with -Xss2M (-Xss8M for tests) !!!\n", soe);
             System.exit(-1);
         } finally {
             callVmHookAction(program, VMHook::stopPlay);
