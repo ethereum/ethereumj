@@ -107,6 +107,9 @@ public class VM {
         put(RETURNDATASIZE, BlockchainConfig::eip211);
         put(STATICCALL, BlockchainConfig::eip214);
         put(EXTCODEHASH, BlockchainConfig::eip1052);
+        put(SHL, BlockchainConfig::eip145);
+        put(SHR, BlockchainConfig::eip145);
+        put(SAR, BlockchainConfig::eip145);
     }};
 
     private final SystemProperties config;
@@ -663,6 +666,42 @@ public class VM {
                     } else {
                         result = DataWord.ZERO;
                     }
+
+                    if (logger.isInfoEnabled())
+                        hint = "" + result.value();
+
+                    program.stackPush(result);
+                    program.step();
+                }
+                break;
+                case SHL: {
+                    DataWord word1 = program.stackPop();
+                    DataWord word2 = program.stackPop();
+                    final DataWord result = word2.shiftLeft(word1);
+
+                    if (logger.isInfoEnabled())
+                        hint = "" + result.value();
+
+                    program.stackPush(result);
+                    program.step();
+                }
+                break;
+                case SHR: {
+                    DataWord word1 = program.stackPop();
+                    DataWord word2 = program.stackPop();
+                    final DataWord result = word2.shiftRight(word1);
+
+                    if (logger.isInfoEnabled())
+                        hint = "" + result.value();
+
+                    program.stackPush(result);
+                    program.step();
+                }
+                break;
+                case SAR: {
+                    DataWord word1 = program.stackPop();
+                    DataWord word2 = program.stackPop();
+                    final DataWord result = word2.shiftRightSigned(word1);
 
                     if (logger.isInfoEnabled())
                         hint = "" + result.value();

@@ -15,32 +15,39 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.config.blockchain;
+package org.ethereum.vm;
 
-import org.ethereum.config.BlockchainConfig;
+import org.ethereum.vm.program.Program;
+import org.ethereum.vm.program.invoke.ProgramInvokeMockImpl;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 
 /**
- * EIPs included in the Constantinople Hard Fork:
- * <ul>
- *     <li>145  - Bitwise shifting instructions in EVM</li>
- *     <li>1014 - Skinny CREATE2</li>
- *     <li>1052 - EXTCODEHASH opcode</li>
- *     <li>1087 - Net gas metering for SSTORE operations</li>
- * </ul>
+ * Base Op test structure
+ * Use {@link #compile(String)} with VM code to compile it,
+ * then new Program(compiledCode) to run
  */
-public class ConstantinopleConfig extends ByzantiumConfig {
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+public abstract class VMBaseOpTest {
 
-    public ConstantinopleConfig(BlockchainConfig parent) {
-        super(parent);
+    protected ProgramInvokeMockImpl invoke;
+    protected Program program;
+
+
+    @Before
+    public void setup() {
+        invoke = new ProgramInvokeMockImpl();
     }
 
-    @Override
-    public boolean eip1052() {
-        return true;
+    @After
+    public void tearDown() {
+        invoke.getRepository().close();
     }
 
-    @Override
-    public boolean eip145() {
-        return true;
+
+    protected byte[] compile(String code) {
+        return new BytecodeCompiler().compile(code);
     }
 }

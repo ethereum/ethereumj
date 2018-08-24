@@ -110,7 +110,11 @@ public class Program {
     private final BlockchainConfig blockchainConfig;
 
     public Program(byte[] ops, ProgramInvoke programInvoke) {
-        this(ops, programInvoke, null);
+        this(ops, programInvoke, (Transaction) null);
+    }
+
+    public Program(byte[] ops, ProgramInvoke programInvoke, SystemProperties config) {
+        this(ops, programInvoke, null, config);
     }
 
     public Program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction) {

@@ -320,5 +320,15 @@ public class GitHubStateTest {
         GeneralStateTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Constantinople);
         GeneralStateTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Byzantium);
     }
+
+    @Test
+    @Ignore("Update after all tests could pass latest develop")
+    public void stShiftTest() throws IOException {
+        suite.runAll("stShift");
+// TODO: Update all, this one passes with following settings:
+//        String commit = "ad2184adca367c0b68c65b44519dba16e1d0b9e2";
+//        String treeSha = "4dd59a4f448dc06c3641bd5cb9c35cf6a099e438";
+//           targetNets += GitHubJSONTestSuite.Network.Constantinople
+    }
 }
 

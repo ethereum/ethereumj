@@ -43,7 +43,8 @@ import static org.ethereum.util.ByteUtil.toHexString;
 public final class DataWord implements Comparable<DataWord> {
 
     /* Maximum value of the DataWord */
-    public static final BigInteger _2_256 = BigInteger.valueOf(2).pow(256);
+    public static final int MAX_POW = 256;
+    public static final BigInteger _2_256 = BigInteger.valueOf(2).pow(MAX_POW);
     public static final BigInteger MAX_VALUE = _2_256.subtract(BigInteger.ONE);
     public static final DataWord ZERO = new DataWord(new byte[32]);
     public static final DataWord ONE = DataWord.of((byte) 1);
@@ -249,19 +250,8 @@ public final class DataWord implements Comparable<DataWord> {
     }
 
     public DataWord negate() {
-
         if (this.isZero()) return ZERO;
-
-        byte[] newData = this.copyData();
-        for (int i = 0; i < this.data.length; ++i) {
-            newData[i] = (byte) ~this.data[i];
-        }
-
-        for (int i = this.data.length - 1; i >= 0; --i) {
-            newData[i] = (byte) (1 + this.data[i] & 0xFF);
-            if (newData[i] != 0) break;
-        }
-        return new DataWord(newData);
+        return bnot().add(DataWord.ONE);
     }
 
     public DataWord bnot() {
@@ -370,6 +360,52 @@ public final class DataWord implements Comparable<DataWord> {
         }
 
         BigInteger result = value().multiply(word1.value()).mod(word2.value());
+        return new DataWord(ByteUtil.copyToArray(result.and(MAX_VALUE)));
+    }
+
+    /**
+     * Shift left, both this and input arg are treated as unsigned
+     * @param arg
+     * @return this << arg
+     */
+    public DataWord shiftLeft(DataWord arg) {
+        if (arg.value().compareTo(BigInteger.valueOf(MAX_POW)) >= 0) {
+            return DataWord.ZERO;
+        }
+        
+        BigInteger result = value().shiftLeft(arg.intValueSafe());
+        return new DataWord(ByteUtil.copyToArray(result.and(MAX_VALUE)));
+    }
+
+    /**
+     * Shift right, both this and input arg are treated as unsigned
+     * @param arg
+     * @return this >> arg
+     */
+    public DataWord shiftRight(DataWord arg) {
+        if (arg.value().compareTo(BigInteger.valueOf(MAX_POW)) >= 0) {
+            return DataWord.ZERO;
+        }
+
+        BigInteger result = value().shiftRight(arg.intValueSafe());
+        return new DataWord(ByteUtil.copyToArray(result.and(MAX_VALUE)));
+    }
+
+    /**
+     * Shift right, this is signed, while input arg is treated as unsigned
+     * @param arg
+     * @return this >> arg
+     */
+    public DataWord shiftRightSigned(DataWord arg) {
+        if (arg.value().compareTo(BigInteger.valueOf(MAX_POW)) >= 0) {
+            if (this.isNegative()) {
+                return DataWord.ONE.negate();
+            } else {
+                return DataWord.ZERO;
+            }
+        }
+
+        BigInteger result = sValue().shiftRight(arg.intValueSafe());
         return new DataWord(ByteUtil.copyToArray(result.and(MAX_VALUE)));
     }
 
