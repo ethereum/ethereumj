@@ -677,12 +677,7 @@ public class VM {
                 case SHL: {
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
-                    final DataWord result;
-                    if (word1.value().compareTo(BigInteger.valueOf(256)) < 0) {
-                        result = word2.shiftLeft(word1);
-                    } else {
-                        result = DataWord.ZERO;
-                    }
+                    final DataWord result = word2.shiftLeft(word1);
 
                     if (logger.isInfoEnabled())
                         hint = "" + result.value();
@@ -694,12 +689,7 @@ public class VM {
                 case SHR: {
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
-                    final DataWord result;
-                    if (word1.value().compareTo(BigInteger.valueOf(256)) < 0) {
-                        result = word2.shiftRight(word1);
-                    } else {
-                        result = DataWord.ZERO;
-                    }
+                    final DataWord result = word2.shiftRight(word1);
 
                     if (logger.isInfoEnabled())
                         hint = "" + result.value();
@@ -711,16 +701,7 @@ public class VM {
                 case SAR: {
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
-                    final DataWord result;
-                    if (word1.value().compareTo(BigInteger.valueOf(256)) < 0) {
-                        result = word2.shiftRightSigned(word1);
-                    } else {
-                        if (word2.isNegative()) {
-                            result = DataWord.ONE.negate();
-                        } else {
-                            result = DataWord.ZERO;
-                        }
-                    }
+                    final DataWord result = word2.shiftRightSigned(word1);
 
                     if (logger.isInfoEnabled())
                         hint = "" + result.value();

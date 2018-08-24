@@ -43,7 +43,8 @@ import static org.ethereum.util.ByteUtil.toHexString;
 public final class DataWord implements Comparable<DataWord> {
 
     /* Maximum value of the DataWord */
-    public static final BigInteger _2_256 = BigInteger.valueOf(2).pow(256);
+    public static final int MAX_POW = 256;
+    public static final BigInteger _2_256 = BigInteger.valueOf(2).pow(MAX_POW);
     public static final BigInteger MAX_VALUE = _2_256.subtract(BigInteger.ONE);
     public static final DataWord ZERO = new DataWord(new byte[32]);
     public static final DataWord ONE = DataWord.of((byte) 1);
@@ -368,7 +369,11 @@ public final class DataWord implements Comparable<DataWord> {
      * @return this << arg
      */
     public DataWord shiftLeft(DataWord arg) {
-        BigInteger result = value().shiftLeft(arg.value().intValue());
+        if (arg.value().compareTo(BigInteger.valueOf(MAX_POW)) >= 0) {
+            return DataWord.ZERO;
+        }
+        
+        BigInteger result = value().shiftLeft(arg.intValueSafe());
         return new DataWord(ByteUtil.copyToArray(result.and(MAX_VALUE)));
     }
 
@@ -378,7 +383,11 @@ public final class DataWord implements Comparable<DataWord> {
      * @return this >> arg
      */
     public DataWord shiftRight(DataWord arg) {
-        BigInteger result = value().shiftRight(arg.value().intValue());
+        if (arg.value().compareTo(BigInteger.valueOf(MAX_POW)) >= 0) {
+            return DataWord.ZERO;
+        }
+
+        BigInteger result = value().shiftRight(arg.intValueSafe());
         return new DataWord(ByteUtil.copyToArray(result.and(MAX_VALUE)));
     }
 
@@ -388,7 +397,15 @@ public final class DataWord implements Comparable<DataWord> {
      * @return this >> arg
      */
     public DataWord shiftRightSigned(DataWord arg) {
-        BigInteger result = sValue().shiftRight(arg.value().intValue());
+        if (arg.value().compareTo(BigInteger.valueOf(MAX_POW)) >= 0) {
+            if (this.isNegative()) {
+                return DataWord.ONE.negate();
+            } else {
+                return DataWord.ZERO;
+            }
+        }
+
+        BigInteger result = sValue().shiftRight(arg.intValueSafe());
         return new DataWord(ByteUtil.copyToArray(result.and(MAX_VALUE)));
     }
 
