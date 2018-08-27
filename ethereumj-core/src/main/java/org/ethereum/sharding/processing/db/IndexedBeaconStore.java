@@ -124,7 +124,7 @@ public class IndexedBeaconStore implements BeaconStore {
             throw new RuntimeException("Consistency breaking save: parent item is not from canonical chain");
 
         ChainItem item = new ChainItem(chainScore, block.getHash(), block.getParentHash(), canonical);
-        putIndexItem(block.getNumber(), item);
+        putIndexItem(block.getSlotNumber(), item);
         blocks.put(block.getHash(), block);
     }
 
@@ -134,12 +134,12 @@ public class IndexedBeaconStore implements BeaconStore {
             return;
 
         byte[] canonicalHead = getCanonicalHead().getHash();
-        long canonicalHeadNum = getCanonicalHead().getNumber();
+        long canonicalHeadNum = getCanonicalHead().getSlotNumber();
         byte[] forkHead = fork.getHash();
-        long forkHeadNum = fork.getNumber();
+        long forkHeadNum = fork.getSlotNumber();
 
         // scan for fork head
-        for (long num = fork.getNumber() + 1; num <= getMaxNumber(); ++num) {
+        for (long num = fork.getSlotNumber() + 1; num <= getMaxNumber(); ++num) {
             List<ChainItem> generation = getGenerationByNumber(num);
             if (generation == null) break;
 
@@ -209,7 +209,7 @@ public class IndexedBeaconStore implements BeaconStore {
         if (block == null)
             return null;
 
-        List<ChainItem> generation = getGenerationByNumber(block.getNumber());
+        List<ChainItem> generation = getGenerationByNumber(block.getSlotNumber());
         if (generation == null)
             return null;
 

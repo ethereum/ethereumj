@@ -188,7 +188,7 @@ public class BeaconChainTest {
         }
 
         Beacon createBlock(Beacon parent) {
-            return createBlock(parent, parent.getNumber() + 1);
+            return createBlock(parent, parent.getSlotNumber() + 1);
         }
 
         Beacon createBlock(Beacon parent, long score) {
@@ -205,7 +205,7 @@ public class BeaconChainTest {
             BeaconState parentState = repository.get(parent.getStateHash());
 
             Beacon newBlock = new Beacon(parent.getHash(),
-                    randaoReveal, mainChainRef, null, parent.getNumber() + 1);
+                    randaoReveal, mainChainRef, null, parent.getSlotNumber() + 1);
             BeaconState newState = beaconChain.transitionFunction.applyBlock(newBlock, parentState);
             newBlock.setStateHash(newState.getHash());
 

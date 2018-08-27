@@ -45,14 +45,14 @@ public class Beacon {
     /* Hash of the state */
     private byte[] stateHash;
     /* Slot number */
-    private long number;
+    private long slotNumber;
 
-    public Beacon(byte[] parentHash, byte[] randaoReveal, byte[] mainChainRef, byte[] stateHash, long number) {
+    public Beacon(byte[] parentHash, byte[] randaoReveal, byte[] mainChainRef, byte[] stateHash, long slotNumber) {
         this.parentHash = parentHash;
         this.randaoReveal = randaoReveal;
         this.mainChainRef = mainChainRef;
         this.stateHash = stateHash;
-        this.number = number;
+        this.slotNumber = slotNumber;
     }
 
     public Beacon(byte[] rlp) {
@@ -61,12 +61,12 @@ public class Beacon {
         this.randaoReveal = items.get(1).getRLPData();
         this.mainChainRef = items.get(2).getRLPData();
         this.stateHash = items.get(3).getRLPData();
-        this.number = ByteUtil.bytesToBigInteger(items.get(4).getRLPData()).longValue();
+        this.slotNumber = ByteUtil.bytesToBigInteger(items.get(4).getRLPData()).longValue();
     }
 
     public byte[] getEncoded() {
         return RLP.wrapList(parentHash, randaoReveal, mainChainRef, stateHash,
-                BigInteger.valueOf(number).toByteArray());
+                BigInteger.valueOf(slotNumber).toByteArray());
     }
 
     public byte[] getHash() {
@@ -89,8 +89,8 @@ public class Beacon {
         return stateHash;
     }
 
-    public long getNumber() {
-        return number;
+    public long getSlotNumber() {
+        return slotNumber;
     }
 
     public boolean isParentOf(Beacon other) {
@@ -111,12 +111,12 @@ public class Beacon {
 
     @Override
     public String toString() {
-        return "#" + getNumber() + " (" + Hex.toHexString(getHash()).substring(0,6) + " <~ "
+        return "#" + getSlotNumber() + " (" + Hex.toHexString(getHash()).substring(0,6) + " <~ "
                 + Hex.toHexString(getParentHash()).substring(0,6) + ")";
     }
 
     public boolean isGenesis() {
-        return this.number == 0L;
+        return this.slotNumber == 0L;
     }
 
     public static final Serializer<Beacon, byte[]> Serializer = new Serializer<Beacon, byte[]>() {

@@ -32,6 +32,6 @@ public class NumberAsScore implements ScoreFunction {
 
     @Override
     public BigInteger apply(Beacon block, BeaconState state) {
-        return BigInteger.valueOf(block.getNumber());
+        return BigInteger.valueOf(block.getSlotNumber());
     }
 }

@@ -202,7 +202,7 @@ public class IndexedBeaconStoreTest {
         Beacon[] others = new Beacon[] { b31, b41, b42, b52, b53, b54 };
         for (Beacon b : canonical) {
             assertEquals(b, store.getByHash(b.getHash()));
-            assertEquals(b, store.getCanonicalByNumber(b.getNumber()));
+            assertEquals(b, store.getCanonicalByNumber(b.getSlotNumber()));
         }
         for (Beacon b : others) {
             assertEquals(b, store.getByHash(b.getHash()));
@@ -212,7 +212,7 @@ public class IndexedBeaconStoreTest {
     private BigInteger expectedScore(Beacon ... blocks) {
         BigInteger score = BigInteger.ZERO;
         for (Beacon b : blocks) {
-            score = score.add(BigInteger.valueOf(b.getNumber()));
+            score = score.add(BigInteger.valueOf(b.getSlotNumber()));
         }
         return score;
     }
@@ -228,7 +228,7 @@ public class IndexedBeaconStoreTest {
         rnd.nextBytes(stateHash);
 
         return new Beacon(parent == null ? new byte[32] : parent.getHash(),
-                randaoReveal, mainChainRef, stateHash, parent == null ? 0 : parent.getNumber() + 1);
+                randaoReveal, mainChainRef, stateHash, parent == null ? 0 : parent.getSlotNumber() + 1);
     }
 
     static class StoreHelper {
@@ -253,13 +253,13 @@ public class IndexedBeaconStoreTest {
         private void saveBlock(Beacon block, boolean canonical) {
             BigInteger chainScore = store.getChainScore(block.getParentHash()) == null ? BigInteger.ZERO :
                     store.getChainScore(block.getParentHash());
-            store.save(block, chainScore.add(BigInteger.valueOf(block.getNumber())), canonical);
+            store.save(block, chainScore.add(BigInteger.valueOf(block.getSlotNumber())), canonical);
         }
 
         void checkCanonicalHead(Beacon head, BigInteger expectedScore) {
             assertEquals(head, store.getCanonicalHead());
-            assertEquals(head, store.getCanonicalByNumber(head.getNumber()));
-            assertArrayEquals(head.getParentHash(), store.getCanonicalByNumber(head.getNumber() - 1).getHash());
+            assertEquals(head, store.getCanonicalByNumber(head.getSlotNumber()));
+            assertArrayEquals(head.getParentHash(), store.getCanonicalByNumber(head.getSlotNumber() - 1).getHash());
             assertEquals(expectedScore, store.getCanonicalHeadScore());
         }
     }
