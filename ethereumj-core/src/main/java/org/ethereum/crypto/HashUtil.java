@@ -247,6 +247,10 @@ public class HashUtil {
         return randomHash;
     }
 
+    /**
+     * As discussed with other sharding implementors:
+     * there is an agreement on using first 256-bits of BLAKE2B-512 digest
+     */
     public static byte[] blake2b(byte[] data) {
         try {
             MessageDigest digest = MessageDigest.getInstance("BLAKE2B-512");
