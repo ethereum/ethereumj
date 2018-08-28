@@ -31,12 +31,12 @@ public class BeaconGenesis extends Beacon {
 
     public static final long SLOT = 0;
 
-    private static final byte[] NULL = new byte[32];
+    private static final byte[] EMPTY = new byte[32];
 
     private static BeaconGenesis instance;
 
     private BeaconGenesis() {
-        super(NULL, NULL, NULL, NULL, SLOT);
+        super(EMPTY, EMPTY, EMPTY, EMPTY, SLOT);
         setStateHash(getState().getHash());
     }
 
