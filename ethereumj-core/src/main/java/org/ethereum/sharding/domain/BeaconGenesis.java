@@ -35,6 +35,9 @@ public class BeaconGenesis extends Beacon {
 
     private static BeaconGenesis instance;
 
+    // stub for proposer, 08/28/2018 @ 11:13am (UTC)
+    private long timestamp = 1535454832000L;
+
     private BeaconGenesis() {
         super(EMPTY, EMPTY, EMPTY, EMPTY, SLOT);
         setStateHash(getState().getHash());
@@ -52,5 +55,14 @@ public class BeaconGenesis extends Beacon {
 
     public BigInteger getScore() {
         return BigInteger.ZERO;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + ", timestamp: " + timestamp;
     }
 }

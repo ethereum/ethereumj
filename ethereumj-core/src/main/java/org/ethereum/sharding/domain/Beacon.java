@@ -112,7 +112,8 @@ public class Beacon {
     @Override
     public String toString() {
         return "#" + getSlotNumber() + " (" + Hex.toHexString(getHash()).substring(0,6) + " <~ "
-                + Hex.toHexString(getParentHash()).substring(0,6) + ")";
+                + Hex.toHexString(getParentHash()).substring(0,6) + "; mainChainRef: " +
+                Hex.toHexString(mainChainRef).substring(0,6) + ")";
     }
 
     public boolean isGenesis() {

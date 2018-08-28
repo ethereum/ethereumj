@@ -32,6 +32,7 @@ import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.sharding.config.DepositContractConfig;
 import org.ethereum.sharding.processing.BeaconChain;
+import org.ethereum.sharding.proposer.ProposerService;
 import org.ethereum.sharding.service.ValidatorService;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.slf4j.Logger;
@@ -125,6 +126,10 @@ public class ShardingWorldManager extends WorldManager {
 
     public void setValidatorService(final ValidatorService validatorService) {
         contractInit.thenRunAsync(validatorService::init);
+    }
+
+    public void setProposerService(final ProposerService proposerService) {
+        contractInit.thenRunAsync(proposerService::init);
     }
 
     public void setBeaconChain(final BeaconChain beaconChain) {
