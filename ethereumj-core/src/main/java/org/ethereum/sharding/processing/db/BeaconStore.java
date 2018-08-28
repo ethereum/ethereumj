@@ -77,7 +77,7 @@ public interface BeaconStore {
 
     /**
      * Returns max block number that is presented in the store.
-     * @return max number or -1 is store is empty
+     * @return max number or -1 if store is empty
      */
     long getMaxNumber();
 
@@ -85,7 +85,7 @@ public interface BeaconStore {
      * Saves block to the storage.
      *
      * @param block the block
-     * @param chainScore total score of the chain that is calculated after given block has been improted
+     * @param chainScore total score of the chain that is calculated after given block has been imported
      * @param canonical whether consider the block as a part of canonical chain or not
      *
      * @throws RuntimeException if an attempt of storing canonical block in fork chain occurs
