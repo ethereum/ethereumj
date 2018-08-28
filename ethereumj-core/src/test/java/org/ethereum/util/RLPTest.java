@@ -1778,16 +1778,19 @@ public class RLPTest {
     @Test
     public void testWrapUnwrap() {
 
+        byte[] shortItemData = new byte[] {(byte) 0x81};
+        byte[] longItemData = new byte[57]; new Random().nextBytes(longItemData);
+
         byte[] nullArray    = RLP.encodeElement(new byte[] {});
         byte[] singleZero   = RLP.encodeElement(new byte[] {0});
         byte[] singleByte   = RLP.encodeElement(new byte[] {1});
-        byte[] shortItem    = RLP.encodeElement(new byte[] {(byte) 0x81});
-        byte[] longItemData = new byte[57]; new Random().nextBytes(longItemData);
+        byte[] shortItem    = RLP.encodeElement(shortItemData);
         byte[] longItem     = RLP.encodeElement(longItemData);
         byte[] shortList    = RLP.encodeList(shortItem, shortItem, shortItem);
         byte[] longList     = RLP.encodeList(longItem, longItem, longItem);
 
-        byte[] encoded = RLP.wrapList(nullArray, singleZero, singleByte, shortItem, longItem, shortList, longList);
+        byte[] encoded = RLP.wrapList(nullArray, singleZero, singleByte, shortItem, longItem,
+                shortList, longList, shortItemData, longItemData);
         RLPList decoded = RLP.unwrapList(encoded);
 
         assertArrayEquals(nullArray, decoded.get(0).getRLPData());
@@ -1797,5 +1800,7 @@ public class RLPTest {
         assertArrayEquals(longItem, decoded.get(4).getRLPData());
         assertArrayEquals(shortList, decoded.get(5).getRLPData());
         assertArrayEquals(longList, decoded.get(6).getRLPData());
+        assertArrayEquals(shortItemData, decoded.get(7).getRLPData());
+        assertArrayEquals(longItemData, decoded.get(8).getRLPData());
     }
 }
