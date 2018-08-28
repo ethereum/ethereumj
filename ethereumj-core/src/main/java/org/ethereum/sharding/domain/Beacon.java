@@ -94,7 +94,7 @@ public class Beacon {
     }
 
     public boolean isParentOf(Beacon other) {
-        return FastByteComparisons.equal(this.getHash(), other.getHash());
+        return FastByteComparisons.equal(this.getParentHash(), other.getHash());
     }
 
     public void setStateHash(byte[] stateHash) {
