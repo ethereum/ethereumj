@@ -15,23 +15,21 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.sharding.service;
+package org.ethereum.sharding.processing.consensus;
 
-import org.ethereum.sharding.domain.Validator;
-
-import java.util.List;
+import org.ethereum.sharding.domain.Beacon;
+import org.ethereum.sharding.processing.state.BeaconState;
 
 /**
- * Helper interface to look for deposited validators in the receipts.
+ * A dummy transition function. Does nothing but returning an empty beacon state.
  *
  * @author Mikhail Kalinin
- * @since 30.07.2018
+ * @since 16.08.2018
  */
-public interface ValidatorRepository {
+public class NoTransition implements StateTransition {
 
-    /**
-     * Returns a list of validators deployed in an inclusive range {@code [fromBlock, toBlock]}.
-     * An order of deposits is preserved, hence first deposited validator has the lowest index in returned list.
-     */
-    List<Validator> query(byte[] fromBlock, byte[] toBlock);
+    @Override
+    public BeaconState applyBlock(Beacon block, BeaconState to) {
+        return new BeaconState();
+    }
 }

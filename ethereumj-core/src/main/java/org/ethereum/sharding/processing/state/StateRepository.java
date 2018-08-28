@@ -15,23 +15,34 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.sharding.service;
+package org.ethereum.sharding.processing.state;
 
-import org.ethereum.sharding.domain.Validator;
-
-import java.util.List;
+import javax.annotation.Nullable;
 
 /**
- * Helper interface to look for deposited validators in the receipts.
+ * An API to the beacon state repository.
+ *
+ * <p>
+ *     The repository is a kv storage with a state hash treated as a key.
  *
  * @author Mikhail Kalinin
- * @since 30.07.2018
+ * @since 15.08.2018
  */
-public interface ValidatorRepository {
+public interface StateRepository {
 
     /**
-     * Returns a list of validators deployed in an inclusive range {@code [fromBlock, toBlock]}.
-     * An order of deposits is preserved, hence first deposited validator has the lowest index in returned list.
+     * Inserts new state into repository.
      */
-    List<Validator> query(byte[] fromBlock, byte[] toBlock);
+    void insert(BeaconState state);
+
+    /**
+     * Returns beacon state with specific hash.
+     */
+    @Nullable
+    BeaconState get(byte[] hash);
+
+    /**
+     * Flushes changes to underlying sources.
+     */
+    void commit();
 }

@@ -70,7 +70,7 @@ public class DepositContract {
     private static final byte[] DEPOSIT_WEI = convert(32, EtherUtil.Unit.ETHER).toByteArray();
     private static final long GAS_LIMIT = 200_000;
     private static final long DEFAULT_GAS_PRICE = convert(5, EtherUtil.Unit.GWEI).longValue();
-    private static final long DEPOSIT_TIMEOUT = 5; // 5 minutes
+    private static final long DEPOSIT_TIMEOUT = 15; // 15 minutes
 
     private byte[] address;
     private byte[] bin;

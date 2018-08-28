@@ -31,6 +31,7 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.sharding.config.DepositContractConfig;
+import org.ethereum.sharding.processing.BeaconChain;
 import org.ethereum.sharding.service.ValidatorService;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.slf4j.Logger;
@@ -63,6 +64,7 @@ public class ShardingWorldManager extends WorldManager {
 
     DepositContractConfig contractConfig;
     DbFlushManager dbFlushManager;
+    DbFlushManager beaconDbFlusher;
 
     private CompletableFuture<Void> contractInit = new CompletableFuture<>();
 
@@ -121,8 +123,25 @@ public class ShardingWorldManager extends WorldManager {
         contractInit.complete(null);
     }
 
-    @Autowired
     public void setValidatorService(final ValidatorService validatorService) {
         contractInit.thenRunAsync(validatorService::init);
+    }
+
+    public void setBeaconChain(final BeaconChain beaconChain) {
+        contractInit.thenRunAsync(beaconChain::init);
+    }
+
+    public void setBeaconDbFlusher(final DbFlushManager beaconDbFlusher) {
+        this.beaconDbFlusher = beaconDbFlusher;
+    }
+
+    @Override
+    public void close() {
+        if (beaconDbFlusher != null) {
+            logger.info("close: beacon chain flush manager ...");
+            beaconDbFlusher.close();
+        }
+
+        super.close();
     }
 }

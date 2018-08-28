@@ -26,6 +26,7 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.swarm.Util;
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -1772,5 +1773,34 @@ public class RLPTest {
         assert !(rlpEl3Level3 instanceof RLPList);
         Transaction tx = new Transaction(rlpEl3Level3.getRLPData());
         assertArrayEquals(Hex.decode("3e15c330e00f3af7ceeeeb10c27237845a034399c151f8d69708fd3ee45c09c6"), tx.getHash());
+    }
+
+    @Test
+    public void testWrapUnwrap() {
+
+        byte[] shortItemData = new byte[] {(byte) 0x81};
+        byte[] longItemData = new byte[57]; new Random().nextBytes(longItemData);
+
+        byte[] nullArray    = RLP.encodeElement(new byte[] {});
+        byte[] singleZero   = RLP.encodeElement(new byte[] {0});
+        byte[] singleByte   = RLP.encodeElement(new byte[] {1});
+        byte[] shortItem    = RLP.encodeElement(shortItemData);
+        byte[] longItem     = RLP.encodeElement(longItemData);
+        byte[] shortList    = RLP.encodeList(shortItem, shortItem, shortItem);
+        byte[] longList     = RLP.encodeList(longItem, longItem, longItem);
+
+        byte[] encoded = RLP.wrapList(nullArray, singleZero, singleByte, shortItem, longItem,
+                shortList, longList, shortItemData, longItemData);
+        RLPList decoded = RLP.unwrapList(encoded);
+
+        assertArrayEquals(nullArray, decoded.get(0).getRLPData());
+        assertArrayEquals(singleZero, decoded.get(1).getRLPData());
+        assertArrayEquals(singleByte, decoded.get(2).getRLPData());
+        assertArrayEquals(shortItem, decoded.get(3).getRLPData());
+        assertArrayEquals(longItem, decoded.get(4).getRLPData());
+        assertArrayEquals(shortList, decoded.get(5).getRLPData());
+        assertArrayEquals(longList, decoded.get(6).getRLPData());
+        assertArrayEquals(shortItemData, decoded.get(7).getRLPData());
+        assertArrayEquals(longItemData, decoded.get(8).getRLPData());
     }
 }

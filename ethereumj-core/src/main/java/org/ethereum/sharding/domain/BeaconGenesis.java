@@ -15,23 +15,42 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.sharding.service;
+package org.ethereum.sharding.domain;
 
-import org.ethereum.sharding.domain.Validator;
+import org.ethereum.sharding.processing.state.BeaconState;
 
-import java.util.List;
+import java.math.BigInteger;
 
 /**
- * Helper interface to look for deposited validators in the receipts.
+ * A special beacon chain block that is the first block of the chain.
  *
  * @author Mikhail Kalinin
- * @since 30.07.2018
+ * @since 14.08.2018
  */
-public interface ValidatorRepository {
+public class BeaconGenesis extends Beacon {
 
-    /**
-     * Returns a list of validators deployed in an inclusive range {@code [fromBlock, toBlock]}.
-     * An order of deposits is preserved, hence first deposited validator has the lowest index in returned list.
-     */
-    List<Validator> query(byte[] fromBlock, byte[] toBlock);
+    public static final long SLOT = 0;
+
+    private static final byte[] EMPTY = new byte[32];
+
+    private static BeaconGenesis instance;
+
+    private BeaconGenesis() {
+        super(EMPTY, EMPTY, EMPTY, EMPTY, SLOT);
+        setStateHash(getState().getHash());
+    }
+
+    public static BeaconGenesis instance() {
+        if (instance == null)
+            instance = new BeaconGenesis();
+        return instance;
+    }
+
+    public BeaconState getState() {
+        return new BeaconState();
+    }
+
+    public BigInteger getScore() {
+        return BigInteger.ZERO;
+    }
 }

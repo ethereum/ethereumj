@@ -15,23 +15,34 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.sharding.service;
+package org.ethereum.sharding.processing;
 
-import org.ethereum.sharding.domain.Validator;
-
-import java.util.List;
+import org.ethereum.sharding.processing.validation.ValidationResult;
 
 /**
- * Helper interface to look for deposited validators in the receipts.
+ * The result of processing a certain block.
  *
  * @author Mikhail Kalinin
- * @since 30.07.2018
+ * @since 16.08.2018
  */
-public interface ValidatorRepository {
+public enum ProcessingResult {
+    Exist,
+    NoParent,
+    Invalid,
+    ConsensusBreak,
+    Best,
+    NotBest;
 
-    /**
-     * Returns a list of validators deployed in an inclusive range {@code [fromBlock, toBlock]}.
-     * An order of deposits is preserved, hence first deposited validator has the lowest index in returned list.
-     */
-    List<Validator> query(byte[] fromBlock, byte[] toBlock);
+    public static ProcessingResult fromValidation(ValidationResult res) {
+        switch (res) {
+            case Exist:
+                return Exist;
+            case NoParent:
+                return NoParent;
+            case StateMismatch:
+                return ConsensusBreak;
+            default:
+                throw new RuntimeException("Can't convert " + res + " to processing result");
+        }
+    }
 }

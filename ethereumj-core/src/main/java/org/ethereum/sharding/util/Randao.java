@@ -69,16 +69,22 @@ public class Randao {
         }
 
         updateNextKey(seed);
+        flush();
     }
 
     public byte[] reveal() {
         byte[] img = src.get(nextKey);
         updateNextKey(img);
+        flush();
         return img;
     }
 
     private void updateNextKey(byte[] key) {
         this.nextKey = key;
         src.put(NEXT_KEY, key);
+    }
+
+    private void flush() {
+        src.flush();
     }
 }

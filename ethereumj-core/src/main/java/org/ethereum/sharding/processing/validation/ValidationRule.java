@@ -15,23 +15,28 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.sharding.service;
+package org.ethereum.sharding.processing.validation;
 
-import org.ethereum.sharding.domain.Validator;
-
-import java.util.List;
+import org.ethereum.sharding.domain.Beacon;
 
 /**
- * Helper interface to look for deposited validators in the receipts.
+ * An abstract interface for beacon chain blocks validation rule.
+ *
+ * @see BeaconValidator
+ * @see StateValidator
+ * @see ValidationResult
  *
  * @author Mikhail Kalinin
- * @since 30.07.2018
+ * @since 14.08.2018
  */
-public interface ValidatorRepository {
+public interface ValidationRule<T> {
 
     /**
-     * Returns a list of validators deployed in an inclusive range {@code [fromBlock, toBlock]}.
-     * An order of deposits is preserved, hence first deposited validator has the lowest index in returned list.
+     * Accepts block and data which block is validated against.
+     *
+     * @param block the block
+     * @param data data that are a part of validation process
+     * @return {@link ValidationResult}
      */
-    List<Validator> query(byte[] fromBlock, byte[] toBlock);
+    ValidationResult apply(Beacon block, T data);
 }

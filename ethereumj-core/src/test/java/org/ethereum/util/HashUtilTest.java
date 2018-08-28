@@ -101,4 +101,11 @@ public class HashUtilTest {
         String result2 = Hex.toHexString(HashUtil.ripemd160("test2".getBytes()));
         assertEquals(expected2, result2);
     }
+
+    @Test
+    public void testBlake2b() {
+        String expected = "aa99f4a69a46c7f453f4907aff67fb5942337f0eac1a1cc1c58067068fc97b9e";
+        String result = Hex.toHexString(HashUtil.blake2b("blake2b-test".getBytes()));
+        assertEquals(expected, result);
+    }
 }

@@ -15,23 +15,23 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.sharding.service;
+package org.ethereum.sharding.processing.consensus;
 
-import org.ethereum.sharding.domain.Validator;
+import org.ethereum.sharding.domain.Beacon;
+import org.ethereum.sharding.processing.state.BeaconState;
 
-import java.util.List;
+import java.math.BigInteger;
 
 /**
- * Helper interface to look for deposited validators in the receipts.
+ * Trivial {@link ScoreFunction} that treats block's number as a score of that block.
  *
  * @author Mikhail Kalinin
- * @since 30.07.2018
+ * @since 16.08.2018
  */
-public interface ValidatorRepository {
+public class NumberAsScore implements ScoreFunction {
 
-    /**
-     * Returns a list of validators deployed in an inclusive range {@code [fromBlock, toBlock]}.
-     * An order of deposits is preserved, hence first deposited validator has the lowest index in returned list.
-     */
-    List<Validator> query(byte[] fromBlock, byte[] toBlock);
+    @Override
+    public BigInteger apply(Beacon block, BeaconState state) {
+        return BigInteger.valueOf(block.getSlotNumber());
+    }
 }
