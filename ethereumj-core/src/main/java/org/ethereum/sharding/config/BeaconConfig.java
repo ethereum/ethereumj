@@ -116,7 +116,7 @@ public class BeaconConfig {
         ValidatorService validatorService;
         if (validatorConfig().isEnabled()) {
             validatorService = new ValidatorServiceImpl(ethereum, validatorConfig(),
-                    depositContract(), depositAuthority(), randao());
+                    depositContract(), depositAuthority(), randao(), publisher());
         } else {
             validatorService = new ValidatorService() {};
         }
@@ -205,7 +205,9 @@ public class BeaconConfig {
 
     @Bean
     public Publisher publisher() {
-        return new Publisher(eventDispatchThread);
+        Publisher publisher = new Publisher(eventDispatchThread);
+        shardingWorldManager.setPublisher(publisher);
+        return publisher;
     }
 
     @Bean

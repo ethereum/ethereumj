@@ -18,9 +18,10 @@
 package org.ethereum.sharding.pubsub;
 
 import org.ethereum.sharding.domain.Beacon;
+import org.ethereum.sharding.service.ValidatorService;
 
 /**
- * Provides shortcuts to {@link Event} constuctors.
+ * Provides shortcuts to {@link Event} constructors.
  *
  * @author Mikhail Kalinin
  * @since 28.08.2018
@@ -33,5 +34,9 @@ public class Events {
 
     public static BeaconChainLoaded onBeaconChainLoaded(Beacon head) {
         return new BeaconChainLoaded(head);
+    }
+
+    public static ValidatorStateUpdated onValidatorStateUpdated(ValidatorService.State newState) {
+        return new ValidatorStateUpdated(newState);
     }
 }
