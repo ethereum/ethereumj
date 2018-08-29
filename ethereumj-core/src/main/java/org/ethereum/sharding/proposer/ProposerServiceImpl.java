@@ -61,10 +61,10 @@ public class ProposerServiceImpl implements ProposerService {
 
         // trigger proposer each time when new block is imported
         publisher.subscribe(BeaconBlockImported.class, data ->
-                ProposerServiceImpl.this.submit(data.getBlock().getSlotNumber() + 1));
+                this.submit(data.getBlock().getSlotNumber() + 1));
 
-        // schedule for next slot
-        submit(proposer.getSlotNumber(System.currentTimeMillis()) + 1);
+        // schedule initial slot proposing
+        submit(proposer.getSlotNumber(System.currentTimeMillis()) + 2);
     }
 
     @Override

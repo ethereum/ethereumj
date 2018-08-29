@@ -65,7 +65,7 @@ public class BeaconProposerImpl implements BeaconProposer {
         publisher.subscribe(BeaconBlockImported.class, data -> {
             if (data.isBest()) {
                 head = data.getBlock();
-                recentState = repository.get(data.getBlock().getStateHash());
+                recentState = this.repository.get(data.getBlock().getStateHash());
             }
         });
 
@@ -97,6 +97,6 @@ public class BeaconProposerImpl implements BeaconProposer {
 
     @Override
     public long getSlotNumber(long timestamp) {
-        return (timestamp - BeaconGenesis.instance().getTimestamp()) / SLOT_DURATION + 1;
+        return (timestamp - BeaconGenesis.instance().getTimestamp()) / SLOT_DURATION;
     }
 }

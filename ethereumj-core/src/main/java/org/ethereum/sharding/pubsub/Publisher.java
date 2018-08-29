@@ -39,7 +39,7 @@ public class Publisher {
 
     EventDispatchThread eventDispatchThread;
 
-    private Map<Class<? extends Event>, List<Consumer>> subscriptionMap = new ConcurrentHashMap<>();
+    protected Map<Class<? extends Event>, List<Consumer>> subscriptionMap = new ConcurrentHashMap<>();
 
     public Publisher(EventDispatchThread eventDispatchThread) {
         this.eventDispatchThread = eventDispatchThread;
