@@ -21,7 +21,7 @@ import org.ethereum.datasource.Source;
 
 import java.security.SecureRandom;
 
-import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.crypto.HashUtil.blake2b;
 
 /**
  * Generates and maintains data samples created in a hash onion fashion.
@@ -37,7 +37,7 @@ import static org.ethereum.crypto.HashUtil.sha3;
  */
 public class Randao {
 
-    private static final byte[] NEXT_KEY = sha3("the_next_randao_image_key".getBytes());
+    private static final byte[] NEXT_KEY = blake2b("the_next_randao_image_key".getBytes());
     private static final int IMAGE_SIZE = 32;
 
     Source<byte[], byte[]> src;
@@ -59,11 +59,11 @@ public class Randao {
 
         // update seed length to IMAGE_SIZE if needed
         if (seed.length != IMAGE_SIZE) {
-            seed = sha3(seed);
+            seed = blake2b(seed);
         }
 
         for (int i = 0; i < rounds; i++) {
-            byte[] next = sha3(seed);
+            byte[] next = blake2b(seed);
             src.put(next, seed);
             seed = next;
         }

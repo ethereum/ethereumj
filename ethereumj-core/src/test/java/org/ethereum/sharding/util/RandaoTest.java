@@ -19,10 +19,9 @@ package org.ethereum.sharding.util;
 
 import org.ethereum.datasource.DbSource;
 import org.ethereum.datasource.inmem.HashMapDBSimple;
-import org.ethereum.sharding.util.Randao;
 import org.junit.Test;
 
-import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.crypto.HashUtil.blake2b;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -45,7 +44,7 @@ public class RandaoTest {
 
         for (int i = 0; i < rounds - 1; i++) {
             byte[] img = rnd.reveal();
-            assertArrayEquals(preImg, sha3(img));
+            assertArrayEquals(preImg, blake2b(img));
             preImg = img;
         }
 
@@ -73,7 +72,7 @@ public class RandaoTest {
         byte[] preImg = img;
         for (; i < rounds - 1; i++) {
             img = rnd.reveal();
-            assertArrayEquals(preImg, sha3(img));
+            assertArrayEquals(preImg, blake2b(img));
             preImg = img;
         }
     }
