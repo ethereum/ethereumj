@@ -18,7 +18,6 @@
 package org.ethereum.sharding.service;
 
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.db.DbFlushManager;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.sharding.util.Randao;
@@ -32,6 +31,7 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.util.concurrent.CompletableFuture;
 
+import static org.ethereum.sharding.proposer.BeaconProposer.SLOT_DURATION;
 import static org.ethereum.sharding.service.ValidatorService.State.DepositFailed;
 import static org.ethereum.sharding.service.ValidatorService.State.Enlisted;
 import static org.ethereum.sharding.service.ValidatorService.State.Undefined;
@@ -47,7 +47,7 @@ public class ValidatorServiceImpl implements ValidatorService {
 
     private static final Logger logger = LoggerFactory.getLogger("beacon");
 
-    private static final int RANDAO_ROUNDS = 30 * 24 * 3600 / 5; // 30 days of block proposing in solo mode
+    private static final int RANDAO_ROUNDS = 30 * 24 * 3600 * 1000 / (int) SLOT_DURATION; // 30 days of block proposing in solo mode
 
     Ethereum ethereum;
     DepositContract depositContract;
