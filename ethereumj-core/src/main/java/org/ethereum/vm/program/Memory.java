@@ -131,7 +131,7 @@ public class Memory implements ProgramListenerAware {
     }
 
     public DataWord readWord(int address) {
-        return new DataWord(read(address, 32));
+        return DataWord.of(read(address, 32));
     }
 
     // just access expecting all data valid

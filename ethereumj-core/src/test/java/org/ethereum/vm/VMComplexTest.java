@@ -66,8 +66,8 @@ public class VMComplexTest {
 
         int expectedGas = 436;
 
-        DataWord key1 = new DataWord(999);
-        DataWord value1 = new DataWord(3);
+        DataWord key1 = DataWord.of(999);
+        DataWord value1 = DataWord.of(3);
 
         // Set contract into Database
         String callerAddr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
@@ -197,8 +197,8 @@ public class VMComplexTest {
         System.out.println("*** Used gas: " + program.getResult().getGasUsed());
 
 
-        DataWord value_1 = repository.getStorageValue(contractA_addr_bytes, new DataWord(00));
-        DataWord value_2 = repository.getStorageValue(contractA_addr_bytes, new DataWord(01));
+        DataWord value_1 = repository.getStorageValue(contractA_addr_bytes, DataWord.of(00));
+        DataWord value_2 = repository.getStorageValue(contractA_addr_bytes, DataWord.of(01));
 
 
         repository.close();
@@ -281,12 +281,12 @@ public class VMComplexTest {
         System.out.println("============ Results ============");
         System.out.println("*** Used gas: " + program.getResult().getGasUsed());
 
-        DataWord value1 = program.memoryLoad(new DataWord(32));
-        DataWord value2 = program.memoryLoad(new DataWord(64));
-        DataWord value3 = program.memoryLoad(new DataWord(96));
-        DataWord value4 = program.memoryLoad(new DataWord(128));
-        DataWord value5 = program.memoryLoad(new DataWord(160));
-        DataWord value6 = program.memoryLoad(new DataWord(192));
+        DataWord value1 = program.memoryLoad(DataWord.of(32));
+        DataWord value2 = program.memoryLoad(DataWord.of(64));
+        DataWord value3 = program.memoryLoad(DataWord.of(96));
+        DataWord value4 = program.memoryLoad(DataWord.of(128));
+        DataWord value5 = program.memoryLoad(DataWord.of(160));
+        DataWord value6 = program.memoryLoad(DataWord.of(192));
 
         repository.close();
 
@@ -431,10 +431,10 @@ public class VMComplexTest {
         System.out.println("============ Results ============");
         System.out.println("*** Used gas: " + program.getResult().getGasUsed());
 
-        DataWord memValue1 = program.memoryLoad(new DataWord(0));
-        DataWord memValue2 = program.memoryLoad(new DataWord(32));
+        DataWord memValue1 = program.memoryLoad(DataWord.of(0));
+        DataWord memValue2 = program.memoryLoad(DataWord.of(32));
 
-        DataWord storeValue1 = repository.getStorageValue(contractB_addr_bytes, new DataWord(00));
+        DataWord storeValue1 = repository.getStorageValue(contractB_addr_bytes, DataWord.of(00));
 
         repository.close();
 

@@ -141,8 +141,8 @@ public class TransactionExecutionSummary {
         for (RLPElement entry : (RLPList) encoded) {
             RLPList asList = (RLPList) entry;
 
-            DataWord key = new DataWord(asList.get(0).getRLPData());
-            DataWord value = new DataWord(asList.get(1).getRLPData());
+            DataWord key = DataWord.of(asList.get(0).getRLPData());
+            DataWord value = DataWord.of(asList.get(1).getRLPData());
             byte[] changedBytes = asList.get(2).getRLPData();
             boolean changed = isNotEmpty(changedBytes) && RLP.decodeInt(changedBytes, 0) == 1;
 
@@ -184,8 +184,8 @@ public class TransactionExecutionSummary {
     private static Map<DataWord, DataWord> decodeStorageDiff(RLPList storageDiff) {
         Map<DataWord, DataWord> result = new HashMap<>();
         for (RLPElement entry : storageDiff) {
-            DataWord key = new DataWord(((RLPList) entry).get(0).getRLPData());
-            DataWord value = new DataWord(((RLPList) entry).get(1).getRLPData());
+            DataWord key = DataWord.of(((RLPList) entry).get(0).getRLPData());
+            DataWord value = DataWord.of(((RLPList) entry).get(1).getRLPData());
             result.put(key, value);
         }
         return result;
@@ -222,7 +222,7 @@ public class TransactionExecutionSummary {
     private static List<DataWord> decodeDeletedAccounts(RLPList deletedAccounts) {
         List<DataWord> result = new ArrayList<>();
         for (RLPElement deletedAccount : deletedAccounts) {
-            result.add(new DataWord(deletedAccount.getRLPData()));
+            result.add(DataWord.of(deletedAccount.getRLPData()));
         }
         return result;
     }

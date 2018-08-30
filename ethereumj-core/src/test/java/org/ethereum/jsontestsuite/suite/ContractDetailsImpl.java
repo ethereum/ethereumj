@@ -98,7 +98,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
         byte[] data = storageTrie.get(key.getData());
         if (data.length > 0) {
             byte[] dataDecoded = RLP.decode2(data).get(0).getRLPData();
-            result = new DataWord(dataDecoded);
+            result = DataWord.of(dataDecoded);
         }
 
         return result;
@@ -124,7 +124,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
         Map<DataWord, DataWord> storage = new HashMap<>();
         if (keys == null) {
             for (ByteArrayWrapper keyBytes : this.keys) {
-                DataWord key = new DataWord(keyBytes);
+                DataWord key = DataWord.of(keyBytes);
                 DataWord value = get(key);
 
                 // we check if the value is not null,
@@ -160,7 +160,7 @@ public class ContractDetailsImpl extends AbstractContractDetails {
     public Set<DataWord> getStorageKeys() {
         Set<DataWord> result = new HashSet<>();
         for (ByteArrayWrapper key : keys) {
-            result.add(new DataWord(key));
+            result.add(DataWord.of(key));
         }
         return result;
     }

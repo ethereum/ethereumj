@@ -207,7 +207,7 @@ public class TransactionExecutor {
         if (!readyToExecute) return;
 
         byte[] targetAddress = tx.getReceiveAddress();
-        precompiledContract = PrecompiledContracts.getContractForAddress(new DataWord(targetAddress), blockchainConfig);
+        precompiledContract = PrecompiledContracts.getContractForAddress(DataWord.of(targetAddress), blockchainConfig);
 
         if (precompiledContract != null) {
             long requiredGas = precompiledContract.getGasForData(tx.getData());

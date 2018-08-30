@@ -55,7 +55,7 @@ public class LogInfo {
 
         for (RLPElement topic1 : topics) {
             byte[] topic = topic1.getRLPData();
-            this.topics.add(new DataWord(topic));
+            this.topics.add(DataWord.of(topic));
         }
     }
 
