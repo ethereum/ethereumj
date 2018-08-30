@@ -18,9 +18,10 @@
 package org.ethereum.sharding.service;
 
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.db.DbFlushManager;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.sharding.pubsub.Events;
+import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.util.Randao;
 import org.ethereum.sharding.config.ValidatorConfig;
 import org.ethereum.sharding.contract.DepositContract;
@@ -32,6 +33,8 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.util.concurrent.CompletableFuture;
 
+import static org.ethereum.sharding.proposer.BeaconProposer.SLOT_DURATION;
+import static org.ethereum.sharding.pubsub.Events.onValidatorStateUpdated;
 import static org.ethereum.sharding.service.ValidatorService.State.DepositFailed;
 import static org.ethereum.sharding.service.ValidatorService.State.Enlisted;
 import static org.ethereum.sharding.service.ValidatorService.State.Undefined;
@@ -47,18 +50,19 @@ public class ValidatorServiceImpl implements ValidatorService {
 
     private static final Logger logger = LoggerFactory.getLogger("beacon");
 
-    private static final int RANDAO_ROUNDS = 30 * 24 * 3600 / 5; // 30 days of block proposing in solo mode
+    private static final int RANDAO_ROUNDS = 30 * 24 * 3600 / (int) (SLOT_DURATION / 1000); // 30 days of block proposing in solo mode
 
     Ethereum ethereum;
     DepositContract depositContract;
     ValidatorConfig config;
     Randao randao;
     DepositAuthority depositAuthority;
+    Publisher publisher;
 
     private State state = Undefined;
 
     public ValidatorServiceImpl(Ethereum ethereum, ValidatorConfig config, DepositContract depositContract,
-                                DepositAuthority depositAuthority, Randao randao) {
+                                DepositAuthority depositAuthority, Randao randao, Publisher publisher) {
         assert config.isEnabled();
 
         this.ethereum = ethereum;
@@ -66,6 +70,7 @@ public class ValidatorServiceImpl implements ValidatorService {
         this.depositContract = depositContract;
         this.depositAuthority = depositAuthority;
         this.randao = randao;
+        this.publisher = publisher;
     }
 
     @Override
@@ -118,6 +123,7 @@ public class ValidatorServiceImpl implements ValidatorService {
 
     void updateState(State newState) {
         state = newState;
+        publisher.publish(onValidatorStateUpdated(newState));
         logState();
     }
 

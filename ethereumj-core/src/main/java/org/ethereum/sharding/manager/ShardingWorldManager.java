@@ -32,6 +32,9 @@ import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.sharding.config.DepositContractConfig;
 import org.ethereum.sharding.processing.BeaconChain;
+import org.ethereum.sharding.proposer.ProposerService;
+import org.ethereum.sharding.pubsub.Publisher;
+import org.ethereum.sharding.pubsub.ValidatorStateUpdated;
 import org.ethereum.sharding.service.ValidatorService;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.slf4j.Logger;
@@ -65,6 +68,7 @@ public class ShardingWorldManager extends WorldManager {
     DepositContractConfig contractConfig;
     DbFlushManager dbFlushManager;
     DbFlushManager beaconDbFlusher;
+    Publisher publisher;
 
     private CompletableFuture<Void> contractInit = new CompletableFuture<>();
 
@@ -127,8 +131,20 @@ public class ShardingWorldManager extends WorldManager {
         contractInit.thenRunAsync(validatorService::init);
     }
 
+    public void setProposerService(final ProposerService proposerService) {
+        publisher.subscribe(ValidatorStateUpdated.class, data -> {
+            if (data.getNewState() == ValidatorService.State.Enlisted) {
+                proposerService.init();
+            }
+        });
+    }
+
     public void setBeaconChain(final BeaconChain beaconChain) {
         contractInit.thenRunAsync(beaconChain::init);
+    }
+
+    public void setPublisher(Publisher publisher) {
+        this.publisher = publisher;
     }
 
     public void setBeaconDbFlusher(final DbFlushManager beaconDbFlusher) {

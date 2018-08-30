@@ -18,6 +18,8 @@
 package org.ethereum.sharding.processing;
 
 import org.ethereum.db.DbFlushManager;
+import org.ethereum.sharding.pubsub.Event;
+import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.processing.consensus.ScoreFunction;
 import org.ethereum.sharding.processing.consensus.StateTransition;
 import org.ethereum.sharding.processing.state.BeaconState;
@@ -30,8 +32,12 @@ import org.ethereum.sharding.domain.BeaconGenesis;
 import org.ethereum.sharding.processing.validation.ValidationResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigInteger;
+
+import static org.ethereum.sharding.pubsub.Events.onBeaconBlock;
+import static org.ethereum.sharding.pubsub.Events.onBeaconChainLoaded;
 
 /**
  * This is default and likely the only implementation of {@link BeaconChain}
@@ -52,6 +58,8 @@ public class BeaconChainImpl implements BeaconChain {
     StateRepository repository;
     ScoreFunction scoreFunction;
 
+    Publisher publisher;
+
     private ChainHead canonicalHead;
 
     public BeaconChainImpl(DbFlushManager beaconDbFlusher, BeaconStore store,
@@ -69,11 +77,17 @@ public class BeaconChainImpl implements BeaconChain {
 
     @Override
     public void init() {
+        logger.info("Load chain with genesis: {}", BeaconGenesis.instance());
+
         if (store.getCanonicalHead() == null)
             insertGenesis();
 
         canonicalHead = new ChainHead(store.getCanonicalHead(), store.getCanonicalHeadScore(),
                 repository.get(store.getCanonicalHead().getStateHash()));
+
+        publish(onBeaconChainLoaded(canonicalHead.block));
+
+        logger.info("Chain loaded with head: {}", canonicalHead.block);
     }
 
     private void insertGenesis() {
@@ -131,6 +145,10 @@ public class BeaconChainImpl implements BeaconChain {
         });
 
         ProcessingResult res = canonicalHead.equals(newHead) ? ProcessingResult.Best : ProcessingResult.NotBest;
+
+        // publish beacon block event
+        publish(onBeaconBlock(block, res == ProcessingResult.Best));
+
         logger.info("Process block {}, status: {}", block.toString(), res);
 
         return res;
@@ -176,5 +194,15 @@ public class BeaconChainImpl implements BeaconChain {
 
             return this.block.equals(((ChainHead) other).block);
         }
+    }
+
+    void publish(Event e) {
+        if (publisher != null)
+            publisher.publish(e);
+    }
+
+    @Autowired
+    public void setPublisher(Publisher publisher) {
+        this.publisher = publisher;
     }
 }

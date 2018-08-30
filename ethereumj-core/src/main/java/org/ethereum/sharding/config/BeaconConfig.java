@@ -19,6 +19,7 @@ package org.ethereum.sharding.config;
 
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
+import org.ethereum.core.EventDispatchThread;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.AbstractCachedSource;
 import org.ethereum.datasource.AsyncWriteCache;
@@ -34,6 +35,7 @@ import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.TransactionStore;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.manager.WorldManager;
+import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.manager.ShardingWorldManager;
 import org.ethereum.sharding.processing.BeaconChain;
 import org.ethereum.sharding.processing.BeaconChainFactory;
@@ -41,6 +43,10 @@ import org.ethereum.sharding.processing.db.BeaconStore;
 import org.ethereum.sharding.processing.db.IndexedBeaconStore;
 import org.ethereum.sharding.processing.state.BeaconStateRepository;
 import org.ethereum.sharding.processing.state.StateRepository;
+import org.ethereum.sharding.proposer.BeaconProposer;
+import org.ethereum.sharding.proposer.BeaconProposerImpl;
+import org.ethereum.sharding.proposer.ProposerService;
+import org.ethereum.sharding.proposer.ProposerServiceImpl;
 import org.ethereum.sharding.service.ValidatorRepositoryImpl;
 import org.ethereum.sharding.service.ValidatorService;
 import org.ethereum.sharding.crypto.DepositAuthority;
@@ -50,7 +56,6 @@ import org.ethereum.sharding.util.Randao;
 import org.ethereum.sharding.service.ValidatorRepository;
 import org.ethereum.sharding.service.ValidatorServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
@@ -98,6 +103,9 @@ public class BeaconConfig {
     @Autowired
     SystemProperties systemProperties;
 
+    @Autowired
+    EventDispatchThread eventDispatchThread;
+
     @Bean
     public ValidatorConfig validatorConfig() {
         return ValidatorConfig.fromFile();
@@ -108,12 +116,23 @@ public class BeaconConfig {
         ValidatorService validatorService;
         if (validatorConfig().isEnabled()) {
             validatorService = new ValidatorServiceImpl(ethereum, validatorConfig(),
-                    depositContract(), depositAuthority(), randao());
+                    depositContract(), depositAuthority(), randao(), publisher());
         } else {
             validatorService = new ValidatorService() {};
         }
         shardingWorldManager.setValidatorService(validatorService);
         return validatorService;
+    }
+
+    @Bean
+    public ProposerService proposerService() {
+        if (validatorConfig().isEnabled()) {
+            ProposerService proposerService = new ProposerServiceImpl(beaconProposer(), beaconChain(), publisher());
+            shardingWorldManager.setProposerService(proposerService);
+            return proposerService;
+        } else {
+            return new ProposerService() {};
+        }
     }
 
     @Bean
@@ -184,6 +203,29 @@ public class BeaconConfig {
         return commonConfig.keyValueDataSource("beaconchain", settings);
     }
 
+    @Bean
+    public Publisher publisher() {
+        Publisher publisher = new Publisher(eventDispatchThread);
+        shardingWorldManager.setPublisher(publisher);
+        return publisher;
+    }
+
+    @Bean
+    public BeaconProposer beaconProposer() {
+        return new BeaconProposerImpl(ethereum, publisher(), randao(), beaconStateRepository(),
+                BeaconChainFactory.stateTransition());
+    }
+
+    @Bean
+    public Randao randao() {
+        DbSource<byte[]> src = commonConfig.keyValueDataSource("randao");
+        WriteCache.BytesKey<byte[]> cache = new WriteCache.BytesKey<>(
+                new BatchSourceWriter<>(src), WriteCache.CacheType.SIMPLE);
+        cache.setFlushSource(true);
+
+        return new Randao(cache);
+    }
+
     private DbFlushManager beaconDbFlusher;
     public DbFlushManager beaconDbFlusher() {
         if (beaconDbFlusher != null)
@@ -196,15 +238,6 @@ public class BeaconConfig {
 
     public DepositAuthority depositAuthority() {
         return new UnsecuredDepositAuthority(validatorConfig());
-    }
-
-    public Randao randao() {
-        DbSource<byte[]> src = commonConfig.keyValueDataSource("randao");
-        WriteCache.BytesKey<byte[]> cache = new WriteCache.BytesKey<>(
-                new BatchSourceWriter<>(src), WriteCache.CacheType.SIMPLE);
-        cache.setFlushSource(true);
-
-        return new Randao(cache);
     }
 
     public static class Enabled implements Condition {

@@ -21,6 +21,7 @@ import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.CallTransaction;
+import org.ethereum.core.EventDispatchThread;
 import org.ethereum.core.Genesis;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
@@ -39,6 +40,7 @@ import org.ethereum.sharding.config.ValidatorConfig;
 import org.ethereum.sharding.contract.DepositContract;
 import org.ethereum.sharding.crypto.DepositAuthority;
 import org.ethereum.sharding.crypto.UnsecuredDepositAuthority;
+import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.service.ValidatorRepository;
 import org.ethereum.sharding.service.ValidatorRepositoryImpl;
 import org.ethereum.sharding.service.ValidatorService;
@@ -164,7 +166,7 @@ public class ShardingTestHelper {
 
         Randao randao = sharding.randao = new Randao(new HashMapDB<>());
         sharding.validatorService = new ValidatorServiceImpl(ethereum, sharding.validatorConfig,
-                sharding.depositContract, authority, randao);
+                sharding.depositContract, authority, randao, new Publisher(EventDispatchThread.getDefault()));
 
         sharding.validatorRepository = new ValidatorRepositoryImpl(standaloneBlockchain.getBlockchain().getBlockStore(),
                 standaloneBlockchain.getBlockchain().getTransactionStore(), sharding.depositContract);
@@ -174,7 +176,8 @@ public class ShardingTestHelper {
 
     public static ValidatorService brandNewValidatorService(ShardingBootstrap bootstrap) {
         return new ValidatorServiceImpl(bootstrap.ethereum,
-                bootstrap.validatorConfig, bootstrap.depositContract, bootstrap.depositAuthority, bootstrap.randao);
+                bootstrap.validatorConfig, bootstrap.depositContract, bootstrap.depositAuthority, bootstrap.randao,
+                new Publisher(EventDispatchThread.getDefault()));
     }
 
     public static class ShardingBootstrap {

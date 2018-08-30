@@ -94,7 +94,7 @@ public class Beacon {
     }
 
     public boolean isParentOf(Beacon other) {
-        return FastByteComparisons.equal(this.getParentHash(), other.getHash());
+        return FastByteComparisons.equal(this.getHash(), other.getParentHash());
     }
 
     public void setStateHash(byte[] stateHash) {
@@ -112,7 +112,8 @@ public class Beacon {
     @Override
     public String toString() {
         return "#" + getSlotNumber() + " (" + Hex.toHexString(getHash()).substring(0,6) + " <~ "
-                + Hex.toHexString(getParentHash()).substring(0,6) + ")";
+                + Hex.toHexString(getParentHash()).substring(0,6) + "; mainChainRef: " +
+                Hex.toHexString(mainChainRef).substring(0,6) + ")";
     }
 
     public boolean isGenesis() {
