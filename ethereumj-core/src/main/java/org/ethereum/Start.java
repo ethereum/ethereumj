@@ -26,6 +26,9 @@ import org.ethereum.mine.Ethash;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * @author Roman Mandeleil
@@ -53,9 +56,26 @@ public class Start {
             Ethereum ethereum = EthereumFactory.createEthereum();
 
             if (actionBlocksLoader) {
-                ethereum.getBlockLoader().loadBlocks();
+                Path path = Paths.get(config.blocksLoader());
+                if (Files.notExists(path)) {
+                    System.out.println(path + " doesn't exist.");
+                }
+
+                Path[] paths;
+                if (Files.isDirectory(path)) {
+                    paths = Files.list(path).sorted().toArray(Path[]::new);
+                } else {
+                    paths = new Path[]{path};
+                }
+
+                boolean loaded = ethereum.getBlockLoader().loadBlocks(paths);
+                if (loaded) {
+                    System.out.println(" * Done * ");
+                    System.exit(0);
+                } else {
+                    System.exit(1);
+                }
             }
         }
     }
-
 }
