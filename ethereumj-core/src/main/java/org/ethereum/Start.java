@@ -17,7 +17,6 @@
  */
 package org.ethereum;
 
-import org.apache.commons.lang3.StringUtils;
 import org.ethereum.cli.CLIInterface;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.facade.Ethereum;
@@ -29,6 +28,14 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
+
+import static java.lang.Long.parseLong;
+import static java.util.Objects.nonNull;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 /**
  * @author Roman Mandeleil
@@ -36,30 +43,44 @@ import java.nio.file.Paths;
  */
 public class Start {
 
-    public static void main(String args[]) throws IOException, URISyntaxException {
+    private static void disableSync(SystemProperties config) {
+        config.setSyncEnabled(false);
+        config.setDiscoveryEnabled(false);
+    }
+
+    private static Optional<Long> getEthashBlockNumber() {
+        String value = System.getProperty("ethash.blockNumber");
+        return isEmpty(value) ? empty() : of(parseLong(value));
+    }
+
+    private static Optional<Path> getBlocksDumpPath(SystemProperties config) {
+        String blocksLoader = config.blocksLoader();
+
+        if (isEmpty(blocksLoader)) {
+            return empty();
+        } else {
+            Path path = Paths.get(blocksLoader);
+            return ofNullable(Files.exists(path) ? path : null);
+        }
+    }
+
+    public static void main(String args[]) {
         CLIInterface.call(args);
 
         final SystemProperties config = SystemProperties.getDefault();
-        final boolean actionBlocksLoader = !config.blocksLoader().isEmpty();
-        final boolean actionGenerateDag = !StringUtils.isEmpty(System.getProperty("ethash.blockNumber"));
 
-        if (actionBlocksLoader || actionGenerateDag) {
-            config.setSyncEnabled(false);
-            config.setDiscoveryEnabled(false);
-        }
-
-        if (actionGenerateDag) {
-            new Ethash(config, Long.parseLong(System.getProperty("ethash.blockNumber"))).getFullDataset();
+        getEthashBlockNumber().ifPresent(ethashBlockNumber -> {
+            disableSync(config);
+            new Ethash(config, ethashBlockNumber).getFullDataset();
             // DAG file has been created, lets exit
             System.exit(0);
-        } else {
-            Ethereum ethereum = EthereumFactory.createEthereum();
+        });
 
-            if (actionBlocksLoader) {
-                Path path = Paths.get(config.blocksLoader());
-                if (Files.notExists(path)) {
-                    System.out.println(path + " doesn't exist.");
-                }
+        Ethereum ethereum = EthereumFactory.createEthereum();
+
+        getBlocksDumpPath(config).ifPresent(path -> {
+            disableSync(config);
+            try {
 
                 Path[] paths;
                 if (Files.isDirectory(path)) {
@@ -69,13 +90,16 @@ public class Start {
                 }
 
                 boolean loaded = ethereum.getBlockLoader().loadBlocks(paths);
+
                 if (loaded) {
                     System.out.println(" * Done * ");
                     System.exit(0);
-                } else {
-                    System.exit(1);
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        }
+
+            System.exit(1);
+        });
     }
 }
