@@ -86,7 +86,7 @@ public class BeaconProposerTest {
 
         Beacon newBlock = BeaconGenesis.instance();
         helper.insertBlock(newBlock);
-        byte[] reveal = helper.randao.reveal();
+        byte[] reveal = helper.randao.revealNext();
 
         for (int i = 0; i < 5; i++) {
             long slotNumber = i * 10;

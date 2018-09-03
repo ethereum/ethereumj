@@ -81,7 +81,7 @@ public class BeaconProposerImpl implements BeaconProposer {
 
     @Override
     public Beacon createNewBlock(long slotNumber) {
-        Beacon block = new Beacon(head.getHash(), randao.reveal(), mainChainRef,
+        Beacon block = new Beacon(head.getHash(), randao.revealNext(), mainChainRef,
                 HashUtil.EMPTY_DATA_HASH, slotNumber);
         BeaconState newState = stateTransition.applyBlock(block, recentState);
         block.setStateHash(newState.getHash());

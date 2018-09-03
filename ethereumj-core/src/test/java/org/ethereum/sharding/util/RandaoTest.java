@@ -39,16 +39,17 @@ public class RandaoTest {
 
         rnd.generate(rounds);
 
-        byte[] preImg = rnd.reveal();
+        byte[] preImg = rnd.revealNext();
         assertNotNull(preImg);
 
         for (int i = 0; i < rounds - 1; i++) {
-            byte[] img = rnd.reveal();
+            byte[] img = rnd.revealNext();
             assertArrayEquals(preImg, blake2b(img));
+            assertArrayEquals(rnd.reveal(preImg), img);
             preImg = img;
         }
 
-        assertNull(rnd.reveal());
+        assertNull(rnd.revealNext());
     }
 
     @Test
@@ -62,16 +63,16 @@ public class RandaoTest {
 
         // reveal a half
         int i = 0;
-        byte[] img = rnd.reveal();
+        byte[] img = rnd.revealNext();
         for (; i < rounds / 2; i++) {
-            img = rnd.reveal();
+            img = rnd.revealNext();
         }
 
         // re-init and reveal the others
         rnd = new Randao(src);
         byte[] preImg = img;
         for (; i < rounds - 1; i++) {
-            img = rnd.reveal();
+            img = rnd.revealNext();
             assertArrayEquals(preImg, blake2b(img));
             preImg = img;
         }

@@ -20,7 +20,6 @@ package org.ethereum.sharding.service;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.listener.EthereumListenerAdapter;
-import org.ethereum.sharding.pubsub.Events;
 import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.util.Randao;
 import org.ethereum.sharding.config.ValidatorConfig;
@@ -102,7 +101,7 @@ public class ValidatorServiceImpl implements ValidatorService {
     byte[] initRandao() {
         // generate randao images
         randao.generate(RANDAO_ROUNDS);
-        return randao.reveal();
+        return randao.revealNext();
     }
 
     void deposit(byte[] randao) {
