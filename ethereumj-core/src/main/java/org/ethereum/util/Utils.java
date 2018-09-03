@@ -39,6 +39,8 @@ import java.util.regex.Pattern;
 
 import javax.swing.*;
 
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+
 public class Utils {
     private static final DataWord DIVISOR = DataWord.of(64);
 
@@ -298,5 +300,12 @@ public class Utils {
         } catch (NumberFormatException e) {
             return false;
         }
+    }
+
+    public static byte[] parseHex(String hex) {
+        if (hex == null) return EMPTY_BYTE_ARRAY;
+        if (hex.startsWith("0x")) hex = hex.substring(2);
+        if (hex.length() % 2 != 0) hex = "0" + hex;
+        return Hex.decode(hex);
     }
 }
