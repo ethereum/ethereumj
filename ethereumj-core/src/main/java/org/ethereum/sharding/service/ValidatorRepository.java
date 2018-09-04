@@ -17,6 +17,7 @@
  */
 package org.ethereum.sharding.service;
 
+import org.ethereum.core.Genesis;
 import org.ethereum.sharding.domain.Validator;
 
 import java.util.List;
@@ -34,4 +35,9 @@ public interface ValidatorRepository {
      * An order of deposits is preserved, hence first deposited validator has the lowest index in returned list.
      */
     List<Validator> query(byte[] fromBlock, byte[] toBlock);
+
+    /**
+     * A shortcut to {@link #query(byte[], byte[])} with {@code fromBlock} set to {@link Genesis#getHash()}
+     */
+    List<Validator> query(byte[] toBlock);
 }

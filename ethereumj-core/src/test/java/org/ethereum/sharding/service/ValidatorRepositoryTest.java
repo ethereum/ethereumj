@@ -83,6 +83,10 @@ public class ValidatorRepositoryTest {
         List<Validator> res = bootstrap.validatorRepository.query(b1.getHash(), b4.getHash());
         checkQueryResult(res, new byte[][]{ val1, val2, val3, val4 });
 
+        // query all via shortcut method
+        res = bootstrap.validatorRepository.query(b4.getHash());
+        checkQueryResult(res, new byte[][]{ val1, val2, val3, val4 });
+
         // query from second and third block
         res = bootstrap.validatorRepository.query(b2.getHash(), b4.getHash());
         checkQueryResult(res, new byte[][]{ val2, val3, val4 });

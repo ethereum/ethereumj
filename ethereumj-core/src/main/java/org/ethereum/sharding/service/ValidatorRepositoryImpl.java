@@ -18,6 +18,7 @@
 package org.ethereum.sharding.service;
 
 import org.ethereum.core.Block;
+import org.ethereum.core.Genesis;
 import org.ethereum.core.TransactionInfo;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.TransactionStore;
@@ -69,5 +70,11 @@ public class ValidatorRepositoryImpl implements ValidatorRepository {
         }));
 
         return validators;
+    }
+
+    @Override
+    public List<Validator> query(byte[] toBlock) {
+        Block genesis = blockStore.getChainBlockByNumber(0L);
+        return query(genesis.getHash(), toBlock);
     }
 }
