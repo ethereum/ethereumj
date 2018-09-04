@@ -518,6 +518,30 @@ public class SystemPropertiesTest {
         assertTrue(StringUtils.countOccurrencesOf(dump, "{") > 50);
     }
 
+    @Test
+    public void testMergeConfigs1() {
+        String firstConfig = "";
+        SystemProperties props = new SystemProperties();
+        Config config = props.mergeConfigs(firstConfig, ConfigFactory::parseString);
+        assertFalse(config.hasPath("peer.listen.port"));
+    }
+
+    @Test
+    public void testMergeConfigs2() {
+        String firstConfig = "peer.listen.port=30123";
+        SystemProperties props = new SystemProperties();
+        Config config = props.mergeConfigs(firstConfig, ConfigFactory::parseString);
+        assertEquals(30123, config.getInt("peer.listen.port"));
+    }
+
+    @Test
+    public void testMergeConfigs3() {
+        String firstConfig = "peer.listen.port=30123,peer.listen.port=30145";
+        SystemProperties props = new SystemProperties();
+        Config config = props.mergeConfigs(firstConfig, ConfigFactory::parseString);
+        assertEquals(30145, config.getInt("peer.listen.port"));
+    }
+
     @SuppressWarnings("SameParameterValue")
     static class ActivePeer {
         boolean asEnodeUrl;
