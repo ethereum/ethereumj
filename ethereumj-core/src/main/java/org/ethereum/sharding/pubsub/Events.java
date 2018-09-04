@@ -36,6 +36,10 @@ public class Events {
         return new BeaconChainLoaded(head);
     }
 
+    public static BeaconChainSynced onBeaconChainSynced(Beacon head) {
+        return new BeaconChainSynced(head);
+    }
+
     public static ValidatorStateUpdated onValidatorStateUpdated(ValidatorService.State newState) {
         return new ValidatorStateUpdated(newState);
     }

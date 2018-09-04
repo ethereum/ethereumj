@@ -38,6 +38,7 @@ import java.math.BigInteger;
 
 import static org.ethereum.sharding.pubsub.Events.onBeaconBlock;
 import static org.ethereum.sharding.pubsub.Events.onBeaconChainLoaded;
+import static org.ethereum.sharding.pubsub.Events.onBeaconChainSynced;
 
 /**
  * This is default and likely the only implementation of {@link BeaconChain}
@@ -86,6 +87,7 @@ public class BeaconChainImpl implements BeaconChain {
                 repository.get(store.getCanonicalHead().getStateHash()));
 
         publish(onBeaconChainLoaded(canonicalHead.block));
+        publish(onBeaconChainSynced(canonicalHead.block));
 
         logger.info("Chain loaded with head: {}", canonicalHead.block);
     }

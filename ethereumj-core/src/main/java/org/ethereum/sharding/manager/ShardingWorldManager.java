@@ -33,6 +33,7 @@ import org.ethereum.manager.WorldManager;
 import org.ethereum.sharding.config.DepositContractConfig;
 import org.ethereum.sharding.processing.BeaconChain;
 import org.ethereum.sharding.proposer.ProposerService;
+import org.ethereum.sharding.pubsub.BeaconChainSynced;
 import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.pubsub.ValidatorStateUpdated;
 import org.ethereum.sharding.service.ValidatorService;
@@ -40,7 +41,6 @@ import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigInteger;
 import java.util.concurrent.CompletableFuture;
@@ -69,8 +69,10 @@ public class ShardingWorldManager extends WorldManager {
     DbFlushManager dbFlushManager;
     DbFlushManager beaconDbFlusher;
     Publisher publisher;
+    ValidatorService validatorService;
 
     private CompletableFuture<Void> contractInit = new CompletableFuture<>();
+    private CompletableFuture<ValidatorService.State> validatorServiceInit = new CompletableFuture<>();
 
     public ShardingWorldManager(SystemProperties config, Repository repository, EthereumListener listener,
                                 Blockchain blockchain, BlockStore blockStore, DepositContractConfig contractConfig,
@@ -128,19 +130,34 @@ public class ShardingWorldManager extends WorldManager {
     }
 
     public void setValidatorService(final ValidatorService validatorService) {
-        contractInit.thenRunAsync(validatorService::init);
+        this.validatorService = validatorService;
+        if (validatorService.getState() == ValidatorService.State.Disabled) {
+            validatorServiceInit.complete(ValidatorService.State.Disabled);
+        } else {
+            publisher.subscribe(ValidatorStateUpdated.class, data -> {
+                if (data.getNewState() == ValidatorService.State.Enlisted ||
+                        data.getNewState() == ValidatorService.State.DepositFailed) {
+                    validatorServiceInit.complete(data.getNewState());
+                }
+            });
+        }
+        contractInit.thenRunAsync(this.validatorService::init);
     }
 
     public void setProposerService(final ProposerService proposerService) {
-        publisher.subscribe(ValidatorStateUpdated.class, data -> {
-            if (data.getNewState() == ValidatorService.State.Enlisted) {
+        // start only if validator is enlisted and after sync is finished
+        publisher.subscribe(BeaconChainSynced.class, data -> {
+            if (validatorService.getState() == ValidatorService.State.Enlisted) {
                 proposerService.init();
             }
         });
     }
 
     public void setBeaconChain(final BeaconChain beaconChain) {
-        contractInit.thenRunAsync(beaconChain::init);
+        // PoC mode:
+        // wait for validator initialization
+        // it's needed to be sure that the validator is registered before beacon genesis state calculation
+        validatorServiceInit.runAfterBothAsync(contractInit, beaconChain::init);
     }
 
     public void setPublisher(Publisher publisher) {
