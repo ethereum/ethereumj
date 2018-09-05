@@ -17,8 +17,15 @@
  */
 package org.ethereum.sharding.domain;
 
+import org.ethereum.datasource.Serializer;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPList;
+
+import java.math.BigInteger;
+
 /**
- * Represents and item of a list of validators held by validator registration contract.
+ * Represents an item of a list of validators held by validator registration contract.
  *
  * @author Mikhail Kalinin
  * @since 21.07.2018
@@ -30,7 +37,13 @@ public class Validator {
     private byte[] withdrawalAddress;
     private byte[] randao;
 
-    private Validator() {
+    public Validator(byte[] encoded) {
+        RLPList list = RLP.unwrapList(encoded);
+
+        this.pubKey = list.get(0).getRLPData();
+        this.withdrawalShard = ByteUtil.bytesToBigInteger(list.get(1).getRLPData()).longValue();
+        this.withdrawalAddress = list.get(2).getRLPData();
+        this.randao = list.get(3).getRLPData();
     }
 
     public Validator(byte[] pubKey, long withdrawalShard, byte[] withdrawalAddress, byte[] randao) {
@@ -38,6 +51,10 @@ public class Validator {
         this.withdrawalShard = withdrawalShard;
         this.withdrawalAddress = withdrawalAddress;
         this.randao = randao;
+    }
+
+    public byte[] getEncoded() {
+        return RLP.wrapList(pubKey, BigInteger.valueOf(withdrawalShard).toByteArray(), withdrawalAddress, randao);
     }
 
     public byte[] getPubKey() {
@@ -55,4 +72,16 @@ public class Validator {
     public byte[] getRandao() {
         return randao;
     }
+
+    public static final Serializer<Validator, byte[]> Serializer = new Serializer<Validator, byte[]>() {
+        @Override
+        public byte[] serialize(Validator validator) {
+            return validator.getEncoded();
+        }
+
+        @Override
+        public Validator deserialize(byte[] stream) {
+            return stream == null ? null : new Validator(stream);
+        }
+    };
 }
