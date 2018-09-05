@@ -542,6 +542,15 @@ public class SystemPropertiesTest {
         assertEquals(30145, config.getInt("peer.listen.port"));
     }
 
+    @Test
+    public void testMergeConfigs4() {
+        String firstConfig = "peer.listen.port=30123,sync.enabled=true";
+        SystemProperties props = new SystemProperties();
+        Config config = props.mergeConfigs(firstConfig, ConfigFactory::parseString);
+        assertEquals(30123, config.getInt("peer.listen.port"));
+        assertEquals(Boolean.TRUE, config.getBoolean("sync.enabled"));
+    }
+
     @SuppressWarnings("SameParameterValue")
     static class ActivePeer {
         boolean asEnodeUrl;
