@@ -120,7 +120,8 @@ public class BeaconProposerTest {
 
         void insertBlock(Beacon block) {
             if (block.isGenesis()) {
-                recentState = BeaconGenesis.instance().getState();
+                recentState = BeaconState.empty();
+                block.setStateHash(recentState.getHash());
             } else {
                 recentState = stateTransition.applyBlock(block, recentState);
             }

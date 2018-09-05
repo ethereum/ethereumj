@@ -24,11 +24,12 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.io.ByteStreams;
-import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.util.Utils;
 
 import java.io.InputStream;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.ethereum.util.Utils.parseHex;
 
@@ -46,19 +47,15 @@ public class BeaconGenesis extends Beacon {
 
     private static BeaconGenesis instance;
 
-    // stub for proposer, 08/28/2018 @ 11:13am (UTC)
+    /* Genesis timestamp, a source of slot's time frames */
     private long timestamp = 0L;
-
-    private BeaconGenesis() {
-        super(EMPTY, EMPTY, EMPTY, EMPTY, SLOT);
-        setStateHash(getState().getHash());
-    }
+    /* A list of public keys that identifies participants of initial active validator set */
+    private List<String> initialValidators = new ArrayList<>();
 
     BeaconGenesis(Json json) {
         super(json.parentHash(), json.randaoReveal(), json.mainChainRef(), EMPTY, SLOT);
         this.timestamp = json.timestamp();
-
-        setStateHash(getState().getHash());
+        this.initialValidators = json.validatorSet();
     }
 
     public static BeaconGenesis instance() {
@@ -69,16 +66,16 @@ public class BeaconGenesis extends Beacon {
         return instance;
     }
 
-    public BeaconState getState() {
-        return new BeaconState();
-    }
-
     public BigInteger getScore() {
         return BigInteger.ZERO;
     }
 
     public long getTimestamp() {
         return timestamp;
+    }
+
+    public List<String> getInitialValidators() {
+        return initialValidators;
     }
 
     @Override
@@ -92,6 +89,7 @@ public class BeaconGenesis extends Beacon {
         String randaoReveal;
         String mainChainRef;
         long timestamp;
+        String[] validatorSet;
 
         byte[] parentHash() {
             return parseHex(parentHash);
@@ -107,6 +105,18 @@ public class BeaconGenesis extends Beacon {
 
         long timestamp() {
             return timestamp * 1000; // seconds to millis
+        }
+
+        List<String> validatorSet() {
+            List<String> validators = new ArrayList<>(validatorSet.length);
+            for (String val : validatorSet) {
+                if ("0x".equals(val.substring(0, 2))) {
+                    validators.add(val.substring(2));
+                } else {
+                    validators.add(val);
+                }
+            }
+            return validators;
         }
 
         static Json fromResource(String resourceName) {

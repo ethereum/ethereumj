@@ -15,29 +15,16 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.sharding.pubsub;
+package org.ethereum.sharding.processing.consensus;
 
 import org.ethereum.sharding.domain.Beacon;
+import org.ethereum.sharding.processing.db.ValidatorSet;
 
 /**
  * @author Mikhail Kalinin
- * @since 03.09.2018
+ * @since 04.09.2018
  */
-public class BeaconChainSynced extends Event<BeaconChainSynced.Data> {
+public interface ValidatorSetTransition {
 
-    public static class Data {
-        private final Beacon head;
-
-        public Data(Beacon head) {
-            this.head = head;
-        }
-
-        public Beacon getHead() {
-            return head;
-        }
-    }
-
-    public BeaconChainSynced(Beacon head) {
-        super(new Data(head));
-    }
+    byte[] applyBlock(Beacon block, ValidatorSet to);
 }

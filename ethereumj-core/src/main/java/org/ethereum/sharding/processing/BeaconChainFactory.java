@@ -17,15 +17,19 @@
  */
 package org.ethereum.sharding.processing;
 
+import org.ethereum.core.Block;
 import org.ethereum.db.DbFlushManager;
+import org.ethereum.sharding.processing.consensus.GenesisTransition;
 import org.ethereum.sharding.processing.consensus.NoTransition;
 import org.ethereum.sharding.processing.consensus.NumberAsScore;
 import org.ethereum.sharding.processing.consensus.ScoreFunction;
 import org.ethereum.sharding.processing.consensus.StateTransition;
 import org.ethereum.sharding.processing.db.BeaconStore;
+import org.ethereum.sharding.processing.db.ValidatorSet;
 import org.ethereum.sharding.processing.state.StateRepository;
 import org.ethereum.sharding.processing.validation.BeaconValidator;
 import org.ethereum.sharding.processing.validation.StateValidator;
+import org.ethereum.sharding.service.ValidatorRepository;
 
 /**
  * A factory that creates {@link BeaconChain} instance.
@@ -41,14 +45,29 @@ public class BeaconChainFactory {
 
     private static StateTransition stateTransition;
 
-    public static BeaconChain create(DbFlushManager beaconDbFlusher, BeaconStore store, StateRepository repository) {
+    public static BeaconChain create(DbFlushManager beaconDbFlusher, BeaconStore store,
+                                     StateRepository repository, StateTransition genesisStateTransition) {
 
         BeaconValidator beaconValidator = new BeaconValidator(store);
         StateValidator stateValidator = new StateValidator();
         ScoreFunction scoreFunction = new NumberAsScore();
 
         return new BeaconChainImpl(beaconDbFlusher, store, stateTransition(),
-                repository, beaconValidator, stateValidator, scoreFunction);
+                repository, beaconValidator, stateValidator, scoreFunction, genesisStateTransition);
+    }
+
+    public static BeaconChain create(DbFlushManager beaconDbFlusher, BeaconStore store, StateRepository repository,
+                                     ValidatorSet validatorSet, ValidatorRepository validatorRepository,
+                                     Block bestBlock) {
+
+        BeaconValidator beaconValidator = new BeaconValidator(store);
+        StateValidator stateValidator = new StateValidator();
+        ScoreFunction scoreFunction = new NumberAsScore();
+        StateTransition genesisStateTransition = new GenesisTransition(validatorSet, validatorRepository)
+                .withMainChainRef(bestBlock.getHash());
+
+        return new BeaconChainImpl(beaconDbFlusher, store, stateTransition(),
+                repository, beaconValidator, stateValidator, scoreFunction, genesisStateTransition);
     }
 
     public static StateTransition stateTransition() {

@@ -30,6 +30,6 @@ public class NoTransition implements StateTransition {
 
     @Override
     public BeaconState applyBlock(Beacon block, BeaconState to) {
-        return new BeaconState();
+        return to;
     }
 }

@@ -35,6 +35,8 @@ import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.TransactionStore;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.manager.WorldManager;
+import org.ethereum.sharding.processing.db.TrieValidatorSet;
+import org.ethereum.sharding.processing.db.ValidatorSet;
 import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.manager.ShardingWorldManager;
 import org.ethereum.sharding.processing.BeaconChain;
@@ -161,10 +163,16 @@ public class BeaconConfig {
 
     @Bean
     public BeaconChain beaconChain() {
-        BeaconChain beaconChain = BeaconChainFactory.create(
-                beaconDbFlusher(), beaconStore(), beaconStateRepository());
+        BeaconChain beaconChain = BeaconChainFactory.create(beaconDbFlusher(), beaconStore(),
+                beaconStateRepository(), validatorSet(), validatorRepository(), blockStore.getBestBlock());
         shardingWorldManager.setBeaconChain(beaconChain);
         return beaconChain;
+    }
+
+    @Bean
+    public ValidatorSet validatorSet() {
+        Source<byte[], byte[]> src = cachedBeaconChainSource("validator_set");
+        return new TrieValidatorSet(src);
     }
 
     @Bean

@@ -58,6 +58,7 @@ public class BeaconChainImpl implements BeaconChain {
     StateValidator stateValidator;
     StateRepository repository;
     ScoreFunction scoreFunction;
+    StateTransition genesisStateTransition;
 
     Publisher publisher;
 
@@ -66,7 +67,7 @@ public class BeaconChainImpl implements BeaconChain {
     public BeaconChainImpl(DbFlushManager beaconDbFlusher, BeaconStore store,
                            StateTransition transitionFunction, StateRepository repository,
                            BeaconValidator beaconValidator, StateValidator stateValidator,
-                           ScoreFunction scoreFunction) {
+                           ScoreFunction scoreFunction, StateTransition genesisStateTransition) {
         this.beaconDbFlusher = beaconDbFlusher;
         this.store = store;
         this.transitionFunction = transitionFunction;
@@ -74,6 +75,7 @@ public class BeaconChainImpl implements BeaconChain {
         this.beaconValidator = beaconValidator;
         this.stateValidator = stateValidator;
         this.scoreFunction = scoreFunction;
+        this.genesisStateTransition = genesisStateTransition;
     }
 
     @Override
@@ -92,12 +94,16 @@ public class BeaconChainImpl implements BeaconChain {
         logger.info("Chain loaded with head: {}", canonicalHead.block);
     }
 
-    private void insertGenesis() {
+    void insertGenesis() {
         BeaconGenesis genesis = BeaconGenesis.instance();
-        store.save(genesis, genesis.getScore(), true);
-        repository.insert(genesis.getState());
-        repository.commit();
 
+        BeaconState genesisState = genesisStateTransition.applyBlock(genesis, BeaconState.empty());
+        repository.insert(genesisState);
+
+        genesis.setStateHash(genesisState.getHash());
+        store.save(genesis, genesis.getScore(), true);
+
+        repository.commit();
         beaconDbFlusher.flushSync();
     }
 

@@ -17,7 +17,12 @@
  */
 package org.ethereum.sharding.processing.state;
 
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.Serializer;
+import org.ethereum.sharding.domain.BeaconGenesis;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPList;
 
 import static org.ethereum.crypto.HashUtil.blake2b;
 
@@ -29,10 +34,18 @@ import static org.ethereum.crypto.HashUtil.blake2b;
  */
 public class BeaconState {
 
-    public BeaconState() {
+    private final byte[] validatorSetHash;
+    private final byte[] dynastySeed;
+
+    public BeaconState(byte[] validatorSetHash, byte[] dynastySeed) {
+        this.validatorSetHash = validatorSetHash;
+        this.dynastySeed = dynastySeed;
     }
 
     public BeaconState(byte[] encoded) {
+        RLPList list = RLP.unwrapList(encoded);
+        this.validatorSetHash = list.get(0).getRLPData();
+        this.dynastySeed = list.get(1).getRLPData();
     }
 
     public byte[] getHash() {
@@ -40,7 +53,11 @@ public class BeaconState {
     }
 
     public byte[] getEncoded() {
-        return new byte[] {};
+        return RLP.wrapList(validatorSetHash, dynastySeed);
+    }
+    
+    public static BeaconState empty() {
+        return new BeaconState(HashUtil.EMPTY_TRIE_HASH, new byte[32]);
     }
 
     public static final Serializer<BeaconState, byte[]> Serializer = new Serializer<BeaconState, byte[]>() {
