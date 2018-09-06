@@ -39,27 +39,6 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
  */
 public class Start {
 
-    private static void disableSync(SystemProperties config) {
-        config.setSyncEnabled(false);
-        config.setDiscoveryEnabled(false);
-    }
-
-    private static Optional<Long> getEthashBlockNumber() {
-        String value = System.getProperty("ethash.blockNumber");
-        return isEmpty(value) ? Optional.empty() : Optional.of(parseLong(value));
-    }
-
-    private static Optional<Path> getBlocksDumpPath(SystemProperties config) {
-        String blocksLoader = config.blocksLoader();
-
-        if (isEmpty(blocksLoader)) {
-            return Optional.empty();
-        } else {
-            Path path = Paths.get(blocksLoader);
-            return Files.exists(path) ? Optional.of(path) : Optional.empty();
-        }
-    }
-
     public static void main(String args[]) {
         CLIInterface.call(args);
 
@@ -91,5 +70,26 @@ public class Start {
 
             System.exit(loaded ? 0 : 1);
         });
+    }
+
+    private static void disableSync(SystemProperties config) {
+        config.setSyncEnabled(false);
+        config.setDiscoveryEnabled(false);
+    }
+
+    private static Optional<Long> getEthashBlockNumber() {
+        String value = System.getProperty("ethash.blockNumber");
+        return isEmpty(value) ? Optional.empty() : Optional.of(parseLong(value));
+    }
+
+    private static Optional<Path> getBlocksDumpPath(SystemProperties config) {
+        String blocksLoader = config.blocksLoader();
+
+        if (isEmpty(blocksLoader)) {
+            return Optional.empty();
+        } else {
+            Path path = Paths.get(blocksLoader);
+            return Files.exists(path) ? Optional.of(path) : Optional.empty();
+        }
     }
 }
