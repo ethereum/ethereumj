@@ -18,16 +18,13 @@
 package org.ethereum.manager;
 
 
-import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
-import org.ethereum.core.BlockchainImpl;
+import org.ethereum.core.Blockchain;
 import org.ethereum.core.ImportResult;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.util.ExecutorPipeline;
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPElement;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,14 +57,14 @@ public class BlockLoader {
     private final static DateTimeFormatter df = DateTimeFormatter.ofPattern("HH:mm:ss.SSSS");
 
     private final BlockHeaderValidator headerValidator;
-    private final BlockchainImpl blockchain;
+    private final Blockchain blockchain;
     private final DbFlushManager dbFlushManager;
 
     private ExecutorPipeline<Block, Block> exec1;
     private ExecutorPipeline<Block, ?> exec2;
 
     @Autowired
-    public BlockLoader(BlockHeaderValidator headerValidator, SystemProperties config, BlockchainImpl blockchain, DbFlushManager dbFlushManager) {
+    public BlockLoader(BlockHeaderValidator headerValidator, Blockchain blockchain, DbFlushManager dbFlushManager) {
         this.headerValidator = headerValidator;
         this.blockchain = blockchain;
         this.dbFlushManager = dbFlushManager;
@@ -75,7 +72,7 @@ public class BlockLoader {
 
     private void initPipelines() {
         exec1 = new ExecutorPipeline(8, 1000, true, (Function<Block, Block>) b -> {
-            if (b.getNumber() >= blockchain.getBlockStore().getBestBlock().getNumber()) {
+            if (b.getNumber() >= blockchain.getBestBlock().getNumber()) {
                 for (Transaction tx : b.getTransactionsList()) {
                     tx.getSender();
                 }
@@ -93,7 +90,7 @@ public class BlockLoader {
     }
 
     private void blockWork(Block block) {
-        if (block.getNumber() >= blockchain.getBlockStore().getBestBlock().getNumber() || blockchain.getBlockStore().getBlockByHash(block.getHash()) == null) {
+        if (block.getNumber() >= blockchain.getBestBlock().getNumber() || blockchain.getBlockByHash(block.getHash()) == null) {
 
             if (block.getNumber() > 0 && !isValid(block.getHeader())) {
                 throw new RuntimeException();
@@ -135,7 +132,6 @@ public class BlockLoader {
         AtomicLong maxBlockNumber = new AtomicLong();
         boolean allBlocksImported;
         try {
-
 
             for (Path dump : paths) {
                 try (DumpWalker walker = walkerFactory.apply(dump)) {
@@ -179,37 +175,6 @@ public class BlockLoader {
 
     private boolean isValid(BlockHeader header) {
         return headerValidator.validateAndLog(header, logger);
-    }
-
-    public static class RlpDumpWalker implements DumpWalker {
-
-        private Iterator<RLPElement> iterator;
-
-        public RlpDumpWalker(Path path) {
-            try {
-                System.out.println("Loading rlp encoded blocks dump from: " + path);
-                // NOT OPTIMAL, but fine for tests
-                byte[] data = Files.readAllBytes(path);
-                this.iterator = RLP.decode2(data, 1).iterator();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        @Override
-        public Iterator<byte[]> iterator() {
-            return new Iterator<byte[]>() {
-                @Override
-                public boolean hasNext() {
-                    return iterator.hasNext();
-                }
-
-                @Override
-                public byte[] next() {
-                    return iterator.next().getRLPData();
-                }
-            };
-        }
     }
 
     public static class HexLineDumpWalker implements DumpWalker {

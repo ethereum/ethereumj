@@ -24,17 +24,13 @@ import org.ethereum.facade.EthereumFactory;
 import org.ethereum.mine.Ethash;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static java.lang.Long.parseLong;
-import static java.util.Objects.nonNull;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 /**
@@ -50,17 +46,17 @@ public class Start {
 
     private static Optional<Long> getEthashBlockNumber() {
         String value = System.getProperty("ethash.blockNumber");
-        return isEmpty(value) ? empty() : of(parseLong(value));
+        return isEmpty(value) ? Optional.empty() : Optional.of(parseLong(value));
     }
 
     private static Optional<Path> getBlocksDumpPath(SystemProperties config) {
         String blocksLoader = config.blocksLoader();
 
         if (isEmpty(blocksLoader)) {
-            return empty();
+            return Optional.empty();
         } else {
             Path path = Paths.get(blocksLoader);
-            return ofNullable(Files.exists(path) ? path : null);
+            return Files.exists(path) ? Optional.of(path) : Optional.empty();
         }
     }
 
@@ -69,9 +65,10 @@ public class Start {
 
         final SystemProperties config = SystemProperties.getDefault();
 
-        getEthashBlockNumber().ifPresent(ethashBlockNumber -> {
+        getEthashBlockNumber().ifPresent(blockNumber -> {
             disableSync(config);
-            new Ethash(config, ethashBlockNumber).getFullDataset();
+
+            new Ethash(config, blockNumber).getFullDataset();
             // DAG file has been created, lets exit
             System.exit(0);
         });
@@ -80,26 +77,19 @@ public class Start {
 
         getBlocksDumpPath(config).ifPresent(path -> {
             disableSync(config);
+
+            boolean loaded = false;
             try {
+                Stream<Path> paths = Files.isDirectory(path)
+                        ? Files.list(path).sorted()
+                        : Stream.of(path);
 
-                Path[] paths;
-                if (Files.isDirectory(path)) {
-                    paths = Files.list(path).sorted().toArray(Path[]::new);
-                } else {
-                    paths = new Path[]{path};
-                }
-
-                boolean loaded = ethereum.getBlockLoader().loadBlocks(paths);
-
-                if (loaded) {
-                    System.out.println(" * Done * ");
-                    System.exit(0);
-                }
+                loaded = ethereum.getBlockLoader().loadBlocks(paths.toArray(Path[]::new));
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
-            System.exit(1);
+            System.exit(loaded ? 0 : 1);
         });
     }
 }
