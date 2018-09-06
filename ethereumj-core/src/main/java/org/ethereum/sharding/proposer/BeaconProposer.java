@@ -38,6 +38,12 @@ public interface BeaconProposer {
     long SLOT_DURATION = 8 * 1000; // 8 seconds
 
     /**
+     * It is assumed that blocks which are distant from canonical chain head by this number or further
+     * can't be affected by reorg in the future. Thus, proved mainChainRef should start from that distance.
+     */
+    long REORG_SAFE_DISTANCE = 32;
+
+    /**
      * Creates new block on top of the beacon chain head.
      *
      * @param slotNumber number of the slot that block does belong to.

@@ -152,7 +152,12 @@ public class BeaconProposerTest {
 
 
             Helper helper = new Helper();
-            helper.proposer = new BeaconProposerImpl(ethereum, publisher, randao, repository, stateTransition);
+            helper.proposer = new BeaconProposerImpl(ethereum, publisher, randao, repository, stateTransition) {
+                @Override
+                byte[] getMainChainRef(Block mainChainHead) {
+                    return mainChainHead.getHash();
+                }
+            };
             helper.listener = listener;
             helper.publisher = publisher;
             helper.randao = randao;
