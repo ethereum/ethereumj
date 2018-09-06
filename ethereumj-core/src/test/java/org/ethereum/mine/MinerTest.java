@@ -48,8 +48,8 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static org.ethereum.listener.EthereumListener.PendingTransactionState.NEW_PENDING;
 import static org.ethereum.publish.Subscription.to;
+import static org.ethereum.publish.event.PendingTransactionUpdated.State.NEW_PENDING;
 
 /**
  * Long running test

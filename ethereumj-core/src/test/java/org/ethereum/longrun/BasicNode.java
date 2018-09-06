@@ -23,7 +23,6 @@ import org.ethereum.core.Block;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
@@ -45,6 +44,7 @@ import java.util.Vector;
 
 import static java.lang.Thread.sleep;
 import static org.ethereum.publish.Subscription.to;
+import static org.ethereum.publish.event.SyncDone.State.COMPLETE;
 
 /**
  * BasicNode of ethereum instance
@@ -162,7 +162,7 @@ class BasicNode implements Runnable {
         logger.info("Monitoring new blocks in real-time...");
     }
 
-    public void onSyncDoneImpl(EthereumListener.SyncState state) {
+    public void onSyncDoneImpl(SyncDone.State state) {
         logger.info("onSyncDone: " + state);
     }
 
@@ -171,15 +171,15 @@ class BasicNode implements Runnable {
 
     protected Block bestBlock = null;
 
-    EthereumListener.SyncState syncState = null;
+    SyncDone.State syncState = null;
     boolean syncComplete = false;
 
     /**
      * The main EthereumJ callback.
      */
-    public void onSyncDone(EthereumListener.SyncState state) {
+    public void onSyncDone(SyncDone.State state) {
         syncState = state;
-        if (state.equals(EthereumListener.SyncState.COMPLETE)) syncComplete = true;
+        if (state == COMPLETE) syncComplete = true;
         onSyncDoneImpl(state);
     }
 

@@ -17,7 +17,13 @@
  */
 package org.ethereum.listener;
 
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockSummary;
+import org.ethereum.core.EventDispatchThread;
+import org.ethereum.core.PendingState;
+import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionExecutionSummary;
+import org.ethereum.core.TransactionReceipt;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
@@ -25,6 +31,8 @@ import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
 import org.ethereum.publish.Publisher;
 import org.ethereum.publish.event.Events;
+import org.ethereum.publish.event.PendingTransactionUpdated;
+import org.ethereum.publish.event.SyncDone;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
@@ -131,13 +139,19 @@ public class BackwardCompatibilityEthereumListenerProxy implements EthereumListe
     @Override
     public void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state, Block block) {
         compositeListener.onPendingTransactionUpdate(txReceipt, state, block);
-        publisher.publish(Events.onPendingTransactionUpdated(block, txReceipt, state));
+        PendingTransactionUpdated.State translatedState = translate(state, PendingTransactionUpdated.State.class);
+        publisher.publish(Events.onPendingTransactionUpdated(block, txReceipt, translatedState));
     }
 
     @Override
     public void onSyncDone(SyncState state) {
         compositeListener.onSyncDone(state);
-        publisher.publish(Events.onSyncDone(state));
+        SyncDone.State translatedState = translate(state, SyncDone.State.class);
+        publisher.publish(Events.onSyncDone(translatedState));
+    }
+
+    private static <S extends Enum<S>, T extends Enum<T>> T translate(S source, Class<T> targetType) {
+        return Enum.valueOf(targetType, source.name());
     }
 
     @Override

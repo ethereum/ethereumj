@@ -17,8 +17,11 @@
  */
 package org.ethereum.publish.event;
 
-import org.ethereum.core.*;
-import org.ethereum.listener.EthereumListener;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockSummary;
+import org.ethereum.core.PendingState;
+import org.ethereum.core.TransactionExecutionSummary;
+import org.ethereum.core.TransactionReceipt;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
@@ -74,11 +77,11 @@ public final class Events {
         return new PendingStateChanged(state);
     }
 
-    public static Event onPendingTransactionUpdated(Block block, TransactionReceipt receipt, EthereumListener.PendingTransactionState state) {
+    public static Event onPendingTransactionUpdated(Block block, TransactionReceipt receipt, PendingTransactionUpdated.State state) {
         return new PendingTransactionUpdated(block, receipt, state);
     }
 
-    public static Event onSyncDone(EthereumListener.SyncState state) {
+    public static Event onSyncDone(SyncDone.State state) {
         return new SyncDone(state);
     }
 

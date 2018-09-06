@@ -17,11 +17,34 @@
  */
 package org.ethereum.publish.event;
 
-import org.ethereum.listener.EthereumListener;
+public class SyncDone extends Event<SyncDone.State> implements OneOffEvent {
 
-public class SyncDone extends Event<EthereumListener.SyncState> implements OneOffEvent {
+    public enum State {
+        /**
+         * When doing fast sync UNSECURE sync means that the full state is downloaded,
+         * chain is on the latest block, and blockchain operations may be executed
+         * (such as state querying, transaction submission)
+         * but the state isn't yet confirmed with  the whole block chain and can't be
+         * trusted.
+         * At this stage historical blocks and receipts are unavailable yet
+         */
+        UNSECURE,
+        /**
+         * When doing fast sync SECURE sync means that the full state is downloaded,
+         * chain is on the latest block, and blockchain operations may be executed
+         * (such as state querying, transaction submission)
+         * The state is now confirmed by the full chain (all block headers are
+         * downloaded and verified) and can be trusted
+         * At this stage historical blocks and receipts are unavailable yet
+         */
+        SECURE,
+        /**
+         * Sync is fully complete. All blocks and receipts are downloaded.
+         */
+        COMPLETE
+    }
 
-    public SyncDone(EthereumListener.SyncState payload) {
+    public SyncDone(State payload) {
         super(payload);
     }
 }

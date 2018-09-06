@@ -44,7 +44,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.ethereum.listener.EthereumListener.PendingTransactionState.*;
+import static org.ethereum.publish.event.PendingTransactionUpdated.State.DROPPED;
+import static org.ethereum.publish.event.PendingTransactionUpdated.State.INCLUDED;
+import static org.ethereum.publish.event.PendingTransactionUpdated.State.NEW_PENDING;
+import static org.ethereum.publish.event.PendingTransactionUpdated.State.PENDING;
 import static org.ethereum.publish.Subscription.to;
 import static org.ethereum.util.blockchain.EtherUtil.Unit.ETHER;
 import static org.ethereum.util.blockchain.EtherUtil.convert;
@@ -70,7 +73,7 @@ public class PendingStateTest {
         public BlockingQueue<Object> onPendingStateChanged = new LinkedBlockingQueue<>();
 //        public BlockingQueue<Triple<TransactionReceipt, PendingTransactionState, Block>> onPendingTransactionUpdate = new LinkedBlockingQueue<>();
 
-        Map<ByteArrayWrapper, BlockingQueue<Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block>>>
+        Map<ByteArrayWrapper, BlockingQueue<Triple<TransactionReceipt, PendingTransactionUpdated.State, Block>>>
                 onPendingTransactionUpdate = new HashMap<>();
 
         public void onBlock(BlockAdded.Data data) {
@@ -90,14 +93,14 @@ public class PendingStateTest {
         }
 
 
-        public void onPendingTransactionUpdate(TransactionReceipt txReceipt, EthereumListener.PendingTransactionState state, Block block) {
+        public void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionUpdated.State state, Block block) {
             System.out.println("PendingStateTest.onPendingTransactionUpdate:" + "txReceipt.err = [" + txReceipt.getError() + "], state = [" + state + "], block: " + block.getShortDescr());
             getQueueFor(txReceipt.getTransaction()).add(Triple.of(txReceipt, state, block));
         }
 
-        public synchronized BlockingQueue<Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block>> getQueueFor(Transaction tx) {
+        public synchronized BlockingQueue<Triple<TransactionReceipt, PendingTransactionUpdated.State, Block>> getQueueFor(Transaction tx) {
             ByteArrayWrapper hashW = new ByteArrayWrapper(tx.getHash());
-            BlockingQueue<Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block>> queue = onPendingTransactionUpdate.get(hashW);
+            BlockingQueue<Triple<TransactionReceipt, PendingTransactionUpdated.State, Block>> queue = onPendingTransactionUpdate.get(hashW);
             if (queue == null) {
                 queue = new LinkedBlockingQueue<>();
                 onPendingTransactionUpdate.put(hashW, queue);
@@ -105,11 +108,11 @@ public class PendingStateTest {
             return queue;
         }
 
-        public EthereumListener.PendingTransactionState pollTxUpdateState(Transaction tx) throws InterruptedException {
+        public PendingTransactionUpdated.State pollTxUpdateState(Transaction tx) throws InterruptedException {
             return getQueueFor(tx).poll(5, SECONDS).getMiddle();
         }
 
-        public Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> pollTxUpdate(Transaction tx) throws InterruptedException {
+        public Triple<TransactionReceipt, PendingTransactionUpdated.State, Block> pollTxUpdate(Transaction tx) throws InterruptedException {
             return getQueueFor(tx).poll(5, SECONDS);
         }
     }
@@ -122,7 +125,7 @@ public class PendingStateTest {
                 .subscribe(to(PendingStateChanged.class, l::onPendingStateChanged))
                 .subscribe(to(PendingTransactionUpdated.class, l::onPendingTransactionUpdate));
 
-        Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd;
+        Triple<TransactionReceipt, PendingTransactionUpdated.State, Block> txUpd;
         PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
 
         ECKey alice = new ECKey();
@@ -179,7 +182,7 @@ public class PendingStateTest {
         for (int i = 0; i < SystemProperties.getDefault().txOutdatedThreshold() + 1; i++) {
             bc.createBlock();
             txUpd = l.pollTxUpdate(tx3);
-            if (txUpd.getMiddle() != PENDING) break;
+            if (txUpd.getMiddle() != PendingTransactionUpdated.State.PENDING) break;
         }
 
         // tx3 dropped due to timeout
@@ -266,7 +269,7 @@ public class PendingStateTest {
                 .subscribe(to(PendingStateChanged.class, l::onPendingStateChanged))
                 .subscribe(to(PendingTransactionUpdated.class, l::onPendingTransactionUpdate));
 
-        Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd = null;
+        Triple<TransactionReceipt, PendingTransactionUpdated.State, Block> txUpd = null;
         PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
 
         ECKey alice = new ECKey();
@@ -356,7 +359,7 @@ public class PendingStateTest {
                 .subscribe(to(PendingStateChanged.class, l::onPendingStateChanged))
                 .subscribe(to(PendingTransactionUpdated.class, l::onPendingTransactionUpdate));
 
-        Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd = null;
+        Triple<TransactionReceipt, PendingTransactionUpdated.State, Block> txUpd = null;
         PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
 
         ECKey alice = new ECKey();
@@ -408,7 +411,7 @@ public class PendingStateTest {
                 .subscribe(to(PendingStateChanged.class, l::onPendingStateChanged))
                 .subscribe(to(PendingTransactionUpdated.class, l::onPendingTransactionUpdate));
 
-        Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd = null;
+        Triple<TransactionReceipt, PendingTransactionUpdated.State, Block> txUpd = null;
         PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
 
         ECKey alice = new ECKey();
@@ -446,7 +449,7 @@ public class PendingStateTest {
                 .subscribe(to(PendingStateChanged.class, l::onPendingStateChanged))
                 .subscribe(to(PendingTransactionUpdated.class, l::onPendingTransactionUpdate));
 
-        Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd = null;
+        Triple<TransactionReceipt, PendingTransactionUpdated.State, Block> txUpd = null;
         PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
 
         ECKey alice = new ECKey();
@@ -475,7 +478,7 @@ public class PendingStateTest {
                 .subscribe(to(PendingStateChanged.class, l::onPendingStateChanged))
                 .subscribe(to(PendingTransactionUpdated.class, l::onPendingTransactionUpdate));
 
-        Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd = null;
+        Triple<TransactionReceipt, PendingTransactionUpdated.State, Block> txUpd = null;
         PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
 
         ECKey alice = new ECKey();
@@ -529,7 +532,7 @@ public class PendingStateTest {
                 .subscribe(to(PendingStateChanged.class, l::onPendingStateChanged))
                 .subscribe(to(PendingTransactionUpdated.class, l::onPendingTransactionUpdate));
 
-        Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd;
+        Triple<TransactionReceipt, PendingTransactionUpdated.State, Block> txUpd;
 
         contract.callFunction("getPrevBlockHash");
         bc.generatePendingTransactions();
@@ -546,7 +549,7 @@ public class PendingStateTest {
                 .subscribe(to(PendingStateChanged.class, l::onPendingStateChanged))
                 .subscribe(to(PendingTransactionUpdated.class, l::onPendingTransactionUpdate));
 
-        Triple<TransactionReceipt, EthereumListener.PendingTransactionState, Block> txUpd = null;
+        Triple<TransactionReceipt, PendingTransactionUpdated.State, Block> txUpd = null;
         PendingStateImpl pendingState = (PendingStateImpl) bc.getBlockchain().getPendingState();
 
         ECKey alice = new ECKey();
@@ -608,8 +611,8 @@ public class PendingStateTest {
 
         for (int i = 0; i < 16; i++) {
             bc.createBlock();
-            EthereumListener.PendingTransactionState state = l.pollTxUpdateState(tx1);
-            if (state == EthereumListener.PendingTransactionState.DROPPED) {
+            PendingTransactionUpdated.State state = l.pollTxUpdateState(tx1);
+            if (state == PendingTransactionUpdated.State.DROPPED) {
                 break;
             }
             if (i == 15) {
@@ -669,7 +672,7 @@ public class PendingStateTest {
         final CountDownLatch txHandle = new CountDownLatch(1);
         PendingListener l = new PendingListener() {
             @Override
-            public void onPendingTransactionUpdate(TransactionReceipt txReceipt, EthereumListener.PendingTransactionState state, Block block) {
+            public void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionUpdated.State state, Block block) {
                 assert !txReceipt.isSuccessful();
                 assert txReceipt.getError().toLowerCase().contains("invalid");
                 assert txReceipt.getError().toLowerCase().contains("receive address");

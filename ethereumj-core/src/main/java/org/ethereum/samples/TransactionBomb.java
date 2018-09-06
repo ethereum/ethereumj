@@ -20,7 +20,6 @@ package org.ethereum.samples;
 import org.ethereum.core.Transaction;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.listener.EthereumListener;
 import org.ethereum.publish.event.BlockAdded;
 import org.ethereum.publish.event.SyncDone;
 import org.spongycastle.util.encoders.Hex;
@@ -50,7 +49,7 @@ public class TransactionBomb {
     }
 
 
-    public void onSyncDone(EthereumListener.SyncState state) {
+    public void onSyncDone(SyncDone.State state) {
         // We will send transactions only
         // after we have the full chain syncs
         // - in order to prevent old nonce usage

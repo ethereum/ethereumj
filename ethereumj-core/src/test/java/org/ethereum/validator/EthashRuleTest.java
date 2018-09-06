@@ -4,12 +4,8 @@ import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockSummary;
 import org.ethereum.core.EventDispatchThread;
-import org.ethereum.listener.EthereumListener;
 import org.ethereum.mine.EthashValidationHelper;
 import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.BlockAdded;
-import org.ethereum.publish.event.Events;
-import org.ethereum.publish.event.SyncDone;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
@@ -17,8 +13,11 @@ import java.util.Collections;
 
 import static org.ethereum.publish.event.Events.onBlockAdded;
 import static org.ethereum.publish.event.Events.onSyncDone;
+import static org.ethereum.publish.event.SyncDone.State.COMPLETE;
 import static org.ethereum.validator.BlockHeaderRule.Success;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Mikhail Kalinin
@@ -107,7 +106,7 @@ public class EthashRuleTest {
         assertTrue(partialCheckTriggered);
 
         // trigger onSyncDone
-        publisher.publish(onSyncDone(EthereumListener.SyncState.COMPLETE));
+        publisher.publish(onSyncDone(COMPLETE));
 
         // check that full verification is done on each run in strict mode
         for (int i = 0; i < 100; i++) {

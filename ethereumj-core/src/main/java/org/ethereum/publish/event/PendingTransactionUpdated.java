@@ -19,7 +19,6 @@ package org.ethereum.publish.event;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.TransactionReceipt;
-import org.ethereum.listener.EthereumListener;
 
 /**
  * Emits when PendingTransaction arrives, executed or dropped and included to a block.
@@ -28,12 +27,52 @@ import org.ethereum.listener.EthereumListener;
  */
 public class PendingTransactionUpdated extends Event<PendingTransactionUpdated.Data> {
 
+    public enum State {
+        /**
+         * Transaction may be dropped due to:
+         * - Invalid transaction (invalid nonce, low gas price, insufficient account funds,
+         * invalid signature)
+         * - Timeout (when pending transaction is not included to any block for
+         * last [transaction.outdated.threshold] blocks
+         * This is the final state
+         */
+        DROPPED,
+
+        /**
+         * The same as PENDING when transaction is just arrived
+         * Next state can be either PENDING or INCLUDED
+         */
+        NEW_PENDING,
+
+        /**
+         * State when transaction is not included to any blocks (on the main chain), and
+         * was executed on the last best block. The repository state is reflected in the PendingState
+         * Next state can be either INCLUDED, DROPPED (due to timeout)
+         * or again PENDING when a new block (without this transaction) arrives
+         */
+        PENDING,
+
+        /**
+         * State when the transaction is included to a block.
+         * This could be the final state, however next state could also be
+         * PENDING: when a fork became the main chain but doesn't include this tx
+         * INCLUDED: when a fork became the main chain and tx is included into another
+         * block from the new main chain
+         * DROPPED: If switched to a new (long enough) main chain without this Tx
+         */
+        INCLUDED;
+
+        public boolean isPending() {
+            return this == NEW_PENDING || this == PENDING;
+        }
+    }
+
     /**
      * Event DTO
      */
     public static class Data {
         private final TransactionReceipt receipt;
-        private final EthereumListener.PendingTransactionState state;
+        private final State state;
         private final Block block;
 
         /**
@@ -42,7 +81,7 @@ public class PendingTransactionUpdated extends Event<PendingTransactionUpdated.D
          * @param block   The block which the current pending state is based on (for PENDING tx state)
          *                or the block which tx was included to (for INCLUDED state)
          */
-        public Data(Block block, TransactionReceipt receipt, EthereumListener.PendingTransactionState state) {
+        public Data(Block block, TransactionReceipt receipt, State state) {
             this.receipt = receipt;
             this.state = state;
             this.block = block;
@@ -52,7 +91,7 @@ public class PendingTransactionUpdated extends Event<PendingTransactionUpdated.D
             return receipt;
         }
 
-        public EthereumListener.PendingTransactionState getState() {
+        public State getState() {
             return state;
         }
 
@@ -61,7 +100,7 @@ public class PendingTransactionUpdated extends Event<PendingTransactionUpdated.D
         }
     }
 
-    public PendingTransactionUpdated(Block block, TransactionReceipt receipt, EthereumListener.PendingTransactionState state) {
+    public PendingTransactionUpdated(Block block, TransactionReceipt receipt, State state) {
         super(new Data(block, receipt, state));
     }
 }
