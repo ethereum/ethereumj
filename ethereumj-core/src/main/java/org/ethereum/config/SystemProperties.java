@@ -52,6 +52,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.URL;
 import java.util.*;
+import java.util.function.Function;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.toHexString;
@@ -185,8 +186,8 @@ public class SystemProperties {
             Config referenceConfig = ConfigFactory.parseResources("ethereumj.conf");
             logger.info("Config (" + (referenceConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): default properties from resource 'ethereumj.conf'");
             String res = System.getProperty("ethereumj.conf.res");
-            Config cmdLineConfigRes = res != null ? ConfigFactory.parseResources(res) : ConfigFactory.empty();
-            logger.info("Config (" + (cmdLineConfigRes.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from -Dethereumj.conf.res resource '" + res + "'");
+            Config cmdLineConfigRes = mergeConfigs(res, ConfigFactory::parseResources);
+            logger.info("Config (" + (cmdLineConfigRes.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from -Dethereumj.conf.res resource(s) '" + res + "'");
             Config userConfig = ConfigFactory.parseResources("user.conf");
             logger.info("Config (" + (userConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from resource 'user.conf'");
             File userDirFile = new File(System.getProperty("user.dir"), "/config/ethereumj.conf");
@@ -197,8 +198,8 @@ public class SystemProperties {
             Config testUserConfig = ConfigFactory.parseResources("test-user.conf");
             logger.info("Config (" + (testUserConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): test properties from resource 'test-user.conf'");
             String file = System.getProperty("ethereumj.conf.file");
-            Config cmdLineConfigFile = file != null ? ConfigFactory.parseFile(new File(file)) : ConfigFactory.empty();
-            logger.info("Config (" + (cmdLineConfigFile.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from -Dethereumj.conf.file file '" + file + "'");
+            Config cmdLineConfigFile = mergeConfigs(res, s -> ConfigFactory.parseFile(new File(s)));
+            logger.info("Config (" + (cmdLineConfigFile.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from -Dethereumj.conf.file file(s) '" + file + "'");
             logger.info("Config (" + (apiConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): config passed via constructor");
             config = apiConfig
                     .withFallback(cmdLineConfigFile)
@@ -314,6 +315,27 @@ public class SystemProperties {
                 throw new RuntimeException("Error validating config method: " + method, e);
             }
         }
+    }
+
+    /**
+     * Builds config from the list of config references in string doing following actions:
+     * 1) Splits input by "," to several strings
+     * 2) Uses parserFunc to create config from each string reference
+     * 3) Merges configs, applying them in the same order as in input, so last overrides first
+     * @param input         String with list of config references separated by ",", null or one reference works fine
+     * @param parserFunc    Function to apply to each reference, produces config from it
+     * @return Merged config
+     */
+    protected Config mergeConfigs(String input, Function<String, Config> parserFunc) {
+        Config config = ConfigFactory.empty();
+        if (input != null && !input.isEmpty()) {
+            String[] list = input.split(",");
+            for (int i = list.length - 1; i >= 0; --i) {
+                config = config.withFallback(parserFunc.apply(list[i]));
+            }
+        }
+
+        return config;
     }
 
     public <T> T getProperty(String propName, T defaultValue) {
