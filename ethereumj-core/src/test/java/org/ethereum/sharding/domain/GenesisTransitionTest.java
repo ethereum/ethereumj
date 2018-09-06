@@ -95,6 +95,7 @@ public class GenesisTransitionTest {
     }
 
     void checkValidatorSet(ValidatorSet set, Validator... validators) {
+        assertEquals(validators.length, set.size());
         for (int i = 0; i < validators.length; i++) {
             assertValidatorEquals(validators[i], set.get(i));
         }
