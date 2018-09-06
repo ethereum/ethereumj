@@ -300,4 +300,32 @@ public class GitHubBlockStateTest {
     public void stCodeCopyTest() throws IOException {
         suite.runAll("stCodeCopyTest");
     }
+
+    @Test
+    @Ignore("Broken tests format, delayed until resolved")
+    public void stExtCodeHashCallCode() throws IOException {
+        String commit = "10ab37c095bb87d2e781bcf112b6104912fccb44";
+        String filePath = "GeneralStateTests/stExtCodeHash/extCodeHashCallCode_d0g0v0.json";
+        BlockchainTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Constantinople);
+        BlockchainTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Byzantium);
+    }
+
+    @Test
+    @Ignore("Broken tests format, delayed until resolved")
+    public void stExtCodeHashCall() throws IOException {
+        String commit = "10ab37c095bb87d2e781bcf112b6104912fccb44";
+        String filePath = "GeneralStateTests/stExtCodeHash/extCodeHashCall_d0g0v0.json";
+        BlockchainTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Constantinople);
+        BlockchainTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Byzantium);
+    }
+
+    @Test
+    @Ignore("Update after all tests could pass latest develop")
+    public void stShiftTest() throws IOException {
+        suite.runAll("stShift");
+// TODO: Update all, this one passes with following settings:
+//        String commitSHA = "560e2cd6cf881821180d46d9cc4c542e19cfea1d";
+//        String treeSHA = "8457a6a49f53218575a349abc311c55939797bff";
+//           targetNets += GitHubJSONTestSuite.Network.Constantinople
+    }
 }

@@ -110,7 +110,11 @@ public class Program {
     private final BlockchainConfig blockchainConfig;
 
     public Program(byte[] ops, ProgramInvoke programInvoke) {
-        this(ops, programInvoke, null);
+        this(ops, programInvoke, (Transaction) null);
+    }
+
+    public Program(byte[] ops, ProgramInvoke programInvoke, SystemProperties config) {
+        this(ops, programInvoke, null, config);
     }
 
     public Program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction) {
@@ -712,6 +716,11 @@ public class Program {
 
     public byte[] getCodeAt(DataWord address) {
         byte[] code = invoke.getRepository().getCode(address.getLast20Bytes());
+        return nullToEmpty(code);
+    }
+
+    public byte[] getCodeHashAt(DataWord address) {
+        byte[] code = invoke.getRepository().getCodeHash(address.getLast20Bytes());
         return nullToEmpty(code);
     }
 

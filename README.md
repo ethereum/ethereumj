@@ -102,7 +102,7 @@ For reference on all existing options, their description and defaults you may re
 To override needed options you may use one of the following ways: 
 * put your options to the `<working dir>/config/ethereumj.conf` file
 * put `user.conf` to the root of your classpath (as a resource) 
-* put your options to any file and supply it via `-Dethereumj.conf.file=<your config>`
+* put your options to any file and supply it via `-Dethereumj.conf.file=<your config>`, accepts several configs, separated by comma applied in provided order: `-Dethereumj.conf.file=<config1>,<config2>`
 * programmatically by using `SystemProperties.CONFIG.override*()`
 * programmatically using by overriding Spring `SystemProperties` bean 
 

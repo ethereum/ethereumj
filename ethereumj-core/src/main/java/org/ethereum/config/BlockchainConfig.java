@@ -163,4 +163,16 @@ public interface BlockchainConfig {
      * Replaces the intermediate state root field of the receipt with the status
      */
     boolean eip658();
+
+    /**
+     * EIP145: https://eips.ethereum.org/EIPS/eip-145
+     * Bitwise shifting instructions in EVM
+     */
+    boolean eip145();
+
+    /**
+     * EIP1052: https://eips.ethereum.org/EIPS/eip-1052
+     * EXTCODEHASH opcode
+     */
+    boolean eip1052();
 }
