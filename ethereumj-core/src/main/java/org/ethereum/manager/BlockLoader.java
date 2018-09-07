@@ -177,7 +177,7 @@ public class BlockLoader {
         return headerValidator.validateAndLog(header, logger);
     }
 
-    public static class HexLineDumpWalker implements DumpWalker {
+    private class HexLineDumpWalker implements DumpWalker {
 
         private final Scanner scanner;
 

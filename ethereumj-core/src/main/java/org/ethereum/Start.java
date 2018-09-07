@@ -21,6 +21,7 @@ import org.ethereum.cli.CLIInterface;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
+import org.ethereum.manager.BlockLoader;
 import org.ethereum.mine.Ethash;
 
 import java.io.IOException;
@@ -44,32 +45,11 @@ public class Start {
 
         final SystemProperties config = SystemProperties.getDefault();
 
-        getEthashBlockNumber().ifPresent(blockNumber -> {
-            disableSync(config);
-
-            new Ethash(config, blockNumber).getFullDataset();
-            // DAG file has been created, lets exit
-            System.exit(0);
-        });
+        getEthashBlockNumber().ifPresent(blockNumber -> createDagFileAndExit(config, blockNumber));
 
         Ethereum ethereum = EthereumFactory.createEthereum();
 
-        getBlocksDumpPath(config).ifPresent(path -> {
-            disableSync(config);
-
-            boolean loaded = false;
-            try {
-                Stream<Path> paths = Files.isDirectory(path)
-                        ? Files.list(path).sorted()
-                        : Stream.of(path);
-
-                loaded = ethereum.getBlockLoader().loadBlocks(paths.toArray(Path[]::new));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            System.exit(loaded ? 0 : 1);
-        });
+        getBlocksDumpPath(config).ifPresent(dumpPath -> loadDumpAndExit(config, dumpPath, ethereum.getBlockLoader()));
     }
 
     private static void disableSync(SystemProperties config) {
@@ -82,6 +62,20 @@ public class Start {
         return isEmpty(value) ? Optional.empty() : Optional.of(parseLong(value));
     }
 
+    /**
+     * Creates DAG file for specified block number and terminate program execution with 0 code.
+     *
+     * @param config      {@link SystemProperties} config instance;
+     * @param blockNumber data set block number;
+     */
+    private static void createDagFileAndExit(SystemProperties config, Long blockNumber) {
+        disableSync(config);
+
+        new Ethash(config, blockNumber).getFullDataset();
+        // DAG file has been created, lets exit
+        System.exit(0);
+    }
+
     private static Optional<Path> getBlocksDumpPath(SystemProperties config) {
         String blocksLoader = config.blocksLoader();
 
@@ -91,5 +85,30 @@ public class Start {
             Path path = Paths.get(blocksLoader);
             return Files.exists(path) ? Optional.of(path) : Optional.empty();
         }
+    }
+
+    /**
+     * Loads single or multiple block dumps from specified path, and terminate program execution.<br>
+     * Exit code is 0 in case of successfully dumps loading, 1 otherwise.
+     *
+     * @param config {@link SystemProperties} config instance;
+     * @param path   file system path to dump file or directory that contains dumps;
+     * @param loader block loader that will be used to import all dumps;
+     */
+    private static void loadDumpAndExit(SystemProperties config, Path path, BlockLoader loader) {
+        disableSync(config);
+
+        boolean loaded = false;
+        try {
+            Stream<Path> paths = Files.isDirectory(path)
+                    ? Files.list(path).sorted()
+                    : Stream.of(path);
+
+            loaded = loader.loadBlocks(paths.toArray(Path[]::new));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        System.exit(loaded ? 0 : 1);
     }
 }
