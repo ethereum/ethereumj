@@ -33,6 +33,7 @@ import java.util.stream.Stream;
 
 import static java.lang.Long.parseLong;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.ethereum.facade.EthereumFactory.createEthereum;
 
 /**
  * @author Roman Mandeleil
@@ -46,10 +47,9 @@ public class Start {
         final SystemProperties config = SystemProperties.getDefault();
 
         getEthashBlockNumber().ifPresent(blockNumber -> createDagFileAndExit(config, blockNumber));
+        getBlocksDumpPath(config).ifPresent(dumpPath -> loadDumpAndExit(config, dumpPath));
 
-        Ethereum ethereum = EthereumFactory.createEthereum();
-
-        getBlocksDumpPath(config).ifPresent(dumpPath -> loadDumpAndExit(config, dumpPath, ethereum.getBlockLoader()));
+        createEthereum();
     }
 
     private static void disableSync(SystemProperties config) {
@@ -93,9 +93,8 @@ public class Start {
      *
      * @param config {@link SystemProperties} config instance;
      * @param path   file system path to dump file or directory that contains dumps;
-     * @param loader block loader that will be used to import all dumps;
      */
-    private static void loadDumpAndExit(SystemProperties config, Path path, BlockLoader loader) {
+    private static void loadDumpAndExit(SystemProperties config, Path path) {
         disableSync(config);
 
         boolean loaded = false;
@@ -104,7 +103,7 @@ public class Start {
                     ? Files.list(path).sorted()
                     : Stream.of(path);
 
-            loaded = loader.loadBlocks(paths.toArray(Path[]::new));
+            loaded = createEthereum().getBlockLoader().loadBlocks(paths.toArray(Path[]::new));
         } catch (IOException e) {
             e.printStackTrace();
         }
