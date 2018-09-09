@@ -1128,7 +1128,7 @@ public class VM {
                 break;
                 case SLOAD: {
                     DataWord key = program.stackPop();
-                    DataWord val = program.getCurrentValue(key);
+                    DataWord val = program.storageLoad(key);
 
                     if (logger.isInfoEnabled())
                         hint = "key: " + key + " value: " + val;

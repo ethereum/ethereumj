@@ -791,11 +791,6 @@ public class Program {
                 Arrays.copyOfRange(returnDataBuffer, off.intValueSafe(), off.intValueSafe() + size.intValueSafe());
     }
 
-    @Deprecated
-    /*
-     * @deprecated
-     * Use {@link #getCurrentValue(DataWord)} instead
-     */
     public DataWord storageLoad(DataWord key) {
         return getStorage().getStorageValue(getOwnerAddress().getLast20Bytes(), key);
     }
