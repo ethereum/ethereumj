@@ -137,7 +137,7 @@ public class Program {
         traceListener = new ProgramTraceListener(config.vmTrace());
         this.memory = setupProgramListener(new Memory());
         this.stack = setupProgramListener(new Stack());
-        this.originalRepo = programInvoke.getRepository().getSnapshotTo(programInvoke.getRepository().getRoot());
+        this.originalRepo = programInvoke.getRepository().clone();
         this.storage = setupProgramListener(new Storage(programInvoke));
         this.trace = new ProgramTrace(config, programInvoke);
         this.blockchainConfig = config.getBlockchainConfig().getConfigForBlock(programInvoke.getNumber().longValue());

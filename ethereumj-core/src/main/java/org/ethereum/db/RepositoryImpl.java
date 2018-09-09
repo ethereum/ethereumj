@@ -230,6 +230,14 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
         throw new RuntimeException("Not supported");
     }
 
+    /**
+     * As tests only implementation this hack is pretty sufficient
+     */
+    @Override
+    public Repository clone() {
+        return startTracking();
+    }
+
     class ContractDetailsImpl implements ContractDetails {
         private byte[] address;
 
