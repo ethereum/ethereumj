@@ -803,6 +803,8 @@ public class Program {
     }
 
     /*
+     * Original storage value at the beginning of current frame execution
+     * For more info check EIP-1283 https://eips.ethereum.org/EIPS/eip-1283
      * @return Storage data at the beginning of Program execution
      */
     public DataWord getOriginalValue(DataWord key) {
