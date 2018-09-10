@@ -236,5 +236,9 @@ public interface Repository extends org.ethereum.facade.Repository{
 
     Repository getSnapshotTo(byte[] root);
 
+    /**
+     * Clones repository so changes made to this repository are
+     * not reflected in its clone. 
+     */
     Repository clone();
 }

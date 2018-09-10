@@ -235,7 +235,7 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
      */
     @Override
     public Repository clone() {
-        return startTracking();
+        return parent.startTracking();
     }
 
     class ContractDetailsImpl implements ContractDetails {
