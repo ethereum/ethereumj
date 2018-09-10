@@ -88,6 +88,7 @@ public class Program {
     private Stack stack;
     private Memory memory;
     private Storage storage;
+    private Repository originalRepo;
     private byte[] returnDataBuffer;
 
     private ProgramResult result = new ProgramResult();
@@ -136,6 +137,7 @@ public class Program {
         traceListener = new ProgramTraceListener(config.vmTrace());
         this.memory = setupProgramListener(new Memory());
         this.stack = setupProgramListener(new Stack());
+        this.originalRepo = programInvoke.getRepository().clone();
         this.storage = setupProgramListener(new Storage(programInvoke));
         this.trace = new ProgramTrace(config, programInvoke);
         this.blockchainConfig = config.getBlockchainConfig().getConfigForBlock(programInvoke.getNumber().longValue());
@@ -791,6 +793,22 @@ public class Program {
 
     public DataWord storageLoad(DataWord key) {
         return getStorage().getStorageValue(getOwnerAddress().getLast20Bytes(), key);
+    }
+
+    /**
+     * @return current Storage data for key
+     */
+    public DataWord getCurrentValue(DataWord key) {
+        return getStorage().getStorageValue(getOwnerAddress().getLast20Bytes(), key);
+    }
+
+    /*
+     * Original storage value at the beginning of current frame execution
+     * For more info check EIP-1283 https://eips.ethereum.org/EIPS/eip-1283
+     * @return Storage data at the beginning of Program execution
+     */
+    public DataWord getOriginalValue(DataWord key) {
+        return originalRepo.getStorageValue(getOwnerAddress().getLast20Bytes(), key);
     }
 
     public DataWord getPrevHash() {

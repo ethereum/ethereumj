@@ -51,6 +51,7 @@ public class GasCost {
     private final int SET_SSTORE = 20000;
     private final int RESET_SSTORE = 5000;
     private final int REFUND_SSTORE = 15000;
+    private final int REUSE_SSTORE = 200;
     private final int CREATE = 32000;
 
     private final int JUMPDEST = 1;
@@ -167,6 +168,10 @@ public class GasCost {
 
     public int getREFUND_SSTORE() {
         return REFUND_SSTORE;
+    }
+
+    public int getREUSE_SSTORE() {
+        return REUSE_SSTORE;
     }
 
     public int getCREATE() {

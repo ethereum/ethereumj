@@ -241,18 +241,54 @@ public class VM {
                     }
                     break;
                 case SSTORE:
+                    DataWord currentValue = program.getCurrentValue(stack.peek());
+                    if (currentValue == null) currentValue = DataWord.ZERO;
                     DataWord newValue = stack.get(stack.size() - 2);
-                    DataWord oldValue = program.storageLoad(stack.peek());
-                    if (oldValue == null && !newValue.isZero())
-                        gasCost = gasCosts.getSET_SSTORE();
-                    else if (oldValue != null && newValue.isZero()) {
-                        // todo: GASREFUND counter policy
 
-                        // refund step cost policy.
-                        program.futureRefundGas(gasCosts.getREFUND_SSTORE());
-                        gasCost = gasCosts.getCLEAR_SSTORE();
-                    } else
-                        gasCost = gasCosts.getRESET_SSTORE();
+                    if (blockchainConfig.eip1283()) { // Net gas metering for SSTORE
+                        if (newValue.equals(currentValue)) {
+                            gasCost = gasCosts.getREUSE_SSTORE();
+                        } else {
+                            DataWord origValue = program.getOriginalValue(stack.peek());
+                            if (origValue == null) origValue = DataWord.ZERO;
+                            if (currentValue.equals(origValue)) {
+                                if (origValue.isZero()) {
+                                    gasCost = gasCosts.getSET_SSTORE();
+                                } else {
+                                    gasCost = gasCosts.getCLEAR_SSTORE();
+                                    if (newValue.isZero()) {
+                                        program.futureRefundGas(gasCosts.getREFUND_SSTORE());
+                                    }
+                                }
+                            } else {
+                                gasCost = gasCosts.getREUSE_SSTORE();
+                                if (!origValue.isZero()) {
+                                    if (currentValue.isZero()) {
+                                        program.futureRefundGas(-gasCosts.getREFUND_SSTORE());
+                                    } else if (newValue.isZero()) {
+                                        program.futureRefundGas(gasCosts.getREFUND_SSTORE());
+                                    }
+                                }
+                                if (origValue.equals(newValue)) {
+                                    if (origValue.isZero()) {
+                                        program.futureRefundGas(gasCosts.getSET_SSTORE() - gasCosts.getREUSE_SSTORE());
+                                    } else {
+                                        program.futureRefundGas(gasCosts.getCLEAR_SSTORE() - gasCosts.getREUSE_SSTORE());
+                                    }
+                                }
+                            }
+                        }
+                    } else { // Before EIP-1283 cost calculation
+                        if (currentValue.isZero() && !newValue.isZero())
+                            gasCost = gasCosts.getSET_SSTORE();
+                        else if (!currentValue.isZero() && newValue.isZero()) {
+                            // refund step cost policy.
+                            program.futureRefundGas(gasCosts.getREFUND_SSTORE());
+                            gasCost = gasCosts.getCLEAR_SSTORE();
+                        } else {
+                            gasCost = gasCosts.getRESET_SSTORE();
+                        }
+                    }
                     break;
                 case SLOAD:
                     gasCost = gasCosts.getSLOAD();
