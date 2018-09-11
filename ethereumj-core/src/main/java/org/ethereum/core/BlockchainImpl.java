@@ -33,6 +33,7 @@ import org.ethereum.sync.SyncManager;
 import org.ethereum.util.*;
 import org.ethereum.validator.DependentBlockHeaderRule;
 import org.ethereum.validator.ParentBlockHeaderValidator;
+import org.ethereum.vm.hook.VMHook;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.slf4j.Logger;
@@ -157,6 +158,10 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     @Autowired
     DbFlushManager dbFlushManager;
+
+    @Autowired
+    private VMHook vmHook;
+
 
     SystemProperties config = SystemProperties.getDefault();
 
@@ -875,8 +880,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             stateLogger.debug("apply block: [{}] tx: [{}] ", block.getNumber(), i);
 
             Repository txTrack = track.startTracking();
-            TransactionExecutor executor = new TransactionExecutor(tx, block.getCoinbase(),
-                    txTrack, blockStore, programInvokeFactory, block, listener, totalGasUsed)
+            TransactionExecutor executor = new TransactionExecutor(
+                    tx, block.getCoinbase(),
+                    txTrack, blockStore, programInvokeFactory, block, listener, totalGasUsed, vmHook)
                     .withCommonConfig(commonConfig);
 
             executor.init();

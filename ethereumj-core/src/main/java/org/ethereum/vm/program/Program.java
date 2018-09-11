@@ -32,6 +32,7 @@ import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.Utils;
 import org.ethereum.vm.*;
 import org.ethereum.vm.PrecompiledContracts.PrecompiledContract;
+import org.ethereum.vm.hook.VMHook;
 import org.ethereum.vm.program.invoke.ProgramInvoke;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
@@ -109,24 +110,25 @@ public class Program {
     private final SystemProperties config;
 
     private final BlockchainConfig blockchainConfig;
+    private final VMHook vmHook;
 
     public Program(byte[] ops, ProgramInvoke programInvoke) {
         this(ops, programInvoke, (Transaction) null);
     }
 
     public Program(byte[] ops, ProgramInvoke programInvoke, SystemProperties config) {
-        this(ops, programInvoke, null, config);
+        this(ops, programInvoke, null, config, VMHook.EMPTY);
     }
 
     public Program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction) {
-        this(ops, programInvoke, transaction, SystemProperties.getDefault());
+        this(ops, programInvoke, transaction, SystemProperties.getDefault(), VMHook.EMPTY);
     }
 
-    public Program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction, SystemProperties config) {
-        this(null, ops, programInvoke, transaction, config);
+    public Program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction, SystemProperties config, VMHook vmHook) {
+        this(null, ops, programInvoke, transaction, config, vmHook);
     }
 
-    public Program(byte[] codeHash, byte[] ops, ProgramInvoke programInvoke, Transaction transaction, SystemProperties config) {
+    public Program(byte[] codeHash, byte[] ops, ProgramInvoke programInvoke, Transaction transaction, SystemProperties config, VMHook vmHook) {
         this.config = config;
         this.invoke = programInvoke;
         this.transaction = transaction;
@@ -134,7 +136,8 @@ public class Program {
         this.codeHash = codeHash == null || FastByteComparisons.equal(HashUtil.EMPTY_DATA_HASH, codeHash) ? null : codeHash;
         this.ops = nullToEmpty(ops);
 
-        traceListener = new ProgramTraceListener(config.vmTrace());
+        this.vmHook = vmHook;
+        this.traceListener = new ProgramTraceListener(config.vmTrace());
         this.memory = setupProgramListener(new Memory());
         this.stack = setupProgramListener(new Stack());
         this.originalRepo = programInvoke.getRepository().clone();
@@ -477,8 +480,8 @@ public class Program {
         if (contractAlreadyExists) {
             result.setException(new BytecodeExecutionException("Trying to create a contract with existing contract address: 0x" + toHexString(newAddress)));
         } else if (isNotEmpty(programCode)) {
-            VM vm = new VM(config);
-            Program program = new Program(programCode, programInvoke, internalTx, config).withCommonConfig(commonConfig);
+            VM vm = new VM(config, vmHook);
+            Program program = new Program(programCode, programInvoke, internalTx, config, vmHook).withCommonConfig(commonConfig);
             vm.play(program);
             result = program.getResult();
         }
@@ -608,8 +611,9 @@ public class Program {
                     msg.getGas(), contextBalance, data, track, this.invoke.getBlockStore(),
                     msg.getType().callIsStatic() || isStaticCall(), byTestingSuite());
 
-            VM vm = new VM(config);
-            Program program = new Program(getStorage().getCodeHash(codeAddress), programCode, programInvoke, internalTx, config).withCommonConfig(commonConfig);
+            VM vm = new VM(config, vmHook);
+            Program program = new Program(getStorage().getCodeHash(codeAddress), programCode, programInvoke, internalTx, config, vmHook)
+                    .withCommonConfig(commonConfig);
             vm.play(program);
             result = program.getResult();
 

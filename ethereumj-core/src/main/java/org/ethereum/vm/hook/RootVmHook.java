@@ -11,6 +11,9 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * Primary {@link VMHook} implementation, that accepts other VM hook components to safely proxy all invocations to them.
+ */
 @Primary
 @Component
 public class RootVmHook implements VMHook {

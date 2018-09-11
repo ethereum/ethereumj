@@ -21,7 +21,6 @@ import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.vm.hook.VMHook;
-import org.ethereum.vm.hook.VMHookFactory;
 import org.ethereum.vm.program.Program;
 import org.ethereum.vm.program.Stack;
 import org.slf4j.Logger;
@@ -34,7 +33,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static org.ethereum.crypto.HashUtil.sha3;
@@ -94,9 +92,6 @@ public class VM {
     /* Keeps track of the number of steps performed in this VM */
     private int vmCounter = 0;
 
-    private static VMHookFactory vmHookFactory;
-    private static VMHook globalVmHook;
-    private VMHook vmHook;
     private boolean vmTrace;
     private long dumpBlock;
 
@@ -114,24 +109,19 @@ public class VM {
     }};
 
     private final SystemProperties config;
+    private final VMHook hook;
+
 
     public VM() {
-        this(SystemProperties.getDefault());
+        this(SystemProperties.getDefault(), VMHook.EMPTY);
     }
 
     @Autowired
-    public VM(SystemProperties config) {
+    public VM(SystemProperties config, VMHook hook) {
         this.config = config;
-        vmTrace = config.vmTrace();
-        dumpBlock = config.dumpBlock();
-
-        if (vmHookFactory != null) {
-            try {
-                vmHook = vmHookFactory.create();
-            } catch (Exception e) {
-                logger.error("Error creating VMHook: {}", e);
-            }
-        }
+        this.vmTrace = config.vmTrace();
+        this.dumpBlock = config.dumpBlock();
+        this.hook = hook;
     }
 
     private long calcMemGas(GasCost gasCosts, long oldMemSize, BigInteger newMemSize, long copySize) {
@@ -422,10 +412,11 @@ public class VM {
             program.spendGas(gasCost, op.name());
 
             // Log debugging line for VM
-            if (program.getNumber().intValue() == dumpBlock)
+            if (program.getNumber().intValue() == dumpBlock) {
                 this.dumpLine(op, gasBefore, gasCost + callGas, memWords, program);
+            }
 
-            callVmHookAction(program, (hook, prg) -> hook.step(prg, op));
+            hook.step(program, op);
 
             // Execute operation
             switch (op) {
@@ -1394,10 +1385,10 @@ public class VM {
     }
 
     public void play(Program program) {
-        try {
-            callVmHookAction(program, VMHook::startPlay);
+        if (program.byTestingSuite()) return;
 
-            if (program.byTestingSuite()) return;
+        try {
+            hook.startPlay(program);
 
             while (!program.isStopped()) {
                 this.step(program);
@@ -1409,42 +1400,17 @@ public class VM {
             logger.error("\n !!! StackOverflowError: update your java run command with -Xss2M (-Xss8M for tests) !!!\n", soe);
             System.exit(-1);
         } finally {
-            callVmHookAction(program, VMHook::stopPlay);
+            hook.stopPlay(program);
         }
     }
 
     /**
-     * @deprecated
+     * @deprecated Define your hook component as a Spring bean, instead of this method using.
      * TODO: Remove after a few versions
-     * Please use {@link VMHookFactory} and setVmHookFactory to
-     * ensure that every {@link VM} instance has a unique {@link VMHook} to
-     * prevent race conditions
      */
     @Deprecated
     public static void setVmHook(VMHook vmHook) {
-        VM.globalVmHook = vmHook;
-    }
-
-    public static void setVmHookFactory(VMHookFactory vmHookFactory) {
-        VM.vmHookFactory = vmHookFactory;
-    }
-
-    private void callVmHookAction(Program program, BiConsumer<VMHook, Program> action) {
-        if (vmHook != null) {
-            try {
-               action.accept(vmHook, program);
-            } catch (Exception e) {
-                logger.error("Error calling VMHook action: {}", e);
-            }
-        }
-
-        if (globalVmHook != null) {
-            try {
-               action.accept(globalVmHook, program);
-            } catch (Exception e) {
-                logger.error("Error calling global VMHook action: {}", e);
-            }
-        }
+        logger.warn("This deprecated method doesn't set VM hook. Define your hook component as a Spring bean.");
     }
 
     /**

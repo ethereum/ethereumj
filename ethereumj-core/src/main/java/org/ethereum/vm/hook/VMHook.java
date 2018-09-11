@@ -25,15 +25,15 @@ import org.ethereum.vm.program.Program;
  */
 public interface VMHook {
 
-    default void startPlay(Program program){
-
+    default void startPlay(Program program) {
     }
 
     default void step(Program program, OpCode opcode) {
-
     }
 
     default void stopPlay(Program program) {
-
     }
+
+    VMHook EMPTY = new VMHook() {
+    };
 }
