@@ -15,14 +15,16 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.vm;
+package org.ethereum.vm.hook;
 
+import org.ethereum.vm.OpCode;
 import org.ethereum.vm.program.Program;
 
 /**
  * Created by Anton Nashatyrev on 15.02.2016.
  */
 public interface VMHook {
+
     default void startPlay(Program program){
 
     }
