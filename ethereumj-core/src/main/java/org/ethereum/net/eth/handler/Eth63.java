@@ -22,17 +22,20 @@ import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.ChannelHandlerContext;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.Blockchain;
+import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionInfo;
+import org.ethereum.core.TransactionReceipt;
 import org.ethereum.datasource.Source;
 import org.ethereum.db.BlockStore;
-import org.ethereum.listener.CompositeEthereumListener;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessage;
 import org.ethereum.net.eth.message.GetNodeDataMessage;
 import org.ethereum.net.eth.message.GetReceiptsMessage;
 import org.ethereum.net.eth.message.NodeDataMessage;
 import org.ethereum.net.eth.message.ReceiptsMessage;
-
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.sync.PeerState;
 import org.ethereum.util.ByteArraySet;
@@ -73,8 +76,8 @@ public class Eth63 extends Eth62 {
 
     @Autowired
     public Eth63(final SystemProperties config, final Blockchain blockchain, BlockStore blockStore,
-                 final CompositeEthereumListener ethereumListener) {
-        super(version, config, blockchain, blockStore, ethereumListener);
+                 final EthereumListener listener) {
+        super(version, config, blockchain, blockStore, listener);
     }
 
     @Override

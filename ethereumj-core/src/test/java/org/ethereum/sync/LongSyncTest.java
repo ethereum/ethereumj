@@ -19,19 +19,24 @@ package org.ethereum.sync;
 
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.FrontierConfig;
-import org.ethereum.config.net.MainNetConfig;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.Blockchain;
+import org.ethereum.core.ImportResult;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.eth.handler.Eth62;
 import org.ethereum.net.eth.handler.EthHandler;
-import org.ethereum.net.eth.message.*;
-import org.ethereum.net.message.Message;
+import org.ethereum.net.eth.message.BlockBodiesMessage;
+import org.ethereum.net.eth.message.BlockHeadersMessage;
+import org.ethereum.net.eth.message.GetBlockBodiesMessage;
+import org.ethereum.net.eth.message.GetBlockHeadersMessage;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.rlpx.Node;
-import org.ethereum.net.server.Channel;
+import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.PeerAddedToSyncPool;
+import org.ethereum.publish.event.message.EthStatusUpdated;
+import org.ethereum.publish.event.message.MessageReceived;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.junit.*;
 import org.springframework.context.annotation.Bean;
@@ -49,6 +54,7 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.ethereum.publish.Subscription.to;
 import static org.ethereum.util.FileUtil.recursiveDelete;
 import static org.junit.Assert.fail;
 import static org.spongycastle.util.encoders.Hex.decode;
@@ -155,14 +161,11 @@ public class LongSyncTest {
         // A == b10, B == genesis
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereumB.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onBlock(Block block, List<TransactionReceipt> receipts) {
-                if (block.isEqual(b10)) {
-                    semaphore.countDown();
-                }
+        ethereumB.subscribe(to(BlockAdded.class, data -> {
+            if (data.getBlockSummary().getBlock().isEqual(b10)) {
+                semaphore.countDown();
             }
-        });
+        }));
 
         semaphore.await(40, SECONDS);
 
@@ -195,14 +198,11 @@ public class LongSyncTest {
         // A == b10, B == genesis
 
         final CountDownLatch semaphoreDisconnect = new CountDownLatch(1);
-        ethereumA.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onRecvMessage(Channel channel, Message message) {
-                if (message instanceof DisconnectMessage) {
-                    semaphoreDisconnect.countDown();
-                }
+        ethereumA.subscribe(to(MessageReceived.class, messageData -> {
+            if (messageData.getMessage() instanceof DisconnectMessage) {
+                semaphoreDisconnect.countDown();
             }
-        });
+        }));
 
         semaphoreDisconnect.await(10, SECONDS);
 
@@ -245,14 +245,11 @@ public class LongSyncTest {
         // A == b10, B == genesis
 
         final CountDownLatch semaphoreDisconnect = new CountDownLatch(1);
-        ethereumA.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onRecvMessage(Channel channel, Message message) {
-                if (message instanceof DisconnectMessage) {
-                    semaphoreDisconnect.countDown();
-                }
+        ethereumA.subscribe(to(MessageReceived.class, messageData -> {
+            if (messageData.getMessage() instanceof DisconnectMessage) {
+                semaphoreDisconnect.countDown();
             }
-        });
+        }));
 
         semaphoreDisconnect.await(10, SECONDS);
 
@@ -290,14 +287,11 @@ public class LongSyncTest {
         // A == b10, B == genesis
 
         final CountDownLatch semaphoreDisconnect = new CountDownLatch(1);
-        ethereumA.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onRecvMessage(Channel channel, Message message) {
-                if (message instanceof DisconnectMessage) {
-                    semaphoreDisconnect.countDown();
-                }
+        ethereumA.subscribe(to(MessageReceived.class, messageData -> {
+            if (messageData.getMessage() instanceof DisconnectMessage) {
+                semaphoreDisconnect.countDown();
             }
-        });
+        }));
 
         semaphoreDisconnect.await(10, SECONDS);
 
@@ -339,14 +333,11 @@ public class LongSyncTest {
         // A == b10, B == genesis
 
         final CountDownLatch semaphoreDisconnect = new CountDownLatch(1);
-        ethereumA.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onRecvMessage(Channel channel, Message message) {
-                if (message instanceof DisconnectMessage) {
-                    semaphoreDisconnect.countDown();
-                }
+        ethereumA.subscribe(to(MessageReceived.class, messageData -> {
+            if (messageData.getMessage() instanceof DisconnectMessage) {
+                semaphoreDisconnect.countDown();
             }
-        });
+        }));
 
         semaphoreDisconnect.await(10, SECONDS);
 
@@ -392,14 +383,11 @@ public class LongSyncTest {
         // A == b10, B == genesis
 
         final CountDownLatch semaphoreDisconnect = new CountDownLatch(1);
-        ethereumA.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onRecvMessage(Channel channel, Message message) {
-                if (message instanceof DisconnectMessage) {
-                    semaphoreDisconnect.countDown();
-                }
+        ethereumA.subscribe(to(MessageReceived.class, messageData -> {
+            if (messageData.getMessage() instanceof DisconnectMessage) {
+                semaphoreDisconnect.countDown();
             }
-        });
+        }));
 
         semaphoreDisconnect.await(10, SECONDS);
 
@@ -441,14 +429,11 @@ public class LongSyncTest {
         // A == b10, B == genesis
 
         final CountDownLatch semaphoreDisconnect = new CountDownLatch(1);
-        ethereumA.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onRecvMessage(Channel channel, Message message) {
-                if (message instanceof DisconnectMessage) {
-                    semaphoreDisconnect.countDown();
-                }
+        ethereumA.subscribe(to(MessageReceived.class, messageData -> {
+            if (messageData.getMessage() instanceof DisconnectMessage) {
+                semaphoreDisconnect.countDown();
             }
-        });
+        }));
 
         semaphoreDisconnect.await(10, SECONDS);
 
@@ -491,14 +476,11 @@ public class LongSyncTest {
         // A == b10, B == genesis
 
         final CountDownLatch semaphoreDisconnect = new CountDownLatch(1);
-        ethereumA.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onRecvMessage(Channel channel, Message message) {
-                if (message instanceof DisconnectMessage) {
-                    semaphoreDisconnect.countDown();
-                }
+        ethereumA.subscribe(to(MessageReceived.class, messageData -> {
+            if (messageData.getMessage() instanceof DisconnectMessage) {
+                semaphoreDisconnect.countDown();
             }
-        });
+        }));
 
         semaphoreDisconnect.await(10, SECONDS);
 
@@ -526,23 +508,11 @@ public class LongSyncTest {
         // A == best
 
         ethereumB = EthereumFactory.createEthereum(SysPropConfigB.props, SysPropConfigB.class);
-
-        ethereumA.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onEthStatusUpdated(Channel channel, StatusMessage statusMessage) {
-                ethA = (EthHandler) channel.getEthHandler();
-            }
-        });
+        ethereumA.subscribe(to(EthStatusUpdated.class, data -> ethA = (EthHandler) data.getChannel().getEthHandler()));
 
         final CountDownLatch semaphore = new CountDownLatch(1);
 
-        ethereumB.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onPeerAddedToSyncPool(Channel peer) {
-                semaphore.countDown();
-            }
-        });
-
+        ethereumB.subscribe(to(PeerAddedToSyncPool.class, channel -> semaphore.countDown()));
         ethereumB.connect(nodeA);
 
         semaphore.await(10, SECONDS);

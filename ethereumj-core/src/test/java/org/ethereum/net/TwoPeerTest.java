@@ -24,11 +24,15 @@ import org.ethereum.core.*;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.mine.Ethash;
 import org.ethereum.net.eth.handler.Eth62;
-import org.ethereum.net.eth.message.*;
+import org.ethereum.net.eth.message.BlockBodiesMessage;
+import org.ethereum.net.eth.message.BlockHeadersMessage;
+import org.ethereum.net.eth.message.GetBlockBodiesMessage;
+import org.ethereum.net.eth.message.GetBlockHeadersMessage;
 import org.ethereum.net.server.Channel;
+import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.message.EthStatusUpdated;
 import org.ethereum.util.RLP;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -48,6 +52,7 @@ import java.util.concurrent.TimeUnit;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.publish.Subscription.to;
 
 /**
  * Created by Anton Nashatyrev on 13.10.2015.
@@ -221,22 +226,17 @@ public class TwoPeerTest {
         final CountDownLatch semaphore = new CountDownLatch(1);
 
         final Channel[] channel1 = new Channel[1];
-        ethereum1.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onEthStatusUpdated(Channel channel, StatusMessage statusMessage) {
-                channel1[0] = channel;
-                System.out.println("==== Got the Channel: " + channel);
-            }
-        });
-        ethereum2.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onBlock(Block block, List<TransactionReceipt> receipts) {
-                if (block.getNumber() == 4) {
-                    semaphore.countDown();
-                }
-            }
+        ethereum1.subscribe(to(EthStatusUpdated.class, data -> {
+            channel1[0] = data.getChannel();
+            System.out.println("==== Got the Channel: " + data.getChannel());
+        }));
 
-        });
+        ethereum2.subscribe(to(BlockAdded.class, data -> {
+            Block block = data.getBlockSummary().getBlock();
+            if (block.getNumber() == 4) {
+                semaphore.countDown();
+            }
+        }));
 
         System.out.println("======= Waiting for block #4");
         semaphore.await(60, TimeUnit.SECONDS);

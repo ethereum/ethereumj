@@ -24,16 +24,18 @@ import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.filter.Filter;
 import ch.qos.logback.core.spi.FilterReply;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockSummary;
+import org.ethereum.core.TransactionReceipt;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.listener.EthereumListener;
-import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.eth.message.StatusMessage;
-import org.ethereum.net.message.Message;
-import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.rlpx.Node;
-import org.ethereum.net.server.Channel;
+import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.NodeDiscovered;
+import org.ethereum.publish.event.PeerAddedToSyncPool;
+import org.ethereum.publish.event.SyncDone;
+import org.ethereum.publish.event.message.EthStatusUpdated;
 import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,18 +45,20 @@ import org.springframework.context.annotation.Bean;
 import javax.annotation.PostConstruct;
 import java.util.*;
 
+import static org.ethereum.publish.Subscription.to;
+
 /**
- *  The base sample class which creates EthereumJ instance, tracks and report all the stages
- *  of starting up like discovering nodes, connecting, syncing
- *
- *  The class can be started as a standalone sample it should just run until full blockchain
- *  sync and then just hanging, listening for new blocks and importing them into a DB
- *
- *  This class is a Spring Component which makes it convenient to easily get access (autowire) to
- *  all components created within EthereumJ. However almost all this could be done without dealing
- *  with the Spring machinery from within a simple main method
- *
- *  Created by Anton Nashatyrev on 05.02.2016.
+ * The base sample class which creates EthereumJ instance, tracks and report all the stages
+ * of starting up like discovering nodes, connecting, syncing
+ * <p>
+ * The class can be started as a standalone sample it should just run until full blockchain
+ * sync and then just hanging, listening for new blocks and importing them into a DB
+ * <p>
+ * This class is a Spring Component which makes it convenient to easily get access (autowire) to
+ * all components created within EthereumJ. However almost all this could be done without dealing
+ * with the Spring machinery from within a simple main method
+ * <p>
+ * Created by Anton Nashatyrev on 05.02.2016.
  */
 public class BasicSample implements Runnable {
 
@@ -131,7 +135,26 @@ public class BasicSample implements Runnable {
         setupLogging();
 
         // adding the main EthereumJ callback to be notified on different kind of events
-        ethereum.addListener(listener);
+        this.ethereum
+                .subscribe(to(SyncDone.class, syncState -> synced = true))
+                .subscribe(to(NodeDiscovered.class, node -> nodesDiscovered.add(node))
+                        .conditionally(node -> nodesDiscovered.size() < 1000))
+                .subscribe(to(EthStatusUpdated.class, data -> ethNodes.put(data.getChannel().getNode(), data.getMessage())))
+                .subscribe(to(PeerAddedToSyncPool.class, peer -> syncPeers.add(peer.getNode())))
+                .subscribe(to(BlockAdded.class, data -> {
+                    BlockSummary blockSummary = data.getBlockSummary();
+                    Block block = blockSummary.getBlock();
+                    List<TransactionReceipt> receipts = blockSummary.getReceipts();
+
+                    bestBlock = block;
+                    txCount += receipts.size();
+                    for (TransactionReceipt receipt : receipts) {
+                        gasSpent += ByteUtil.byteArrayToLong(receipt.getGasUsed());
+                    }
+                    if (syncComplete) {
+                        logger.info("New block: " + block.getShortDescr());
+                    }
+                }));
 
         logger.info("Sample component created. Listening for ethereum events...");
 
@@ -186,7 +209,7 @@ public class BasicSample implements Runnable {
 
         int bootNodes = config.peerDiscoveryIPList().size();
         int cnt = 0;
-        while(true) {
+        while (true) {
             Thread.sleep(cnt < 30 ? 300 : 5000);
 
             if (nodesDiscovered.size() > bootNodes) {
@@ -215,7 +238,7 @@ public class BasicSample implements Runnable {
     protected void waitForAvailablePeers() throws Exception {
         logger.info("Waiting for available Eth capable nodes...");
         int cnt = 0;
-        while(true) {
+        while (true) {
             Thread.sleep(cnt < 30 ? 1000 : 5000);
 
             if (ethNodes.size() > 0) {
@@ -241,7 +264,7 @@ public class BasicSample implements Runnable {
     protected void waitForSyncPeers() throws Exception {
         logger.info("Searching for peers to sync with...");
         int cnt = 0;
-        while(true) {
+        while (true) {
             Thread.sleep(cnt < 30 ? 1000 : 5000);
 
             if (syncPeers.size() > 0) {
@@ -268,7 +291,7 @@ public class BasicSample implements Runnable {
         logger.info("Current BEST block: " + currentBest.getShortDescr());
         logger.info("Waiting for blocks start importing (may take a while)...");
         int cnt = 0;
-        while(true) {
+        while (true) {
             Thread.sleep(cnt < 300 ? 1000 : 60000);
 
             if (bestBlock != null && bestBlock.getNumber() > currentBest.getNumber()) {
@@ -293,7 +316,7 @@ public class BasicSample implements Runnable {
      */
     private void waitForSync() throws Exception {
         logger.info("Waiting for the whole blockchain sync (will take up to several hours for the whole chain)...");
-        while(true) {
+        while (true) {
             Thread.sleep(10000);
 
             if (synced) {
@@ -309,81 +332,9 @@ public class BasicSample implements Runnable {
         }
     }
 
-    /**
-     * The main EthereumJ callback.
-     */
-    EthereumListener listener = new EthereumListenerAdapter() {
-        @Override
-        public void onSyncDone(SyncState state) {
-            synced = true;
-        }
-
-        @Override
-        public void onNodeDiscovered(Node node) {
-            if (nodesDiscovered.size() < 1000) {
-                nodesDiscovered.add(node);
-            }
-        }
-
-        @Override
-        public void onEthStatusUpdated(Channel channel, StatusMessage statusMessage) {
-            ethNodes.put(channel.getNode(), statusMessage);
-        }
-
-        @Override
-        public void onPeerAddedToSyncPool(Channel peer) {
-            syncPeers.add(peer.getNode());
-        }
-
-        @Override
-        public void onBlock(Block block, List<TransactionReceipt> receipts) {
-            bestBlock = block;
-            txCount += receipts.size();
-            for (TransactionReceipt receipt : receipts) {
-                gasSpent += ByteUtil.byteArrayToLong(receipt.getGasUsed());
-            }
-            if (syncComplete) {
-                logger.info("New block: " + block.getShortDescr());
-            }
-        }
-        @Override
-        public void onRecvMessage(Channel channel, Message message) {
-        }
-
-        @Override
-        public void onSendMessage(Channel channel, Message message) {
-        }
-
-        @Override
-        public void onPeerDisconnect(String host, long port) {
-        }
-
-        @Override
-        public void onPendingTransactionsReceived(List<Transaction> transactions) {
-        }
-
-        @Override
-        public void onPendingStateChanged(PendingState pendingState) {
-        }
-        @Override
-        public void onHandShakePeer(Channel channel, HelloMessage helloMessage) {
-        }
-
-        @Override
-        public void onNoConnections() {
-        }
-
-        @Override
-        public void onVMTraceCreated(String transactionHash, String trace) {
-        }
-
-        @Override
-        public void onTransactionExecuted(TransactionExecutionSummary summary) {
-        }
-    };
-
     private static class CustomFilter extends Filter<ILoggingEvent> {
         private Set<String> visibleLoggers = new HashSet<>();
+
         @Override
         public synchronized FilterReply decide(ILoggingEvent event) {
             return visibleLoggers.contains(event.getLoggerName()) && event.getLevel().isGreaterOrEqual(Level.INFO) ||

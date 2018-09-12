@@ -24,9 +24,11 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.util.ByteArraySet;
-import org.ethereum.vm.*;
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.LogInfo;
+import org.ethereum.vm.PrecompiledContracts;
+import org.ethereum.vm.VM;
 import org.ethereum.vm.program.Program;
 import org.ethereum.vm.program.ProgramResult;
 import org.ethereum.vm.program.invoke.ProgramInvoke;
@@ -91,7 +93,7 @@ public class TransactionExecutor {
     public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
                                ProgramInvokeFactory programInvokeFactory, Block currentBlock) {
 
-        this(tx, coinbase, track, blockStore, programInvokeFactory, currentBlock, new EthereumListenerAdapter(), 0);
+        this(tx, coinbase, track, blockStore, programInvokeFactory, currentBlock, EthereumListener.EMPTY, 0);
     }
 
     public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,

@@ -27,9 +27,15 @@ import org.ethereum.net.server.Channel;
 import java.util.List;
 
 /**
+ * Default implementation of {@link EthereumListener}.<br>
+ * Uses expensive enough logic for delivery events to client.<br>
+ * Will be removed in future releases.
+ *
  * @author Roman Mandeleil
  * @since 08.08.2014
+ * @deprecated use {@link org.ethereum.publish.Publisher} instead.
  */
+@Deprecated
 public class EthereumListenerAdapter implements EthereumListener {
 
     @Override

@@ -22,7 +22,11 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.*;
+import org.ethereum.core.AccountState;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.BlockIdentifier;
+import org.ethereum.core.BlockchainImpl;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.datasource.NodeKeyCompositor;
@@ -32,15 +36,19 @@ import org.ethereum.db.HeaderStore;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.StateSource;
 import org.ethereum.facade.SyncStatus;
-import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.handler.Eth63;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.server.Channel;
+import org.ethereum.publish.Publisher;
+import org.ethereum.publish.event.SyncDone;
 import org.ethereum.trie.TrieKey;
-import org.ethereum.util.*;
+import org.ethereum.util.ByteArrayMap;
+import org.ethereum.util.ByteArraySet;
+import org.ethereum.util.FastByteComparisons;
+import org.ethereum.util.FileUtil;
+import org.ethereum.util.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,16 +60,30 @@ import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static org.ethereum.listener.EthereumListener.SyncState.COMPLETE;
 import static org.ethereum.listener.EthereumListener.SyncState.SECURE;
 import static org.ethereum.listener.EthereumListener.SyncState.UNSECURE;
+import static org.ethereum.publish.Subscription.to;
 import static org.ethereum.trie.TrieKey.fromPacked;
-import static org.ethereum.util.CompactEncoder.hasTerminator;
 import static org.ethereum.util.ByteUtil.toHexString;
+import static org.ethereum.util.CompactEncoder.hasTerminator;
 
 /**
  * Created by Anton Nashatyrev on 24.10.2016.
@@ -109,7 +131,10 @@ public class FastSyncManager {
     DbFlushManager dbFlushManager;
 
     @Autowired
-    CompositeEthereumListener listener;
+    private EthereumListener listener;
+    @Autowired
+    private Publisher publisher;
+
 
     @Autowired
     ApplicationContext applicationContext;
@@ -194,7 +219,7 @@ public class FastSyncManager {
             case SECURE:
                 if (headersDownloader != null) {
                     return new SyncStatus(SyncStatus.SyncStage.Headers, headersDownloader.getHeadersLoaded(),
-                                pivot.getNumber());
+                            pivot.getNumber());
                 } else {
                     return new SyncStatus(SyncStatus.SyncStage.Headers, pivot.getNumber(), pivot.getNumber());
                 }
@@ -236,9 +261,15 @@ public class FastSyncManager {
             this.nodeHash = nodeHash;
 
             switch (type) {
-                case STATE: stateNodesCnt++; break;
-                case CODE: codeNodesCnt++; break;
-                case STORAGE: storageNodesCnt++; break;
+                case STATE:
+                    stateNodesCnt++;
+                    break;
+                case CODE:
+                    codeNodesCnt++;
+                    break;
+                case STORAGE:
+                    storageNodesCnt++;
+                    break;
             }
         }
 
@@ -540,7 +571,7 @@ public class FastSyncManager {
 
         retrieveLoop();
 
-        logger.info("FastSync: state trie download complete! (Nodes count: state: " + stateNodesCnt + ", storage: " +storageNodesCnt + ", code: " +codeNodesCnt + ")");
+        logger.info("FastSync: state trie download complete! (Nodes count: state: " + stateNodesCnt + ", storage: " + storageNodesCnt + ", code: " + codeNodesCnt + ")");
         last = 0;
         logStat();
 
@@ -556,12 +587,7 @@ public class FastSyncManager {
         logger.info("FastSync: proceeding to regular sync...");
 
         final CountDownLatch syncDoneLatch = new CountDownLatch(1);
-        listener.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onSyncDone(SyncState state) {
-                syncDoneLatch.countDown();
-            }
-        });
+        publisher.subscribe(to(SyncDone.class, syncState -> syncDoneLatch.countDown()));
         syncManager.initRegularSync(UNSECURE);
         logger.info("FastSync: waiting for regular sync to reach the blockchain head...");
 
@@ -880,10 +906,11 @@ public class FastSyncManager {
      * 1. Get pivotBlockNumber blocks from all peers
      * 2. Ensure that pivot block available from 50% + 1 peer
      * 3. Otherwise proposes new pivotBlockNumber (stepped back)
-     * @param pivotBlockNumber      Pivot block number
-     * @return     null - if no peers available
-     *             null, newPivotBlockNumber - if it's better to try other pivot block number
-     *             BlockHeader, null - if pivot successfully fetched and verified by majority of peers
+     *
+     * @param pivotBlockNumber Pivot block number
+     * @return null - if no peers available
+     * null, newPivotBlockNumber - if it's better to try other pivot block number
+     * BlockHeader, null - if pivot successfully fetched and verified by majority of peers
      */
     private Pair<BlockHeader, Long> getPivotHeaderByNumber(long pivotBlockNumber) throws Exception {
         List<Channel> allIdle = pool.getAllIdle();

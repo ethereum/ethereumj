@@ -18,48 +18,37 @@
 package org.ethereum.samples;
 
 import org.ethereum.core.Block;
-import org.ethereum.core.TransactionReceipt;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.facade.Repository;
-import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.publish.event.BlockAdded;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.util.List;
 
-public class FollowAccount extends EthereumListenerAdapter {
+import static org.ethereum.publish.Subscription.to;
 
-
-    Ethereum ethereum = null;
-
-    public FollowAccount(Ethereum ethereum) {
-        this.ethereum = ethereum;
-    }
+public class FollowAccount {
 
     public static void main(String[] args) {
-
         Ethereum ethereum = EthereumFactory.createEthereum();
-        ethereum.addListener(new FollowAccount(ethereum));
-    }
+        ethereum.subscribe(to(BlockAdded.class, data -> {
+            byte[] cow = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
 
-    @Override
-    public void onBlock(Block block, List<TransactionReceipt> receipts) {
+            // Get snapshot some time ago - 10% blocks ago
+            long bestNumber = ethereum.getBlockchain().getBestBlock().getNumber();
+            long oldNumber = (long) (bestNumber * 0.9);
 
-        byte[] cow = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
+            Block oldBlock = ethereum.getBlockchain().getBlockByNumber(oldNumber);
 
-        // Get snapshot some time ago - 10% blocks ago
-        long bestNumber = ethereum.getBlockchain().getBestBlock().getNumber();
-        long oldNumber = (long) (bestNumber * 0.9);
+            Repository repository = ethereum.getRepository();
+            Repository snapshot = ethereum.getSnapshotTo(oldBlock.getStateRoot());
 
-        Block oldBlock = ethereum.getBlockchain().getBlockByNumber(oldNumber);
+            BigInteger nonce_ = snapshot.getNonce(cow);
+            BigInteger nonce = repository.getNonce(cow);
 
-        Repository repository = ethereum.getRepository();
-        Repository snapshot = ethereum.getSnapshotTo(oldBlock.getStateRoot());
-
-        BigInteger nonce_ = snapshot.getNonce(cow);
-        BigInteger nonce = repository.getNonce(cow);
-
-        System.err.println(" #" + block.getNumber() + " [cd2a3d9] => snapshot_nonce:" +  nonce_ + " latest_nonce:" + nonce);
+            System.err.printf(" #%d [cd2a3d9] => snapshot_nonce:%d latest_nonce:%d\n",
+                    data.getBlockSummary().getBlock().getNumber(), nonce_, nonce);
+        }));
     }
 }

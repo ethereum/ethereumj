@@ -3,14 +3,17 @@ package org.ethereum.validator;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockSummary;
-import org.ethereum.listener.CompositeEthereumListener;
-import org.ethereum.listener.EthereumListener;
+import org.ethereum.core.EventDispatchThread;
 import org.ethereum.mine.EthashValidationHelper;
+import org.ethereum.publish.Publisher;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.Collections;
 
+import static org.ethereum.publish.event.Events.onBlockAdded;
+import static org.ethereum.publish.event.Events.onSyncDone;
+import static org.ethereum.publish.event.SyncDone.State.COMPLETE;
 import static org.ethereum.validator.BlockHeaderRule.Success;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -21,22 +24,6 @@ import static org.junit.Assert.assertTrue;
  * @since 12.07.2018
  */
 public class EthashRuleTest {
-
-    static class CompositeEthereumListenerMock extends CompositeEthereumListener {
-        @Override
-        public void onBlock(final BlockSummary blockSummary, final boolean best) {
-            for (final EthereumListener listener : listeners) {
-                listener.onBlock(blockSummary, best);
-            }
-        }
-
-        @Override
-        public void onSyncDone(final SyncState state) {
-            for (final EthereumListener listener : listeners) {
-                listener.onSyncDone(state);
-            }
-        }
-    }
 
     static class EthashValidationHelperMock extends EthashValidationHelper {
 
@@ -66,8 +53,8 @@ public class EthashRuleTest {
 
     @Test
     public void testFake() {
-        CompositeEthereumListener listener = new CompositeEthereumListenerMock();
-        EthashRule rule = new EthashRule(EthashRule.Mode.fake, EthashRule.ChainType.main, listener);
+        Publisher publisher = new Publisher(EventDispatchThread.getDefault());
+        EthashRule rule = new EthashRule(EthashRule.Mode.fake, EthashRule.ChainType.main, publisher);
 
         assertEquals(Success, rule.validate(validHeader));
         assertEquals(Success, rule.validate(partlyValidHeader));
@@ -76,14 +63,14 @@ public class EthashRuleTest {
 
     @Test
     public void testStrict() {
-        CompositeEthereumListener listener = new CompositeEthereumListenerMock();
-        EthashRule rule = new EthashRule(EthashRule.Mode.strict, EthashRule.ChainType.main, listener);
+        Publisher publisher = new Publisher(EventDispatchThread.getDefault());
+        EthashRule rule = new EthashRule(EthashRule.Mode.strict, EthashRule.ChainType.main, publisher);
 
         // cache is empty, fallback into fake rule
         assertEquals(Success, rule.validate(partlyValidHeader));
 
         // trigger ethash cache
-        listener.onBlock(dummySummaryNum_1, true);
+        publisher.publish(onBlockAdded(dummySummaryNum_1, true));
 
         assertEquals(Success, rule.validate(validHeader));
         assertNotEquals(Success, rule.validate(partlyValidHeader));
@@ -97,11 +84,11 @@ public class EthashRuleTest {
 
     @Test
     public void testMixed() {
-        CompositeEthereumListener listener = new CompositeEthereumListenerMock();
-        EthashRule rule = new EthashRule(EthashRule.Mode.mixed, EthashRule.ChainType.main, listener);
+        Publisher publisher = new Publisher(EventDispatchThread.getDefault());
+        EthashRule rule = new EthashRule(EthashRule.Mode.mixed, EthashRule.ChainType.main, publisher);
 
         // trigger ethash cache
-        listener.onBlock(dummySummaryNum_1, true);
+        publisher.publish(onBlockAdded(dummySummaryNum_1, true));
 
         // check mixed mode randomness
         boolean fullCheckTriggered = false;
@@ -119,7 +106,7 @@ public class EthashRuleTest {
         assertTrue(partialCheckTriggered);
 
         // trigger onSyncDone
-        listener.onSyncDone(EthereumListener.SyncState.COMPLETE);
+        publisher.publish(onSyncDone(COMPLETE));
 
         // check that full verification is done on each run in strict mode
         for (int i = 0; i < 100; i++) {
@@ -130,14 +117,15 @@ public class EthashRuleTest {
     @Test
     public void testCacheMain() {
         EthashValidationHelperMock helper = new EthashValidationHelperMock(EthashValidationHelper.CacheOrder.direct);
-        CompositeEthereumListener listener = new CompositeEthereumListenerMock();
-        EthashRule rule = new EthashRule(EthashRule.Mode.mixed, EthashRule.ChainType.main, listener);
+        Publisher publisher = new Publisher(EventDispatchThread.getDefault());
+        EthashRule rule = new EthashRule(EthashRule.Mode.mixed, EthashRule.ChainType.main, publisher);
         rule.ethashHelper = helper;
 
         // trigger cache
         for (int i = 0; i < 100; i++) {
-            listener.onBlock(dummySummaryNum_1, false);
-            listener.onBlock(dummySummaryNum_1, true);
+            publisher
+                    .publish(onBlockAdded(dummySummaryNum_1, false))
+                    .publish(onBlockAdded(dummySummaryNum_1, true));
         }
 
         // must be triggered on best block only
@@ -147,8 +135,8 @@ public class EthashRuleTest {
     @Test
     public void testCacheDirect() {
         EthashValidationHelperMock helper = new EthashValidationHelperMock(EthashValidationHelper.CacheOrder.direct);
-        CompositeEthereumListener listener = new CompositeEthereumListenerMock();
-        EthashRule rule = new EthashRule(EthashRule.Mode.mixed, EthashRule.ChainType.direct, listener);
+        Publisher publisher = new Publisher(EventDispatchThread.getDefault());
+        EthashRule rule = new EthashRule(EthashRule.Mode.mixed, EthashRule.ChainType.direct, publisher);
         rule.ethashHelper = helper;
 
         // trigger cache
@@ -159,11 +147,12 @@ public class EthashRuleTest {
         // must be triggered each verification attempt, in spite of mixed mode
         assertEquals(100, helper.preCacheCounter);
     }
+
     @Test
     public void testCacheReverse() {
         EthashValidationHelperMock helper = new EthashValidationHelperMock(EthashValidationHelper.CacheOrder.direct);
-        CompositeEthereumListener listener = new CompositeEthereumListenerMock();
-        EthashRule rule = new EthashRule(EthashRule.Mode.mixed, EthashRule.ChainType.reverse, listener);
+        Publisher publisher = new Publisher(EventDispatchThread.getDefault());
+        EthashRule rule = new EthashRule(EthashRule.Mode.mixed, EthashRule.ChainType.reverse, publisher);
         rule.ethashHelper = helper;
 
         // trigger cache

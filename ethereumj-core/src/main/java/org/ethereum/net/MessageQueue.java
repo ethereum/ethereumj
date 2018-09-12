@@ -43,14 +43,14 @@ import static org.ethereum.net.message.StaticMessages.DISCONNECT_MESSAGE;
  * This class contains the logic for sending messages in a queue
  *
  * Messages open by send and answered by receive of appropriate message
- *      PING by PONG
- *      GET_PEERS by PEERS
- *      GET_TRANSACTIONS by TRANSACTIONS
- *      GET_BLOCK_HASHES by BLOCK_HASHES
- *      GET_BLOCKS by BLOCKS
+ * PING by PONG
+ * GET_PEERS by PEERS
+ * GET_TRANSACTIONS by TRANSACTIONS
+ * GET_BLOCK_HASHES by BLOCK_HASHES
+ * GET_BLOCKS by BLOCKS
  *
  * The following messages will not be answered:
- *      PONG, PEERS, HELLO, STATUS, TRANSACTIONS, BLOCKS
+ * PONG, PEERS, HELLO, STATUS, TRANSACTIONS, BLOCKS
  *
  * @author Roman Mandeleil
  */

@@ -20,17 +20,15 @@ package org.ethereum.net.rlpx;
 import com.typesafe.config.ConfigFactory;
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.Block;
-import org.ethereum.core.TransactionReceipt;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
-import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.MessageWatcher;
 import org.ethereum.net.shh.WhisperMessage;
+import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.message.MessageReceived;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
@@ -38,9 +36,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.io.FileNotFoundException;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.ethereum.publish.Subscription.to;
 
 /**
  * Created by Anton Nashatyrev on 13.10.2015.
@@ -112,16 +112,13 @@ public class SanityLongRunTest {
 
         final CountDownLatch semaphore = new CountDownLatch(1);
 
-        ethereum2.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onRecvMessage(Channel channel, Message message) {
-                if (message instanceof StatusMessage) {
-                    System.out.println("=== Status received: " + message);
-                    semaphore.countDown();
-                }
+        ethereum2.subscribe(to(MessageReceived.class, messageData -> {
+            Message message = messageData.getMessage();
+            if (message instanceof StatusMessage) {
+                System.out.println("=== Status received: " + message);
+                semaphore.countDown();
             }
-
-        });
+        }));
 
         semaphore.await(60, TimeUnit.SECONDS);
         if(semaphore.getCount() > 0) {
@@ -131,24 +128,20 @@ public class SanityLongRunTest {
         final CountDownLatch semaphoreBlocks = new CountDownLatch(1);
         final CountDownLatch semaphoreFirstBlock = new CountDownLatch(1);
 
-        ethereum2.addListener(new EthereumListenerAdapter() {
-            int blocksCnt = 0;
-
-            @Override
-            public void onBlock(Block block, List<TransactionReceipt> receipts) {
-                blocksCnt++;
-                if (blocksCnt % 1000 == 0 || blocksCnt == 1) {
-                    System.out.println("=== Blocks imported: " + blocksCnt);
-                    if (blocksCnt == 1) {
-                        semaphoreFirstBlock.countDown();
-                    }
-                }
-                if (blocksCnt >= 10_000) {
-                    semaphoreBlocks.countDown();
-                    System.out.println("=== Blocks task done.");
+        AtomicInteger blocksCnt = new AtomicInteger();
+        ethereum2.subscribe(to(BlockAdded.class, data -> {
+            blocksCnt.addAndGet(1);
+            if (blocksCnt.get() % 1000 == 0 || blocksCnt.get() == 1) {
+                System.out.println("=== Blocks imported: " + blocksCnt);
+                if (blocksCnt.get() == 1) {
+                    semaphoreFirstBlock.countDown();
                 }
             }
-        });
+            if (blocksCnt.get() >= 10_000) {
+                semaphoreBlocks.countDown();
+                System.out.println("=== Blocks task done.");
+            }
+        }));
 
         semaphoreFirstBlock.await(180, TimeUnit.SECONDS);
         if(semaphoreFirstBlock.getCount() > 0) {

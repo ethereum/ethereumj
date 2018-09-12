@@ -17,14 +17,12 @@
  */
 package org.ethereum.samples;
 
-import org.ethereum.core.Block;
-import org.ethereum.core.PendingState;
-import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionReceipt;
+import org.ethereum.core.*;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.PendingTransactionUpdated;
 import org.ethereum.util.ByteUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -32,21 +30,23 @@ import org.springframework.context.annotation.Bean;
 import java.math.BigInteger;
 import java.util.*;
 
+import static org.ethereum.publish.event.PendingTransactionUpdated.State.NEW_PENDING;
+import static org.ethereum.publish.Subscription.to;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * PendingState is the ability to track the changes made by transaction immediately and not wait for
  * the block containing that transaction.
- *
+ * <p>
  * This sample connects to the test network (it has a lot of free Ethers) and starts periodically
  * transferring funds to a random address. The pending state is monitored and you may see that
  * while the actual receiver balance remains the same right after transaction sent the pending
  * state reflects balance change immediately.
- *
+ * <p>
  * While new blocks are arrived the sample monitors which of our transactions are included ot those blocks.
  * After each 5 transactions the sample stops sending transactions and waits for all transactions
  * are cleared (included to blocks) so the actual and pending receiver balances become equal.
- *
+ * <p>
  * Created by Anton Nashatyrev on 05.02.2016.
  */
 public class PendingStateSample extends TestNetSample {
@@ -64,21 +64,12 @@ public class PendingStateSample extends TestNetSample {
 
     @Override
     public void onSyncDone() {
-        ethereum.addListener(new EthereumListenerAdapter() {
-            // listening here when the PendingState is updated with new transactions
-            @Override
-            public void onPendingTransactionsReceived(List<Transaction> transactions) {
-                for (Transaction tx : transactions) {
-                    PendingStateSample.this.onPendingTransactionReceived(tx);
-                }
-            }
-
-            // when block arrives look for our included transactions
-            @Override
-            public void onBlock(Block block, List<TransactionReceipt> receipts) {
-                PendingStateSample.this.onBlock(block, receipts);
-            }
-        });
+        this.ethereum
+                // listening here when the PendingState is updated with new transactions
+                .subscribe(to(PendingTransactionUpdated.class, data -> onPendingTransactionReceived(data.getReceipt().getTransaction()))
+                        .conditionally(data -> data.getState() == NEW_PENDING))
+                // when block arrives look for our included transactions
+                .subscribe(to(BlockAdded.class, d -> onBlock(d)));
 
         new Thread(() -> {
             try {
@@ -100,7 +91,7 @@ public class PendingStateSample extends TestNetSample {
 
         int weisToSend = 100;
         int count = 0;
-        while(true) {
+        while (true) {
             if (count < 5) {
                 Transaction tx = new Transaction(
                         ByteUtil.bigIntegerToBytes(nonce),
@@ -129,9 +120,9 @@ public class PendingStateSample extends TestNetSample {
     }
 
     /**
-     *  The PendingState is updated with a new pending transactions.
-     *  Prints the current receiver balance (based on blocks) and the pending balance
-     *  which should immediately reflect receiver balance change
+     * The PendingState is updated with a new pending transactions.
+     * Prints the current receiver balance (based on blocks) and the pending balance
+     * which should immediately reflect receiver balance change
      */
     void onPendingTransactionReceived(Transaction tx) {
         logger.info("onPendingTransactionReceived: " + tx);
@@ -151,6 +142,11 @@ public class PendingStateSample extends TestNetSample {
      * For each block we are looking for our transactions and clearing them
      * The actual receiver balance is confirmed upon block arrival
      */
+    public void onBlock(BlockAdded.Data data) {
+        BlockSummary blockSummary = data.getBlockSummary();
+        onBlock(blockSummary.getBlock(), blockSummary.getReceipts());
+    }
+
     public void onBlock(Block block, List<TransactionReceipt> receipts) {
         int cleared = 0;
         for (Transaction tx : block.getTransactionsList()) {
@@ -175,7 +171,7 @@ public class PendingStateSample extends TestNetSample {
     public static void main(String[] args) throws Exception {
         sLogger.info("Starting EthereumJ!");
 
-        class Config extends TestNetConfig{
+        class Config extends TestNetConfig {
             @Override
             @Bean
             public TestNetSample sampleBean() {

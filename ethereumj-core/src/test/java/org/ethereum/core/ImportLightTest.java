@@ -22,12 +22,13 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.NoDeleteSource;
+import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.RepositoryRoot;
-import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.mine.Ethash;
+import org.ethereum.listener.BackwardCompatibilityEthereumListenerProxy;
+import org.ethereum.publish.event.TransactionExecuted;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.blockchain.SolidityContract;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
@@ -43,6 +44,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.*;
+
+import static org.ethereum.publish.Subscription.to;
 
 /**
  * Created by Anton Nashatyrev on 29.12.2015.
@@ -351,24 +354,24 @@ public class ImportLightTest {
 
         String contractSrc =
                 "contract Child {" +
-                "  int a;" +
-                "  int b;" +
-                "  int public c;" +
-                "  function Child(int i) {" +
-                "    a = 333 + i;" +
-                "    b = 444 + i;" +
-                "  }" +
-                "  function sum() {" +
-                "    c = a + b;" +
-                "  }" +
-                "}" +
-                "contract Parent {" +
-                "  address public child;" +
-                "  function createChild(int a) returns (address) {" +
-                "    child = new Child(a);" +
-                "    return child;" +
-                "  }" +
-                "}";
+                        "  int a;" +
+                        "  int b;" +
+                        "  int public c;" +
+                        "  function Child(int i) {" +
+                        "    a = 333 + i;" +
+                        "    b = 444 + i;" +
+                        "  }" +
+                        "  function sum() {" +
+                        "    c = a + b;" +
+                        "  }" +
+                        "}" +
+                        "contract Parent {" +
+                        "  address public child;" +
+                        "  function createChild(int a) returns (address) {" +
+                        "    child = new Child(a);" +
+                        "    return child;" +
+                        "  }" +
+                        "}";
 
         StandaloneBlockchain bc = new StandaloneBlockchain();
         SolidityContract parent = bc.submitNewContract(contractSrc, "Parent");
@@ -390,17 +393,17 @@ public class ImportLightTest {
         // Test creation of the contract on forked branch with different storage
         String contractSrc =
                 "contract A {" +
-                "  int public a;" +
-                "  function A() {" +
-                "    a = 333;" +
-                "  }" +
-                "}" +
-                "contract B {" +
-                "  int public a;" +
-                "  function B() {" +
-                "    a = 111;" +
-                "  }" +
-                "}";
+                        "  int public a;" +
+                        "  function A() {" +
+                        "    a = 333;" +
+                        "  }" +
+                        "}" +
+                        "contract B {" +
+                        "  int public a;" +
+                        "  function B() {" +
+                        "    a = 111;" +
+                        "  }" +
+                        "}";
 
         {
             StandaloneBlockchain bc = new StandaloneBlockchain();
@@ -425,20 +428,20 @@ public class ImportLightTest {
         // checks that correct msg.value is passed when contract internally created with value
         String contract =
                 "pragma solidity ^0.4.3;\n" +
-                "contract B {\n" +
-                "      uint public valReceived;\n" +
-                "      \n" +
-                "      function B() payable {\n" +
-                "        valReceived = msg.value;\n" +
-                "      }\n" +
-                "}\n" +
-                "contract A {\n" +
-                "    function () payable { }\n" +
-                "    address public child;\n" +
-                "    function create() payable {\n" +
-                "        child = (new B).value(20)();\n" +
-                "    }\n" +
-                "}";
+                        "contract B {\n" +
+                        "      uint public valReceived;\n" +
+                        "      \n" +
+                        "      function B() payable {\n" +
+                        "        valReceived = msg.value;\n" +
+                        "      }\n" +
+                        "}\n" +
+                        "contract A {\n" +
+                        "    function () payable { }\n" +
+                        "    address public child;\n" +
+                        "    function create() payable {\n" +
+                        "        child = (new B).value(20)();\n" +
+                        "    }\n" +
+                        "}";
         StandaloneBlockchain bc = new StandaloneBlockchain().withAutoblock(true);
         SolidityContract a = bc.submitNewContract(contract, "A");
         bc.sendEther(a.getAddress(), BigInteger.valueOf(10_000));
@@ -453,17 +456,17 @@ public class ImportLightTest {
     public void contractCodeForkTest() throws IOException, InterruptedException {
         String contractA =
                 "contract A {" +
-                "  function call() returns (uint) {" +
-                "    return 111;" +
-                "  }" +
-                "}";
+                        "  function call() returns (uint) {" +
+                        "    return 111;" +
+                        "  }" +
+                        "}";
 
         String contractB =
                 "contract B {" +
-                "  function call() returns (uint) {" +
-                "    return 222222;" +
-                "  }" +
-                "}";
+                        "  function call() returns (uint) {" +
+                        "    return 222222;" +
+                        "  }" +
+                        "}";
 
         StandaloneBlockchain bc = new StandaloneBlockchain();
         Block b1 = bc.createBlock();
@@ -485,18 +488,18 @@ public class ImportLightTest {
         byte[] addr = Hex.decode("0101010101010101010101010101010101010101");
         String contractA =
                 "pragma solidity ^0.4.3;" +
-                "contract B { function dummy() {}}" +
-                "contract A {" +
-                "  function callBalance() returns (uint) {" +
-                "    address addr = 0x" + Hex.toHexString(addr) + ";" +
-                "    uint bal = addr.balance;" +
-                "  }" +
-                "  function callMethod() returns (uint) {" +
-                "    address addr = 0x" + Hex.toHexString(addr) + ";" +
-                "    B b = B(addr);" +
-                "    b.dummy();" +
-                "  }" +
-                "}";
+                        "contract B { function dummy() {}}" +
+                        "contract A {" +
+                        "  function callBalance() returns (uint) {" +
+                        "    address addr = 0x" + Hex.toHexString(addr) + ";" +
+                        "    uint bal = addr.balance;" +
+                        "  }" +
+                        "  function callMethod() returns (uint) {" +
+                        "    address addr = 0x" + Hex.toHexString(addr) + ";" +
+                        "    B b = B(addr);" +
+                        "    b.dummy();" +
+                        "  }" +
+                        "}";
 
         StandaloneBlockchain bc = new StandaloneBlockchain()
                 .withGasPrice(1)
@@ -552,10 +555,10 @@ public class ImportLightTest {
     public void deepRecursionTest() throws Exception {
         String contractA =
                 "contract A {" +
-                "  function recursive(){" +
-                "    this.recursive();" +
-                "  }" +
-                "}";
+                        "  function recursive(){" +
+                        "    this.recursive();" +
+                        "  }" +
+                        "}";
 
         StandaloneBlockchain bc = new StandaloneBlockchain().withGasLimit(5_000_000);
         SolidityContract a = bc.submitNewContract(contractA, "A");
@@ -570,10 +573,10 @@ public class ImportLightTest {
     public void prevBlockHashOnFork() throws Exception {
         String contractA =
                 "contract A {" +
-                "  bytes32 public blockHash;" +
-                "  function a(){" +
-                "    blockHash = block.blockhash(block.number - 1);" +
-                "  }" +
+                        "  bytes32 public blockHash;" +
+                        "  function a(){" +
+                        "    blockHash = block.blockhash(block.number - 1);" +
+                        "  }" +
                         "}";
 
         StandaloneBlockchain bc = new StandaloneBlockchain();
@@ -598,19 +601,19 @@ public class ImportLightTest {
     public void rollbackInternalTx() throws Exception {
         String contractA =
                 "contract A {" +
-                "  uint public a;" +
-                "  uint public b;" +
-                "  function f() {" +
-                "    b = 1;" +
-                "    this.call(bytes4(sha3('exception()')));" +
-                "    a = 2;" +
-                "  }" +
+                        "  uint public a;" +
+                        "  uint public b;" +
+                        "  function f() {" +
+                        "    b = 1;" +
+                        "    this.call(bytes4(sha3('exception()')));" +
+                        "    a = 2;" +
+                        "  }" +
 
-                "  function exception() {" +
-                "    b = 2;" +
-                "    throw;" +
-                "  }" +
-                "}";
+                        "  function exception() {" +
+                        "    b = 2;" +
+                        "    throw;" +
+                        "  }" +
+                        "}";
 
         StandaloneBlockchain bc = new StandaloneBlockchain();
         SolidityContract a = bc.submitNewContract(contractA);
@@ -663,15 +666,15 @@ public class ImportLightTest {
     public void threadRacePendingTest() throws Exception {
         String contractA =
                 "contract A {" +
-                "  uint[32] public somedata1;" +
-                "  uint[32] public somedata2;" +
-                "  function set1(uint idx, uint val){" +
-                "    somedata1[idx] = val;" +
-                "  }" +
-                "  function set2(uint idx, uint val){" +
-                "    somedata2[idx] = val;" +
-                "  }" +
-                "}";
+                        "  uint[32] public somedata1;" +
+                        "  uint[32] public somedata2;" +
+                        "  function set1(uint idx, uint val){" +
+                        "    somedata1[idx] = val;" +
+                        "  }" +
+                        "  function set2(uint idx, uint val){" +
+                        "    somedata2[idx] = val;" +
+                        "  }" +
+                        "}";
 
         final StandaloneBlockchain bc = new StandaloneBlockchain();
         final StandaloneBlockchain.SolidityContractImpl a = (StandaloneBlockchain.SolidityContractImpl) bc.submitNewContract(contractA);
@@ -699,7 +702,7 @@ public class ImportLightTest {
         }).start();
 
         Block b_1 = null;
-        while(cnt++ > 0) {
+        while (cnt++ > 0) {
             long s = System.nanoTime();
 
             a.callFunction("set1", cnt % 32, cnt);
@@ -746,14 +749,12 @@ public class ImportLightTest {
     }
 
 
-
-
     @Test
     public void suicideInFailedCall() throws Exception {
         // check that if a contract is suicide in call which is failed (thus suicide is reverted)
         // the refund for this suicide is not added
         String contractA =
-                        "contract B {" +
+                "contract B {" +
                         "  function f(){" +
                         "    suicide(msg.sender);" +
                         "  }" +
@@ -773,12 +774,7 @@ public class ImportLightTest {
         SolidityContract a = bc.submitNewContract(contractA, "A");
         bc.createBlock();
         final BigInteger[] refund = new BigInteger[1];
-        bc.addEthereumListener(new EthereumListenerAdapter() {
-            @Override
-            public void onTransactionExecuted(TransactionExecutionSummary summary) {
-                refund[0] = summary.getGasRefund();
-            }
-        });
+        bc.subscribe(to(TransactionExecuted.class, tes -> refund[0] = tes.getGasRefund()));
         a.callFunction("f");
         bc.createBlock();
 
@@ -792,7 +788,7 @@ public class ImportLightTest {
         // check that if a contract is suicide in call which is failed (thus suicide is reverted)
         // the refund for this suicide is not added
         String contractA =
-                        "contract A {" +
+                "contract A {" +
                         "  function f(){" +
                         "    this.call(bytes4(sha3('bad()')));" +
                         "  }" +
@@ -806,12 +802,7 @@ public class ImportLightTest {
         SolidityContract a = bc.submitNewContract(contractA, "A");
         bc.createBlock();
         final List<LogInfo> logs = new ArrayList<>();
-        bc.addEthereumListener(new EthereumListenerAdapter() {
-            @Override
-            public void onTransactionExecuted(TransactionExecutionSummary summary) {
-                logs.addAll(summary.getLogs());
-            }
-        });
+        bc.subscribe(to(TransactionExecuted.class, tes -> logs.addAll(tes.getLogs())));
         a.callFunction("f");
         bc.createBlock();
 
@@ -853,7 +844,7 @@ public class ImportLightTest {
         Assert.assertArrayEquals(key.getAddress(), (byte[]) ret[0]);
 
         ret = a.callConstFunction("f", hash,
-                ByteUtil.merge(new byte[] {1}, new byte[30], new byte[]{signature.v}),
+                ByteUtil.merge(new byte[]{1}, new byte[30], new byte[]{signature.v}),
                 ByteUtil.bigIntegerToBytes(signature.r, 32),
                 ByteUtil.bigIntegerToBytes(signature.s, 32));
 
@@ -895,16 +886,16 @@ public class ImportLightTest {
         RepositoryRoot repository = new RepositoryRoot(new NoDeleteSource<>(new HashMapDB<byte[]>()));
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
-        EthereumListenerAdapter listener = new EthereumListenerAdapter();
 
-        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository)
+        BackwardCompatibilityEthereumListenerProxy listenerProxy = BackwardCompatibilityEthereumListenerProxy.createDefault();
+        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, listenerProxy)
                 .withParentBlockHeaderValidator(new CommonConfig().parentHeaderValidator());
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
 
         blockchain.byTest = true;
 
-        PendingStateImpl pendingState = new PendingStateImpl(listener);
+        PendingStateImpl pendingState = new PendingStateImpl(listenerProxy);
 
         pendingState.setBlockchain(blockchain);
         blockchain.setPendingState(pendingState);

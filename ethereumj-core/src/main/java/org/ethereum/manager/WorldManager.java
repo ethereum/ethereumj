@@ -18,34 +18,45 @@
 package org.ethereum.manager;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockSummary;
+import org.ethereum.core.Blockchain;
+import org.ethereum.core.BlockchainImpl;
+import org.ethereum.core.EventDispatchThread;
+import org.ethereum.core.Genesis;
+import org.ethereum.core.PendingState;
+import org.ethereum.core.Repository;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.HeaderStore;
 import org.ethereum.db.migrate.MigrateHeaderSourceTotalDiff;
-import org.ethereum.listener.CompositeEthereumListener;
+import org.ethereum.listener.BackwardCompatibilityEthereumListenerProxy;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
+import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.rlpx.discover.UDPListener;
+import org.ethereum.net.server.ChannelManager;
+import org.ethereum.publish.Publisher;
+import org.ethereum.publish.Subscription;
 import org.ethereum.sync.FastSyncManager;
 import org.ethereum.sync.SyncManager;
-import org.ethereum.net.rlpx.discover.NodeManager;
-import org.ethereum.net.server.ChannelManager;
 import org.ethereum.sync.SyncPool;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.util.ByteUtil.toHexString;
 
@@ -56,7 +67,7 @@ import static org.ethereum.util.ByteUtil.toHexString;
  * @since 01.06.2014
  */
 @Component
-public class WorldManager {
+public class WorldManager implements ApplicationContextAware {
 
     private static final Logger logger = LoggerFactory.getLogger("general");
 
@@ -65,9 +76,6 @@ public class WorldManager {
 
     @Autowired
     private ChannelManager channelManager;
-
-    @Autowired
-    private AdminInfo adminInfo;
 
     @Autowired
     private NodeManager nodeManager;
@@ -90,28 +98,23 @@ public class WorldManager {
     @Autowired
     private DbFlushManager dbFlushManager;
 
-    @Autowired
     private ApplicationContext ctx;
-
-    private SystemProperties config;
-
-    private EthereumListener listener;
-
-    private Blockchain blockchain;
-
-    private Repository repository;
-
-    private BlockStore blockStore;
+    private final SystemProperties config;
+    private final EthereumListener listener;
+    private final Blockchain blockchain;
+    private final Repository repository;
+    private final BlockStore blockStore;
 
     @Autowired
-    public WorldManager(final SystemProperties config, final Repository repository,
-                        final EthereumListener listener, final Blockchain blockchain,
-                        final BlockStore blockStore) {
+    public WorldManager(SystemProperties config, Repository repository, EthereumListener listener,
+                        Blockchain blockchain, BlockStore blockStore) {
+
         this.listener = listener;
         this.blockchain = blockchain;
         this.repository = repository;
         this.blockStore = blockStore;
         this.config = config;
+
         loadBlockchain();
     }
 
@@ -121,9 +124,25 @@ public class WorldManager {
         syncManager.init(channelManager, pool);
     }
 
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.ctx = applicationContext;
+    }
+
+    /**
+     * @param listener
+     * @deprecated use #subscription instead.
+     */
+    @Deprecated
     public void addListener(EthereumListener listener) {
         logger.info("Ethereum listener added");
-        ((CompositeEthereumListener) this.listener).addListener(listener);
+        ((BackwardCompatibilityEthereumListenerProxy) listener).getCompositeListener().addListener(listener);
+    }
+
+
+    public Publisher subscribe(Subscription subscription) {
+        return getPublisher().subscribe(subscription);
     }
 
     public void startPeerDiscovery() {
@@ -143,12 +162,21 @@ public class WorldManager {
         return channelManager;
     }
 
+    /**
+     * @return
+     * @deprecated use {@link #getPublisher()} instead.
+     */
+    @Deprecated
     public EthereumListener getListener() {
         return listener;
     }
 
+    public Publisher getPublisher() {
+        return ((BackwardCompatibilityEthereumListenerProxy) listener).getPublisher();
+    }
+
     public org.ethereum.facade.Repository getRepository() {
-        return (org.ethereum.facade.Repository)repository;
+        return repository;
     }
 
     public Blockchain getBlockchain() {
@@ -186,7 +214,7 @@ public class WorldManager {
             blockchain.setBestBlock(Genesis.getInstance(config));
             blockchain.setTotalDifficulty(Genesis.getInstance(config).getDifficultyBI());
 
-            listener.onBlock(new BlockSummary(Genesis.getInstance(config), new HashMap<byte[], BigInteger>(), new ArrayList<TransactionReceipt>(), new ArrayList<TransactionExecutionSummary>()), true);
+            listener.onBlock(new BlockSummary(Genesis.getInstance(config), emptyMap(), emptyList(), emptyList()), true);
 //            repository.dumpState(Genesis.getInstance(config), 0, 0, null);
 
             logger.info("Genesis block loaded");

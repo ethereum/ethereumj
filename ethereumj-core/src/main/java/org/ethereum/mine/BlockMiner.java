@@ -27,9 +27,10 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumImpl;
-import org.ethereum.listener.CompositeEthereumListener;
-import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.mine.MinerIfc.MiningResult;
+import org.ethereum.publish.Publisher;
+import org.ethereum.publish.event.PendingStateChanged;
+import org.ethereum.publish.event.SyncDone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,20 +38,21 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static java.lang.Math.max;
+import static org.ethereum.publish.Subscription.to;
 
 /**
  * Manages embedded CPU mining and allows to use external miners.
- *
+ * <p>
  * Created by Anton Nashatyrev on 10.12.2015.
  */
 @Component
 public class BlockMiner {
     private static final Logger logger = LoggerFactory.getLogger("mine");
-
-    private static ExecutorService executor = Executors.newSingleThreadExecutor();
 
     private Blockchain blockchain;
 
@@ -60,8 +62,6 @@ public class BlockMiner {
     private Ethereum ethereum;
 
     protected PendingState pendingState;
-
-    private CompositeEthereumListener listener;
 
     private SystemProperties config;
 
@@ -82,34 +82,29 @@ public class BlockMiner {
     private int UNCLE_GENERATION_LIMIT;
 
     @Autowired
-    public BlockMiner(final SystemProperties config, final CompositeEthereumListener listener,
+    public BlockMiner(final SystemProperties config, Publisher publisher,
                       final Blockchain blockchain, final BlockStore blockStore,
                       final PendingState pendingState) {
-        this.listener = listener;
         this.config = config;
         this.blockchain = blockchain;
         this.blockStore = blockStore;
         this.pendingState = pendingState;
-        UNCLE_LIST_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_LIST_LIMIT();
-        UNCLE_GENERATION_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_GENERATION_LIMIT();
-        minGasPrice = config.getMineMinGasPrice();
-        minBlockTimeout = config.getMineMinBlockTimeoutMsec();
-        cpuThreads = config.getMineCpuThreads();
-        fullMining = config.isMineFullDataset();
-        listener.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onPendingStateChanged(PendingState pendingState) {
-                BlockMiner.this.onPendingStateChanged();
-            }
+        this.UNCLE_LIST_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_LIST_LIMIT();
+        this.UNCLE_GENERATION_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_GENERATION_LIMIT();
+        this.minGasPrice = config.getMineMinGasPrice();
+        this.minBlockTimeout = config.getMineMinBlockTimeoutMsec();
+        this.cpuThreads = config.getMineCpuThreads();
+        this.fullMining = config.isMineFullDataset();
 
-            @Override
-            public void onSyncDone(SyncState state) {
-                if (config.minerStart() && config.isSyncEnabled()) {
-                    logger.info("Sync complete, start mining...");
-                    startMining();
-                }
-            }
-        });
+        publisher
+                .subscribe(to(PendingStateChanged.class, ps -> onPendingStateChanged()))
+                .subscribe(to(SyncDone.class, s -> {
+                    if (config.minerStart() && config.isSyncEnabled()) {
+                        logger.info("Sync complete, start mining...");
+                        startMining();
+                    }
+                }));
+
 
         if (config.minerStart() && !config.isSyncEnabled()) {
             logger.info("Sync disabled, start mining now...");
@@ -152,7 +147,7 @@ public class BlockMiner {
         PendingStateImpl.TransactionSortedSet ret = new PendingStateImpl.TransactionSortedSet();
         ret.addAll(pendingState.getPendingTransactions());
         Iterator<Transaction> it = ret.iterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             Transaction tx = it.next();
             if (!isAcceptableTx(tx)) {
                 logger.debug("Miner excluded the transaction: {}", tx);
@@ -211,7 +206,7 @@ public class BlockMiner {
 
         long limitNum = max(0, miningNum - UNCLE_GENERATION_LIMIT);
         Set<ByteArrayWrapper> ancestors = BlockchainImpl.getAncestors(blockStore, mineBest, UNCLE_GENERATION_LIMIT + 1, true);
-        Set<ByteArrayWrapper> knownUncles = ((BlockchainImpl)blockchain).getUsedUncles(blockStore, mineBest, true);
+        Set<ByteArrayWrapper> knownUncles = ((BlockchainImpl) blockchain).getUsedUncles(blockStore, mineBest, true);
         knownUncles.addAll(ancestors);
         knownUncles.add(new ByteArrayWrapper(mineBest.getHash()));
 
@@ -254,7 +249,7 @@ public class BlockMiner {
     protected void restartMining() {
         Block newMiningBlock = getNewBlockForMining();
 
-        synchronized(this) {
+        synchronized (this) {
             cancelCurrentBlock();
             miningBlock = newMiningBlock;
 

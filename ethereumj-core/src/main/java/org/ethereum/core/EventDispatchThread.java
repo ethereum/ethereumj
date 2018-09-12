@@ -35,7 +35,7 @@ import java.util.concurrent.*;
  * Created by Anton Nashatyrev on 29.12.2015.
  */
 @Component
-public class EventDispatchThread {
+public class EventDispatchThread implements Executor {
     private static final Logger logger = LoggerFactory.getLogger("blockchain");
     private static EventDispatchThread eventDispatchThread;
 
@@ -65,6 +65,11 @@ public class EventDispatchThread {
             };
         }
         return eventDispatchThread;
+    }
+
+    @Override
+    public void execute(Runnable command) {
+        invokeLater(command);
     }
 
     public void invokeLater(final Runnable r) {

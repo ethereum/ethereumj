@@ -17,17 +17,20 @@
  */
 package org.ethereum.facade;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockSummary;
+import org.ethereum.core.CallTransaction;
+import org.ethereum.core.ImportResult;
 import org.ethereum.core.PendingState;
 import org.ethereum.core.Repository;
+import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionExecutionSummary;
+import org.ethereum.core.TransactionReceipt;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.listener.GasPriceTracker;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.manager.BlockLoader;
@@ -39,6 +42,10 @@ import org.ethereum.net.server.ChannelManager;
 import org.ethereum.net.shh.Whisper;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
+import org.ethereum.publish.Publisher;
+import org.ethereum.publish.Subscription;
+import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.Event;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.program.ProgramResult;
@@ -53,13 +60,19 @@ import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.util.concurrent.FutureAdapter;
 
+import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.net.InetAddress;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
+import static org.ethereum.publish.Subscription.to;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
@@ -104,18 +117,18 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
 
     private SystemProperties config;
 
-    private CompositeEthereumListener compositeEthereumListener;
-
-
     private GasPriceTracker gasPriceTracker = new GasPriceTracker();
 
     @Autowired
-    public EthereumImpl(final SystemProperties config, final CompositeEthereumListener compositeEthereumListener) {
-        this.compositeEthereumListener = compositeEthereumListener;
+    public EthereumImpl(final SystemProperties config) {
         this.config = config;
         System.out.println();
-        this.compositeEthereumListener.addListener(gasPriceTracker);
         gLogger.info("EthereumJ node started: enode://" + toHexString(config.nodeId()) + "@" + config.externalIp() + ":" + config.listenPort());
+    }
+
+    @PostConstruct
+    public void init() {
+        worldManager.subscribe(to(BlockAdded.class, data -> gasPriceTracker.onBlock(data.getBlockSummary())));
     }
 
     @Override
@@ -165,6 +178,21 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
     @Override
     public void addListener(EthereumListener listener) {
         worldManager.addListener(listener);
+    }
+
+    @Override
+    public Publisher subscribe(Subscription subscription) {
+        return worldManager.getPublisher().subscribe(subscription);
+    }
+
+    @Override
+    public <T> Publisher subscribe(Class<? extends Event<T>> type, Consumer<T> handler) {
+        return subscribe(to(type, handler));
+    }
+
+    @Override
+    public <T> Publisher subscribe(Class<? extends Event<T>> type, BiConsumer<T, Subscription.LifeCycle> handler) {
+        return subscribe(to(type, handler));
     }
 
     @Override
@@ -284,7 +312,7 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
         try {
             org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor
                     (tx, block.getCoinbase(), repository, worldManager.getBlockStore(),
-                            programInvokeFactory, block, new EthereumListenerAdapter(), 0)
+                            programInvokeFactory, block, EthereumListener.EMPTY, 0)
                     .withCommonConfig(commonConfig)
                     .setLocalCall(true);
 
@@ -421,10 +449,12 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
     }
 
     @Override
-    public void start() {}
+    public void start() {
+    }
 
     @Override
-    public void stop() {}
+    public void stop() {
+    }
 
     @Override
     public boolean isRunning() {

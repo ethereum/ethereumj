@@ -27,18 +27,25 @@ import org.ethereum.net.server.Channel;
 import java.util.List;
 
 /**
+ * Uses expensive enough logic for delivery events to client.<br>
+ * Will be removed in future releases.
+ *
  * @author Roman Mandeleil
  * @since 27.07.2014
+ * @deprecated use {@link org.ethereum.publish.Publisher} instead.
  */
 public interface EthereumListener {
 
+    /**
+     * Will be extracted to separate enum in future releases after {@link EthereumListener} eviction.
+     */
     enum PendingTransactionState {
         /**
          * Transaction may be dropped due to:
          * - Invalid transaction (invalid nonce, low gas price, insufficient account funds,
-         *         invalid signature)
+         * invalid signature)
          * - Timeout (when pending transaction is not included to any block for
-         *         last [transaction.outdated.threshold] blocks
+         * last [transaction.outdated.threshold] blocks
          * This is the final state
          */
         DROPPED,
@@ -62,7 +69,7 @@ public interface EthereumListener {
          * This could be the final state, however next state could also be
          * PENDING: when a fork became the main chain but doesn't include this tx
          * INCLUDED: when a fork became the main chain and tx is included into another
-         *           block from the new main chain
+         * block from the new main chain
          * DROPPED: If switched to a new (long enough) main chain without this Tx
          */
         INCLUDED;
@@ -72,6 +79,9 @@ public interface EthereumListener {
         }
     }
 
+    /**
+     * Will be extracted to separate enum in future releases after {@link EthereumListener} eviction.
+     */
     enum SyncState {
         /**
          * When doing fast sync UNSECURE sync means that the full state is downloaded,
@@ -135,9 +145,9 @@ public interface EthereumListener {
      * Is called when PendingTransaction arrives, executed or dropped and included to a block
      *
      * @param txReceipt Receipt of the tx execution on the current PendingState
-     * @param state Current state of pending tx
-     * @param block The block which the current pending state is based on (for PENDING tx state)
-     *              or the block which tx was included to (for INCLUDED state)
+     * @param state     Current state of pending tx
+     * @param block     The block which the current pending state is based on (for PENDING tx state)
+     *                  or the block which tx was included to (for INCLUDED state)
      */
     void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state, Block block);
 
@@ -150,4 +160,6 @@ public interface EthereumListener {
     void onTransactionExecuted(TransactionExecutionSummary summary);
 
     void onPeerAddedToSyncPool(Channel peer);
+
+    EthereumListener EMPTY = new EthereumListenerAdapter();
 }

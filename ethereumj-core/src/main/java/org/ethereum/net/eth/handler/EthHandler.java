@@ -19,27 +19,31 @@ package org.ethereum.net.eth.handler;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.core.Block;
+import org.ethereum.core.Blockchain;
 import org.ethereum.db.BlockStore;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.config.SystemProperties;
-import org.ethereum.core.*;
-import org.ethereum.listener.CompositeEthereumListener;
-import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.eth.EthVersion;
-import org.ethereum.net.eth.message.*;
+import org.ethereum.net.eth.message.EthMessage;
+import org.ethereum.net.eth.message.EthMessageCodes;
+import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.server.Channel;
+import org.ethereum.listener.BackwardCompatibilityEthereumListenerProxy;
+import org.ethereum.publish.Publisher;
+import org.ethereum.publish.Subscription;
+import org.ethereum.publish.event.BlockAdded;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import static java.lang.String.format;
 
 /**
  * Process the messages between peers with 'eth' capability on the network<br>
  * Contains common logic to all supported versions
  * delegating version specific stuff to its descendants
- *
  */
 public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage> implements Eth {
 
@@ -49,7 +53,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     protected SystemProperties config;
 
-    protected CompositeEthereumListener ethereumListener;
+    protected EthereumListener ethereumListener;
 
     protected Channel channel;
 
@@ -60,12 +64,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     protected boolean peerDiscoveryMode = false;
 
     protected Block bestBlock;
-    protected EthereumListener listener = new EthereumListenerAdapter() {
-        @Override
-        public void onBlock(Block block, List<TransactionReceipt> receipts) {
-            bestBlock = block;
-        }
-    };
+    private Subscription<BlockAdded, BlockAdded.Data> bestBlockSub;
 
     protected boolean processTransactions = false;
 
@@ -75,15 +74,21 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     protected EthHandler(final EthVersion version, final SystemProperties config,
                          final Blockchain blockchain, final BlockStore blockStore,
-                         final CompositeEthereumListener ethereumListener) {
+                         final EthereumListener listener) {
         this.version = version;
         this.config = config;
-        this.ethereumListener = ethereumListener;
         this.blockchain = blockchain;
-        bestBlock = blockStore.getBestBlock();
-        this.ethereumListener.addListener(listener);
+        this.bestBlock = blockStore.getBestBlock();
+        this.ethereumListener = listener;
+        this.bestBlockSub = Subscription.to(BlockAdded.class, this::setBestBlock);
+        getPublisher().subscribe(this.bestBlockSub);
+
         // when sync enabled we delay transactions processing until sync is complete
-        processTransactions = !config.isSyncEnabled();
+        this.processTransactions = !config.isSyncEnabled();
+    }
+
+    private void setBestBlock(BlockAdded.Data data) {
+        this.bestBlock = data.getBlockSummary().getBlock();
     }
 
     @Override
@@ -99,6 +104,10 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         msgQueue.receivedMessage(msg);
     }
 
+    public Publisher getPublisher() {
+        return ((BackwardCompatibilityEthereumListenerProxy) ethereumListener).getPublisher();
+    }
+
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         logger.warn("Eth handling failed", cause);
@@ -108,7 +117,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
         logger.debug("handlerRemoved: kill timers in EthHandler");
-        ethereumListener.removeListener(listener);
+        getPublisher().unsubscribe(bestBlockSub);
         onShutdown();
     }
 

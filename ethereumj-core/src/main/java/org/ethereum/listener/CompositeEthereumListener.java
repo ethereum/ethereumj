@@ -23,16 +23,17 @@ import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executor;
 
 /**
+ * @deprecated use {@link org.ethereum.publish.Publisher} instead.
  * @author Roman Mandeleil
  * @since 12.11.2014
  */
+@Deprecated
 public class CompositeEthereumListener implements EthereumListener {
 
     private static abstract class RunnableInfo implements Runnable {
@@ -50,10 +51,14 @@ public class CompositeEthereumListener implements EthereumListener {
         }
     }
 
-    @Autowired
-    EventDispatchThread eventDispatchThread = EventDispatchThread.getDefault();
-    
-    protected List<EthereumListener> listeners = new CopyOnWriteArrayList<>();
+    private final Executor executor;
+    private final List<EthereumListener> listeners;
+
+
+    public CompositeEthereumListener(Executor executor) {
+        this.executor = executor;
+        this.listeners = new CopyOnWriteArrayList<>();
+    }
 
     public void addListener(EthereumListener listener) {
         listeners.add(listener);
@@ -65,7 +70,7 @@ public class CompositeEthereumListener implements EthereumListener {
     @Override
     public void trace(final String output) {
         for (final EthereumListener listener : listeners) {
-            eventDispatchThread.invokeLater(new RunnableInfo(listener, "trace") {
+            executor.execute(new RunnableInfo(listener, "trace") {
                 @Override
                 public void run() {
                     listener.trace(output);
@@ -77,7 +82,7 @@ public class CompositeEthereumListener implements EthereumListener {
     @Override
     public void onBlock(final BlockSummary blockSummary) {
         for (final EthereumListener listener : listeners) {
-            eventDispatchThread.invokeLater(new RunnableInfo(listener, "onBlock") {
+            executor.execute(new RunnableInfo(listener, "onBlock") {
                 @Override
                 public void run() {
                     listener.onBlock(blockSummary);
@@ -89,7 +94,7 @@ public class CompositeEthereumListener implements EthereumListener {
     @Override
     public void onBlock(final BlockSummary blockSummary, final boolean best) {
         for (final EthereumListener listener : listeners) {
-            eventDispatchThread.invokeLater(new RunnableInfo(listener, "onBlock") {
+            executor.execute(new RunnableInfo(listener, "onBlock") {
                 @Override
                 public void run() {
                     listener.onBlock(blockSummary, best);
@@ -101,7 +106,7 @@ public class CompositeEthereumListener implements EthereumListener {
     @Override
     public void onRecvMessage(final Channel channel, final Message message) {
         for (final EthereumListener listener : listeners) {
-            eventDispatchThread.invokeLater(new RunnableInfo(listener, "onRecvMessage") {
+            executor.execute(new RunnableInfo(listener, "onRecvMessage") {
                 @Override
                 public void run() {
                     listener.onRecvMessage(channel, message);
@@ -113,7 +118,7 @@ public class CompositeEthereumListener implements EthereumListener {
     @Override
     public void onSendMessage(final Channel channel, final Message message) {
         for (final EthereumListener listener : listeners) {
-            eventDispatchThread.invokeLater(new RunnableInfo(listener, "onSendMessage") {
+            executor.execute(new RunnableInfo(listener, "onSendMessage") {
                 @Override
                 public void run() {
                     listener.onSendMessage(channel, message);
@@ -125,7 +130,7 @@ public class CompositeEthereumListener implements EthereumListener {
     @Override
     public void onPeerDisconnect(final String host, final long port) {
         for (final EthereumListener listener : listeners) {
-            eventDispatchThread.invokeLater(new RunnableInfo(listener, "onPeerDisconnect") {
+            executor.execute(new RunnableInfo(listener, "onPeerDisconnect") {
                 @Override
                 public void run() {
                     listener.onPeerDisconnect(host, port);
@@ -137,7 +142,7 @@ public class CompositeEthereumListener implements EthereumListener {
     @Override
     public void onPendingTransactionsReceived(final List<Transaction> transactions) {
         for (final EthereumListener listener : listeners) {
-            eventDispatchThread.invokeLater(new RunnableInfo(listener, "onPendingTransactionsReceived") {
+            executor.execute(new RunnableInfo(listener, "onPendingTransactionsReceived") {
                 @Override
                 public void run() {
                     listener.onPendingTransactionsReceived(transactions);
@@ -149,7 +154,7 @@ public class CompositeEthereumListener implements EthereumListener {
     @Override
     public void onPendingStateChanged(final PendingState pendingState) {
         for (final EthereumListener listener : listeners) {
-            eventDispatchThread.invokeLater(new RunnableInfo(listener, "onPendingStateChanged") {
+            executor.execute(new RunnableInfo(listener, "onPendingStateChanged") {
                 @Override
                 public void run() {
                     listener.onPendingStateChanged(pendingState);
@@ -161,7 +166,7 @@ public class CompositeEthereumListener implements EthereumListener {
     @Override
     public void onSyncDone(final SyncState state) {
         for (final EthereumListener listener : listeners) {
-            eventDispatchThread.invokeLater(new RunnableInfo(listener, "onSyncDone") {
+            executor.execute(new RunnableInfo(listener, "onSyncDone") {
                 @Override
                 public void run() {
                     listener.onSyncDone(state);
@@ -173,7 +178,7 @@ public class CompositeEthereumListener implements EthereumListener {
     @Override
     public void onNoConnections() {
         for (final EthereumListener listener : listeners) {
-            eventDispatchThread.invokeLater(new RunnableInfo(listener, "onNoConnections") {
+            executor.execute(new RunnableInfo(listener, "onNoConnections") {
                 @Override
                 public void run() {
                     listener.onNoConnections();
@@ -185,7 +190,7 @@ public class CompositeEthereumListener implements EthereumListener {
     @Override
     public void onHandShakePeer(final Channel channel, final HelloMessage helloMessage) {
         for (final EthereumListener listener : listeners) {
-            eventDispatchThread.invokeLater(new RunnableInfo(listener, "onHandShakePeer") {
+            executor.execute(new RunnableInfo(listener, "onHandShakePeer") {
                 @Override
                 public void run() {
                     listener.onHandShakePeer(channel, helloMessage);
@@ -197,7 +202,7 @@ public class CompositeEthereumListener implements EthereumListener {
     @Override
     public void onVMTraceCreated(final String transactionHash, final String trace) {
         for (final EthereumListener listener : listeners) {
-            eventDispatchThread.invokeLater(new RunnableInfo(listener, "onVMTraceCreated") {
+            executor.execute(new RunnableInfo(listener, "onVMTraceCreated") {
                 @Override
                 public void run() {
                     listener.onVMTraceCreated(transactionHash, trace);
@@ -209,7 +214,7 @@ public class CompositeEthereumListener implements EthereumListener {
     @Override
     public void onNodeDiscovered(final Node node) {
         for (final EthereumListener listener : listeners) {
-            eventDispatchThread.invokeLater(new RunnableInfo(listener, "onNodeDiscovered") {
+            executor.execute(new RunnableInfo(listener, "onNodeDiscovered") {
                 @Override
                 public void run() {
                     listener.onNodeDiscovered(node);
@@ -221,7 +226,7 @@ public class CompositeEthereumListener implements EthereumListener {
     @Override
     public void onEthStatusUpdated(final Channel channel, final StatusMessage status) {
         for (final EthereumListener listener : listeners) {
-            eventDispatchThread.invokeLater(new RunnableInfo(listener, "onEthStatusUpdated") {
+            executor.execute(new RunnableInfo(listener, "onEthStatusUpdated") {
                 @Override
                 public void run() {
                     listener.onEthStatusUpdated(channel, status);
@@ -233,7 +238,7 @@ public class CompositeEthereumListener implements EthereumListener {
     @Override
     public void onTransactionExecuted(final TransactionExecutionSummary summary) {
         for (final EthereumListener listener : listeners) {
-            eventDispatchThread.invokeLater(new RunnableInfo(listener, "onTransactionExecuted") {
+            executor.execute(new RunnableInfo(listener, "onTransactionExecuted") {
                 @Override
                 public void run() {
                     listener.onTransactionExecuted(summary);
@@ -245,7 +250,7 @@ public class CompositeEthereumListener implements EthereumListener {
     @Override
     public void onPeerAddedToSyncPool(final Channel peer) {
         for (final EthereumListener listener : listeners) {
-            eventDispatchThread.invokeLater(new RunnableInfo(listener, "onPeerAddedToSyncPool") {
+            executor.execute(new RunnableInfo(listener, "onPeerAddedToSyncPool") {
                 @Override
                 public void run() {
                     listener.onPeerAddedToSyncPool(peer);
@@ -258,7 +263,7 @@ public class CompositeEthereumListener implements EthereumListener {
     public void onPendingTransactionUpdate(final TransactionReceipt txReceipt, final PendingTransactionState state,
                                            final Block block) {
         for (final EthereumListener listener : listeners) {
-            eventDispatchThread.invokeLater(new RunnableInfo(listener, "onPendingTransactionUpdate") {
+            executor.execute(new RunnableInfo(listener, "onPendingTransactionUpdate") {
                 @Override
                 public void run() {
                     listener.onPendingTransactionUpdate(txReceipt, state, block);

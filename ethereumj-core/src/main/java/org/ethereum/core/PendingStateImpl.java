@@ -17,18 +17,6 @@
  */
 package org.ethereum.core;
 
-import static org.ethereum.listener.EthereumListener.PendingTransactionState.DROPPED;
-import static org.ethereum.listener.EthereumListener.PendingTransactionState.INCLUDED;
-import static org.ethereum.listener.EthereumListener.PendingTransactionState.NEW_PENDING;
-import static org.ethereum.listener.EthereumListener.PendingTransactionState.PENDING;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeSet;
-
 import org.apache.commons.collections4.map.LRUMap;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
@@ -37,7 +25,6 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.TransactionStore;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListener.PendingTransactionState;
-import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
@@ -46,6 +33,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
+
+import static org.ethereum.listener.EthereumListener.PendingTransactionState.DROPPED;
+import static org.ethereum.listener.EthereumListener.PendingTransactionState.INCLUDED;
+import static org.ethereum.listener.EthereumListener.PendingTransactionState.NEW_PENDING;
+import static org.ethereum.listener.EthereumListener.PendingTransactionState.PENDING;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
@@ -78,7 +75,6 @@ public class PendingStateImpl implements PendingState {
     @Autowired
     CommonConfig commonConfig = CommonConfig.getDefault();
 
-    @Autowired
     private EthereumListener listener;
 
     @Autowired
@@ -174,7 +170,7 @@ public class PendingStateImpl implements PendingState {
 
         if (!newPending.isEmpty()) {
             listener.onPendingTransactionsReceived(newPending);
-            listener.onPendingStateChanged(PendingStateImpl.this);
+            listener.onPendingStateChanged(this);
         }
 
         return newPending;
@@ -210,7 +206,8 @@ public class PendingStateImpl implements PendingState {
     /**
      * Executes pending tx on the latest best block
      * Fires pending state update
-     * @param tx    Transaction
+     *
+     * @param tx Transaction
      * @return True if transaction gets NEW_PENDING state, False if DROPPED
      */
     private boolean addPendingTransactionImpl(final Transaction tx) {
@@ -258,7 +255,7 @@ public class PendingStateImpl implements PendingState {
     }
 
     private Block findCommonAncestor(Block b1, Block b2) {
-        while(!b1.isEqual(b2)) {
+        while (!b1.isEqual(b2)) {
             if (b1.getNumber() >= b2.getNumber()) {
                 b1 = blockchain.getBlockByHash(b1.getParentHash());
             }
@@ -288,7 +285,7 @@ public class PendingStateImpl implements PendingState {
 
             // first return back the transactions from forked blocks
             Block rollback = getBestBlock();
-            while(!rollback.isEqual(commonAncestor)) {
+            while (!rollback.isEqual(commonAncestor)) {
                 List<PendingTransaction> blockTxs = new ArrayList<>();
                 for (Transaction tx : rollback.getTransactionsList()) {
                     logger.trace("Returning transaction back to pending: " + tx);
@@ -304,7 +301,7 @@ public class PendingStateImpl implements PendingState {
             // next process blocks from new fork
             Block main = newBlock;
             List<Block> mainFork = new ArrayList<>();
-            while(!main.isEqual(commonAncestor)) {
+            while (!main.isEqual(commonAncestor)) {
                 mainFork.add(main);
                 main = blockchain.getBlockByHash(main.getParentHash());
             }
@@ -411,7 +408,7 @@ public class PendingStateImpl implements PendingState {
 
         TransactionExecutor executor = new TransactionExecutor(
                 tx, best.getCoinbase(), getRepository(),
-                blockStore, programInvokeFactory, createFakePendingBlock(), new EthereumListenerAdapter(), 0)
+                blockStore, programInvokeFactory, createFakePendingBlock(), EthereumListener.EMPTY, 0)
                 .withCommonConfig(commonConfig);
 
         executor.init();

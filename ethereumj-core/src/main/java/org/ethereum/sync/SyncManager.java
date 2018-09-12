@@ -19,9 +19,7 @@ package org.ethereum.sync;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
-import org.ethereum.core.Blockchain;
 import org.ethereum.facade.SyncStatus;
-import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
@@ -47,8 +45,8 @@ import java.util.function.Consumer;
 import static java.lang.Math.max;
 import static java.util.Collections.singletonList;
 import static org.ethereum.core.ImportResult.*;
-import static org.ethereum.util.Utils.longToTimePeriod;
 import static org.ethereum.util.ByteUtil.toHexString;
+import static org.ethereum.util.Utils.longToTimePeriod;
 
 /**
  * @author Mikhail Kalinin
@@ -61,7 +59,7 @@ public class SyncManager extends BlockDownloader {
 
     // Transaction.getSender() is quite heavy operation so we are prefetching this value on several threads
     // to unload the main block importing cycle
-    private ExecutorPipeline<BlockWrapper,BlockWrapper> exec1 = new ExecutorPipeline<>
+    private ExecutorPipeline<BlockWrapper, BlockWrapper> exec1 = new ExecutorPipeline<>
             (4, 1000, true, blockWrapper -> {
                 for (Transaction tx : blockWrapper.getBlock().getTransactionsList()) {
                     tx.getSender();
@@ -86,7 +84,7 @@ public class SyncManager extends BlockDownloader {
     private Blockchain blockchain;
 
     @Autowired
-    private CompositeEthereumListener compositeEthereumListener;
+    private EthereumListener listener;
 
     @Autowired
     private FastSyncManager fastSyncManager;
@@ -132,7 +130,7 @@ public class SyncManager extends BlockDownloader {
                 try {
                     logger.info("Sync state: " + getSyncStatus() +
                             (isSyncDone() || importStart == 0 ? "" : "; Import idle time " +
-                            longToTimePeriod(importIdleTime.get()) + " of total " + longToTimePeriod(System.currentTimeMillis() - importStart)));
+                                    longToTimePeriod(importIdleTime.get()) + " of total " + longToTimePeriod(System.currentTimeMillis() - importStart)));
                 } catch (Exception e) {
                     logger.error("Unexpected", e);
                 }
@@ -166,7 +164,7 @@ public class SyncManager extends BlockDownloader {
 
         Runnable queueProducer = this::produceQueue;
 
-        syncQueueThread = new Thread (queueProducer, "SyncQueueThread");
+        syncQueueThread = new Thread(queueProducer, "SyncQueueThread");
         syncQueueThread.start();
 
         if (config.makeDoneByTimeout() >= 0) {
@@ -225,7 +223,8 @@ public class SyncManager extends BlockDownloader {
     }
 
     @Override
-    protected void pushHeaders(List<BlockHeaderWrapper> headers) {}
+    protected void pushHeaders(List<BlockHeaderWrapper> headers) {
+    }
 
     @Override
     protected int getBlockQueueFreeSize() {
@@ -310,7 +309,8 @@ public class SyncManager extends BlockDownloader {
                             wrapper.getBlock().getTransactionsList().size(), ts);
 
                 if (syncDone && (importResult == IMPORTED_BEST || importResult == IMPORTED_NOT_BEST)) {
-                    if (logger.isDebugEnabled()) logger.debug("Block dump: " + toHexString(wrapper.getBlock().getEncoded()));
+                    if (logger.isDebugEnabled())
+                        logger.debug("Block dump: " + toHexString(wrapper.getBlock().getEncoded()));
                     // Propagate block to the net after successful import asynchronously
                     if (wrapper.isNewBlock()) channelManager.onNewForeignBlock(wrapper);
                 }
@@ -339,14 +339,14 @@ public class SyncManager extends BlockDownloader {
         if (syncDone) return;
         syncDone = true;
         channelManager.onSyncDone(true);
-        compositeEthereumListener.onSyncDone(syncDoneType);
+        listener.onSyncDone(syncDoneType);
     }
 
     public CompletableFuture<Void> switchToShortSync() {
         final CompletableFuture<Void> syncDoneF = new CompletableFuture<>();
-        if(!syncDone && config.isSyncEnabled()) {
+        if (!syncDone && config.isSyncEnabled()) {
             new Thread(() -> {
-                while(!blockQueue.isEmpty() && !syncDone) {
+                while (!blockQueue.isEmpty() && !syncDone) {
                     try {
                         Thread.sleep(100);
                     } catch (InterruptedException e) {
@@ -366,11 +366,10 @@ public class SyncManager extends BlockDownloader {
     /**
      * Adds NEW block to the queue
      *
-     * @param block new block
+     * @param block  new block
      * @param nodeId nodeId of the remote peer which this block is received from
-     *
      * @return true if block passed validations and was added to the queue,
-     *         otherwise it returns false
+     * otherwise it returns false
      */
     public boolean validateAndAddNewBlock(Block block, byte[] nodeId) {
 

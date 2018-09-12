@@ -19,11 +19,7 @@ package org.ethereum.jsontestsuite.suite;
 
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockchainImpl;
-import org.ethereum.core.ImportResult;
-import org.ethereum.core.PendingStateImpl;
-import org.ethereum.core.Repository;
+import org.ethereum.core.*;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.*;
 import org.ethereum.jsontestsuite.suite.builder.BlockBuilder;
@@ -31,9 +27,8 @@ import org.ethereum.jsontestsuite.suite.builder.RepositoryBuilder;
 import org.ethereum.jsontestsuite.suite.model.BlockTck;
 import org.ethereum.jsontestsuite.suite.validators.BlockHeaderValidator;
 import org.ethereum.jsontestsuite.suite.validators.RepositoryValidator;
-import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.listener.BackwardCompatibilityEthereumListenerProxy;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
 import org.ethereum.vm.VM;
@@ -47,11 +42,7 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.ethereum.crypto.HashUtil.shortHash;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -99,11 +90,12 @@ public class TestRunner {
 
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 
-        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository)
+        BackwardCompatibilityEthereumListenerProxy listenerProxy = BackwardCompatibilityEthereumListenerProxy.createDefault();
+        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, listenerProxy)
                 .withParentBlockHeaderValidator(CommonConfig.getDefault().parentHeaderValidator());
         blockchain.byTest = true;
 
-        PendingStateImpl pendingState = new PendingStateImpl(new EthereumListenerAdapter());
+        PendingStateImpl pendingState = new PendingStateImpl(listenerProxy);
 
         blockchain.setBestBlock(genesis);
         blockchain.setTotalDifficulty(genesis.getDifficultyBI());
@@ -121,8 +113,8 @@ public class TestRunner {
                     blockTck.getUncleHeaders());
 
             setNewStateRoot = !((blockTck.getTransactions() == null)
-                && (blockTck.getUncleHeaders() == null)
-                && (blockTck.getBlockHeader() == null));
+                    && (blockTck.getUncleHeaders() == null)
+                    && (blockTck.getBlockHeader() == null));
 
             Block tBlock = null;
             try {
@@ -132,7 +124,7 @@ public class TestRunner {
                 ArrayList<String> outputSummary =
                         BlockHeaderValidator.valid(tBlock.getHeader(), block.getHeader());
 
-                if (!outputSummary.isEmpty()){
+                if (!outputSummary.isEmpty()) {
                     for (String output : outputSummary)
                         logger.error("{}", output);
                 }
@@ -161,7 +153,7 @@ public class TestRunner {
                 testCase.getLastblockhash().substring(2) : testCase.getLastblockhash());
         String finalRoot = Hex.toHexString(blockStore.getBlockByHash(bestHash).getStateRoot());
 
-        if (!finalRoot.equals(currRoot)){
+        if (!finalRoot.equals(currRoot)) {
             String formattedString = String.format("Root hash doesn't match best: expected: %s current: %s",
                     finalRoot, currRoot);
             results.add(formattedString);
@@ -350,7 +342,7 @@ public class TestRunner {
                             }
                         }
 
-                    /* asset logs */
+                        /* asset logs */
                         List<LogInfo> logResult = program.getResult().getLogInfoList();
 
                         List<String> logResults = logs.compareToReal(logResult);
@@ -500,7 +492,7 @@ public class TestRunner {
     public Repository loadRepository(Repository track, Map<ByteArrayWrapper, AccountState> pre) {
 
 
-            /* 1. Store pre-exist accounts - Pre */
+        /* 1. Store pre-exist accounts - Pre */
         for (ByteArrayWrapper key : pre.keySet()) {
 
             AccountState accountState = pre.get(key);

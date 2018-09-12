@@ -17,11 +17,7 @@
  */
 package org.ethereum.samples;
 
-import org.ethereum.core.Block;
-import org.ethereum.core.CallTransaction;
-import org.ethereum.core.PendingStateImpl;
-import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionReceipt;
+import org.ethereum.core.*;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
@@ -29,9 +25,10 @@ import org.ethereum.db.TransactionStore;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.listener.BlockReplay;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.listener.EventListener;
 import org.ethereum.listener.TxStatus;
+import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.PendingTransactionUpdated;
 import org.ethereum.solidity.compiler.CompilationResult;
 import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.ethereum.util.ByteUtil;
@@ -49,11 +46,11 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
 import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.publish.Subscription.to;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
@@ -110,7 +107,7 @@ public class EventListenerSample extends TestNetSample {
                     "}  ";
 
     private Map<ByteArrayWrapper, TransactionReceipt> txWaiters =
-            Collections.synchronizedMap(new HashMap<ByteArrayWrapper, TransactionReceipt>());
+            Collections.synchronizedMap(new HashMap<>());
 
     class IncEvent {
         IncEvent(String address, Long inc, Long total) {
@@ -205,16 +202,15 @@ public class EventListenerSample extends TestNetSample {
      */
     @Override
     public void onSyncDone() throws Exception {
-        ethereum.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state, Block block) {
-                ByteArrayWrapper txHashW = new ByteArrayWrapper(txReceipt.getTransaction().getHash());
-                // Catching transaction errors
-                if (txWaiters.containsKey(txHashW) && !txReceipt.isSuccessful()) {
-                    txWaiters.put(txHashW, txReceipt);
-                }
+        ethereum.subscribe(to(PendingTransactionUpdated.class, data -> {
+            TransactionReceipt txReceipt = data.getReceipt();
+            ByteArrayWrapper txHashW = new ByteArrayWrapper(txReceipt.getTransaction().getHash());
+            // Catching transaction errors
+            if (txWaiters.containsKey(txHashW) && !txReceipt.isSuccessful()) {
+                txWaiters.put(txHashW, txReceipt);
             }
-        });
+        }));
+
         requestFreeEther(ECKey.fromPrivate(senderPrivateKey).getAddress());
         requestFreeEther(ECKey.fromPrivate(sender2PrivateKey).getAddress());
         if (contractAddress == null) {
@@ -287,13 +283,8 @@ public class EventListenerSample extends TestNetSample {
      *  - Calls contract from 2 different addresses
      */
     private void deployContractAndTest() throws Exception {
-        ethereum.addListener(new EthereumListenerAdapter() {
-            // when block arrives look for our included transactions
-            @Override
-            public void onBlock(Block block, List<TransactionReceipt> receipts) {
-                EventListenerSample.this.onBlock(block, receipts);
-            }
-        });
+        // when block arrives look for our included transactions
+        ethereum.subscribe(to(BlockAdded.class, this::onBlock));
 
         CompilationResult.ContractMetadata metadata = compileContract();
 
@@ -390,8 +381,8 @@ public class EventListenerSample extends TestNetSample {
         return waitForTx(txHashW);
     }
 
-    private void onBlock(Block block, List<TransactionReceipt> receipts) {
-        for (TransactionReceipt receipt : receipts) {
+    private void onBlock(BlockAdded.Data data) {
+        for (TransactionReceipt receipt : data.getBlockSummary().getReceipts()) {
             ByteArrayWrapper txHashW = new ByteArrayWrapper(receipt.getTransaction().getHash());
             if (txWaiters.containsKey(txHashW)) {
                 txWaiters.put(txHashW, receipt);

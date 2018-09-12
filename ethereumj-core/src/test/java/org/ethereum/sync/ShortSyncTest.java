@@ -19,22 +19,21 @@ package org.ethereum.sync;
 
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Blockchain;
-import org.ethereum.core.TransactionReceipt;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.eth.handler.Eth62;
 import org.ethereum.net.eth.handler.EthHandler;
 import org.ethereum.net.eth.message.*;
-import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.rlpx.Node;
-import org.ethereum.net.server.Channel;
+import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.PeerAddedToSyncPool;
+import org.ethereum.publish.event.message.EthStatusUpdated;
+import org.ethereum.publish.event.message.MessageReceived;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.junit.*;
 import org.springframework.context.annotation.Bean;
@@ -55,6 +54,7 @@ import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.ethereum.publish.Subscription.to;
 import static org.ethereum.util.FileUtil.recursiveDelete;
 import static org.junit.Assert.fail;
 import static org.spongycastle.util.encoders.Hex.decode;
@@ -160,21 +160,15 @@ public class ShortSyncTest {
         // A == b10, B == genesis
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereumB.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onBlock(Block block, List<TransactionReceipt> receipts) {
-                if (block.isEqual(b10)) {
-                    semaphore.countDown();
-                }
-            }
-        });
+        ethereumB.subscribe(to(BlockAdded.class, data -> semaphore.countDown())
+                .conditionally(data -> data.getBlockSummary().getBlock().isEqual(b10)));
 
         ethA.sendNewBlock(b10);
 
         semaphore.await(10, SECONDS);
 
         // check if B == b10
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             fail("PeerB bestBlock is incorrect");
         }
     }
@@ -198,21 +192,15 @@ public class ShortSyncTest {
         // A == b8', B == genesis
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereumB.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onBlock(Block block, List<TransactionReceipt> receipts) {
-                if (block.isEqual(b8_)) {
-                    semaphore.countDown();
-                }
-            }
-        });
+        ethereumB.subscribe(to(BlockAdded.class, data -> semaphore.countDown())
+                .conditionally(data -> data.getBlockSummary().getBlock().isEqual(b8_)));
 
         ethA.sendNewBlock(b8_);
 
         semaphore.await(10, SECONDS);
 
         // check if B == b8'
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             fail("PeerB bestBlock is incorrect");
         }
     }
@@ -240,21 +228,19 @@ public class ShortSyncTest {
         // A == b10, B == b8'
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereumB.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onBlock(Block block, List<TransactionReceipt> receipts) {
-                if (block.isEqual(b10)) {
-                    semaphore.countDown();
-                }
+        ethereumB.subscribe(to(BlockAdded.class, data -> {
+            Block block = data.getBlockSummary().getBlock();
+            if (block.isEqual(b10)) {
+                semaphore.countDown();
             }
-        });
+        }));
 
         ethA.sendNewBlock(b10);
 
         semaphore.await(10, SECONDS);
 
         // check if B == b10
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             fail("PeerB bestBlock is incorrect");
         }
     }
@@ -287,14 +273,8 @@ public class ShortSyncTest {
         // A == b5, B == b9
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereumB.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onBlock(Block block, List<TransactionReceipt> receipts) {
-                if (block.isEqual(b10)) {
-                    semaphore.countDown();
-                }
-            }
-        });
+        ethereumB.subscribe(to(BlockAdded.class, blockSummary -> semaphore.countDown())
+                .conditionally(data -> data.getBlockSummary().getBlock().equals(b10)));
 
         ethA.sendNewBlockHashes(b5);
 
@@ -309,7 +289,7 @@ public class ShortSyncTest {
         semaphore.await(10, SECONDS);
 
         // check if B == b10
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             fail("PeerB bestBlock is incorrect");
         }
     }
@@ -342,22 +322,20 @@ public class ShortSyncTest {
 
         final CountDownLatch semaphore = new CountDownLatch(1);
         final CountDownLatch semaphoreB8_ = new CountDownLatch(1);
-        ethereumB.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onBlock(Block block, List<TransactionReceipt> receipts) {
-                if (block.isEqual(b10)) {
-                    semaphore.countDown();
-                }
-                if (block.isEqual(b8_)) {
-                    semaphoreB8_.countDown();
-                }
+        ethereumB.subscribe(to(BlockAdded.class, data -> {
+            Block block = data.getBlockSummary().getBlock();
+            if (block.isEqual(b10)) {
+                semaphore.countDown();
             }
-        });
+            if (block.isEqual(b8_)) {
+                semaphoreB8_.countDown();
+            }
+        }));
 
         ethA.sendNewBlockHashes(b8_);
 
         semaphoreB8_.await(10, SECONDS);
-        if(semaphoreB8_.getCount() > 0) {
+        if (semaphoreB8_.getCount() > 0) {
             fail("PeerB didn't import b8'");
         }
 
@@ -372,7 +350,7 @@ public class ShortSyncTest {
         semaphore.await(10, SECONDS);
 
         // check if B == b10
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             fail("PeerB bestBlock is incorrect");
         }
     }
@@ -404,24 +382,22 @@ public class ShortSyncTest {
 
         final CountDownLatch semaphore = new CountDownLatch(1);
         final CountDownLatch semaphoreB7 = new CountDownLatch(1);
-        ethereumB.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onBlock(Block block, List<TransactionReceipt> receipts) {
-                if (block.isEqual(b7)) {
-                    semaphoreB7.countDown();
-                }
-                if (block.isEqual(b10)) {
-                    semaphore.countDown();
-                }
+        ethereumB.subscribe(to(BlockAdded.class, data -> {
+            Block block = data.getBlockSummary().getBlock();
+            if (block.isEqual(b7)) {
+                semaphoreB7.countDown();
             }
-        });
+            if (block.isEqual(b10)) {
+                semaphore.countDown();
+            }
+        }));
 
         ethA.sendNewBlockHashes(b7);
 
         semaphoreB7.await(10, SECONDS);
 
         // check if B == b7
-        if(semaphoreB7.getCount() > 0) {
+        if (semaphoreB7.getCount() > 0) {
             fail("PeerB didn't recover a gap");
         }
 
@@ -435,7 +411,7 @@ public class ShortSyncTest {
         semaphore.await(10, SECONDS);
 
         // check if B == b10
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             fail("PeerB bestBlock is incorrect");
         }
     }
@@ -466,27 +442,23 @@ public class ShortSyncTest {
 
         // A == b8', B == b4
 
-        ethereumB.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onRecvMessage(Channel channel, Message message) {
-                if (message instanceof NewBlockMessage) {
-                    // it's time to do a re-branch
-                    for (Block b : mainB1B10) {
-                        blockchainA.tryToConnect(b);
-                    }
+        ethereumB.subscribe(to(MessageReceived.class, data -> {
+            if (data.getMessage() instanceof NewBlockMessage) {
+                // it's time to do a re-branch
+                for (Block b : mainB1B10) {
+                    blockchainA.tryToConnect(b);
                 }
             }
-        });
+
+        }));
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereumB.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onBlock(Block block, List<TransactionReceipt> receipts) {
-                if (block.isEqual(b10)) {
-                    semaphore.countDown();
-                }
+        ethereumB.subscribe(to(BlockAdded.class, data -> {
+            Block block = data.getBlockSummary().getBlock();
+            if (block.isEqual(b10)) {
+                semaphore.countDown();
             }
-        });
+        }));
 
         ethA.sendNewBlock(b8_);
         ethA.sendNewBlock(b10);
@@ -494,7 +466,7 @@ public class ShortSyncTest {
         semaphore.await(10, SECONDS);
 
         // check if B == b10
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             fail("PeerB bestBlock is incorrect");
         }
     }
@@ -529,27 +501,25 @@ public class ShortSyncTest {
 
         final CountDownLatch semaphore = new CountDownLatch(1);
         final CountDownLatch semaphoreB7_ = new CountDownLatch(1);
-        ethereumB.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onBlock(Block block, List<TransactionReceipt> receipts) {
-                if (block.isEqual(b7_)) {
-                    // it's time to do a re-branch
-                    for (Block b : mainB1B10) {
-                        blockchainA.tryToConnect(b);
-                    }
+        ethereumB.subscribe(to(BlockAdded.class, data -> {
+            Block block = data.getBlockSummary().getBlock();
+            if (block.isEqual(b7_)) {
+                // it's time to do a re-branch
+                for (Block b : mainB1B10) {
+                    blockchainA.tryToConnect(b);
+                }
 
-                    semaphoreB7_.countDown();
-                }
-                if (block.isEqual(b10)) {
-                    semaphore.countDown();
-                }
+                semaphoreB7_.countDown();
             }
-        });
+            if (block.isEqual(b10)) {
+                semaphore.countDown();
+            }
+        }));
 
         ethA.sendNewBlockHashes(b7_);
 
         semaphoreB7_.await(10, SECONDS);
-        if(semaphoreB7_.getCount() > 0) {
+        if (semaphoreB7_.getCount() > 0) {
             fail("PeerB didn't import b7'");
         }
 
@@ -558,7 +528,7 @@ public class ShortSyncTest {
         semaphore.await(10, SECONDS);
 
         // check if B == b10
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             fail("PeerB bestBlock is incorrect");
         }
     }
@@ -613,19 +583,16 @@ public class ShortSyncTest {
         ethA.sendNewBlock(b8_);
 
         final CountDownLatch semaphoreDisconnect = new CountDownLatch(1);
-        ethereumA.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onRecvMessage(Channel channel, Message message) {
-                if (message instanceof DisconnectMessage) {
-                    semaphoreDisconnect.countDown();
-                }
+        ethereumA.subscribe(to(MessageReceived.class, messageData -> {
+            if (messageData.getMessage() instanceof DisconnectMessage) {
+                semaphoreDisconnect.countDown();
             }
-        });
+        }));
 
         semaphoreDisconnect.await(10, SECONDS);
 
         // check if peer was dropped
-        if(semaphoreDisconnect.getCount() > 0) {
+        if (semaphoreDisconnect.getCount() > 0) {
             fail("PeerA is not dropped");
         }
 
@@ -637,27 +604,21 @@ public class ShortSyncTest {
         }
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereumB.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onBlock(Block block, List<TransactionReceipt> receipts) {
-                if (block.isEqual(b10)) {
-                    semaphore.countDown();
-                }
+        ethereumB.subscribe(to(BlockAdded.class, data -> {
+            Block block = data.getBlockSummary().getBlock();
+            if (block.isEqual(b10)) {
+                semaphore.countDown();
             }
-        });
+        }));
+
 
         final CountDownLatch semaphoreConnect = new CountDownLatch(1);
-        ethereumB.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onPeerAddedToSyncPool(Channel peer) {
-                semaphoreConnect.countDown();
-            }
-        });
+        ethereumB.subscribe(to(PeerAddedToSyncPool.class, channel -> semaphoreConnect.countDown()));
         ethereumB.connect(nodeA);
 
         // await connection
         semaphoreConnect.await(10, SECONDS);
-        if(semaphoreConnect.getCount() > 0) {
+        if (semaphoreConnect.getCount() > 0) {
             fail("PeerB is not able to connect to PeerA");
         }
 
@@ -666,7 +627,7 @@ public class ShortSyncTest {
         semaphore.await(10, SECONDS);
 
         // check if B == b10
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             fail("PeerB bestBlock is incorrect");
         }
     }
@@ -720,47 +681,38 @@ public class ShortSyncTest {
         ethA.sendNewBlockHashes(b8_);
 
         final CountDownLatch semaphoreDisconnect = new CountDownLatch(1);
-        ethereumA.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onRecvMessage(Channel channel, Message message) {
-                if (message instanceof DisconnectMessage) {
-                    semaphoreDisconnect.countDown();
-                }
+        ethereumA.subscribe(to(MessageReceived.class, data -> {
+            if (data.getMessage() instanceof DisconnectMessage) {
+                semaphoreDisconnect.countDown();
             }
-        });
+        }));
+
 
         semaphoreDisconnect.await(10, SECONDS);
 
         // check if peer was dropped
-        if(semaphoreDisconnect.getCount() > 0) {
+        if (semaphoreDisconnect.getCount() > 0) {
             fail("PeerA is not dropped");
         }
 
         // back to usual handler
-        SysPropConfigA.eth62 = null;
+        LongSyncTest.SysPropConfigA.eth62 = null;
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereumB.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onBlock(Block block, List<TransactionReceipt> receipts) {
-                if (block.isEqual(b10)) {
-                    semaphore.countDown();
-                }
+        ethereumB.subscribe(to(BlockAdded.class, data -> {
+            Block block = data.getBlockSummary().getBlock();
+            if (block.isEqual(b10)) {
+                semaphore.countDown();
             }
-        });
+        }));
 
         final CountDownLatch semaphoreConnect = new CountDownLatch(1);
-        ethereumB.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onPeerAddedToSyncPool(Channel peer) {
-                semaphoreConnect.countDown();
-            }
-        });
+        ethereumB.subscribe(to(PeerAddedToSyncPool.class, channel -> semaphoreConnect.countDown()));
         ethereumB.connect(nodeA);
 
         // await connection
         semaphoreConnect.await(10, SECONDS);
-        if(semaphoreConnect.getCount() > 0) {
+        if (semaphoreConnect.getCount() > 0) {
             fail("PeerB is not able to connect to PeerA");
         }
 
@@ -775,7 +727,7 @@ public class ShortSyncTest {
         semaphore.await(10, SECONDS);
 
         // check if B == b10
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             fail("PeerB bestBlock is incorrect");
         }
     }
@@ -808,23 +760,20 @@ public class ShortSyncTest {
 
         final CountDownLatch semaphore1 = new CountDownLatch(1);
         final CountDownLatch semaphore2 = new CountDownLatch(1);
-        ethereumB.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onBlock(Block block, List<TransactionReceipt> receipts) {
-                if (block.isEqual(b6_)) {
-                    if (semaphore1.getCount() > 0) {
-                        semaphore1.countDown();
-                    } else {
-                        semaphore2.countDown();
-                    }
+        ethereumB.subscribe(to(BlockAdded.class, data -> {
+            if (data.getBlockSummary().getBlock().isEqual(b6_)) {
+                if (semaphore1.getCount() > 0) {
+                    semaphore1.countDown();
+                } else {
+                    semaphore2.countDown();
                 }
             }
-        });
+        }));
 
         ethA.sendNewBlock(b6_);
         semaphore1.await(10, SECONDS);
 
-        if(semaphore1.getCount() > 0) {
+        if (semaphore1.getCount() > 0) {
             fail("PeerB doesn't accept block with higher TD");
         }
 
@@ -839,7 +788,7 @@ public class ShortSyncTest {
         semaphore2.await(5, SECONDS);
 
         // check if B skips b6'
-        if(semaphore2.getCount() == 0) {
+        if (semaphore2.getCount() == 0) {
             fail("PeerB doesn't skip block with lower TD");
         }
     }
@@ -873,21 +822,16 @@ public class ShortSyncTest {
         // A == b10, B == genesis
 
         final CountDownLatch semaphoreDisconnect = new CountDownLatch(1);
-        ethereumA.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onRecvMessage(Channel channel, Message message) {
-                if (message instanceof DisconnectMessage) {
-                    semaphoreDisconnect.countDown();
-                }
-            }
-        });
+        this.ethereumA
+                .subscribe(to(MessageReceived.class, data -> semaphoreDisconnect.countDown())
+                        .conditionally(data -> data.getMessage() instanceof DisconnectMessage));
 
         ethA.sendNewBlock(b10);
 
         semaphoreDisconnect.await(10, SECONDS);
 
         // check if peer was dropped
-        if(semaphoreDisconnect.getCount() > 0) {
+        if (semaphoreDisconnect.getCount() > 0) {
             fail("PeerA is not dropped");
         }
     }
@@ -938,21 +882,15 @@ public class ShortSyncTest {
         // A == b8', B == b10
 
         final CountDownLatch semaphoreDisconnect = new CountDownLatch(1);
-        ethereumA.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onRecvMessage(Channel channel, Message message) {
-                if (message instanceof DisconnectMessage) {
-                    semaphoreDisconnect.countDown();
-                }
-            }
-        });
+        ethereumA.subscribe(to(MessageReceived.class, data -> semaphoreDisconnect.countDown())
+                .conditionally(data -> data.getMessage() instanceof DisconnectMessage));
 
         ethA.sendNewBlockHashes(b8_);
 
         semaphoreDisconnect.await(10, SECONDS);
 
         // check if peer was dropped
-        if(semaphoreDisconnect.getCount() > 0) {
+        if (semaphoreDisconnect.getCount() > 0) {
             fail("PeerA is not dropped");
         }
     }
@@ -978,7 +916,7 @@ public class ShortSyncTest {
                         forkB1B5B8_.get(7).getHeader(),
                         forkB1B5B8_.get(6).getHeader(),
                         new BlockHeader(new byte[32], new byte[32], new byte[32], new byte[32], new byte[32],
-                                6, new byte[] {0}, 0, 0, new byte[0], new byte[0], new byte[0]),
+                                6, new byte[]{0}, 0, 0, new byte[0], new byte[0], new byte[0]),
                         forkB1B5B8_.get(4).getHeader()
                 );
 
@@ -1004,21 +942,15 @@ public class ShortSyncTest {
         // A == b8', B == b10
 
         final CountDownLatch semaphoreDisconnect = new CountDownLatch(1);
-        ethereumA.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onRecvMessage(Channel channel, Message message) {
-                if (message instanceof DisconnectMessage) {
-                    semaphoreDisconnect.countDown();
-                }
-            }
-        });
+        ethereumA.subscribe(to(MessageReceived.class, data -> semaphoreDisconnect.countDown())
+                .conditionally(data -> data.getMessage() instanceof DisconnectMessage));
 
         ethA.sendNewBlockHashes(b8_);
 
         semaphoreDisconnect.await(10, SECONDS);
 
         // check if peer was dropped
-        if(semaphoreDisconnect.getCount() > 0) {
+        if (semaphoreDisconnect.getCount() > 0) {
             fail("PeerA is not dropped");
         }
     }
@@ -1028,26 +960,15 @@ public class ShortSyncTest {
         ethereumA = EthereumFactory.createEthereum(SysPropConfigA.props, SysPropConfigA.class);
         ethereumB = EthereumFactory.createEthereum(SysPropConfigB.props, SysPropConfigB.class);
 
-        ethereumA.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onEthStatusUpdated(Channel channel, StatusMessage statusMessage) {
-                ethA = (EthHandler) channel.getEthHandler();
-            }
-        });
+        ethereumA.subscribe(to(EthStatusUpdated.class, data -> ethA = (EthHandler) data.getChannel().getEthHandler()));
 
         final CountDownLatch semaphore = new CountDownLatch(1);
 
-        ethereumB.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onPeerAddedToSyncPool(Channel peer) {
-                semaphore.countDown();
-            }
-        });
-
+        ethereumB.subscribe(to(PeerAddedToSyncPool.class, channel -> semaphore.countDown()));
         ethereumB.connect(nodeA);
 
         semaphore.await(10, SECONDS);
-        if(semaphore.getCount() > 0) {
+        if (semaphore.getCount() > 0) {
             fail("Failed to set up peers");
         }
     }

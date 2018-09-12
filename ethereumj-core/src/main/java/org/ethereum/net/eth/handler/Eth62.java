@@ -24,15 +24,15 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
-import org.ethereum.listener.CompositeEthereumListener;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.*;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
-import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.PeerState;
+import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.validator.BlockHeaderRule;
@@ -53,9 +53,8 @@ import static org.ethereum.datasource.MemSizeEstimator.ByteArrayEstimator;
 import static org.ethereum.net.eth.EthVersion.V62;
 import static org.ethereum.net.message.ReasonCode.USELESS_PEER;
 import static org.ethereum.sync.PeerState.*;
-import static org.ethereum.sync.PeerState.BLOCK_RETRIEVING;
-import static org.ethereum.util.Utils.longToTimePeriod;
 import static org.ethereum.util.ByteUtil.toHexString;
+import static org.ethereum.util.Utils.longToTimePeriod;
 
 /**
  * Eth 62
@@ -127,14 +126,14 @@ public class Eth62 extends EthHandler {
 
     @Autowired
     public Eth62(final SystemProperties config, final Blockchain blockchain,
-                 final BlockStore blockStore, final CompositeEthereumListener ethereumListener) {
-        this(version, config, blockchain, blockStore, ethereumListener);
+                 final BlockStore blockStore, EthereumListener listener) {
+        this(version, config, blockchain, blockStore, listener);
     }
 
     Eth62(final EthVersion version, final SystemProperties config,
           final Blockchain blockchain, final BlockStore blockStore,
-          final CompositeEthereumListener ethereumListener) {
-        super(version, config, blockchain, blockStore, ethereumListener);
+          final EthereumListener listener) {
+        super(version, config, blockchain, blockStore, listener);
     }
 
     @Override

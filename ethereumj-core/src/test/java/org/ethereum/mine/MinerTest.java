@@ -21,14 +21,18 @@ import com.typesafe.config.ConfigFactory;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.NoAutoscan;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.eth.handler.Eth62;
-import org.ethereum.net.eth.message.*;
+import org.ethereum.net.eth.message.NewBlockMessage;
+import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.PendingTransactionUpdated;
+import org.ethereum.publish.event.SyncDone;
 import org.ethereum.util.ByteUtil;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -38,9 +42,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.io.FileNotFoundException;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+
+import static org.ethereum.publish.Subscription.to;
+import static org.ethereum.publish.event.PendingTransactionUpdated.State.NEW_PENDING;
 
 /**
  * Long running test
@@ -99,13 +108,12 @@ public class MinerTest {
         Ethereum ethereum2 = EthereumFactory.createEthereum(SysPropConfig2.props, SysPropConfig2.class);
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereum2.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onBlock(Block block, List<TransactionReceipt> receipts) {
-                System.err.println("=== New block: " + blockInfo(block));
-                System.err.println(block);
+        ethereum2.subscribe(to(BlockAdded.class, data -> {
+            Block block = data.getBlockSummary().getBlock();
+            System.err.println("=== New block: " + blockInfo(block));
+            System.err.println(block);
 
-                for (Transaction tx : block.getTransactionsList()) {
+            for (Transaction tx : block.getTransactionsList()) {
 //                    Pair<Transaction, Long> remove = submittedTxs.remove(new ByteArrayWrapper(tx.getHash()));
 //                    if (remove == null) {
 //                        System.err.println("===== !!! Unknown Tx: " + tx);
@@ -114,7 +122,7 @@ public class MinerTest {
 //                                + " sec: " + tx);
 //                    }
 
-                }
+            }
 
 //                for (Pair<Transaction, Long> pair : submittedTxs.values()) {
 //                    if (System.currentTimeMillis() - pair.getRight() > 60 * 1000) {
@@ -122,19 +130,14 @@ public class MinerTest {
 //                                + " sec: " + pair.getLeft());
 //                    }
 //                }
-            }
 
-            @Override
-            public void onPendingTransactionsReceived(List<Transaction> transactions) {
-                System.err.println("=== Tx: " + transactions);
-            }
-
-            @Override
-            public void onSyncDone(SyncState state) {
-                semaphore.countDown();
-                System.err.println("=== Sync Done!");
-            }
-        });
+        }))
+        .subscribe(to(PendingTransactionUpdated.class, data -> System.err.println("=== Tx: " + data.getReceipt().getTransaction()))
+                .conditionally(data -> data.getState() == NEW_PENDING))
+        .subscribe(to(SyncDone.class, syncState -> {
+            semaphore.countDown();
+            System.err.println("=== Sync Done!");
+        }));
 
         System.out.println("Waiting for sync...");
         semaphore.await();
@@ -203,17 +206,9 @@ public class MinerTest {
 //        Ethereum ethereum2 = EthereumFactory.createEthereum(SysPropConfig2.props, SysPropConfig2.class);
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereum1.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onBlock(Block block, List<TransactionReceipt> receipts) {
-                System.out.println("=== New block: " + blockInfo(block));
-            }
-
-            @Override
-            public void onSyncDone(SyncState state) {
-                semaphore.countDown();
-            }
-        });
+        ethereum1
+                .subscribe(to(BlockAdded.class, data -> System.out.println("=== New block: " + blockInfo(data.getBlockSummary().getBlock()))))
+                .subscribe(to(SyncDone.class, syncState -> semaphore.countDown()));
 
 //        ethereum2.addListener(new EthereumListenerAdapter() {
 //            @Override
