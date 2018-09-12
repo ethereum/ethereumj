@@ -33,6 +33,7 @@ public class BeaconStateTransition implements StateTransition<BeaconState> {
             Finality finality = finalityTransition.applyBlock(block, crystallized.getFinality());
             ValidatorSet validatorSet = validatorSetTransition.applyBlock(block, crystallized.getDynasty().getValidatorSet());
             Dynasty dynasty = crystallized.getDynasty().withValidatorSet(validatorSet);
+            dynasty = dynastyTransition.applyBlock(block, dynasty);
 
             crystallized = crystallized
                     .withDynasty(dynasty)

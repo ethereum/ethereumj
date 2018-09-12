@@ -101,8 +101,18 @@ public class Dynasty {
                 totalDeposits, seed, seedLastReset, startSlot);
     }
 
+    public Dynasty withNumberIncrement(long addition) {
+        return new Dynasty(validatorSet, committees, number + addition, crosslinkingStartShard,
+                totalDeposits, seed, seedLastReset, startSlot);
+    }
+
     public Dynasty withCrosslinkingStartShard(long crosslinkingStartShard) {
         return new Dynasty(validatorSet, committees, number, crosslinkingStartShard,
+                totalDeposits, seed, seedLastReset, startSlot);
+    }
+
+    public Dynasty withCrosslinkingStartShardIncrement(long addition) {
+        return new Dynasty(validatorSet, committees, number, crosslinkingStartShard + addition,
                 totalDeposits, seed, seedLastReset, startSlot);
     }
 

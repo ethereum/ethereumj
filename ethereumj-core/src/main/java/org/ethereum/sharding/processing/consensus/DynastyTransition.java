@@ -8,8 +8,13 @@ import org.ethereum.sharding.processing.state.Dynasty;
  * @since 12.09.2018
  */
 public class DynastyTransition implements StateTransition<Dynasty> {
+
     @Override
     public Dynasty applyBlock(Beacon block, Dynasty to) {
-        return to;
+        if (block.getSlotNumber() - to.getStartSlot() < BeaconConstants.MIN_DYNASTY_LENGTH)
+            return to;
+
+        return to.withNumberIncrement(1L)
+                .withCrosslinkingStartShardIncrement(1L);
     }
 }

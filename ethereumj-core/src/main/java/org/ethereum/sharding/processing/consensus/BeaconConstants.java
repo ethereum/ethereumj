@@ -42,6 +42,11 @@ public interface BeaconConstants {
     int SHARD_COUNT = 1024;
 
     /**
+     * Minimal number of slots in dynasty
+     */
+    long MIN_DYNASTY_LENGTH = 256;
+
+    /**
      * Validator registration deposit in wei
      */
     BigInteger DEPOSIT_WEI = convert(32, EtherUtil.Unit.ETHER);
