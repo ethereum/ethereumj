@@ -20,6 +20,8 @@ package org.ethereum.sharding.processing.state;
 import org.ethereum.datasource.ObjectDataSource;
 import org.ethereum.datasource.Source;
 import org.ethereum.sharding.processing.db.BeaconStore;
+import org.ethereum.sharding.processing.db.TrieValidatorSet;
+import org.ethereum.sharding.processing.db.ValidatorSet;
 
 /**
  * Default implementation of {@link StateRepository}.
@@ -30,21 +32,26 @@ import org.ethereum.sharding.processing.db.BeaconStore;
 public class BeaconStateRepository implements StateRepository {
 
     Source<byte[], byte[]> src;
-    ObjectDataSource<BeaconState> stateDS;
+    ObjectDataSource<BeaconState.Stripped> stateDS;
+    Source<byte[], byte[]> validatorSrc;
 
-    public BeaconStateRepository(Source<byte[], byte[]> src) {
+    public BeaconStateRepository(Source<byte[], byte[]> src, Source<byte[], byte[]> validatorSrc) {
         this.src = src;
-        this.stateDS = new ObjectDataSource<>(src, BeaconState.Serializer, BeaconStore.BLOCKS_IN_MEM);
+        this.validatorSrc = validatorSrc;
+        this.stateDS = new ObjectDataSource<>(src, BeaconState.Stripped.Serializer, BeaconStore.BLOCKS_IN_MEM);
     }
 
     @Override
     public void insert(BeaconState state) {
-        stateDS.put(state.getHash(), state);
+        stateDS.put(state.getHash(), state.getStripped());
     }
 
     @Override
     public BeaconState get(byte[] hash) {
-        return stateDS.get(hash);
+        BeaconState.Stripped stripped = stateDS.get(hash);
+        ValidatorSet validatorSet = new TrieValidatorSet(validatorSrc, stripped.getValidatorSetHash());
+
+        return new BeaconState(validatorSet, stripped.getDynastySeed());
     }
 
     @Override

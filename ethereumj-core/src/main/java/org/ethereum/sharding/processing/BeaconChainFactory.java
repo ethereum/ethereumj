@@ -57,13 +57,12 @@ public class BeaconChainFactory {
     }
 
     public static BeaconChain create(DbFlushManager beaconDbFlusher, BeaconStore store, StateRepository repository,
-                                     ValidatorSet validatorSet, ValidatorRepository validatorRepository,
-                                     Block bestBlock) {
+                                     ValidatorRepository validatorRepository, Block bestBlock) {
 
         BeaconValidator beaconValidator = new BeaconValidator(store);
         StateValidator stateValidator = new StateValidator();
         ScoreFunction scoreFunction = new NumberAsScore();
-        StateTransition genesisStateTransition = new GenesisTransition(validatorSet, validatorRepository)
+        StateTransition genesisStateTransition = new GenesisTransition(validatorRepository)
                 .withMainChainRef(bestBlock.getHash());
 
         return new BeaconChainImpl(beaconDbFlusher, store, stateTransition(),

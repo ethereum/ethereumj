@@ -55,8 +55,8 @@ public class GenesisTransitionTest {
         ValidatorSet validatorSet = new TrieValidatorSet(new HashMapDB<>());
         ValidatorRepository validatorRepository = new PredefinedValidatorRepository(v1, v2, v3, v4);
 
-        GenesisTransition transition = new GenesisTransition(validatorSet, validatorRepository);
-        transition.applyBlock(genesis, BeaconState.empty());
+        GenesisTransition transition = new GenesisTransition(validatorRepository);
+        transition.applyBlock(genesis, BeaconState.empty().withValidatorSet(validatorSet));
 
         checkValidatorSet(validatorSet, v1, v3, v4);
     }

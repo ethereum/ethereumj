@@ -158,21 +158,16 @@ public class BeaconConfig {
     @Bean
     public StateRepository beaconStateRepository() {
         Source<byte[], byte[]> src = cachedBeaconChainSource("beacon_state");
-        return new BeaconStateRepository(src);
+        Source<byte[], byte[]> validatorSrc = cachedBeaconChainSource("validator_set");
+        return new BeaconStateRepository(src, validatorSrc);
     }
 
     @Bean
     public BeaconChain beaconChain() {
         BeaconChain beaconChain = BeaconChainFactory.create(beaconDbFlusher(), beaconStore(),
-                beaconStateRepository(), validatorSet(), validatorRepository(), blockStore.getBestBlock());
+                beaconStateRepository(), validatorRepository(), blockStore.getBestBlock());
         shardingWorldManager.setBeaconChain(beaconChain);
         return beaconChain;
-    }
-
-    @Bean
-    public ValidatorSet validatorSet() {
-        Source<byte[], byte[]> src = cachedBeaconChainSource("validator_set");
-        return new TrieValidatorSet(src);
     }
 
     @Bean

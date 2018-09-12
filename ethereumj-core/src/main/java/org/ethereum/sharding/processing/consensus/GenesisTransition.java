@@ -35,13 +35,11 @@ import java.util.stream.Collectors;
  */
 public class GenesisTransition implements StateTransition {
 
-    ValidatorSet validatorSet;
     ValidatorRepository validatorRepository;
     ValidatorSetTransition validatorSetTransition = new ValidatorSetInitiator();
     byte[] mainChainRef;
 
-    public GenesisTransition(ValidatorSet validatorSet, ValidatorRepository validatorRepository) {
-        this.validatorSet = validatorSet;
+    public GenesisTransition(ValidatorRepository validatorRepository) {
         this.validatorRepository = validatorRepository;
     }
 
@@ -59,15 +57,15 @@ public class GenesisTransition implements StateTransition {
             mainChainRef = genesis.getMainChainRef();
         }
 
-        byte[] validatorSetHash = validatorSetTransition.applyBlock(block, validatorSet);
+        ValidatorSet newValidatorSet = validatorSetTransition.applyBlock(block, to.getValidatorSet());
 
-        return new BeaconState(validatorSetHash, genesis.getRandaoReveal());
+        return new BeaconState(newValidatorSet, genesis.getRandaoReveal());
     }
 
     class ValidatorSetInitiator implements ValidatorSetTransition {
 
         @Override
-        public byte[] applyBlock(Beacon block, ValidatorSet to) {
+        public ValidatorSet applyBlock(Beacon block, ValidatorSet set) {
             BeaconGenesis genesis = (BeaconGenesis) block;
 
             Map<String, Validator> registered = validatorRepository.query(mainChainRef)
@@ -75,10 +73,10 @@ public class GenesisTransition implements StateTransition {
 
             genesis.getInitialValidators().forEach(pubKey -> {
                 Validator v = registered.get(pubKey);
-                if (v != null) validatorSet.add(v);
+                if (v != null) set.add(v);
             });
 
-            return validatorSet.getHash();
+            return set;
         }
     }
 }

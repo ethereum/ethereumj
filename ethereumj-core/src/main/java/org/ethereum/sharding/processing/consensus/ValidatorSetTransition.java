@@ -26,5 +26,5 @@ import org.ethereum.sharding.processing.db.ValidatorSet;
  */
 public interface ValidatorSetTransition {
 
-    byte[] applyBlock(Beacon block, ValidatorSet to);
+    ValidatorSet applyBlock(Beacon block, ValidatorSet to);
 }
