@@ -90,7 +90,15 @@ public class CrystallizedState {
         return new CrystallizedState(lastStateRecalc, dynasty, finality, crosslinks);
     }
 
+    public CrystallizedState withLastStateRecalcIncrement(long addition) {
+        return new CrystallizedState(lastStateRecalc + addition, dynasty, finality, crosslinks);
+    }
+
     public CrystallizedState withCrosslinks(Crosslink[] crosslinks) {
+        return new CrystallizedState(lastStateRecalc, dynasty, finality, crosslinks);
+    }
+
+    public CrystallizedState withFinality(Finality finality) {
         return new CrystallizedState(lastStateRecalc, dynasty, finality, crosslinks);
     }
 
