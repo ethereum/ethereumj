@@ -60,14 +60,14 @@ public class TrieValidatorSet implements ValidatorSet {
     private int size;
 
     public TrieValidatorSet(Source<byte[], byte[]> src) {
-        this(src, null);
+        this(src, EMPTY_HASH);
     }
 
     public TrieValidatorSet(Source<byte[], byte[]> src, byte[] root) {
         this.underlyingSrc = src;
         // trie deletes ghost nodes by default, force keeping them in the source
         this.trieSrc = new NoDeleteSource<>(underlyingSrc);
-        this.trie = new TrieImpl(trieSrc, root);
+        this.trie = new TrieImpl(trieSrc, root == EMPTY_HASH ? null : root);
         this.validators = new SourceCodec<>(trie, IndexSerializer, Validator.Serializer);
 
         // load size
@@ -125,8 +125,7 @@ public class TrieValidatorSet implements ValidatorSet {
         public byte[] serialize(Integer index) {
             // MAX_VALIDATOR_COUNT = 2 ** 22,
             // drop highest byte due to its uselessness
-            byte[] path = ByteUtil.intToBytes(index);
-            return Arrays.copyOfRange(path, 1, 4);
+            return ByteUtil.toInt24(index);
         }
 
         @Override

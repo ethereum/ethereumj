@@ -17,6 +17,7 @@
  */
 package org.ethereum.sharding.processing.db;
 
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.Source;
 import org.ethereum.sharding.domain.Validator;
 
@@ -35,6 +36,11 @@ import org.ethereum.sharding.domain.Validator;
  * @since 04.09.2018
  */
 public interface ValidatorSet extends Source<Integer, Validator> {
+
+    /**
+     * A hash of empty validator set
+     */
+    byte[] EMPTY_HASH = HashUtil.EMPTY_TRIE_HASH;
 
     /**
      * Returns validator with specified index.

@@ -41,7 +41,7 @@ public class TrieValidatorSetTest {
         ValidatorSet set = emptySet();
 
         assertEquals(0, set.size());
-        assertArrayEquals(HashUtil.EMPTY_TRIE_HASH, set.getHash());
+        assertArrayEquals(ValidatorSet.EMPTY_HASH, set.getHash());
 
         Validator first = getRandomValidator();
         Validator second = getRandomValidator();
@@ -50,7 +50,7 @@ public class TrieValidatorSetTest {
         assertEquals(0, idx);
         assertEquals(1, set.size());
 
-        assert !FastByteComparisons.equal(HashUtil.EMPTY_TRIE_HASH, set.getHash());
+        assert !FastByteComparisons.equal(ValidatorSet.EMPTY_HASH, set.getHash());
 
         assertValidatorEquals(first, set.get(0));
 

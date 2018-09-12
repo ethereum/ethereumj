@@ -17,10 +17,8 @@
  */
 package org.ethereum.sharding.processing.state;
 
-import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.Serializer;
-import org.ethereum.sharding.domain.BeaconGenesis;
-import org.ethereum.util.ByteUtil;
+import org.ethereum.sharding.processing.db.ValidatorSet;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
@@ -57,7 +55,7 @@ public class BeaconState {
     }
     
     public static BeaconState empty() {
-        return new BeaconState(HashUtil.EMPTY_TRIE_HASH, new byte[32]);
+        return new BeaconState(ValidatorSet.EMPTY_HASH, new byte[32]);
     }
 
     public static final Serializer<BeaconState, byte[]> Serializer = new Serializer<BeaconState, byte[]>() {
