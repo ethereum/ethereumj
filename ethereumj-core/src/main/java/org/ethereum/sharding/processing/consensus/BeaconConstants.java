@@ -17,14 +17,32 @@
  */
 package org.ethereum.sharding.processing.consensus;
 
-import org.ethereum.sharding.domain.Beacon;
-import org.ethereum.sharding.processing.db.ValidatorSet;
+import org.ethereum.util.blockchain.EtherUtil;
+
+import java.math.BigInteger;
+
+import static org.ethereum.util.blockchain.EtherUtil.convert;
 
 /**
+ * A global constants related to beacon chain consensus.
+ *
  * @author Mikhail Kalinin
- * @since 04.09.2018
+ * @since 06.09.2018
  */
-public interface ValidatorSetTransition {
+public interface BeaconConstants {
 
-    ValidatorSet applyBlock(Beacon block, ValidatorSet to);
+    /**
+     *  Number of slots in each cycle
+     */
+    long CYCLE_LENGTH = 64;
+
+    /**
+     * Number of shards
+     */
+    int SHARD_COUNT = 1024;
+
+    /**
+     * Validator registration deposit in wei
+     */
+    BigInteger DEPOSIT_WEI = convert(32, EtherUtil.Unit.ETHER);
 }

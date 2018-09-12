@@ -106,7 +106,7 @@ public class BeaconProposerTest {
         EthereumListener listener;
         Publisher publisher;
         Randao randao;
-        StateTransition stateTransition;
+        StateTransition<BeaconState> stateTransition;
         StateRepository repository;
         BeaconState recentState;
 
@@ -142,8 +142,8 @@ public class BeaconProposerTest {
             Randao randao = new Randao(new HashMapDB<>());
             randao.generate(1000);
 
-            StateRepository repository = new BeaconStateRepository(new HashMapDB<>(), new HashMapDB<>());
-            StateTransition stateTransition = new NoTransition();
+            StateRepository repository = new BeaconStateRepository(new HashMapDB<>(), new HashMapDB<>(), new HashMapDB<>());
+            StateTransition<BeaconState> stateTransition = new NoTransition();
 
             CompositeEthereumListenerMock listener = new CompositeEthereumListenerMock();
             Ethereum ethereum = new EthereumMock(listener);

@@ -53,13 +53,13 @@ public class GenesisTransitionTest {
 
         BeaconGenesis genesis = new BeaconGenesis(getJson(v1, v3, v4));
 
-        StateRepository stateRepository = new BeaconStateRepository(new HashMapDB<>(), new HashMapDB<>());
+        StateRepository stateRepository = new BeaconStateRepository(new HashMapDB<>(), new HashMapDB<>(), new HashMapDB<>());
         ValidatorRepository validatorRepository = new PredefinedValidatorRepository(v1, v2, v3, v4);
 
         GenesisTransition transition = new GenesisTransition(validatorRepository);
         BeaconState newState = transition.applyBlock(genesis, stateRepository.getEmpty());
 
-        checkValidatorSet(newState.getValidatorSet(), v1, v3, v4);
+        checkValidatorSet(newState.getCrystallizedState().getDynasty().getValidatorSet(), v1, v3, v4);
     }
 
     BeaconGenesis.Json getJson(Validator... validators) {

@@ -18,7 +18,6 @@
 package org.ethereum.sharding.processing.state;
 
 import org.ethereum.datasource.Serializer;
-import org.ethereum.sharding.processing.db.ValidatorSet;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
@@ -32,70 +31,57 @@ import static org.ethereum.crypto.HashUtil.blake2b;
  */
 public class BeaconState {
 
-    private final ValidatorSet validatorSet;
-    private final byte[] dynastySeed;
+    private final CrystallizedState crystallizedState;
 
-    public BeaconState(ValidatorSet validatorSet, byte[] dynastySeed) {
-        this.validatorSet = validatorSet;
-        this.dynastySeed = dynastySeed;
+    public BeaconState(CrystallizedState crystallizedState) {
+        this.crystallizedState = crystallizedState;
     }
 
-    public ValidatorSet getValidatorSet() {
-        return validatorSet;
-    }
-
-    public byte[] getDynastySeed() {
-        return dynastySeed;
+    public CrystallizedState getCrystallizedState() {
+        return crystallizedState;
     }
 
     public byte[] getHash() {
-        return blake2b(getStripped().encode());
+        return flatten().getHash();
     }
 
-    public Stripped getStripped() {
-        return new Stripped(validatorSet.getHash(), dynastySeed);
+    public Flattened flatten() {
+        return new Flattened(crystallizedState);
     }
 
-    public static class Stripped {
-        private final byte[] validatorSetHash;
-        private final byte[] dynastySeed;
+    public static class Flattened {
+        private final byte[] crystallizedStateHash;
 
-        public Stripped(byte[] validatorSetHash, byte[] dynastySeed) {
-            this.validatorSetHash = validatorSetHash;
-            this.dynastySeed = dynastySeed;
+        public Flattened(CrystallizedState crystallizedState) {
+            this.crystallizedStateHash = crystallizedState.getHash();
         }
 
-        public Stripped(byte[] encoded) {
+        public Flattened(byte[] encoded) {
             RLPList list = RLP.unwrapList(encoded);
-            this.validatorSetHash = list.get(0).getRLPData();
-            this.dynastySeed = list.get(1).getRLPData();
+            this.crystallizedStateHash = list.get(0).getRLPData();
         }
 
-        public static Stripped empty() {
-            return new Stripped(ValidatorSet.EMPTY_HASH, new byte[32]);
+        public byte[] getCrystallizedStateHash() {
+            return crystallizedStateHash;
+        }
+
+        public byte[] getHash() {
+            return blake2b(encode());
         }
 
         public byte[] encode() {
-            return RLP.wrapList(validatorSetHash, dynastySeed);
+            return RLP.wrapList(crystallizedStateHash);
         }
 
-        public byte[] getValidatorSetHash() {
-            return validatorSetHash;
-        }
-
-        public byte[] getDynastySeed() {
-            return dynastySeed;
-        }
-
-        public static final org.ethereum.datasource.Serializer<Stripped, byte[]> Serializer = new Serializer<Stripped, byte[]>() {
+        public static final org.ethereum.datasource.Serializer<Flattened, byte[]> Serializer = new Serializer<Flattened, byte[]>() {
             @Override
-            public byte[] serialize(Stripped state) {
+            public byte[] serialize(Flattened state) {
                 return state == null ? null : state.encode();
             }
 
             @Override
-            public Stripped deserialize(byte[] stream) {
-                return stream == null ? null : new Stripped(stream);
+            public Flattened deserialize(byte[] stream) {
+                return stream == null ? null : new Flattened(stream);
             }
         };
     }

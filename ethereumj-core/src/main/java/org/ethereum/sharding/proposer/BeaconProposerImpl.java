@@ -48,7 +48,7 @@ public class BeaconProposerImpl implements BeaconProposer {
     private static final Logger logger = LoggerFactory.getLogger("proposer");
 
     Randao randao;
-    StateTransition stateTransition;
+    StateTransition<BeaconState> stateTransition;
     StateRepository repository;
     BlockStore blockStore;
 
@@ -57,7 +57,7 @@ public class BeaconProposerImpl implements BeaconProposer {
     private BeaconState recentState;
 
     public BeaconProposerImpl(Ethereum ethereum, Publisher publisher, Randao randao,
-                              StateRepository repository, StateTransition stateTransition) {
+                              StateRepository repository, StateTransition<BeaconState> stateTransition) {
         this.randao = randao;
         this.repository = repository;
         this.stateTransition = stateTransition;

@@ -23,20 +23,27 @@ import org.ethereum.sharding.domain.BeaconGenesis;
 import org.ethereum.sharding.domain.Validator;
 import org.ethereum.sharding.processing.db.ValidatorSet;
 import org.ethereum.sharding.processing.state.BeaconState;
+import org.ethereum.sharding.processing.state.Crosslink;
+import org.ethereum.sharding.processing.state.CrystallizedState;
+import org.ethereum.sharding.processing.state.Dynasty;
 import org.ethereum.sharding.service.ValidatorRepository;
 import org.spongycastle.util.encoders.Hex;
 
+import java.math.BigInteger;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static org.ethereum.sharding.processing.consensus.BeaconConstants.DEPOSIT_WEI;
+import static org.ethereum.sharding.processing.consensus.BeaconConstants.SHARD_COUNT;
 
 /**
  * @author Mikhail Kalinin
  * @since 04.09.2018
  */
-public class GenesisTransition implements StateTransition {
+public class GenesisTransition implements StateTransition<BeaconState> {
 
     ValidatorRepository validatorRepository;
-    ValidatorSetTransition validatorSetTransition = new ValidatorSetInitiator();
+    StateTransition<ValidatorSet> validatorSetTransition = new ValidatorSetInitiator();
     byte[] mainChainRef;
 
     public GenesisTransition(ValidatorRepository validatorRepository) {
@@ -57,12 +64,24 @@ public class GenesisTransition implements StateTransition {
             mainChainRef = genesis.getMainChainRef();
         }
 
-        ValidatorSet newValidatorSet = validatorSetTransition.applyBlock(block, to.getValidatorSet());
+        ValidatorSet validatorSet = validatorSetTransition.applyBlock(block,
+                to.getCrystallizedState().getDynasty().getValidatorSet());
 
-        return new BeaconState(newValidatorSet, genesis.getRandaoReveal());
+        Dynasty dynasty = to.getCrystallizedState().getDynasty()
+                .withValidatorSet(validatorSet)
+                .withNumber(1L)
+                .withCrosslinkingStartShard(0L)
+                .withTotalDepositsIncrement(DEPOSIT_WEI.multiply(BigInteger.valueOf(validatorSet.size())));
+
+        CrystallizedState crystallizedState = to.getCrystallizedState()
+                .withDynasty(dynasty)
+                .withLastStateRecalc(0L)
+                .withCrosslinks(Crosslink.empty(SHARD_COUNT));
+
+        return new BeaconState(crystallizedState);
     }
 
-    class ValidatorSetInitiator implements ValidatorSetTransition {
+    class ValidatorSetInitiator implements StateTransition<ValidatorSet> {
 
         @Override
         public ValidatorSet applyBlock(Beacon block, ValidatorSet set) {

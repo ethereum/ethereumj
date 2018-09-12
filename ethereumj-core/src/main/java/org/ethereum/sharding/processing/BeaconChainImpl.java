@@ -53,21 +53,21 @@ public class BeaconChainImpl implements BeaconChain {
     DbFlushManager beaconDbFlusher;
     BeaconStore store;
 
-    StateTransition transitionFunction;
+    StateTransition<BeaconState> transitionFunction;
+    StateTransition<BeaconState> genesisStateTransition;
     BeaconValidator beaconValidator;
     StateValidator stateValidator;
     StateRepository repository;
     ScoreFunction scoreFunction;
-    StateTransition genesisStateTransition;
 
     Publisher publisher;
 
     private ChainHead canonicalHead;
 
     public BeaconChainImpl(DbFlushManager beaconDbFlusher, BeaconStore store,
-                           StateTransition transitionFunction, StateRepository repository,
+                           StateTransition<BeaconState> transitionFunction, StateRepository repository,
                            BeaconValidator beaconValidator, StateValidator stateValidator,
-                           ScoreFunction scoreFunction, StateTransition genesisStateTransition) {
+                           ScoreFunction scoreFunction, StateTransition<BeaconState> genesisStateTransition) {
         this.beaconDbFlusher = beaconDbFlusher;
         this.store = store;
         this.transitionFunction = transitionFunction;

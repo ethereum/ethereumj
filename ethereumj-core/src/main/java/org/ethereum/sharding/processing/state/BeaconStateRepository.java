@@ -32,42 +32,70 @@ import org.ethereum.sharding.processing.db.ValidatorSet;
 public class BeaconStateRepository implements StateRepository {
 
     Source<byte[], byte[]> src;
-    ObjectDataSource<BeaconState.Stripped> stateDS;
+    ObjectDataSource<BeaconState.Flattened> stateDS;
+    Source<byte[], byte[]> crystallizedSrc;
+    ObjectDataSource<CrystallizedState.Flattened> crystallizedDS;
     Source<byte[], byte[]> validatorSrc;
 
-    public BeaconStateRepository(Source<byte[], byte[]> src, Source<byte[], byte[]> validatorSrc) {
+    public BeaconStateRepository(Source<byte[], byte[]> src, Source<byte[], byte[]> crystallizedSrc,
+                                 Source<byte[], byte[]> validatorSrc) {
         this.src = src;
+        this.crystallizedSrc = crystallizedSrc;
         this.validatorSrc = validatorSrc;
-        this.stateDS = new ObjectDataSource<>(src, BeaconState.Stripped.Serializer, BeaconStore.BLOCKS_IN_MEM);
+
+        this.stateDS = new ObjectDataSource<>(src, BeaconState.Flattened.Serializer, BeaconStore.BLOCKS_IN_MEM);
+        this.crystallizedDS = new ObjectDataSource<>(crystallizedSrc,
+                CrystallizedState.Flattened.Serializer, BeaconStore.BLOCKS_IN_MEM);
     }
 
     @Override
     public void insert(BeaconState state) {
-        stateDS.put(state.getHash(), state.getStripped());
+        CrystallizedState crystallized = state.getCrystallizedState();
+        crystallizedDS.put(crystallized.getHash(), crystallized.flatten());
+        stateDS.put(state.getHash(), state.flatten());
     }
 
     @Override
     public BeaconState get(byte[] hash) {
-        BeaconState.Stripped stripped = stateDS.get(hash);
-        if (stripped == null)
+        BeaconState.Flattened flattened = stateDS.get(hash);
+        if (flattened == null)
             return null;
 
-        return fromStripped(stripped);
+        return fromFlattened(flattened);
     }
 
     @Override
     public BeaconState getEmpty() {
-        return fromStripped(BeaconState.Stripped.empty());
+        CrystallizedState.Flattened crystallizedFlattened = CrystallizedState.Flattened.empty();
+        CrystallizedState crystallizedState = fromFlattened(crystallizedFlattened);
+
+        return new BeaconState(crystallizedState);
     }
 
-    BeaconState fromStripped(BeaconState.Stripped stripped) {
-        ValidatorSet validatorSet = new TrieValidatorSet(validatorSrc, stripped.getValidatorSetHash());
+    BeaconState fromFlattened(BeaconState.Flattened flattened) {
+        CrystallizedState.Flattened crystallizedFlattened = crystallizedDS.get(flattened.getCrystallizedStateHash());
+        CrystallizedState crystallizedState = fromFlattened(crystallizedFlattened);
 
-        return new BeaconState(validatorSet, stripped.getDynastySeed());
+        return new BeaconState(crystallizedState);
+    }
+
+    CrystallizedState fromFlattened(CrystallizedState.Flattened flattened) {
+        ValidatorSet validatorSet = new TrieValidatorSet(validatorSrc, flattened.getValidatorSetHash());
+        Dynasty dynasty = new Dynasty(validatorSet, flattened.getCommittees(),
+                flattened.getCurrentDynasty(), flattened.getCrosslinkingStartShard(),
+                flattened.getTotalDeposits(), flattened.getDynastySeed(),
+                flattened.getDynastySeedLastReset(), flattened.getDynastyStart());
+
+        Finality finality = new Finality(flattened.getLastJustifiedSlot(),
+                flattened.getJustifiedStreak(), flattened.getLastFinalizedSlot());
+
+        return new CrystallizedState(flattened.getLastStateRecalc(),
+                dynasty, finality, flattened.getCrosslinks());
     }
 
     @Override
     public void commit() {
+        crystallizedDS.flush();
         stateDS.flush();
     }
 }

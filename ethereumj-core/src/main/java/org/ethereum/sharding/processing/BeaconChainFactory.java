@@ -26,6 +26,7 @@ import org.ethereum.sharding.processing.consensus.ScoreFunction;
 import org.ethereum.sharding.processing.consensus.StateTransition;
 import org.ethereum.sharding.processing.db.BeaconStore;
 import org.ethereum.sharding.processing.db.ValidatorSet;
+import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.StateRepository;
 import org.ethereum.sharding.processing.validation.BeaconValidator;
 import org.ethereum.sharding.processing.validation.StateValidator;
@@ -43,10 +44,10 @@ import org.ethereum.sharding.service.ValidatorRepository;
  */
 public class BeaconChainFactory {
 
-    private static StateTransition stateTransition;
+    private static StateTransition<BeaconState> stateTransition;
 
     public static BeaconChain create(DbFlushManager beaconDbFlusher, BeaconStore store,
-                                     StateRepository repository, StateTransition genesisStateTransition) {
+                                     StateRepository repository, StateTransition<BeaconState> genesisStateTransition) {
 
         BeaconValidator beaconValidator = new BeaconValidator(store);
         StateValidator stateValidator = new StateValidator();
@@ -59,17 +60,13 @@ public class BeaconChainFactory {
     public static BeaconChain create(DbFlushManager beaconDbFlusher, BeaconStore store, StateRepository repository,
                                      ValidatorRepository validatorRepository, Block bestBlock) {
 
-        BeaconValidator beaconValidator = new BeaconValidator(store);
-        StateValidator stateValidator = new StateValidator();
-        ScoreFunction scoreFunction = new NumberAsScore();
-        StateTransition genesisStateTransition = new GenesisTransition(validatorRepository)
+        StateTransition<BeaconState> genesisStateTransition = new GenesisTransition(validatorRepository)
                 .withMainChainRef(bestBlock.getHash());
 
-        return new BeaconChainImpl(beaconDbFlusher, store, stateTransition(),
-                repository, beaconValidator, stateValidator, scoreFunction, genesisStateTransition);
+        return create(beaconDbFlusher, store, repository, genesisStateTransition);
     }
 
-    public static StateTransition stateTransition() {
+    public static StateTransition<BeaconState> stateTransition() {
         if (stateTransition == null)
             stateTransition = new NoTransition();
         return stateTransition;
