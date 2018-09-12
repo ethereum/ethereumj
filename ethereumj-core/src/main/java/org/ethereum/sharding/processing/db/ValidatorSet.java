@@ -85,43 +85,4 @@ public interface ValidatorSet extends Source<Integer, Validator> {
      * Returns a sample of validator set that corresponds to specified hash.
      */
     ValidatorSet getSnapshotTo(byte[] hash);
-
-    /**
-     * All the way empty validator set.
-     */
-    ValidatorSet Empty = new ValidatorSet() {
-        @Override
-        public Validator get(Integer index) {
-            return null;
-        }
-
-        @Override
-        public void put(Integer index, Validator validator) {
-        }
-
-        @Override
-        public int add(Validator validator) {
-            return 0;
-        }
-
-        @Override
-        public int size() {
-            return 0;
-        }
-
-        @Override
-        public byte[] getHash() {
-            return EMPTY_HASH;
-        }
-
-        @Override
-        public ValidatorSet getSnapshotTo(byte[] hash) {
-            return this;
-        }
-
-        @Override
-        public boolean flush() {
-            return false;
-        }
-    };
 }

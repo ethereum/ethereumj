@@ -42,6 +42,11 @@ public interface StateRepository {
     BeaconState get(byte[] hash);
 
     /**
+     * Creates valid empty state.
+     */
+    BeaconState getEmpty();
+
+    /**
      * Flushes changes to underlying sources.
      */
     void commit();

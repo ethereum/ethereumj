@@ -49,6 +49,18 @@ public class BeaconStateRepository implements StateRepository {
     @Override
     public BeaconState get(byte[] hash) {
         BeaconState.Stripped stripped = stateDS.get(hash);
+        if (stripped == null)
+            return null;
+
+        return fromStripped(stripped);
+    }
+
+    @Override
+    public BeaconState getEmpty() {
+        return fromStripped(BeaconState.Stripped.empty());
+    }
+
+    BeaconState fromStripped(BeaconState.Stripped stripped) {
         ValidatorSet validatorSet = new TrieValidatorSet(validatorSrc, stripped.getValidatorSetHash());
 
         return new BeaconState(validatorSet, stripped.getDynastySeed());

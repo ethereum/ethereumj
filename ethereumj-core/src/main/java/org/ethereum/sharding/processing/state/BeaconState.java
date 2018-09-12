@@ -56,14 +56,6 @@ public class BeaconState {
         return new Stripped(validatorSet.getHash(), dynastySeed);
     }
 
-    public static BeaconState empty() {
-        return new BeaconState(ValidatorSet.Empty, new byte[32]);
-    }
-
-    public BeaconState withValidatorSet(ValidatorSet validatorSet) {
-        return new BeaconState(validatorSet, dynastySeed);
-    }
-
     public static class Stripped {
         private final byte[] validatorSetHash;
         private final byte[] dynastySeed;
@@ -77,6 +69,10 @@ public class BeaconState {
             RLPList list = RLP.unwrapList(encoded);
             this.validatorSetHash = list.get(0).getRLPData();
             this.dynastySeed = list.get(1).getRLPData();
+        }
+
+        public static Stripped empty() {
+            return new Stripped(ValidatorSet.EMPTY_HASH, new byte[32]);
         }
 
         public byte[] encode() {

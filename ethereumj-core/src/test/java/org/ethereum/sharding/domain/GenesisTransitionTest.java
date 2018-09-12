@@ -20,9 +20,10 @@ package org.ethereum.sharding.domain;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.sharding.processing.consensus.GenesisTransition;
-import org.ethereum.sharding.processing.db.TrieValidatorSet;
 import org.ethereum.sharding.processing.db.ValidatorSet;
 import org.ethereum.sharding.processing.state.BeaconState;
+import org.ethereum.sharding.processing.state.BeaconStateRepository;
+import org.ethereum.sharding.processing.state.StateRepository;
 import org.ethereum.sharding.service.ValidatorRepository;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
@@ -52,13 +53,13 @@ public class GenesisTransitionTest {
 
         BeaconGenesis genesis = new BeaconGenesis(getJson(v1, v3, v4));
 
-        ValidatorSet validatorSet = new TrieValidatorSet(new HashMapDB<>());
+        StateRepository stateRepository = new BeaconStateRepository(new HashMapDB<>(), new HashMapDB<>());
         ValidatorRepository validatorRepository = new PredefinedValidatorRepository(v1, v2, v3, v4);
 
         GenesisTransition transition = new GenesisTransition(validatorRepository);
-        transition.applyBlock(genesis, BeaconState.empty().withValidatorSet(validatorSet));
+        BeaconState newState = transition.applyBlock(genesis, stateRepository.getEmpty());
 
-        checkValidatorSet(validatorSet, v1, v3, v4);
+        checkValidatorSet(newState.getValidatorSet(), v1, v3, v4);
     }
 
     BeaconGenesis.Json getJson(Validator... validators) {

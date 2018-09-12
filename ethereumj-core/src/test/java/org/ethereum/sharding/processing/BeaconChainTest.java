@@ -57,7 +57,7 @@ public class BeaconChainTest {
         beaconChain.init();
         Beacon head = beaconChain.getCanonicalHead();
         assertEquals(BeaconGenesis.instance(), head);
-        assertArrayEquals(BeaconState.empty().getHash(), helper.repository.get(head.getStateHash()).getHash());
+        assertArrayEquals(helper.repository.getEmpty().getHash(), helper.repository.get(head.getStateHash()).getHash());
         assertEquals(BeaconGenesis.instance().getScore(), helper.store.getCanonicalHeadScore());
     }
 

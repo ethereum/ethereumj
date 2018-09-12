@@ -97,7 +97,7 @@ public class BeaconChainImpl implements BeaconChain {
     void insertGenesis() {
         BeaconGenesis genesis = BeaconGenesis.instance();
 
-        BeaconState genesisState = genesisStateTransition.applyBlock(genesis, BeaconState.empty());
+        BeaconState genesisState = genesisStateTransition.applyBlock(genesis, repository.getEmpty());
         repository.insert(genesisState);
 
         genesis.setStateHash(genesisState.getHash());
