@@ -19,6 +19,7 @@ package org.ethereum.sharding.processing;
 
 import org.ethereum.core.Block;
 import org.ethereum.db.DbFlushManager;
+import org.ethereum.sharding.processing.consensus.BeaconStateTransition;
 import org.ethereum.sharding.processing.consensus.GenesisTransition;
 import org.ethereum.sharding.processing.consensus.NoTransition;
 import org.ethereum.sharding.processing.consensus.NumberAsScore;
@@ -47,13 +48,14 @@ public class BeaconChainFactory {
     private static StateTransition<BeaconState> stateTransition;
 
     public static BeaconChain create(DbFlushManager beaconDbFlusher, BeaconStore store,
-                                     StateRepository repository, StateTransition<BeaconState> genesisStateTransition) {
+                                     StateRepository repository, StateTransition<BeaconState> genesisStateTransition,
+                                     StateTransition<BeaconState> stateTransitionFunction) {
 
         BeaconValidator beaconValidator = new BeaconValidator(store);
         StateValidator stateValidator = new StateValidator();
         ScoreFunction scoreFunction = new NumberAsScore();
 
-        return new BeaconChainImpl(beaconDbFlusher, store, stateTransition(),
+        return new BeaconChainImpl(beaconDbFlusher, store, stateTransitionFunction,
                 repository, beaconValidator, stateValidator, scoreFunction, genesisStateTransition);
     }
 
@@ -63,12 +65,12 @@ public class BeaconChainFactory {
         StateTransition<BeaconState> genesisStateTransition = new GenesisTransition(validatorRepository)
                 .withMainChainRef(bestBlock.getHash());
 
-        return create(beaconDbFlusher, store, repository, genesisStateTransition);
+        return create(beaconDbFlusher, store, repository, genesisStateTransition, stateTransition(validatorRepository));
     }
 
-    public static StateTransition<BeaconState> stateTransition() {
+    public static StateTransition<BeaconState> stateTransition(ValidatorRepository validatorRepository) {
         if (stateTransition == null)
-            stateTransition = new NoTransition();
+            stateTransition = new BeaconStateTransition(validatorRepository);
         return stateTransition;
     }
 }

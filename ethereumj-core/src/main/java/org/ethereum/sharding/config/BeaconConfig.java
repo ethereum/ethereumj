@@ -217,7 +217,7 @@ public class BeaconConfig {
     @Bean
     public BeaconProposer beaconProposer() {
         return new BeaconProposerImpl(ethereum, publisher(), randao(), beaconStateRepository(),
-                BeaconChainFactory.stateTransition());
+                BeaconChainFactory.stateTransition(validatorRepository()));
     }
 
     @Bean

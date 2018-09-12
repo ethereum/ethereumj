@@ -184,7 +184,7 @@ public class BeaconChainTest {
             inst.store = new IndexedBeaconStore(new HashMapDB<>(), new HashMapDB<>());
             inst.repository = new BeaconStateRepository(new HashMapDB<>(), new HashMapDB<>(), new HashMapDB<>());
             inst.beaconChain = (BeaconChainImpl) BeaconChainFactory.create(
-                    new DummyFlusher(), inst.store, inst.repository, new NoTransition());
+                    new DummyFlusher(), inst.store, inst.repository, new NoTransition(), new NoTransition());
             inst.beaconChain.scoreFunction = (block, state) -> BigInteger.valueOf(block.getMainChainRef()[0]);
             return inst;
         }
