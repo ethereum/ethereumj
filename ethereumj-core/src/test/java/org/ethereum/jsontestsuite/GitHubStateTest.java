@@ -330,5 +330,21 @@ public class GitHubStateTest {
 //        String treeSha = "4dd59a4f448dc06c3641bd5cb9c35cf6a099e438";
 //           targetNets += GitHubJSONTestSuite.Network.Constantinople
     }
+
+    @Test
+    @Ignore("Update after all tests could pass latest develop")
+    public void stCreate2Test() throws IOException {
+        suite.runAll("stCreate2");
+// TODO: Update all, this one passes with following settings:
+//        String commitSHA = "e2d84e1c00289bc259ad631efb6b42390e6a291a";
+//        String treeSHA = "a0de4e26471485201d279792d057f3576f76a0c4";
+//           targetNets += GitHubJSONTestSuite.Network.Constantinople
+
+        // TODO: FIX create2collisionStorage_Constantinople_2
+//        String commitSHA = "e2d84e1c00289bc259ad631efb6b42390e6a291a";
+//        String filePath = "stCreate2/create2collisionStorage.json";
+//        GeneralStateTestSuite.runSingle(filePath, commitSHA, GitHubJSONTestSuite.Network.Constantinople);
+
+    }
 }
 

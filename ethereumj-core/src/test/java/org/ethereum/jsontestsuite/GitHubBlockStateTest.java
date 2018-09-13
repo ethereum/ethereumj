@@ -328,4 +328,19 @@ public class GitHubBlockStateTest {
 //        String treeSHA = "8457a6a49f53218575a349abc311c55939797bff";
 //           targetNets += GitHubJSONTestSuite.Network.Constantinople
     }
+
+    @Test
+    @Ignore("Update after all tests could pass latest develop")
+    public void stCreate2Test() throws IOException {
+        suite.runAll("stCreate2");
+// TODO: Update all, this one passes with following settings:
+//        String commitSHA = "e2d84e1c00289bc259ad631efb6b42390e6a291a";
+//        String treeSHA = "d74573a79cf607744759acde258bf7c3cf849bf1";
+//           targetNets += GitHubJSONTestSuite.Network.Constantinople
+
+        // TODO: fix test
+//        String commit = "e2d84e1c00289bc259ad631efb6b42390e6a291a";
+//        String filePath = "GeneralStateTests/stCreate2/create2collisionStorage_d1g0v0.json";
+//        BlockchainTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Constantinople);
+    }
 }

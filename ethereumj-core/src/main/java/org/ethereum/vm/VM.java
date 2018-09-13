@@ -110,6 +110,7 @@ public class VM {
         put(SHL, BlockchainConfig::eip145);
         put(SHR, BlockchainConfig::eip145);
         put(SAR, BlockchainConfig::eip145);
+        put(CREATE2, BlockchainConfig::eip1014);
     }};
 
     private final SystemProperties config;
@@ -385,6 +386,10 @@ public class VM {
                     gasCost += adjustedCallGas.longValueSafe();
                     break;
                 case CREATE:
+                    gasCost = gasCosts.getCREATE() + calcMemGas(gasCosts, oldMemSize,
+                            memNeeded(stack.get(stack.size() - 2), stack.get(stack.size() - 3)), 0);
+                    break;
+                case CREATE2:
                     gasCost = gasCosts.getCREATE() + calcMemGas(gasCosts, oldMemSize,
                             memNeeded(stack.get(stack.size() - 2), stack.get(stack.size() - 3)), 0);
                     break;
@@ -1275,6 +1280,25 @@ public class VM {
                                 program.getCallDeep(), hint);
 
                     program.createContract(value, inOffset, inSize);
+
+                    program.step();
+                }
+                break;
+                case CREATE2: {
+                    if (program.isStaticCall()) throw new Program.StaticCallModificationException();
+
+                    DataWord value = program.stackPop();
+                    DataWord inOffset = program.stackPop();
+                    DataWord inSize = program.stackPop();
+                    DataWord salt = program.stackPop();
+
+                    if (logger.isInfoEnabled())
+                        logger.info(logString, String.format("%5s", "[" + program.getPC() + "]"),
+                                String.format("%-12s", op.name()),
+                                program.getGas().value(),
+                                program.getCallDeep(), hint);
+
+                    program.createContract2(value, inOffset, inSize, salt);
 
                     program.step();
                 }
