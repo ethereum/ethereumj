@@ -435,7 +435,7 @@ public class Program {
         byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
         BigInteger endowment = value.value();
         if (!verifyCall(senderAddress, endowment))
-            return;;
+            return;
 
         byte[] programCode = memoryChunk(memStart.intValue(), memSize.intValue());
         byte[] contractAddress = HashUtil.calcSaltAddr(senderAddress, programCode, salt.getData());
