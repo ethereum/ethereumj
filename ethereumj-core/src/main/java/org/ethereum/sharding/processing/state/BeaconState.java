@@ -18,6 +18,8 @@
 package org.ethereum.sharding.processing.state;
 
 import org.ethereum.datasource.Serializer;
+import org.ethereum.sharding.domain.Beacon;
+import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
@@ -47,6 +49,14 @@ public class BeaconState {
 
     public Flattened flatten() {
         return new Flattened(crystallizedState);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof BeaconState)) return false;
+
+        return FastByteComparisons.equal(((BeaconState) o).getHash(), this.getHash());
     }
 
     public static class Flattened {

@@ -26,6 +26,14 @@ public class BeaconStateTransition implements StateTransition<BeaconState> {
         this.finalityTransition = new FinalityTransition();
     }
 
+    public BeaconStateTransition(StateTransition<ValidatorSet> validatorSetTransition,
+                                 StateTransition<Dynasty> dynastyTransition,
+                                 StateTransition<Finality> finalityTransition) {
+        this.validatorSetTransition = validatorSetTransition;
+        this.dynastyTransition = dynastyTransition;
+        this.finalityTransition = finalityTransition;
+    }
+
     @Override
     public BeaconState applyBlock(Beacon block, BeaconState to) {
 
