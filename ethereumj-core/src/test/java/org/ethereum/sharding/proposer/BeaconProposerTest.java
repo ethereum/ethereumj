@@ -86,7 +86,7 @@ public class BeaconProposerTest {
 
         Beacon newBlock = BeaconGenesis.instance();
         helper.insertBlock(newBlock);
-        byte[] reveal = helper.randao.reveal();
+        byte[] reveal = helper.randao.revealNext();
 
         for (int i = 0; i < 5; i++) {
             long slotNumber = i * 10;
@@ -106,7 +106,7 @@ public class BeaconProposerTest {
         EthereumListener listener;
         Publisher publisher;
         Randao randao;
-        StateTransition stateTransition;
+        StateTransition<BeaconState> stateTransition;
         StateRepository repository;
         BeaconState recentState;
 
@@ -120,7 +120,8 @@ public class BeaconProposerTest {
 
         void insertBlock(Beacon block) {
             if (block.isGenesis()) {
-                recentState = BeaconGenesis.instance().getState();
+                recentState = repository.getEmpty();
+                block.setStateHash(recentState.getHash());
             } else {
                 recentState = stateTransition.applyBlock(block, recentState);
             }
@@ -141,8 +142,8 @@ public class BeaconProposerTest {
             Randao randao = new Randao(new HashMapDB<>());
             randao.generate(1000);
 
-            StateRepository repository = new BeaconStateRepository(new HashMapDB<>());
-            StateTransition stateTransition = new NoTransition();
+            StateRepository repository = new BeaconStateRepository(new HashMapDB<>(), new HashMapDB<>(), new HashMapDB<>());
+            StateTransition<BeaconState> stateTransition = new NoTransition();
 
             CompositeEthereumListenerMock listener = new CompositeEthereumListenerMock();
             Ethereum ethereum = new EthereumMock(listener);
@@ -151,7 +152,12 @@ public class BeaconProposerTest {
 
 
             Helper helper = new Helper();
-            helper.proposer = new BeaconProposerImpl(ethereum, publisher, randao, repository, stateTransition);
+            helper.proposer = new BeaconProposerImpl(ethereum, publisher, randao, repository, stateTransition) {
+                @Override
+                byte[] getMainChainRef(Block mainChainHead) {
+                    return mainChainHead.getHash();
+                }
+            };
             helper.listener = listener;
             helper.publisher = publisher;
             helper.randao = randao;

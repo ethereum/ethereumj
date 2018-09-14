@@ -18,6 +18,10 @@
 package org.ethereum.sharding.processing.state;
 
 import org.ethereum.datasource.Serializer;
+import org.ethereum.sharding.domain.Beacon;
+import org.ethereum.util.FastByteComparisons;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPList;
 
 import static org.ethereum.crypto.HashUtil.blake2b;
 
@@ -29,29 +33,66 @@ import static org.ethereum.crypto.HashUtil.blake2b;
  */
 public class BeaconState {
 
-    public BeaconState() {
+    private final CrystallizedState crystallizedState;
+
+    public BeaconState(CrystallizedState crystallizedState) {
+        this.crystallizedState = crystallizedState;
     }
 
-    public BeaconState(byte[] encoded) {
+    public CrystallizedState getCrystallizedState() {
+        return crystallizedState;
     }
 
     public byte[] getHash() {
-        return blake2b(getEncoded());
+        return flatten().getHash();
     }
 
-    public byte[] getEncoded() {
-        return new byte[] {};
+    public Flattened flatten() {
+        return new Flattened(crystallizedState);
     }
 
-    public static final Serializer<BeaconState, byte[]> Serializer = new Serializer<BeaconState, byte[]>() {
-        @Override
-        public byte[] serialize(BeaconState state) {
-            return state == null ? null : state.getEncoded();
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || !(o instanceof BeaconState)) return false;
+
+        return FastByteComparisons.equal(((BeaconState) o).getHash(), this.getHash());
+    }
+
+    public static class Flattened {
+        private final byte[] crystallizedStateHash;
+
+        public Flattened(CrystallizedState crystallizedState) {
+            this.crystallizedStateHash = crystallizedState.getHash();
         }
 
-        @Override
-        public BeaconState deserialize(byte[] stream) {
-            return stream == null ? null : new BeaconState(stream);
+        public Flattened(byte[] encoded) {
+            RLPList list = RLP.unwrapList(encoded);
+            this.crystallizedStateHash = list.get(0).getRLPData();
         }
-    };
+
+        public byte[] getCrystallizedStateHash() {
+            return crystallizedStateHash;
+        }
+
+        public byte[] getHash() {
+            return blake2b(encode());
+        }
+
+        public byte[] encode() {
+            return RLP.wrapList(crystallizedStateHash);
+        }
+
+        public static final org.ethereum.datasource.Serializer<Flattened, byte[]> Serializer = new Serializer<Flattened, byte[]>() {
+            @Override
+            public byte[] serialize(Flattened state) {
+                return state == null ? null : state.encode();
+            }
+
+            @Override
+            public Flattened deserialize(byte[] stream) {
+                return stream == null ? null : new Flattened(stream);
+            }
+        };
+    }
 }

@@ -38,6 +38,7 @@ import java.math.BigInteger;
 
 import static org.ethereum.sharding.pubsub.Events.onBeaconBlock;
 import static org.ethereum.sharding.pubsub.Events.onBeaconChainLoaded;
+import static org.ethereum.sharding.pubsub.Events.onBeaconChainSynced;
 
 /**
  * This is default and likely the only implementation of {@link BeaconChain}
@@ -52,7 +53,8 @@ public class BeaconChainImpl implements BeaconChain {
     DbFlushManager beaconDbFlusher;
     BeaconStore store;
 
-    StateTransition transitionFunction;
+    StateTransition<BeaconState> transitionFunction;
+    StateTransition<BeaconState> genesisStateTransition;
     BeaconValidator beaconValidator;
     StateValidator stateValidator;
     StateRepository repository;
@@ -63,9 +65,9 @@ public class BeaconChainImpl implements BeaconChain {
     private ChainHead canonicalHead;
 
     public BeaconChainImpl(DbFlushManager beaconDbFlusher, BeaconStore store,
-                           StateTransition transitionFunction, StateRepository repository,
+                           StateTransition<BeaconState> transitionFunction, StateRepository repository,
                            BeaconValidator beaconValidator, StateValidator stateValidator,
-                           ScoreFunction scoreFunction) {
+                           ScoreFunction scoreFunction, StateTransition<BeaconState> genesisStateTransition) {
         this.beaconDbFlusher = beaconDbFlusher;
         this.store = store;
         this.transitionFunction = transitionFunction;
@@ -73,6 +75,7 @@ public class BeaconChainImpl implements BeaconChain {
         this.beaconValidator = beaconValidator;
         this.stateValidator = stateValidator;
         this.scoreFunction = scoreFunction;
+        this.genesisStateTransition = genesisStateTransition;
     }
 
     @Override
@@ -86,16 +89,21 @@ public class BeaconChainImpl implements BeaconChain {
                 repository.get(store.getCanonicalHead().getStateHash()));
 
         publish(onBeaconChainLoaded(canonicalHead.block));
+        publish(onBeaconChainSynced(canonicalHead.block));
 
         logger.info("Chain loaded with head: {}", canonicalHead.block);
     }
 
-    private void insertGenesis() {
+    void insertGenesis() {
         BeaconGenesis genesis = BeaconGenesis.instance();
-        store.save(genesis, genesis.getScore(), true);
-        repository.insert(genesis.getState());
-        repository.commit();
 
+        BeaconState genesisState = genesisStateTransition.applyBlock(genesis, repository.getEmpty());
+        repository.insert(genesisState);
+
+        genesis.setStateHash(genesisState.getHash());
+        store.save(genesis, genesis.getScore(), true);
+
+        repository.commit();
         beaconDbFlusher.flushSync();
     }
 

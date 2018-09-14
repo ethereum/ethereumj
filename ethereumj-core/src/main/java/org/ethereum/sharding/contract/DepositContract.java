@@ -28,6 +28,7 @@ import org.ethereum.listener.LogFilter;
 import org.ethereum.listener.RecommendedGasPriceTracker;
 import org.ethereum.sharding.crypto.DepositAuthority;
 import org.ethereum.sharding.domain.Validator;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.Futures;
 import org.ethereum.util.blockchain.EtherUtil;
@@ -43,7 +44,9 @@ import java.math.BigInteger;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
 import static org.ethereum.util.ByteUtil.longToBytes;
+import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
 import static org.ethereum.util.blockchain.EtherUtil.convert;
 
 /**
@@ -67,7 +70,7 @@ public class DepositContract {
 
     private static final Logger logger = LoggerFactory.getLogger("beacon");
 
-    private static final byte[] DEPOSIT_WEI = convert(32, EtherUtil.Unit.ETHER).toByteArray();
+    private static final byte[] DEPOSIT_WEI = bigIntegerToBytes(convert(32, EtherUtil.Unit.ETHER));
     private static final long GAS_LIMIT = 200_000;
     private static final long DEFAULT_GAS_PRICE = convert(5, EtherUtil.Unit.GWEI).longValue();
     private static final long DEPOSIT_TIMEOUT = 15; // 15 minutes
@@ -141,8 +144,8 @@ public class DepositContract {
         BigInteger nonce = ethereum.getRepository().getNonce(authority.address());
         long gasPrice = gasPriceTracker.getRecommendedGasPrice();
         Integer chainId = ethereum.getChainIdForNextBlock();
-        Transaction tx = new Transaction(nonce.toByteArray(), longToBytes(gasPrice), longToBytes(GAS_LIMIT),
-                address, DEPOSIT_WEI, data, chainId);
+        Transaction tx = new Transaction(bigIntegerToBytes(nonce), longToBytesNoLeadZeroes(gasPrice),
+                longToBytesNoLeadZeroes(GAS_LIMIT), address, DEPOSIT_WEI, data, chainId);
         authority.sign(tx);
         return tx;
     }

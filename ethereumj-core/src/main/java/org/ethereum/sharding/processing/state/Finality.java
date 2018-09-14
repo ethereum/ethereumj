@@ -17,37 +17,38 @@
  */
 package org.ethereum.sharding.processing.state;
 
-import javax.annotation.Nullable;
-
 /**
- * An API to the beacon state repository.
- *
- * <p>
- *     The repository is a kv storage with a state hash treated as a key.
- *
  * @author Mikhail Kalinin
- * @since 15.08.2018
+ * @since 12.09.2018
  */
-public interface StateRepository {
+public class Finality {
 
-    /**
-     * Inserts new state into repository.
-     */
-    void insert(BeaconState state);
+    /* The last justified slot */
+    private final long lastJustifiedSlot;
+    /* Number of consecutive justified slots ending at this one */
+    private final long justifiedStreak;
+    /* The last finalized slot */
+    private final long lastFinalizedSlot;
 
-    /**
-     * Returns beacon state with specific hash.
-     */
-    @Nullable
-    BeaconState get(byte[] hash);
+    public Finality(long lastJustifiedSlot, long justifiedStreak, long lastFinalizedSlot) {
+        this.lastJustifiedSlot = lastJustifiedSlot;
+        this.justifiedStreak = justifiedStreak;
+        this.lastFinalizedSlot = lastFinalizedSlot;
+    }
 
-    /**
-     * Creates valid empty state.
-     */
-    BeaconState getEmpty();
+    public long getLastJustifiedSlot() {
+        return lastJustifiedSlot;
+    }
 
-    /**
-     * Flushes changes to underlying sources.
-     */
-    void commit();
+    public long getJustifiedStreak() {
+        return justifiedStreak;
+    }
+
+    public long getLastFinalizedSlot() {
+        return lastFinalizedSlot;
+    }
+
+    public static Finality empty() {
+        return new Finality(0L, 0L, 0L);
+    }
 }

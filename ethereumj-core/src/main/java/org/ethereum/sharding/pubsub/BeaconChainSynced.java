@@ -15,29 +15,29 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.sharding.service;
+package org.ethereum.sharding.pubsub;
 
-import org.ethereum.core.Genesis;
-import org.ethereum.sharding.domain.Validator;
-
-import java.util.List;
+import org.ethereum.sharding.domain.Beacon;
 
 /**
- * Helper interface to look for deposited validators in the receipts.
- *
  * @author Mikhail Kalinin
- * @since 30.07.2018
+ * @since 03.09.2018
  */
-public interface ValidatorRepository {
+public class BeaconChainSynced extends Event<BeaconChainSynced.Data> {
 
-    /**
-     * Returns a list of validators deployed in an inclusive range {@code [fromBlock, toBlock]}.
-     * An order of deposits is preserved, hence first deposited validator has the lowest index in returned list.
-     */
-    List<Validator> query(byte[] fromBlock, byte[] toBlock);
+    public static class Data {
+        private final Beacon head;
 
-    /**
-     * A shortcut to {@link #query(byte[], byte[])} with {@code fromBlock} set to {@link Genesis#getHash()}
-     */
-    List<Validator> query(byte[] toBlock);
+        public Data(Beacon head) {
+            this.head = head;
+        }
+
+        public Beacon getHead() {
+            return head;
+        }
+    }
+
+    public BeaconChainSynced(Beacon head) {
+        super(new Data(head));
+    }
 }

@@ -23,6 +23,7 @@ import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.domain.BeaconGenesis;
+import org.ethereum.sharding.processing.consensus.NoTransition;
 import org.ethereum.sharding.processing.db.BeaconStore;
 import org.ethereum.sharding.processing.db.IndexedBeaconStore;
 import org.ethereum.sharding.processing.state.BeaconState;
@@ -56,7 +57,7 @@ public class BeaconChainTest {
         beaconChain.init();
         Beacon head = beaconChain.getCanonicalHead();
         assertEquals(BeaconGenesis.instance(), head);
-        assertArrayEquals(BeaconGenesis.instance().getState().getHash(), helper.repository.get(head.getStateHash()).getHash());
+        assertArrayEquals(helper.repository.getEmpty().getHash(), helper.repository.get(head.getStateHash()).getHash());
         assertEquals(BeaconGenesis.instance().getScore(), helper.store.getCanonicalHeadScore());
     }
 
@@ -181,8 +182,9 @@ public class BeaconChainTest {
         static Helper newInstance() {
             Helper inst = new Helper();
             inst.store = new IndexedBeaconStore(new HashMapDB<>(), new HashMapDB<>());
-            inst.repository = new BeaconStateRepository(new HashMapDB<>());
-            inst.beaconChain = (BeaconChainImpl) BeaconChainFactory.create(new DummyFlusher(), inst.store, inst.repository);
+            inst.repository = new BeaconStateRepository(new HashMapDB<>(), new HashMapDB<>(), new HashMapDB<>());
+            inst.beaconChain = (BeaconChainImpl) BeaconChainFactory.create(
+                    new DummyFlusher(), inst.store, inst.repository, new NoTransition(), new NoTransition());
             inst.beaconChain.scoreFunction = (block, state) -> BigInteger.valueOf(block.getMainChainRef()[0]);
             return inst;
         }

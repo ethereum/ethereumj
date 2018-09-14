@@ -26,10 +26,10 @@ import org.ethereum.sharding.processing.state.BeaconState;
  * @author Mikhail Kalinin
  * @since 16.08.2018
  */
-public class NoTransition implements StateTransition {
+public class NoTransition implements StateTransition<BeaconState> {
 
     @Override
     public BeaconState applyBlock(Beacon block, BeaconState to) {
-        return new BeaconState();
+        return to;
     }
 }

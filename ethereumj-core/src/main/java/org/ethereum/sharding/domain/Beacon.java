@@ -104,7 +104,7 @@ public class Beacon {
     @Override
     public boolean equals(Object other) {
         if (this == other) return true;
-        if (!(other instanceof Beacon)) return false;
+        if (other == null || !(other instanceof Beacon)) return false;
 
         return FastByteComparisons.equal(this.getHash(), ((Beacon) other).getHash());
     }

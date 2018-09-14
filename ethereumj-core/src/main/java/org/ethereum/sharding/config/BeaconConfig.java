@@ -35,6 +35,8 @@ import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.TransactionStore;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.manager.WorldManager;
+import org.ethereum.sharding.processing.db.TrieValidatorSet;
+import org.ethereum.sharding.processing.db.ValidatorSet;
 import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.manager.ShardingWorldManager;
 import org.ethereum.sharding.processing.BeaconChain;
@@ -156,13 +158,15 @@ public class BeaconConfig {
     @Bean
     public StateRepository beaconStateRepository() {
         Source<byte[], byte[]> src = cachedBeaconChainSource("beacon_state");
-        return new BeaconStateRepository(src);
+        Source<byte[], byte[]> validatorSrc = cachedBeaconChainSource("validator_set");
+        Source<byte[], byte[]> crystallizedSrc = cachedBeaconChainSource("crystallized_state");
+        return new BeaconStateRepository(src, crystallizedSrc, validatorSrc);
     }
 
     @Bean
     public BeaconChain beaconChain() {
-        BeaconChain beaconChain = BeaconChainFactory.create(
-                beaconDbFlusher(), beaconStore(), beaconStateRepository());
+        BeaconChain beaconChain = BeaconChainFactory.create(beaconDbFlusher(), beaconStore(),
+                beaconStateRepository(), validatorRepository(), blockStore.getBestBlock());
         shardingWorldManager.setBeaconChain(beaconChain);
         return beaconChain;
     }
@@ -213,7 +217,7 @@ public class BeaconConfig {
     @Bean
     public BeaconProposer beaconProposer() {
         return new BeaconProposerImpl(ethereum, publisher(), randao(), beaconStateRepository(),
-                BeaconChainFactory.stateTransition());
+                BeaconChainFactory.stateTransition(validatorRepository()));
     }
 
     @Bean

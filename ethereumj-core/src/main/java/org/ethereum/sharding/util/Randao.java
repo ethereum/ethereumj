@@ -30,7 +30,9 @@ import static org.ethereum.crypto.HashUtil.blake2b;
  *     That is a list of images made with a series of functions: <code>H_n(... H_2(H_1(s)))</code>.
  *
  * <p>
- *     Use {@link #generate(int)} to create a list of images and then {@link #reveal()} to pick last image.
+ *     Use {@link #generate(int)} to create a list of images and then {@link #revealNext()} to pick next unrevealed image;
+ *     {@link #reveal(byte[])} returns image using its pre image as a key.
+ *
  *
  * @author Mikhail Kalinin
  * @since 17.07.2018
@@ -72,7 +74,11 @@ public class Randao {
         flush();
     }
 
-    public byte[] reveal() {
+    public byte[] reveal(byte[] preImage) {
+        return src.get(preImage);
+    }
+
+    public byte[] revealNext() {
         byte[] img = src.get(nextKey);
         updateNextKey(img);
         flush();

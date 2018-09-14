@@ -15,29 +15,39 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.sharding.service;
+package org.ethereum.sharding.processing.consensus;
 
-import org.ethereum.core.Genesis;
-import org.ethereum.sharding.domain.Validator;
+import org.ethereum.util.blockchain.EtherUtil;
 
-import java.util.List;
+import java.math.BigInteger;
+
+import static org.ethereum.util.blockchain.EtherUtil.convert;
 
 /**
- * Helper interface to look for deposited validators in the receipts.
+ * A global constants related to beacon chain consensus.
  *
  * @author Mikhail Kalinin
- * @since 30.07.2018
+ * @since 06.09.2018
  */
-public interface ValidatorRepository {
+public interface BeaconConstants {
 
     /**
-     * Returns a list of validators deployed in an inclusive range {@code [fromBlock, toBlock]}.
-     * An order of deposits is preserved, hence first deposited validator has the lowest index in returned list.
+     *  Number of slots in each cycle
      */
-    List<Validator> query(byte[] fromBlock, byte[] toBlock);
+    long CYCLE_LENGTH = 64;
 
     /**
-     * A shortcut to {@link #query(byte[], byte[])} with {@code fromBlock} set to {@link Genesis#getHash()}
+     * Number of shards
      */
-    List<Validator> query(byte[] toBlock);
+    int SHARD_COUNT = 1024;
+
+    /**
+     * Minimal number of slots in dynasty
+     */
+    long MIN_DYNASTY_LENGTH = 256;
+
+    /**
+     * Validator registration deposit in wei
+     */
+    BigInteger DEPOSIT_WEI = convert(32, EtherUtil.Unit.ETHER);
 }

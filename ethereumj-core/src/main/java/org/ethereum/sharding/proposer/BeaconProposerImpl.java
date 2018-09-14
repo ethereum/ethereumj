@@ -17,8 +17,10 @@
  */
 package org.ethereum.sharding.proposer;
 
+import org.ethereum.core.Block;
 import org.ethereum.core.BlockSummary;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.sharding.domain.Beacon;
@@ -33,6 +35,8 @@ import org.ethereum.sharding.util.Randao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static java.lang.Math.max;
+
 /**
  * Default implementation of {@link BeaconProposer}.
  *
@@ -44,19 +48,21 @@ public class BeaconProposerImpl implements BeaconProposer {
     private static final Logger logger = LoggerFactory.getLogger("proposer");
 
     Randao randao;
-    StateTransition stateTransition;
+    StateTransition<BeaconState> stateTransition;
     StateRepository repository;
+    BlockStore blockStore;
 
     private byte[] mainChainRef;
     private Beacon head;
     private BeaconState recentState;
 
     public BeaconProposerImpl(Ethereum ethereum, Publisher publisher, Randao randao,
-                              StateRepository repository, StateTransition stateTransition) {
+                              StateRepository repository, StateTransition<BeaconState> stateTransition) {
         this.randao = randao;
         this.repository = repository;
         this.stateTransition = stateTransition;
-        this.mainChainRef = ethereum.getBlockchain().getBestBlock().getHash();
+        this.blockStore = ethereum.getBlockchain().getBlockStore();
+        this.mainChainRef = getMainChainRef(ethereum.getBlockchain().getBestBlock());
 
         // init head
         publisher.subscribe(BeaconChainLoaded.class, data -> head = data.getHead());
@@ -74,14 +80,18 @@ public class BeaconProposerImpl implements BeaconProposer {
             @Override
             public void onBlock(BlockSummary blockSummary, boolean best) {
                 if (best)
-                    mainChainRef = blockSummary.getBlock().getHash();
+                    mainChainRef = getMainChainRef(blockSummary.getBlock());
             }
         });
     }
 
+    byte[] getMainChainRef(Block mainChainHead) {
+        return blockStore.getBlockHashByNumber(max(0L, mainChainHead.getNumber() - REORG_SAFE_DISTANCE));
+    }
+
     @Override
     public Beacon createNewBlock(long slotNumber) {
-        Beacon block = new Beacon(head.getHash(), randao.reveal(), mainChainRef,
+        Beacon block = new Beacon(head.getHash(), randao.revealNext(), mainChainRef,
                 HashUtil.EMPTY_DATA_HASH, slotNumber);
         BeaconState newState = stateTransition.applyBlock(block, recentState);
         block.setStateHash(newState.getHash());

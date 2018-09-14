@@ -727,4 +727,15 @@ public class ByteUtil {
     public static byte[] parseWord(byte[] input, int offset, int idx) {
         return parseBytes(input, offset + 32 * idx, 32);
     }
+
+    /**
+     * Returns byte array representation of int24 value derived from given val.
+     * Endianness is preserved.
+     */
+    public static byte[] toInt24(int val) {
+        byte[] bytes = ByteBuffer.allocate(Integer.BYTES).putInt(val).array();
+        byte[] ret = new byte[Integer.BYTES - 1];
+        System.arraycopy(bytes, 1, ret, 0, Integer.BYTES - 1);
+        return ret;
+    }
 }
