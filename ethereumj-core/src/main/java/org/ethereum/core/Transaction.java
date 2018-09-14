@@ -360,7 +360,6 @@ public class Transaction {
 
     public byte[] getContractAddress() {
         if (!isContractCreation()) return null;
-        // TODO: CREATE2 ??
         return HashUtil.calcNewAddr(this.getSender(), this.getNonce());
     }
 
