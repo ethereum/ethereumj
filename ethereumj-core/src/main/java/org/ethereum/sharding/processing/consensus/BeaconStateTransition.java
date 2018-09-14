@@ -8,6 +8,8 @@ import org.ethereum.sharding.processing.state.Dynasty;
 import org.ethereum.sharding.processing.state.Finality;
 import org.ethereum.sharding.service.ValidatorRepository;
 
+import static org.ethereum.sharding.processing.consensus.BeaconConstants.CYCLE_LENGTH;
+
 /**
  * @author Mikhail Kalinin
  * @since 12.09.2018
@@ -29,7 +31,7 @@ public class BeaconStateTransition implements StateTransition<BeaconState> {
 
         CrystallizedState crystallized = to.getCrystallizedState();
 
-        if (block.getSlotNumber() - crystallized.getLastStateRecalc() >= BeaconConstants.CYCLE_LENGTH) {
+        if (block.getSlotNumber() - crystallized.getLastStateRecalc() >= CYCLE_LENGTH) {
             Finality finality = finalityTransition.applyBlock(block, crystallized.getFinality());
             ValidatorSet validatorSet = validatorSetTransition.applyBlock(block, crystallized.getDynasty().getValidatorSet());
             Dynasty dynasty = crystallized.getDynasty().withValidatorSet(validatorSet);
@@ -37,7 +39,7 @@ public class BeaconStateTransition implements StateTransition<BeaconState> {
 
             crystallized = crystallized
                     .withDynasty(dynasty)
-                    .withLastStateRecalcIncrement(1L)
+                    .withLastStateRecalcIncrement(CYCLE_LENGTH)
                     .withFinality(finality);
         }
 
