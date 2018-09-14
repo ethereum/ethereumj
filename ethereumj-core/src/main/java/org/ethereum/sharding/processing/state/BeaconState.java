@@ -54,7 +54,7 @@ public class BeaconState {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof BeaconState)) return false;
+        if (o == null || !(o instanceof BeaconState)) return false;
 
         return FastByteComparisons.equal(((BeaconState) o).getHash(), this.getHash());
     }
