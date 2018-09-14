@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import java.math.BigInteger;
 import java.util.List;
 
+import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.ArrayUtils.getLength;
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 import static org.ethereum.util.BIUtil.*;
@@ -110,7 +111,7 @@ public class TransactionExecutor {
         this.listener = listener;
         this.gasUsedInTheBlock = gasUsedInTheBlock;
         this.m_endGas = toBI(tx.getGasLimit());
-        this.vmHook = vmHook;
+        this.vmHook = isNull(vmHook) ? VMHook.EMPTY : vmHook;
 
         withCommonConfig(CommonConfig.getDefault());
     }
