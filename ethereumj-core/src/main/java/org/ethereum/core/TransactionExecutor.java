@@ -99,6 +99,12 @@ public class TransactionExecutor {
 
     public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
                                ProgramInvokeFactory programInvokeFactory, Block currentBlock,
+                               EthereumListener listener, long gasUsedInTheBlock) {
+        this(tx, coinbase,track, blockStore, programInvokeFactory, currentBlock, listener, gasUsedInTheBlock, VMHook.EMPTY);
+    }
+
+    public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
+                               ProgramInvokeFactory programInvokeFactory, Block currentBlock,
                                EthereumListener listener, long gasUsedInTheBlock, VMHook vmHook) {
 
         this.tx = tx;
