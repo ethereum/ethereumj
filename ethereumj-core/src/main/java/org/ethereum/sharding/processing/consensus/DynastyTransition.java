@@ -14,7 +14,6 @@ public class DynastyTransition implements StateTransition<Dynasty> {
         if (block.getSlotNumber() - to.getStartSlot() < BeaconConstants.MIN_DYNASTY_LENGTH)
             return to;
 
-        return to.withNumberIncrement(1L)
-                .withCrosslinkingStartShardIncrement(1L);
+        return to.withNumberIncrement(1L);
     }
 }

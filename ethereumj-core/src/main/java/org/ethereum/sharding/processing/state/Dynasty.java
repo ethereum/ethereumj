@@ -36,8 +36,6 @@ public class Dynasty {
     private final Committee[] committees;
     /* The number of dynasty transitions including this one */
     private final long number;
-    /* The next shard that crosslinking assignment will start from */
-    private final long crosslinkingStartShard;
     /* Total balance of deposits in wei */
     private final BigInteger totalDeposits;
     /* Used to select the committees for each shard */
@@ -47,12 +45,11 @@ public class Dynasty {
     /* Slot that current dynasty is stared from */
     private final long startSlot;
 
-    public Dynasty(ValidatorSet validatorSet, Committee[] committees, long number, long crosslinkingStartShard,
+    public Dynasty(ValidatorSet validatorSet, Committee[] committees, long number,
                    BigInteger totalDeposits, byte[] seed, long seedLastReset, long startSlot) {
         this.validatorSet = validatorSet;
         this.committees = committees;
         this.number = number;
-        this.crosslinkingStartShard = crosslinkingStartShard;
         this.totalDeposits = totalDeposits;
         this.seed = seed;
         this.seedLastReset = seedLastReset;
@@ -69,10 +66,6 @@ public class Dynasty {
 
     public long getNumber() {
         return number;
-    }
-
-    public long getCrosslinkingStartShard() {
-        return crosslinkingStartShard;
     }
 
     public BigInteger getTotalDeposits() {
@@ -92,32 +85,22 @@ public class Dynasty {
     }
 
     public Dynasty withValidatorSet(ValidatorSet validatorSet) {
-        return new Dynasty(validatorSet, committees, number, crosslinkingStartShard,
+        return new Dynasty(validatorSet, committees, number,
                 totalDeposits, seed, seedLastReset, startSlot);
     }
 
     public Dynasty withNumber(long number) {
-        return new Dynasty(validatorSet, committees, number, crosslinkingStartShard,
+        return new Dynasty(validatorSet, committees, number,
                 totalDeposits, seed, seedLastReset, startSlot);
     }
 
     public Dynasty withNumberIncrement(long addition) {
-        return new Dynasty(validatorSet, committees, number + addition, crosslinkingStartShard,
-                totalDeposits, seed, seedLastReset, startSlot);
-    }
-
-    public Dynasty withCrosslinkingStartShard(long crosslinkingStartShard) {
-        return new Dynasty(validatorSet, committees, number, crosslinkingStartShard,
-                totalDeposits, seed, seedLastReset, startSlot);
-    }
-
-    public Dynasty withCrosslinkingStartShardIncrement(long addition) {
-        return new Dynasty(validatorSet, committees, number, crosslinkingStartShard + addition,
+        return new Dynasty(validatorSet, committees, number + addition,
                 totalDeposits, seed, seedLastReset, startSlot);
     }
 
     public Dynasty withTotalDepositsIncrement(BigInteger addition) {
-        return new Dynasty(validatorSet, committees, number, crosslinkingStartShard,
+        return new Dynasty(validatorSet, committees, number,
                 totalDeposits.add(addition), seed, seedLastReset, startSlot);
     }
 }

@@ -82,7 +82,7 @@ public class BeaconStateRepository implements StateRepository {
     CrystallizedState fromFlattened(CrystallizedState.Flattened flattened) {
         ValidatorSet validatorSet = new TrieValidatorSet(validatorSrc, flattened.getValidatorSetHash());
         Dynasty dynasty = new Dynasty(validatorSet, flattened.getCommittees(),
-                flattened.getCurrentDynasty(), flattened.getCrosslinkingStartShard(),
+                flattened.getCurrentDynasty(),
                 flattened.getTotalDeposits(), flattened.getDynastySeed(),
                 flattened.getDynastySeedLastReset(), flattened.getDynastyStart());
 

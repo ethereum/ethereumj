@@ -75,7 +75,7 @@ public class StateTransitionTest {
 
     BeaconState getOrigin() {
         ValidatorSet validatorSet = new TrieValidatorSet(new HashMapDB<>());
-        Dynasty dynasty = new Dynasty(validatorSet, new Committee[0], 0L, 0L, BigInteger.ZERO, new byte[32], 0L, 0L);
+        Dynasty dynasty = new Dynasty(validatorSet, new Committee[0], 0L, BigInteger.ZERO, new byte[32], 0L, 0L);
         Finality finality = Finality.empty();
 
         CrystallizedState crystallized = new CrystallizedState(0L, dynasty, finality, new Crosslink[0]);
