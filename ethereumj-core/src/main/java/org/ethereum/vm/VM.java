@@ -20,6 +20,7 @@ package org.ethereum.vm;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.ContractDetails;
+import org.ethereum.vm.hook.BackwardCompatibilityVmHook;
 import org.ethereum.vm.hook.VMHook;
 import org.ethereum.vm.program.Program;
 import org.ethereum.vm.program.Stack;
@@ -37,8 +38,8 @@ import java.util.function.Function;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.ethereum.vm.OpCode.*;
 import static org.ethereum.util.ByteUtil.toHexString;
+import static org.ethereum.vm.OpCode.*;
 
 /**
  * The Ethereum Virtual Machine (EVM) is responsible for initialization
@@ -121,7 +122,7 @@ public class VM {
         this.config = config;
         this.vmTrace = config.vmTrace();
         this.dumpBlock = config.dumpBlock();
-        this.hook = hook;
+        this.hook = new BackwardCompatibilityVmHook(hook);
     }
 
     private long calcMemGas(GasCost gasCosts, long oldMemSize, BigInteger newMemSize, long copySize) {
@@ -1410,7 +1411,8 @@ public class VM {
      */
     @Deprecated
     public static void setVmHook(VMHook vmHook) {
-        logger.warn("This deprecated method doesn't set VM hook. Define your hook component as a Spring bean.");
+        logger.warn("VM.setVmHook(VMHook vmHook) is deprecated method. Define your hook component as a Spring bean.");
+        BackwardCompatibilityVmHook.setDeprecatedHook(vmHook);
     }
 
     /**
