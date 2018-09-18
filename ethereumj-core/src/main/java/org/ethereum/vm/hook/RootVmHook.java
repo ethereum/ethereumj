@@ -63,11 +63,11 @@ public class RootVmHook implements VMHook {
 
     @Override
     public void step(Program program, OpCode opcode) {
-        safeProxyToAll(hook -> hook.startPlay(program));
+        safeProxyToAll(hook -> hook.step(program, opcode));
     }
 
     @Override
     public void stopPlay(Program program) {
-        safeProxyToAll(hook -> hook.startPlay(program));
+        safeProxyToAll(hook -> hook.stopPlay(program));
     }
 }
