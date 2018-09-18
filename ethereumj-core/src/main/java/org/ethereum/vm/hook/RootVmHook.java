@@ -25,7 +25,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -40,8 +42,8 @@ public class RootVmHook implements VMHook {
     private final List<VMHook> hooks;
 
     @Autowired
-    public RootVmHook(List<VMHook> hooks) {
-        this.hooks = hooks;
+    public RootVmHook(Optional<List<VMHook>> hooks) {
+        this.hooks = hooks.orElseGet(ArrayList::new);
     }
 
     private void safeProxyToAll(Consumer<VMHook> action) {
