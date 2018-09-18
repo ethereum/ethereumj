@@ -25,10 +25,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
+
+import static java.util.Collections.emptyList;
 
 /**
  * Primary {@link VMHook} implementation, that accepts other VM hook components to safely proxy all invocations to them.
@@ -43,31 +44,36 @@ public class RootVmHook implements VMHook {
 
     @Autowired
     public RootVmHook(Optional<List<VMHook>> hooks) {
-        this.hooks = hooks.orElseGet(ArrayList::new);
+        this.hooks = hooks.orElse(emptyList());
     }
 
-    private void safeProxyToAll(Consumer<VMHook> action) {
-        this.hooks.forEach(hook -> {
+    private void proxySafeToAll(Consumer<VMHook> action) {
+        for (VMHook hook : hooks) {
             try {
                 action.accept(hook);
             } catch (Throwable t) {
                 logger.error("VM hook execution error: ", t);
             }
-        });
+        }
     }
 
     @Override
     public void startPlay(Program program) {
-        safeProxyToAll(hook -> hook.startPlay(program));
+        proxySafeToAll(hook -> hook.startPlay(program));
     }
 
     @Override
     public void step(Program program, OpCode opcode) {
-        safeProxyToAll(hook -> hook.step(program, opcode));
+        proxySafeToAll(hook -> hook.step(program, opcode));
     }
 
     @Override
     public void stopPlay(Program program) {
-        safeProxyToAll(hook -> hook.stopPlay(program));
+        proxySafeToAll(hook -> hook.stopPlay(program));
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return hooks.isEmpty();
     }
 }
