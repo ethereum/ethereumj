@@ -35,6 +35,8 @@ import java.util.Random;
 
 import static java.util.Arrays.copyOfRange;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
+import static org.ethereum.util.ByteUtil.bytesToBigInteger;
 
 public class HashUtil {
 
@@ -180,6 +182,30 @@ public class HashUtil {
         byte[] encNonce = RLP.encodeBigInteger(new BigInteger(1, nonce));
 
         return sha3omit12(RLP.encodeList(encSender, encNonce));
+    }
+
+    /**
+     * The way to calculate new address inside ethereum for {@link org.ethereum.vm.OpCode#CREATE2}
+     * sha3(0xff ++ msg.sender ++ salt ++ sha3(init_code)))[12:]
+     *
+     * @param senderAddr - creating address
+     * @param initCode - contract init code
+     * @param salt - salt to make different result addresses
+     * @return new address
+     */
+    public static byte[] calcSaltAddr(byte[] senderAddr, byte[] initCode, byte[] salt) {
+        // 1 - 0xff length, 32 bytes - keccak-256
+        byte[] data = new byte[1 + senderAddr.length + salt.length + 32];
+        data[0] = (byte) 0xff;
+        int currentOffset = 1;
+        System.arraycopy(senderAddr, 0, data, currentOffset, senderAddr.length);
+        currentOffset += senderAddr.length;
+        System.arraycopy(salt, 0, data, currentOffset, salt.length);
+        currentOffset += salt.length;
+        byte[] sha3InitCode = sha3(initCode);
+        System.arraycopy(sha3InitCode, 0, data, currentOffset, sha3InitCode.length);
+
+        return sha3omit12(data);
     }
 
     /**

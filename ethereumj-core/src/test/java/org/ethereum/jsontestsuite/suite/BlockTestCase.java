@@ -39,6 +39,7 @@ public class BlockTestCase {
     private String lastblockhash;
     private int noBlockChainHistory;
     private GitHubJSONTestSuite.Network network;
+    private SealEngine sealEngine = SealEngine.Ethash;
 
     public BlockTestCase() {
     }
@@ -115,6 +116,14 @@ public class BlockTestCase {
         return network.getConfig();
     }
 
+    public SealEngine getSealEngine() {
+        return sealEngine;
+    }
+
+    public void setSealEngine(SealEngine sealEngine) {
+        this.sealEngine = sealEngine;
+    }
+
     @Override
     public String toString() {
         return "BlockTestCase{" +
@@ -122,5 +131,10 @@ public class BlockTestCase {
                 ", genesisBlockHeader=" + genesisBlockHeader +
                 ", pre=" + pre +
                 '}';
+    }
+
+    enum SealEngine {
+        NoProof,  // blocks in the test should not be checked for difficulty
+        Ethash
     }
 }

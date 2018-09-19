@@ -404,25 +404,76 @@ public class Program {
         return this.storage;
     }
 
-    @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
+    /**
+     * Create contract for {@link OpCode#CREATE}
+     * @param value         Endowment
+     * @param memStart      Code memory offset
+     * @param memSize       Code memory size
+     */
     public void createContract(DataWord value, DataWord memStart, DataWord memSize) {
         returnDataBuffer = null; // reset return buffer right before the call
 
-        if (getCallDeep() == MAX_DEPTH) {
-            stackPushZero();
+        byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
+        BigInteger endowment = value.value();
+        if (!verifyCall(senderAddress, endowment))
             return;
-        }
+
+        byte[] nonce = getStorage().getNonce(senderAddress).toByteArray();
+        byte[] contractAddress = HashUtil.calcNewAddr(senderAddress, nonce);
+
+        byte[] programCode = memoryChunk(memStart.intValue(), memSize.intValue());
+        createContractImpl(value, programCode, contractAddress);
+    }
+
+    /**
+     * Create contract for {@link OpCode#CREATE2}
+     * @param value         Endowment
+     * @param memStart      Code memory offset
+     * @param memSize       Code memory size
+     * @param salt          Salt, used in contract address calculation
+     */
+    public void createContract2(DataWord value, DataWord memStart, DataWord memSize, DataWord salt) {
+        returnDataBuffer = null; // reset return buffer right before the call
 
         byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
         BigInteger endowment = value.value();
-        if (isNotCovers(getStorage().getBalance(senderAddress), endowment)) {
-            stackPushZero();
+        if (!verifyCall(senderAddress, endowment))
             return;
+
+        byte[] programCode = memoryChunk(memStart.intValue(), memSize.intValue());
+        byte[] contractAddress = HashUtil.calcSaltAddr(senderAddress, programCode, salt.getData());
+
+        createContractImpl(value, programCode, contractAddress);
+    }
+
+    /**
+     * Verifies CREATE attempt
+     */
+    private boolean verifyCall(byte[] senderAddress, BigInteger endowment) {
+        if (getCallDeep() == MAX_DEPTH) {
+            stackPushZero();
+            return false;
         }
 
-        // [1] FETCH THE CODE FROM THE MEMORY
-        byte[] programCode = memoryChunk(memStart.intValue(), memSize.intValue());
+        if (isNotCovers(getStorage().getBalance(senderAddress), endowment)) {
+            stackPushZero();
+            return false;
+        }
 
+        return true;
+    }
+
+    /**
+     * All stages required to create contract on provided address after initial check
+     * @param value         Endowment
+     * @param programCode   Contract code
+     * @param newAddress    Contract address
+     */
+    @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
+    private void createContractImpl(DataWord value, byte[] programCode, byte[] newAddress) {
+
+        // [1] LOG, SPEND GAS
+        byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
         if (logger.isInfoEnabled())
             logger.info("creating a new contract inside contract run: [{}]", toHexString(senderAddress));
 
@@ -432,9 +483,6 @@ public class Program {
         spendGas(gasLimit.longValue(), "internal call");
 
         // [2] CREATE THE CONTRACT ADDRESS
-        byte[] nonce = getStorage().getNonce(senderAddress).toByteArray();
-        byte[] newAddress = HashUtil.calcNewAddr(getOwnerAddress().getLast20Bytes(), nonce);
-
         AccountState existingAddr = getStorage().getAccountState(newAddress);
         boolean contractAlreadyExists = existingAddr != null && existingAddr.isContractExist(blockchainConfig);
 
@@ -462,6 +510,7 @@ public class Program {
         track.addBalance(newAddress, oldBalance);
 
         // [4] TRANSFER THE BALANCE
+        BigInteger endowment = value.value();
         BigInteger newBalance = ZERO;
         if (!byTestingSuite()) {
             track.addBalance(senderAddress, endowment.negate());
@@ -470,6 +519,7 @@ public class Program {
 
 
         // [5] COOK THE INVOKE AND EXECUTE
+        byte[] nonce = getStorage().getNonce(senderAddress).toByteArray();
         InternalTransaction internalTx = addInternalTx(nonce, getGasLimit(), senderAddress, null, endowment, programCode, "create");
         ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
                 this, DataWord.of(newAddress), getOwnerAddress(), value, gasLimit,
@@ -542,6 +592,7 @@ public class Program {
                         refundGas);
             }
         }
+        touchedAccounts.add(newAddress);
     }
 
     /**
