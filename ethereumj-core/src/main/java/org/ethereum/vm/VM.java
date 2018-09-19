@@ -89,8 +89,6 @@ public class VM {
     // max mem size which couldn't be paid for ever
     // used to reduce expensive BigInt arithmetic
     private static BigInteger MAX_MEM_SIZE = BigInteger.valueOf(Integer.MAX_VALUE);
-    // deprecated field that holds VM hook. Will be removed in the future releases.
-    private static VMHook deprecatedHook = VMHook.EMPTY;
 
     /* Keeps track of the number of steps performed in this VM */
     private int vmCounter = 0;
@@ -112,6 +110,10 @@ public class VM {
     }};
 
     private final SystemProperties config;
+
+    // deprecated field that holds VM hook. Will be removed in the future releases.
+    private static VMHook deprecatedHook = VMHook.EMPTY;
+    private final boolean hasHooks;
     private final VMHook[] hooks;
 
     public VM() {
@@ -126,6 +128,7 @@ public class VM {
         this.hooks = Stream.of(deprecatedHook, hook)
                 .filter(h -> !h.isEmpty())
                 .toArray(VMHook[]::new);
+        this.hasHooks = this.hooks.length > 0;
     }
 
     private void onHookEvent(Consumer<VMHook> consumer) {
@@ -426,7 +429,9 @@ public class VM {
                 this.dumpLine(op, gasBefore, gasCost + callGas, memWords, program);
             }
 
-            onHookEvent(hook -> hook.step(program, op));
+            if (hasHooks) {
+                onHookEvent(hook -> hook.step(program, op));
+            }
 
             // Execute operation
             switch (op) {
@@ -1398,7 +1403,9 @@ public class VM {
         if (program.byTestingSuite()) return;
 
         try {
-            onHookEvent(hook -> hook.startPlay(program));
+            if (hasHooks) {
+                onHookEvent(hook -> hook.startPlay(program));
+            }
 
             while (!program.isStopped()) {
                 this.step(program);
@@ -1410,7 +1417,9 @@ public class VM {
             logger.error("\n !!! StackOverflowError: update your java run command with -Xss2M (-Xss8M for tests) !!!\n", soe);
             System.exit(-1);
         } finally {
-            onHookEvent(hook -> hook.stopPlay(program));
+            if (hasHooks) {
+                onHookEvent(hook -> hook.stopPlay(program));
+            }
         }
     }
 
