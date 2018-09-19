@@ -413,7 +413,7 @@ public class Program {
         byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
         BigInteger endowment = value.value();
         if (!verifyCall(senderAddress, endowment))
-            return;;
+            return;
 
         byte[] nonce = getStorage().getNonce(senderAddress).toByteArray();
         byte[] contractAddress = HashUtil.calcNewAddr(senderAddress, nonce);
