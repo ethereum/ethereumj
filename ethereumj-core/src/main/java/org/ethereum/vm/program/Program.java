@@ -589,6 +589,7 @@ public class Program {
                         refundGas);
             }
         }
+        touchedAccounts.add(newAddress);
     }
 
     /**

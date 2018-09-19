@@ -334,17 +334,14 @@ public class GitHubStateTest {
     @Test
     @Ignore("Update after all tests could pass latest develop")
     public void stCreate2Test() throws IOException {
-        suite.runAll("stCreate2");
+        suite.runAll("stCreate2", new HashSet<>(Arrays.asList(
+                "RevertInCreateInInit",   // Tests excluded because they test unreal prestate
+                "create2collisionStorage" // (nonce, balance 0, code empty, but some storage)
+        )));
 // TODO: Update all, this one passes with following settings:
-//        String commitSHA = "e2d84e1c00289bc259ad631efb6b42390e6a291a";
-//        String treeSHA = "a0de4e26471485201d279792d057f3576f76a0c4";
+//        String commitSHA = "3f5febc901913ef698f1b09dda8705babd729e4a";
+//        String treeSHA = "222ea3812849ed982ef0268ec41b609e5b13c412";
 //           targetNets += GitHubJSONTestSuite.Network.Constantinople
-
-        // TODO: FIX create2collisionStorage_Constantinople_2
-//        String commitSHA = "e2d84e1c00289bc259ad631efb6b42390e6a291a";
-//        String filePath = "stCreate2/create2collisionStorage.json";
-//        GeneralStateTestSuite.runSingle(filePath, commitSHA, GitHubJSONTestSuite.Network.Constantinople);
-
     }
 }
 
