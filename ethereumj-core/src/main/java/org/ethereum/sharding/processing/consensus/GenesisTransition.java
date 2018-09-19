@@ -69,8 +69,7 @@ public class GenesisTransition implements StateTransition<BeaconState> {
 
         Dynasty dynasty = to.getCrystallizedState().getDynasty()
                 .withValidatorSet(validatorSet)
-                .withNumber(1L)
-                .withTotalDepositsIncrement(DEPOSIT_WEI.multiply(BigInteger.valueOf(validatorSet.size())));
+                .withNumber(1L);
 
         CrystallizedState crystallizedState = to.getCrystallizedState()
                 .withDynasty(dynasty)

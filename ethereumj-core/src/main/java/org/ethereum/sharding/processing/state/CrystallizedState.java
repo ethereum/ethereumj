@@ -24,12 +24,8 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
-import java.math.BigInteger;
-
 import static org.ethereum.crypto.HashUtil.blake2b;
-import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
 import static org.ethereum.util.ByteUtil.byteArrayToLong;
-import static org.ethereum.util.ByteUtil.bytesToBigInteger;
 import static org.ethereum.util.ByteUtil.isSingleZero;
 import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
 
@@ -58,8 +54,7 @@ public class CrystallizedState {
     public Flattened flatten() {
         return new Flattened(dynasty.getValidatorSet().getHash(), lastStateRecalc, dynasty.getCommittees(),
                 finality.getLastJustifiedSlot(), finality.getJustifiedStreak(), finality.getLastFinalizedSlot(),
-                dynasty.getNumber(), crosslinks, dynasty.getTotalDeposits(),
-                dynasty.getSeed(), dynasty.getSeedLastReset(), dynasty.getStartSlot());
+                dynasty.getNumber(), crosslinks, dynasty.getSeed(), dynasty.getSeedLastReset(), dynasty.getStartSlot());
     }
 
     public byte[] getHash() {
@@ -76,10 +71,6 @@ public class CrystallizedState {
 
     public Finality getFinality() {
         return finality;
-    }
-
-    public Crosslink[] getCrosslinks() {
-        return crosslinks;
     }
 
     public CrystallizedState withDynasty(Dynasty dynasty) {
@@ -121,8 +112,6 @@ public class CrystallizedState {
         private final long currentDynasty;
         /* The most recent crosslinks for each shard */
         private final Crosslink[] crosslinks;
-        /* Total balance of deposits in wei */
-        private final BigInteger totalDeposits;
         /* Used to select the committees for each shard */
         private final byte[] dynastySeed;
         /* Last dynasty the seed was reset */
@@ -131,9 +120,8 @@ public class CrystallizedState {
         private final long dynastyStart;
 
         public Flattened(byte[] validatorSetHash, long lastStateRecalc, Committee[] committees, long lastJustifiedSlot,
-                         long justifiedStreak, long lastFinalizedSlot, long currentDynasty,
-                         Crosslink[] crosslinks, BigInteger totalDeposits, byte[] dynastySeed, long dynastySeedLastReset,
-                         long dynastyStart) {
+                         long justifiedStreak, long lastFinalizedSlot, long currentDynasty, Crosslink[] crosslinks,
+                         byte[] dynastySeed, long dynastySeedLastReset, long dynastyStart) {
             this.validatorSetHash = validatorSetHash;
             this.lastStateRecalc = lastStateRecalc;
             this.committees = committees;
@@ -142,7 +130,6 @@ public class CrystallizedState {
             this.lastFinalizedSlot = lastFinalizedSlot;
             this.currentDynasty = currentDynasty;
             this.crosslinks = crosslinks;
-            this.totalDeposits = totalDeposits;
             this.dynastySeed = dynastySeed;
             this.dynastySeedLastReset = dynastySeedLastReset;
             this.dynastyStart = dynastyStart;
@@ -157,13 +144,12 @@ public class CrystallizedState {
             this.justifiedStreak = byteArrayToLong(list.get(3).getRLPData());
             this.lastFinalizedSlot = byteArrayToLong(list.get(4).getRLPData());
             this.currentDynasty = byteArrayToLong(list.get(5).getRLPData());
-            this.totalDeposits = bytesToBigInteger(list.get(6).getRLPData());
-            this.dynastySeed = list.get(7).getRLPData();
-            this.dynastySeedLastReset = byteArrayToLong(list.get(8).getRLPData());
-            this.dynastyStart = byteArrayToLong(list.get(9).getRLPData());
+            this.dynastySeed = list.get(6).getRLPData();
+            this.dynastySeedLastReset = byteArrayToLong(list.get(7).getRLPData());
+            this.dynastyStart = byteArrayToLong(list.get(8).getRLPData());
 
-            if (!isSingleZero(list.get(10).getRLPData())) {
-                RLPList committeeList = RLP.unwrapList(list.get(10).getRLPData());
+            if (!isSingleZero(list.get(9).getRLPData())) {
+                RLPList committeeList = RLP.unwrapList(list.get(9).getRLPData());
                 this.committees = new Committee[committeeList.size()];
                 for (int i = 0; i < committeeList.size(); i++)
                     this.committees[i] = new Committee(committeeList.get(i).getRLPData());
@@ -171,8 +157,8 @@ public class CrystallizedState {
                 this.committees = new Committee[0];
             }
 
-            if (!isSingleZero(list.get(11).getRLPData())) {
-                RLPList crosslinkList = RLP.unwrapList(list.get(11).getRLPData());
+            if (!isSingleZero(list.get(10).getRLPData())) {
+                RLPList crosslinkList = RLP.unwrapList(list.get(10).getRLPData());
                 this.crosslinks = new Crosslink[crosslinkList.size()];
                 for (int i = 0; i < crosslinkList.size(); i++)
                     this.crosslinks[i] = new Crosslink(crosslinkList.get(i).getRLPData());
@@ -198,8 +184,7 @@ public class CrystallizedState {
             return RLP.wrapList(validatorSetHash, longToBytesNoLeadZeroes(lastStateRecalc),
                     longToBytesNoLeadZeroes(lastJustifiedSlot), longToBytesNoLeadZeroes(justifiedStreak),
                     longToBytesNoLeadZeroes(lastFinalizedSlot), longToBytesNoLeadZeroes(currentDynasty),
-                    longToBytesNoLeadZeroes(dynastyStart),
-                    bigIntegerToBytes(totalDeposits), dynastySeed, longToBytesNoLeadZeroes(dynastySeedLastReset),
+                    longToBytesNoLeadZeroes(dynastyStart), dynastySeed, longToBytesNoLeadZeroes(dynastySeedLastReset),
                     encodedCommittees.length > 0 ? RLP.wrapList(encodedCommittees) : ByteUtil.ZERO_BYTE_ARRAY,
                     encodedCrosslinks.length > 0 ? RLP.wrapList(encodedCrosslinks) : ByteUtil.ZERO_BYTE_ARRAY);
         }
@@ -240,10 +225,6 @@ public class CrystallizedState {
             return crosslinks;
         }
 
-        public BigInteger getTotalDeposits() {
-            return totalDeposits;
-        }
-
         public byte[] getDynastySeed() {
             return dynastySeed;
         }
@@ -262,7 +243,7 @@ public class CrystallizedState {
 
         public static Flattened empty() {
             return new Flattened(ValidatorSet.EMPTY_HASH, 0, new Committee[0], 0L, 0L, 0L, 0L,
-                    new Crosslink[0], BigInteger.ZERO, new byte[32], 0L, 0L);
+                    new Crosslink[0], new byte[32], 0L, 0L);
         }
 
         public static final org.ethereum.datasource.Serializer<Flattened, byte[]> Serializer = new Serializer<Flattened, byte[]>() {

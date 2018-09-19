@@ -20,8 +20,6 @@ package org.ethereum.sharding.processing.state;
 import org.ethereum.sharding.processing.consensus.BeaconConstants;
 import org.ethereum.sharding.processing.db.ValidatorSet;
 
-import java.math.BigInteger;
-
 /**
  * @author Mikhail Kalinin
  * @since 12.09.2018
@@ -36,8 +34,6 @@ public class Dynasty {
     private final Committee[] committees;
     /* The number of dynasty transitions including this one */
     private final long number;
-    /* Total balance of deposits in wei */
-    private final BigInteger totalDeposits;
     /* Used to select the committees for each shard */
     private final byte[] seed;
     /* Last dynasty the seed was reset */
@@ -46,11 +42,10 @@ public class Dynasty {
     private final long startSlot;
 
     public Dynasty(ValidatorSet validatorSet, Committee[] committees, long number,
-                   BigInteger totalDeposits, byte[] seed, long seedLastReset, long startSlot) {
+                   byte[] seed, long seedLastReset, long startSlot) {
         this.validatorSet = validatorSet;
         this.committees = committees;
         this.number = number;
-        this.totalDeposits = totalDeposits;
         this.seed = seed;
         this.seedLastReset = seedLastReset;
         this.startSlot = startSlot;
@@ -68,10 +63,6 @@ public class Dynasty {
         return number;
     }
 
-    public BigInteger getTotalDeposits() {
-        return totalDeposits;
-    }
-
     public byte[] getSeed() {
         return seed;
     }
@@ -85,22 +76,14 @@ public class Dynasty {
     }
 
     public Dynasty withValidatorSet(ValidatorSet validatorSet) {
-        return new Dynasty(validatorSet, committees, number,
-                totalDeposits, seed, seedLastReset, startSlot);
+        return new Dynasty(validatorSet, committees, number, seed, seedLastReset, startSlot);
     }
 
     public Dynasty withNumber(long number) {
-        return new Dynasty(validatorSet, committees, number,
-                totalDeposits, seed, seedLastReset, startSlot);
+        return new Dynasty(validatorSet, committees, number, seed, seedLastReset, startSlot);
     }
 
     public Dynasty withNumberIncrement(long addition) {
-        return new Dynasty(validatorSet, committees, number + addition,
-                totalDeposits, seed, seedLastReset, startSlot);
-    }
-
-    public Dynasty withTotalDepositsIncrement(BigInteger addition) {
-        return new Dynasty(validatorSet, committees, number,
-                totalDeposits.add(addition), seed, seedLastReset, startSlot);
+        return new Dynasty(validatorSet, committees, number + addition, seed, seedLastReset, startSlot);
     }
 }
