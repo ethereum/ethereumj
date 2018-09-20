@@ -25,11 +25,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
-
-import static java.util.Collections.emptyList;
 
 /**
  * Primary {@link VMHook} implementation, that accepts other VM hook components to safely proxy all invocations to them.
@@ -40,11 +37,11 @@ public class RootVmHook implements VMHook {
 
     private static final Logger logger = LoggerFactory.getLogger("VM");
 
-    private final List<VMHook> hooks;
+    private VMHook[] hooks;
 
     @Autowired
-    public RootVmHook(Optional<List<VMHook>> hooks) {
-        this.hooks = hooks.orElse(emptyList());
+    public RootVmHook(Optional<VMHook[]> hooks) {
+        this.hooks = hooks.orElseGet(() -> new VMHook[] {});
     }
 
     private void proxySafeToAll(Consumer<VMHook> action) {
@@ -74,6 +71,6 @@ public class RootVmHook implements VMHook {
 
     @Override
     public boolean isEmpty() {
-        return hooks.isEmpty();
+        return hooks.length == 0;
     }
 }
