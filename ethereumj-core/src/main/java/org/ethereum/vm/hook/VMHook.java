@@ -1,5 +1,5 @@
 /*
- * Copyright (c) [2018] [ <ether.camp> ]
+ * Copyright (c) [2016] [ <ether.camp> ]
  * This file is part of the ethereumJ library.
  *
  * The ethereumJ library is free software: you can redistribute it and/or modify
@@ -15,16 +15,25 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.vm;
+package org.ethereum.vm.hook;
+
+import org.ethereum.vm.OpCode;
+import org.ethereum.vm.program.Program;
 
 /**
- * Created by Richard Hart on 07.07.2018.
- *
- * Factory used to create {@link VMHook} objects
+ * Created by Anton Nashatyrev on 15.02.2016.
  */
-public interface VMHookFactory {
-    /**
-     * Creates {@link VMHook}
-     */
-    VMHook create();
+public interface VMHook {
+
+    default void startPlay(Program program) {
+    }
+
+    default void step(Program program, OpCode opcode) {
+    }
+
+    default void stopPlay(Program program) {
+    }
+
+    VMHook EMPTY = new VMHook() {
+    };
 }

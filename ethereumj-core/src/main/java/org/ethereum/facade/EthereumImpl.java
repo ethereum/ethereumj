@@ -20,15 +20,9 @@ package org.ethereum.facade;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockSummary;
-import org.ethereum.core.CallTransaction;
-import org.ethereum.core.ImportResult;
+import org.ethereum.core.*;
 import org.ethereum.core.PendingState;
 import org.ethereum.core.Repository;
-import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionExecutionSummary;
-import org.ethereum.core.TransactionReceipt;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.GasPriceTracker;
@@ -48,6 +42,7 @@ import org.ethereum.publish.event.BlockAdded;
 import org.ethereum.publish.event.Event;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.vm.hook.VMHook;
 import org.ethereum.vm.program.ProgramResult;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
@@ -280,7 +275,7 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
                 Repository txTrack = track.startTracking();
                 org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor(
                         tx, block.getCoinbase(), txTrack, worldManager.getBlockStore(),
-                        programInvokeFactory, block, worldManager.getListener(), 0)
+                        programInvokeFactory, block, worldManager.getListener(), 0, VMHook.EMPTY)
                         .withCommonConfig(commonConfig);
 
                 executor.init();
@@ -312,7 +307,7 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
         try {
             org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor
                     (tx, block.getCoinbase(), repository, worldManager.getBlockStore(),
-                            programInvokeFactory, block, EthereumListener.EMPTY, 0)
+                            programInvokeFactory, block)
                     .withCommonConfig(commonConfig)
                     .setLocalCall(true);
 
@@ -449,12 +444,10 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
     }
 
     @Override
-    public void start() {
-    }
+    public void start() {}
 
     @Override
-    public void stop() {
-    }
+    public void stop() {}
 
     @Override
     public boolean isRunning() {

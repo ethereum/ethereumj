@@ -32,6 +32,7 @@ import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.Utils;
 import org.ethereum.vm.*;
 import org.ethereum.vm.PrecompiledContracts.PrecompiledContract;
+import org.ethereum.vm.hook.VMHook;
 import org.ethereum.vm.program.invoke.ProgramInvoke;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
@@ -88,6 +89,7 @@ public class Program {
     private Stack stack;
     private Memory memory;
     private Storage storage;
+    private Repository originalRepo;
     private byte[] returnDataBuffer;
 
     private ProgramResult result = new ProgramResult();
@@ -108,24 +110,25 @@ public class Program {
     private final SystemProperties config;
 
     private final BlockchainConfig blockchainConfig;
+    private final VMHook vmHook;
 
     public Program(byte[] ops, ProgramInvoke programInvoke) {
         this(ops, programInvoke, (Transaction) null);
     }
 
     public Program(byte[] ops, ProgramInvoke programInvoke, SystemProperties config) {
-        this(ops, programInvoke, null, config);
+        this(ops, programInvoke, null, config, VMHook.EMPTY);
     }
 
     public Program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction) {
-        this(ops, programInvoke, transaction, SystemProperties.getDefault());
+        this(ops, programInvoke, transaction, SystemProperties.getDefault(), VMHook.EMPTY);
     }
 
-    public Program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction, SystemProperties config) {
-        this(null, ops, programInvoke, transaction, config);
+    public Program(byte[] ops, ProgramInvoke programInvoke, Transaction transaction, SystemProperties config, VMHook vmHook) {
+        this(null, ops, programInvoke, transaction, config, vmHook);
     }
 
-    public Program(byte[] codeHash, byte[] ops, ProgramInvoke programInvoke, Transaction transaction, SystemProperties config) {
+    public Program(byte[] codeHash, byte[] ops, ProgramInvoke programInvoke, Transaction transaction, SystemProperties config, VMHook vmHook) {
         this.config = config;
         this.invoke = programInvoke;
         this.transaction = transaction;
@@ -133,9 +136,11 @@ public class Program {
         this.codeHash = codeHash == null || FastByteComparisons.equal(HashUtil.EMPTY_DATA_HASH, codeHash) ? null : codeHash;
         this.ops = nullToEmpty(ops);
 
-        traceListener = new ProgramTraceListener(config.vmTrace());
+        this.vmHook = vmHook;
+        this.traceListener = new ProgramTraceListener(config.vmTrace());
         this.memory = setupProgramListener(new Memory());
         this.stack = setupProgramListener(new Stack());
+        this.originalRepo = programInvoke.getRepository().clone();
         this.storage = setupProgramListener(new Storage(programInvoke));
         this.trace = new ProgramTrace(config, programInvoke);
         this.blockchainConfig = config.getBlockchainConfig().getConfigForBlock(programInvoke.getNumber().longValue());
@@ -399,25 +404,76 @@ public class Program {
         return this.storage;
     }
 
-    @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
+    /**
+     * Create contract for {@link OpCode#CREATE}
+     * @param value         Endowment
+     * @param memStart      Code memory offset
+     * @param memSize       Code memory size
+     */
     public void createContract(DataWord value, DataWord memStart, DataWord memSize) {
         returnDataBuffer = null; // reset return buffer right before the call
 
-        if (getCallDeep() == MAX_DEPTH) {
-            stackPushZero();
+        byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
+        BigInteger endowment = value.value();
+        if (!verifyCall(senderAddress, endowment))
             return;
-        }
+
+        byte[] nonce = getStorage().getNonce(senderAddress).toByteArray();
+        byte[] contractAddress = HashUtil.calcNewAddr(senderAddress, nonce);
+
+        byte[] programCode = memoryChunk(memStart.intValue(), memSize.intValue());
+        createContractImpl(value, programCode, contractAddress);
+    }
+
+    /**
+     * Create contract for {@link OpCode#CREATE2}
+     * @param value         Endowment
+     * @param memStart      Code memory offset
+     * @param memSize       Code memory size
+     * @param salt          Salt, used in contract address calculation
+     */
+    public void createContract2(DataWord value, DataWord memStart, DataWord memSize, DataWord salt) {
+        returnDataBuffer = null; // reset return buffer right before the call
 
         byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
         BigInteger endowment = value.value();
-        if (isNotCovers(getStorage().getBalance(senderAddress), endowment)) {
-            stackPushZero();
+        if (!verifyCall(senderAddress, endowment))
             return;
+
+        byte[] programCode = memoryChunk(memStart.intValue(), memSize.intValue());
+        byte[] contractAddress = HashUtil.calcSaltAddr(senderAddress, programCode, salt.getData());
+
+        createContractImpl(value, programCode, contractAddress);
+    }
+
+    /**
+     * Verifies CREATE attempt
+     */
+    private boolean verifyCall(byte[] senderAddress, BigInteger endowment) {
+        if (getCallDeep() == MAX_DEPTH) {
+            stackPushZero();
+            return false;
         }
 
-        // [1] FETCH THE CODE FROM THE MEMORY
-        byte[] programCode = memoryChunk(memStart.intValue(), memSize.intValue());
+        if (isNotCovers(getStorage().getBalance(senderAddress), endowment)) {
+            stackPushZero();
+            return false;
+        }
 
+        return true;
+    }
+
+    /**
+     * All stages required to create contract on provided address after initial check
+     * @param value         Endowment
+     * @param programCode   Contract code
+     * @param newAddress    Contract address
+     */
+    @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
+    private void createContractImpl(DataWord value, byte[] programCode, byte[] newAddress) {
+
+        // [1] LOG, SPEND GAS
+        byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
         if (logger.isInfoEnabled())
             logger.info("creating a new contract inside contract run: [{}]", toHexString(senderAddress));
 
@@ -427,9 +483,6 @@ public class Program {
         spendGas(gasLimit.longValue(), "internal call");
 
         // [2] CREATE THE CONTRACT ADDRESS
-        byte[] nonce = getStorage().getNonce(senderAddress).toByteArray();
-        byte[] newAddress = HashUtil.calcNewAddr(getOwnerAddress().getLast20Bytes(), nonce);
-
         AccountState existingAddr = getStorage().getAccountState(newAddress);
         boolean contractAlreadyExists = existingAddr != null && existingAddr.isContractExist(blockchainConfig);
 
@@ -457,6 +510,7 @@ public class Program {
         track.addBalance(newAddress, oldBalance);
 
         // [4] TRANSFER THE BALANCE
+        BigInteger endowment = value.value();
         BigInteger newBalance = ZERO;
         if (!byTestingSuite()) {
             track.addBalance(senderAddress, endowment.negate());
@@ -465,6 +519,7 @@ public class Program {
 
 
         // [5] COOK THE INVOKE AND EXECUTE
+        byte[] nonce = getStorage().getNonce(senderAddress).toByteArray();
         InternalTransaction internalTx = addInternalTx(nonce, getGasLimit(), senderAddress, null, endowment, programCode, "create");
         ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
                 this, DataWord.of(newAddress), getOwnerAddress(), value, gasLimit,
@@ -475,8 +530,8 @@ public class Program {
         if (contractAlreadyExists) {
             result.setException(new BytecodeExecutionException("Trying to create a contract with existing contract address: 0x" + toHexString(newAddress)));
         } else if (isNotEmpty(programCode)) {
-            VM vm = new VM(config);
-            Program program = new Program(programCode, programInvoke, internalTx, config).withCommonConfig(commonConfig);
+            VM vm = new VM(config, vmHook);
+            Program program = new Program(programCode, programInvoke, internalTx, config, vmHook).withCommonConfig(commonConfig);
             vm.play(program);
             result = program.getResult();
         }
@@ -537,6 +592,7 @@ public class Program {
                         refundGas);
             }
         }
+        touchedAccounts.add(newAddress);
     }
 
     /**
@@ -606,8 +662,9 @@ public class Program {
                     msg.getGas(), contextBalance, data, track, this.invoke.getBlockStore(),
                     msg.getType().callIsStatic() || isStaticCall(), byTestingSuite());
 
-            VM vm = new VM(config);
-            Program program = new Program(getStorage().getCodeHash(codeAddress), programCode, programInvoke, internalTx, config).withCommonConfig(commonConfig);
+            VM vm = new VM(config, vmHook);
+            Program program = new Program(getStorage().getCodeHash(codeAddress), programCode, programInvoke, internalTx, config, vmHook)
+                    .withCommonConfig(commonConfig);
             vm.play(program);
             result = program.getResult();
 
@@ -791,6 +848,22 @@ public class Program {
 
     public DataWord storageLoad(DataWord key) {
         return getStorage().getStorageValue(getOwnerAddress().getLast20Bytes(), key);
+    }
+
+    /**
+     * @return current Storage data for key
+     */
+    public DataWord getCurrentValue(DataWord key) {
+        return getStorage().getStorageValue(getOwnerAddress().getLast20Bytes(), key);
+    }
+
+    /*
+     * Original storage value at the beginning of current frame execution
+     * For more info check EIP-1283 https://eips.ethereum.org/EIPS/eip-1283
+     * @return Storage data at the beginning of Program execution
+     */
+    public DataWord getOriginalValue(DataWord key) {
+        return originalRepo.getStorageValue(getOwnerAddress().getLast20Bytes(), key);
     }
 
     public DataWord getPrevHash() {

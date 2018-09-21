@@ -78,6 +78,11 @@ public class IterableTestRepository implements Repository {
     }
 
     @Override
+    public Repository clone() {
+        return new IterableTestRepository(src.clone(), this);
+    }
+
+    @Override
     public AccountState createAccount(byte[] addr) {
         addAccount(addr);
         return src.createAccount(addr);

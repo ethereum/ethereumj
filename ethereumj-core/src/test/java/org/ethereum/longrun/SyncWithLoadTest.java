@@ -31,7 +31,6 @@ import org.ethereum.core.TransactionReceipt;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.listener.EthereumListener;
 import org.ethereum.publish.event.BlockAdded;
 import org.ethereum.publish.event.PendingTransactionUpdated;
 import org.ethereum.sync.SyncManager;
@@ -192,17 +191,20 @@ public class SyncWithLoadTest {
             }
         }
 
-        private void onPendingTransactionUpdated(PendingTransactionUpdated.Data data) {
+        public void onPendingTransactionUpdated(PendingTransactionUpdated.Data data) {
+            Random rnd = new Random();
+            Block bestBlock = ethereum.getBlockchain().getBestBlock();
+            Block block = ethereum.getBlockchain().getBlockByNumber(rnd.nextInt((int) bestBlock.getNumber()));
+
             Transaction tx = data.getReceipt().getTransaction();
-            Block block = data.getBlock();
-//            Block block = ethereum.getBlockchain().getBlockByNumber(new Random().nextInt((int) bestBlock.getNumber()));
+
             Repository repository = ((Repository) ethereum.getRepository())
                     .getSnapshotTo(block.getStateRoot())
                     .startTracking();
             try {
                 TransactionExecutor executor = new TransactionExecutor
                         (tx, block.getCoinbase(), repository, ethereum.getBlockchain().getBlockStore(),
-                                programInvokeFactory, block, EthereumListener.EMPTY, 0)
+                                programInvokeFactory, block)
                         .withCommonConfig(commonConfig)
                         .setLocalCall(true);
 
@@ -227,7 +229,7 @@ public class SyncWithLoadTest {
                 this.ethereum
                         .subscribe(to(BlockAdded.class, this::onBlock))
                         .subscribe(to(PendingTransactionUpdated.class, this::onPendingTransactionUpdated)
-                            .conditionally(data -> data.getState() == NEW_PENDING));
+                                .conditionally(data -> data.getState() == NEW_PENDING));
 
                 // Run 1-30 minutes
                 Random generator = new Random();

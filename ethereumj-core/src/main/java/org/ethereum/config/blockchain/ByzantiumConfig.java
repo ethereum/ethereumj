@@ -20,9 +20,8 @@ package org.ethereum.config.blockchain;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.Constants;
 import org.ethereum.config.ConstantsAdapter;
-import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
-import org.ethereum.core.Repository;
+import org.ethereum.util.blockchain.EtherUtil;
 
 import java.math.BigInteger;
 
@@ -51,7 +50,7 @@ public class ByzantiumConfig extends Eip160HFConfig {
     public ByzantiumConfig(BlockchainConfig parent) {
         super(parent);
         constants = new ConstantsAdapter(super.getConstants()) {
-            private final BigInteger BLOCK_REWARD = new BigInteger("3000000000000000000");
+            private final BigInteger BLOCK_REWARD = EtherUtil.convert(3, EtherUtil.Unit.ETHER);
 
             @Override
             public BigInteger getBLOCK_REWARD() {
