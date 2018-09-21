@@ -20,7 +20,6 @@ package org.ethereum.vm;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.vm.hook.BackwardCompatibilityVmHook;
 import org.ethereum.vm.hook.VMHook;
 import org.ethereum.vm.program.Program;
 import org.ethereum.vm.program.Stack;
@@ -34,7 +33,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -89,7 +90,6 @@ public class VM {
     // used to reduce expensive BigInt arithmetic
     private static BigInteger MAX_MEM_SIZE = BigInteger.valueOf(Integer.MAX_VALUE);
 
-
     /* Keeps track of the number of steps performed in this VM */
     private int vmCounter = 0;
 
@@ -111,8 +111,11 @@ public class VM {
     }};
 
     private final SystemProperties config;
-    private final VMHook hook;
 
+    // deprecated field that holds VM hook. Will be removed in the future releases.
+    private static VMHook deprecatedHook = VMHook.EMPTY;
+    private final boolean hasHooks;
+    private final VMHook[] hooks;
 
     public VM() {
         this(SystemProperties.getDefault(), VMHook.EMPTY);
@@ -123,7 +126,16 @@ public class VM {
         this.config = config;
         this.vmTrace = config.vmTrace();
         this.dumpBlock = config.dumpBlock();
-        this.hook = new BackwardCompatibilityVmHook(hook);
+        this.hooks = Stream.of(deprecatedHook, hook)
+                .filter(h -> !h.isEmpty())
+                .toArray(VMHook[]::new);
+        this.hasHooks = this.hooks.length > 0;
+    }
+
+    private void onHookEvent(Consumer<VMHook> consumer) {
+        for (VMHook hook : this.hooks) {
+            consumer.accept(hook);
+        }
     }
 
     private long calcMemGas(GasCost gasCosts, long oldMemSize, BigInteger newMemSize, long copySize) {
@@ -422,7 +434,9 @@ public class VM {
                 this.dumpLine(op, gasBefore, gasCost + callGas, memWords, program);
             }
 
-            hook.step(program, op);
+            if (hasHooks) {
+                onHookEvent(hook -> hook.step(program, op));
+            }
 
             // Execute operation
             switch (op) {
@@ -1413,7 +1427,9 @@ public class VM {
         if (program.byTestingSuite()) return;
 
         try {
-            hook.startPlay(program);
+            if (hasHooks) {
+                onHookEvent(hook -> hook.startPlay(program));
+            }
 
             while (!program.isStopped()) {
                 this.step(program);
@@ -1425,7 +1441,9 @@ public class VM {
             logger.error("\n !!! StackOverflowError: update your java run command with -Xss2M (-Xss8M for tests) !!!\n", soe);
             System.exit(-1);
         } finally {
-            hook.stopPlay(program);
+            if (hasHooks) {
+                onHookEvent(hook -> hook.stopPlay(program));
+            }
         }
     }
 
@@ -1436,7 +1454,7 @@ public class VM {
     @Deprecated
     public static void setVmHook(VMHook vmHook) {
         logger.warn("VM.setVmHook(VMHook vmHook) is deprecated method. Define your hook component as a Spring bean.");
-        BackwardCompatibilityVmHook.setDeprecatedHook(vmHook);
+        VM.deprecatedHook = vmHook;
     }
 
     /**

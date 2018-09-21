@@ -229,6 +229,11 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return this;
     }
 
+    public BlockchainImpl withVmHook(VMHook vmHook) {
+        this.vmHook = vmHook;
+        return this;
+    }
+
     private void initConst(SystemProperties config) {
         minerCoinbase = config.getMinerCoinbase();
         minerExtraData = config.getMineExtraData();

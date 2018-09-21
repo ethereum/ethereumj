@@ -25,8 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -39,35 +37,40 @@ public class RootVmHook implements VMHook {
 
     private static final Logger logger = LoggerFactory.getLogger("VM");
 
-    private final List<VMHook> hooks;
+    private VMHook[] hooks;
 
     @Autowired
-    public RootVmHook(Optional<List<VMHook>> hooks) {
-        this.hooks = hooks.orElseGet(ArrayList::new);
+    public RootVmHook(Optional<VMHook[]> hooks) {
+        this.hooks = hooks.orElseGet(() -> new VMHook[] {});
     }
 
-    private void safeProxyToAll(Consumer<VMHook> action) {
-        this.hooks.forEach(hook -> {
+    private void proxySafeToAll(Consumer<VMHook> action) {
+        for (VMHook hook : hooks) {
             try {
                 action.accept(hook);
             } catch (Throwable t) {
                 logger.error("VM hook execution error: ", t);
             }
-        });
+        }
     }
 
     @Override
     public void startPlay(Program program) {
-        safeProxyToAll(hook -> hook.startPlay(program));
+        proxySafeToAll(hook -> hook.startPlay(program));
     }
 
     @Override
     public void step(Program program, OpCode opcode) {
-        safeProxyToAll(hook -> hook.step(program, opcode));
+        proxySafeToAll(hook -> hook.step(program, opcode));
     }
 
     @Override
     public void stopPlay(Program program) {
-        safeProxyToAll(hook -> hook.stopPlay(program));
+        proxySafeToAll(hook -> hook.stopPlay(program));
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return hooks.length == 0;
     }
 }
