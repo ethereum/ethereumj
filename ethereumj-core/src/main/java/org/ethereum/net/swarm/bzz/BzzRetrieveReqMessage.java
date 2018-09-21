@@ -23,7 +23,6 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**

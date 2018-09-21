@@ -17,9 +17,7 @@
  */
 package org.ethereum.net.shh;
 
-
 import org.apache.commons.collections4.map.LRUMap;
-import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
@@ -27,7 +25,6 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.stereotype.Component;
 
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Component

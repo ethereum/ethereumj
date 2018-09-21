@@ -40,7 +40,6 @@ import java.io.IOException;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
-
 /**
  * This class creates the connection to an remote address using the Netty framework
  *

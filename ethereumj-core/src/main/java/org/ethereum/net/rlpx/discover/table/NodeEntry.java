@@ -19,8 +19,6 @@ package org.ethereum.net.rlpx.discover.table;
 
 import org.ethereum.net.rlpx.Node;
 
-import static org.ethereum.crypto.HashUtil.sha3;
-
 /**
  * Created by kest on 5/25/15.
  */

@@ -17,12 +17,10 @@
  */
 package org.ethereum.net.rlpx.discover;
 
-
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.handler.codec.MessageToMessageDecoder;
-import org.ethereum.crypto.ECKey;
 import org.ethereum.net.rlpx.Message;
 import org.slf4j.LoggerFactory;
 

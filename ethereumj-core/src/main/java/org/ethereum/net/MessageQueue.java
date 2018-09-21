@@ -25,7 +25,6 @@ import org.ethereum.net.message.Message;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.p2p.PingMessage;
-import org.ethereum.net.p2p.PongMessage;
 import org.ethereum.net.server.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

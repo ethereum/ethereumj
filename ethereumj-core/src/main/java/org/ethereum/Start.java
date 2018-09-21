@@ -19,9 +19,6 @@ package org.ethereum;
 
 import org.ethereum.cli.CLIInterface;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.facade.Ethereum;
-import org.ethereum.facade.EthereumFactory;
-import org.ethereum.manager.BlockLoader;
 import org.ethereum.mine.Ethash;
 
 import java.io.IOException;

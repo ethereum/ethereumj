@@ -28,8 +28,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import static java.lang.Thread.sleep;
-
 /**
  * @author Roman Mandeleil
  * @since 23.05.2014

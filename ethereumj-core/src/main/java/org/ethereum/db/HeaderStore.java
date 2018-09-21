@@ -25,7 +25,6 @@ import org.ethereum.datasource.Source;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
  * BlockHeaders store
  * Assumes one chain

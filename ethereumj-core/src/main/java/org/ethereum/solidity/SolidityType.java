@@ -20,7 +20,6 @@ package org.ethereum.solidity;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.vm.DataWord;
 
 import java.lang.reflect.Array;
 import java.math.BigInteger;

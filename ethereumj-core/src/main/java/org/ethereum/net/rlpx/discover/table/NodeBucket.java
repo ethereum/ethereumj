@@ -19,7 +19,6 @@ package org.ethereum.net.rlpx.discover.table;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 /**

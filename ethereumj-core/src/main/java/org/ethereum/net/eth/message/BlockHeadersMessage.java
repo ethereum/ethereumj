@@ -22,7 +22,6 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import static org.ethereum.util.ByteUtil.toHexString;
