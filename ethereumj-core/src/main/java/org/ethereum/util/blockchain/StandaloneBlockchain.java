@@ -45,6 +45,7 @@ import org.ethereum.util.FastByteComparisons;
 import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
+import org.ethereum.vm.hook.VMHook;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.iq80.leveldb.DBException;
 import org.spongycastle.util.encoders.Hex;
@@ -86,6 +87,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
     private BlockSummary lastSummary;
     private final BackwardCompatibilityEthereumListenerProxy listenerProxy;
+    private VMHook vmHook = VMHook.EMPTY;
 
     class PendingTx {
         ECKey sender;
@@ -196,6 +198,11 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
     public StandaloneBlockchain withDbDelay(long dbDelay) {
         this.dbDelay = dbDelay;
+        return this;
+    }
+
+    public StandaloneBlockchain withVmHook(VMHook vmHook) {
+        this.vmHook = vmHook;
         return this;
     }
 
@@ -494,7 +501,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 
         BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, listenerProxy)
-                .withSyncManager(new SyncManager());
+                .withSyncManager(new SyncManager())
+                .withVmHook(vmHook);
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
         blockchain.setPruneManager(pruneManager);
