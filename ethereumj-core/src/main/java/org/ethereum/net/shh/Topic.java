@@ -19,7 +19,6 @@ package org.ethereum.net.shh;
 
 import org.ethereum.util.RLP;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static org.ethereum.crypto.HashUtil.sha3;

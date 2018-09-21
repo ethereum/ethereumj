@@ -17,14 +17,11 @@
  */
 package org.ethereum.solidity.compiler;
 
-
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static org.apache.commons.collections4.CollectionUtils.disjunction;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.substringsBetween;

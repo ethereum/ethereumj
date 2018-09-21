@@ -18,7 +18,6 @@
 package org.ethereum.datasource;
 
 import com.google.common.util.concurrent.*;
-import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.ethereum.util.ALock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -22,7 +22,6 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.crypto.ECKey;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.WireTrafficStats;
 import org.slf4j.LoggerFactory;
@@ -35,8 +34,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import static org.ethereum.crypto.HashUtil.sha3;
 
 @Component
 public class UDPListener {

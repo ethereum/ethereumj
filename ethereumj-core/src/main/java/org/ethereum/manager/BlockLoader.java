@@ -17,7 +17,6 @@
  */
 package org.ethereum.manager;
 
-
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Blockchain;

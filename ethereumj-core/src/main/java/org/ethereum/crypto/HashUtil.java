@@ -35,8 +35,6 @@ import java.util.Random;
 
 import static java.util.Arrays.copyOfRange;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
-import static org.ethereum.util.ByteUtil.bytesToBigInteger;
 
 public class HashUtil {
 

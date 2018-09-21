@@ -19,9 +19,6 @@ package org.ethereum.net.rlpx;
 
 import org.ethereum.crypto.ECKey;
 import org.spongycastle.math.ec.ECPoint;
-import org.spongycastle.util.BigIntegers;
-
-import java.util.Arrays;
 
 import static org.ethereum.util.ByteUtil.merge;
 import static org.spongycastle.util.BigIntegers.asUnsignedByteArray;

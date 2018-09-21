@@ -17,7 +17,6 @@
  */
 package org.ethereum.vm.program;
 
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
 import org.ethereum.core.Transaction;
@@ -27,7 +26,6 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.ethereum.vm.DataWord;
 
-import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import static org.apache.commons.lang3.ArrayUtils.*;

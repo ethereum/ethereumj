@@ -21,7 +21,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.ethereum.core.*;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessageCodes;
-import org.ethereum.sync.PeerState;
 import org.ethereum.sync.SyncStatistics;
 
 import java.math.BigInteger;

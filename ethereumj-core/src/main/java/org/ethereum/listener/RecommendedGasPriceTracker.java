@@ -27,7 +27,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
  * Calculates a 'reasonable' Gas price based on statistics of the latest transaction's Gas prices.
  * This is an updated version that returns more accurate data
