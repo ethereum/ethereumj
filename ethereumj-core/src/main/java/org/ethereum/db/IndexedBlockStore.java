@@ -17,6 +17,8 @@
  */
 package org.ethereum.db;
 
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.datasource.DataSourceArray;
@@ -35,6 +37,7 @@ import java.io.*;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import static java.math.BigInteger.ZERO;
 import static org.ethereum.crypto.HashUtil.shortHash;
@@ -49,11 +52,16 @@ public class IndexedBlockStore extends AbstractBlockstore{
     Source<byte[], byte[]> blocksDS;
     ObjectDataSource<Block> blocks;
 
+    KafkaProducer<Long, Object> longKeyedKafkaProducer;
+    KafkaProducer<String, Object> stringKeyedKafkaProducer;
+
     public IndexedBlockStore(){
     }
 
-    public void init(Source<byte[], byte[]> index, Source<byte[], byte[]> blocks) {
+    public void init(Source<byte[], byte[]> index, Source<byte[], byte[]> blocks, KafkaProducer<Long, Object> longKeyedKafkaProducer, KafkaProducer<String, Object> stringKeyedKafkaProducer) {
         indexDS = index;
+        this.longKeyedKafkaProducer = longKeyedKafkaProducer;
+        this.stringKeyedKafkaProducer = stringKeyedKafkaProducer;
         this.index = new DataSourceArray<>(
                 new ObjectDataSource<>(index, BLOCK_INFO_SERIALIZER, 512));
         this.blocksDS = blocks;
@@ -68,6 +76,8 @@ public class IndexedBlockStore extends AbstractBlockstore{
                 return bytes == null ? null : new Block(bytes);
             }
         }, 256);
+
+
     }
 
     public synchronized Block getBestBlock(){
@@ -121,9 +131,20 @@ public class IndexedBlockStore extends AbstractBlockstore{
         blockInfo.setMainChain(mainChain); // FIXME:maybe here I should force reset main chain for all uncles on that level
 
         putBlockInfo(blockInfos, blockInfo);
-        index.set((int) block.getNumber(), blockInfos);
 
+        try {
+            final ProducerRecord<Long, Object> infoRecord = new ProducerRecord<>("blocks-info", block.getNumber(), new BlockInfosList(blockInfos));
+            longKeyedKafkaProducer.send(infoRecord).get();
+
+            final ProducerRecord<String, Object> blockRecord = new ProducerRecord<>("blocks", ByteUtil.toHexString(block.getHash()), block);
+            stringKeyedKafkaProducer.send(blockRecord);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        index.set((int) block.getNumber(), blockInfos);
         blocks.put(block.getHash(), block);
+
     }
 
     private void putBlockInfo(List<BlockInfo> blockInfos, BlockInfo blockInfo) {
@@ -497,7 +518,16 @@ public class IndexedBlockStore extends AbstractBlockstore{
     }
 
     private synchronized void setBlockInfoForLevel(long level, List<BlockInfo> infos){
+
+        try {
+            final ProducerRecord<Long, Object> infoRecord = new ProducerRecord<>("blocks-info", level, new BlockInfosList(infos));
+            longKeyedKafkaProducer.send(infoRecord).get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
         index.set((int) level, infos);
+
     }
 
     private static BlockInfo getBlockInfoForHash(List<BlockInfo> blocks, byte[] hash){
@@ -525,5 +555,18 @@ public class IndexedBlockStore extends AbstractBlockstore{
 //        } catch (Exception e) {
 //            logger.warn("Problems closing blocksDS", e);
 //        }
+    }
+
+    private static final class BlockInfosList {
+
+        private final List<BlockInfo> infos;
+
+        private BlockInfosList(List<BlockInfo> infos) {
+            this.infos = infos;
+        }
+
+        public List<BlockInfo> getInfos() {
+            return infos;
+        }
     }
 }

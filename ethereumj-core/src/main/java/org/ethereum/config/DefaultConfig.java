@@ -17,6 +17,7 @@
  */
 package org.ethereum.config;
 
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.ethereum.datasource.*;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.IndexedBlockStore;
@@ -59,7 +60,10 @@ public class DefaultConfig {
         IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
         Source<byte[], byte[]> block = commonConfig.cachedDbSource("block");
         Source<byte[], byte[]> index = commonConfig.cachedDbSource("index");
-        indexedBlockStore.init(index, block);
+        KafkaProducer<Long, Object> longKeyedKafkaProducer = commonConfig.longKeyedKafkaProducer();
+        KafkaProducer<String, Object> stringKeyedKafkaProducer = commonConfig.stringKeyedKafkaProducer();
+
+        indexedBlockStore.init(index, block, longKeyedKafkaProducer, stringKeyedKafkaProducer);
 
         return indexedBlockStore;
     }
@@ -67,7 +71,10 @@ public class DefaultConfig {
     @Bean
     public TransactionStore transactionStore() {
         commonConfig.fastSyncCleanUp();
-        return new TransactionStore(commonConfig.cachedDbSource("transactions"));
+        return new TransactionStore(
+                commonConfig.cachedDbSource("transactions"),
+                commonConfig.stringKeyedKafkaProducer()
+        );
     }
 
     @Bean

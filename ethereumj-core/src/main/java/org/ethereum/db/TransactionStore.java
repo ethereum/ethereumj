@@ -18,8 +18,11 @@
 package org.ethereum.db;
 
 import org.apache.commons.collections4.map.LRUMap;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.ethereum.datasource.*;
 import org.ethereum.core.TransactionInfo;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
@@ -31,6 +34,7 @@ import javax.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Storage (tx hash) => List of (block idx, tx idx, TransactionReceipt)
@@ -50,6 +54,8 @@ public class TransactionStore extends ObjectDataSource<List<TransactionInfo>> {
 
     private final LRUMap<ByteArrayWrapper, Object> lastSavedTxHash = new LRUMap<>(5000);
     private final Object object = new Object();
+
+    private final KafkaProducer<String, Object> kafkaProducer;
 
     private final static Serializer<List<TransactionInfo>, byte[]> serializer =
             new Serializer<List<TransactionInfo>, byte[]>() {
@@ -107,6 +113,13 @@ public class TransactionStore extends ObjectDataSource<List<TransactionInfo>> {
             }
         }
         existingInfos.add(tx);
+
+        try {
+            this.kafkaProducer.send(new ProducerRecord<>("transactions", ByteUtil.toHexString(txHash), new TransactionInfosList(existingInfos))).get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
         put(txHash, existingInfos);
 
         return true;
@@ -122,8 +135,21 @@ public class TransactionStore extends ObjectDataSource<List<TransactionInfo>> {
         return null;
     }
 
-    public TransactionStore(Source<byte[], byte[]> src) {
+    public TransactionStore(Source<byte[], byte[]> src, KafkaProducer<String, Object> kafkaProducer) {
         super(src, serializer, 256);
+        this.kafkaProducer = kafkaProducer;
+    }
+
+    private final class TransactionInfosList {
+        private final List<TransactionInfo> infos;
+
+        private TransactionInfosList(List<TransactionInfo> infos) {
+            this.infos = infos;
+        }
+
+        public List<TransactionInfo> getInfos() {
+            return infos;
+        }
     }
 
     @PreDestroy

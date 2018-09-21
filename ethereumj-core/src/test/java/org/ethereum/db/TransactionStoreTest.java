@@ -54,7 +54,7 @@ public class TransactionStoreTest {
         HashMapDB<byte[]> txDb = new HashMapDB<>();
 
         StandaloneBlockchain bc = new StandaloneBlockchain();
-        bc.getBlockchain().withTransactionStore(new TransactionStore(txDb));
+        bc.getBlockchain().withTransactionStore(new TransactionStore(txDb, null));
         SolidityContract contract = bc.submitNewContract(contractSrc);
         bc.createBlock();
         contract.callFunction("add", 555, 222);
@@ -70,7 +70,7 @@ public class TransactionStoreTest {
         bc.getBlockchain().flush();
         System.out.println(txDb.keys().size());
 
-        TransactionStore txStore = new TransactionStore(txDb);
+        TransactionStore txStore = new TransactionStore(txDb, null);
         TransactionInfo tx1Info_ = txStore.get(tx1.getHash()).get(0);
         executionResult = tx1Info_.getReceipt().getExecutionResult();
         Assert.assertArrayEquals(DataWord.of(777).getData(), executionResult);
@@ -94,7 +94,7 @@ public class TransactionStoreTest {
         HashMapDB txDb = new HashMapDB();
 
         StandaloneBlockchain bc = new StandaloneBlockchain();
-        TransactionStore transactionStore = new TransactionStore(txDb);
+        TransactionStore transactionStore = new TransactionStore(txDb, null);
         bc.getBlockchain().withTransactionStore(transactionStore);
         SolidityContract contract = bc.submitNewContract(contractSrc);
         Block b1 = bc.createBlock();
@@ -121,7 +121,7 @@ public class TransactionStoreTest {
         // check that we can read previously saved entries (saved with legacy code)
 
         HashMapDB txDb = new HashMapDB();
-        TransactionStore transactionStore = new TransactionStore(txDb);
+        TransactionStore transactionStore = new TransactionStore(txDb, null);
         StandaloneBlockchain bc = new StandaloneBlockchain();
         bc.getBlockchain().withTransactionStore(transactionStore);
 
@@ -132,7 +132,7 @@ public class TransactionStoreTest {
 
         HashMapDB<byte[]> txDb1 = new HashMapDB<>();
         txDb1.put(tx.getHash(), info.getEncoded()); // legacy serialization
-        TransactionStore transactionStore1 = new TransactionStore(txDb1);
+        TransactionStore transactionStore1 = new TransactionStore(txDb1, null);
         TransactionInfo info1 = transactionStore1.get(tx.getHash()).get(0);
         Assert.assertArrayEquals(info1.getReceipt().getPostTxState(), info.getReceipt().getPostTxState());
     }

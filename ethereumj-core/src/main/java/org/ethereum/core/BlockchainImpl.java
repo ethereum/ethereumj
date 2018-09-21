@@ -18,6 +18,7 @@
 package org.ethereum.core;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
@@ -192,13 +193,13 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     //todo: autowire over constructor
-    public BlockchainImpl(final BlockStore blockStore, final Repository repository) {
+    public BlockchainImpl(final BlockStore blockStore, final Repository repository, final KafkaProducer<String, Object> kafkaProducer) {
         this.blockStore = blockStore;
         this.repository = repository;
         this.adminInfo = new AdminInfo();
         this.listener = new EthereumListenerAdapter();
         this.parentHeaderValidator = null;
-        this.transactionStore = new TransactionStore(new HashMapDB());
+        this.transactionStore = new TransactionStore(new HashMapDB(), kafkaProducer);
         this.eventDispatchThread = EventDispatchThread.getDefault();
         this.programInvokeFactory = new ProgramInvokeFactoryImpl();
         initConst(SystemProperties.getDefault());

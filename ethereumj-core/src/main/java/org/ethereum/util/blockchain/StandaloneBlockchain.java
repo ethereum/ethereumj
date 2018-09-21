@@ -470,7 +470,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         SystemProperties.getDefault().setBlockchainConfig(netConfig != null ? netConfig : getEasyMiningConfig());
 
         IndexedBlockStore blockStore = new IndexedBlockStore();
-        blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>());
+        blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>(), null, null);
 
         stateDS = new HashMapDB<>();
         pruningStateDS = new JournalSource<>(stateDS);
@@ -482,7 +482,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
         listener = new CompositeEthereumListener();
 
-        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository)
+        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, null)
                 .withEthereumListener(listener)
                 .withSyncManager(new SyncManager());
         blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());

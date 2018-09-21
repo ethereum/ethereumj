@@ -35,7 +35,7 @@ public class CheckFork {
         Source<byte[], byte[]> blockDS = CommonConfig.getDefault().cachedDbSource("block");
 
         IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
-        indexedBlockStore.init(index, blockDS);
+        indexedBlockStore.init(index, blockDS, null, null);
 
         for (int i = 1_919_990; i < 1_921_000; i++) {
             Block chainBlock = indexedBlockStore.getChainBlockByNumber(i);
