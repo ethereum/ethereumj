@@ -137,7 +137,7 @@ public class WorldManager implements ApplicationContextAware {
     @Deprecated
     public void addListener(EthereumListener listener) {
         logger.info("Ethereum listener added");
-        ((BackwardCompatibilityEthereumListenerProxy) listener).getCompositeListener().addListener(listener);
+        ((BackwardCompatibilityEthereumListenerProxy) this.listener).getCompositeListener().addListener(listener);
     }
 
 
