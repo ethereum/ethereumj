@@ -25,6 +25,7 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.*;
+import org.ethereum.kafka.Kafka;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.listener.EthereumListener;
@@ -193,13 +194,13 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     //todo: autowire over constructor
-    public BlockchainImpl(final BlockStore blockStore, final Repository repository, final KafkaProducer<String, Object> kafkaProducer) {
+    public BlockchainImpl(final BlockStore blockStore, final Repository repository) {
         this.blockStore = blockStore;
         this.repository = repository;
         this.adminInfo = new AdminInfo();
         this.listener = new EthereumListenerAdapter();
         this.parentHeaderValidator = null;
-        this.transactionStore = new TransactionStore(new HashMapDB(), kafkaProducer);
+        this.transactionStore = new TransactionStore(new HashMapDB());
         this.eventDispatchThread = EventDispatchThread.getDefault();
         this.programInvokeFactory = new ProgramInvokeFactoryImpl();
         initConst(SystemProperties.getDefault());

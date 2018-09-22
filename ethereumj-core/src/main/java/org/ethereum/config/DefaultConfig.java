@@ -17,7 +17,6 @@
  */
 package org.ethereum.config;
 
-import org.apache.kafka.clients.producer.KafkaProducer;
 import org.ethereum.datasource.*;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.IndexedBlockStore;
@@ -60,10 +59,7 @@ public class DefaultConfig {
         IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
         Source<byte[], byte[]> block = commonConfig.cachedDbSource("block");
         Source<byte[], byte[]> index = commonConfig.cachedDbSource("index");
-        KafkaProducer<Long, Object> longKeyedKafkaProducer = commonConfig.longKeyedKafkaProducer();
-        KafkaProducer<String, Object> stringKeyedKafkaProducer = commonConfig.stringKeyedKafkaProducer();
-
-        indexedBlockStore.init(index, block, longKeyedKafkaProducer, stringKeyedKafkaProducer);
+        indexedBlockStore.init(index, block);
 
         return indexedBlockStore;
     }
@@ -71,17 +67,14 @@ public class DefaultConfig {
     @Bean
     public TransactionStore transactionStore() {
         commonConfig.fastSyncCleanUp();
-        return new TransactionStore(
-                commonConfig.cachedDbSource("transactions"),
-                commonConfig.stringKeyedKafkaProducer()
-        );
+        return new TransactionStore(commonConfig.cachedDbSource("transactions"));
     }
 
     @Bean
     public PruneManager pruneManager() {
         if (config.databasePruneDepth() >= 0) {
             return new PruneManager((IndexedBlockStore) blockStore(), commonConfig.stateSource().getJournalSource(),
-                    commonConfig.stateSource().getNoJournalSource(), config.databasePruneDepth());
+                commonConfig.stateSource().getNoJournalSource(), config.databasePruneDepth());
         } else {
             return new PruneManager(null, null, null, -1); // dummy
         }

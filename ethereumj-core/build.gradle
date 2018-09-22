@@ -135,6 +135,9 @@ dependencies {
     compile "com.google.guava:guava:24.1-jre"
 
     compile "org.apache.kafka:kafka-streams:2.0.0"
+    compile "org.apache.avro:avro:1.8.2"
+    compile "io.confluent:kafka-avro-serializer:3.2.1"
+
     compile "com.github.jcustenborder.kafka:kafka-jackson:0.0.1.2"
     compile "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.5"
 

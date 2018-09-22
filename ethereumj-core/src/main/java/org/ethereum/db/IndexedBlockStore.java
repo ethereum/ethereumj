@@ -17,14 +17,14 @@
  */
 package org.ethereum.db;
 
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.datasource.DataSourceArray;
 import org.ethereum.datasource.ObjectDataSource;
 import org.ethereum.datasource.Serializer;
 import org.ethereum.datasource.Source;
+import org.ethereum.kafka.Kafka;
+import org.ethereum.kafka.models.BlockInfoList;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
@@ -37,7 +37,6 @@ import java.io.*;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 import static java.math.BigInteger.ZERO;
 import static org.ethereum.crypto.HashUtil.shortHash;
@@ -48,20 +47,15 @@ public class IndexedBlockStore extends AbstractBlockstore{
     private static final Logger logger = LoggerFactory.getLogger("general");
 
     Source<byte[], byte[]> indexDS;
-    DataSourceArray<List<BlockInfo>> index;
+    protected DataSourceArray<List<BlockInfo>> index;
     Source<byte[], byte[]> blocksDS;
-    ObjectDataSource<Block> blocks;
-
-    KafkaProducer<Long, Object> longKeyedKafkaProducer;
-    KafkaProducer<String, Object> stringKeyedKafkaProducer;
+    protected ObjectDataSource<Block> blocks;
 
     public IndexedBlockStore(){
     }
 
-    public void init(Source<byte[], byte[]> index, Source<byte[], byte[]> blocks, KafkaProducer<Long, Object> longKeyedKafkaProducer, KafkaProducer<String, Object> stringKeyedKafkaProducer) {
+    public void init(Source<byte[], byte[]> index, Source<byte[], byte[]> blocks) {
         indexDS = index;
-        this.longKeyedKafkaProducer = longKeyedKafkaProducer;
-        this.stringKeyedKafkaProducer = stringKeyedKafkaProducer;
         this.index = new DataSourceArray<>(
                 new ObjectDataSource<>(index, BLOCK_INFO_SERIALIZER, 512));
         this.blocksDS = blocks;
@@ -76,9 +70,8 @@ public class IndexedBlockStore extends AbstractBlockstore{
                 return bytes == null ? null : new Block(bytes);
             }
         }, 256);
-
-
     }
+
 
     public synchronized Block getBestBlock(){
 
@@ -120,7 +113,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
         addInternalBlock(block, totalDifficulty, mainChain);
     }
 
-    private void addInternalBlock(Block block, BigInteger totalDifficulty, boolean mainChain){
+    protected void addInternalBlock(Block block, BigInteger totalDifficulty, boolean mainChain){
 
         List<BlockInfo> blockInfos = block.getNumber() >= index.size() ?  null : index.get((int) block.getNumber());
         blockInfos = blockInfos == null ? new ArrayList<BlockInfo>() : blockInfos;
@@ -132,22 +125,12 @@ public class IndexedBlockStore extends AbstractBlockstore{
 
         putBlockInfo(blockInfos, blockInfo);
 
-        try {
-            final ProducerRecord<Long, Object> infoRecord = new ProducerRecord<>("blocks-info", block.getNumber(), new BlockInfosList(blockInfos));
-            longKeyedKafkaProducer.send(infoRecord).get();
-
-            final ProducerRecord<String, Object> blockRecord = new ProducerRecord<>("blocks", ByteUtil.toHexString(block.getHash()), block);
-            stringKeyedKafkaProducer.send(blockRecord);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
         index.set((int) block.getNumber(), blockInfos);
         blocks.put(block.getHash(), block);
 
     }
 
-    private void putBlockInfo(List<BlockInfo> blockInfos, BlockInfo blockInfo) {
+    protected void putBlockInfo(List<BlockInfo> blockInfos, BlockInfo blockInfo) {
         for (int i = 0; i < blockInfos.size(); i++) {
             BlockInfo curBlockInfo = blockInfos.get(i);
             if (FastByteComparisons.equal(curBlockInfo.getHash(), blockInfo.getHash())) {
@@ -517,17 +500,8 @@ public class IndexedBlockStore extends AbstractBlockstore{
         return index.get((int) level);
     }
 
-    private synchronized void setBlockInfoForLevel(long level, List<BlockInfo> infos){
-
-        try {
-            final ProducerRecord<Long, Object> infoRecord = new ProducerRecord<>("blocks-info", level, new BlockInfosList(infos));
-            longKeyedKafkaProducer.send(infoRecord).get();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
+    protected synchronized void setBlockInfoForLevel(long level, List<BlockInfo> infos){
         index.set((int) level, infos);
-
     }
 
     private static BlockInfo getBlockInfoForHash(List<BlockInfo> blocks, byte[] hash){
@@ -555,18 +529,5 @@ public class IndexedBlockStore extends AbstractBlockstore{
 //        } catch (Exception e) {
 //            logger.warn("Problems closing blocksDS", e);
 //        }
-    }
-
-    private static final class BlockInfosList {
-
-        private final List<BlockInfo> infos;
-
-        private BlockInfosList(List<BlockInfo> infos) {
-            this.infos = infos;
-        }
-
-        public List<BlockInfo> getInfos() {
-            return infos;
-        }
     }
 }

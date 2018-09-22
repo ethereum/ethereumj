@@ -22,6 +22,8 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.ethereum.datasource.*;
 import org.ethereum.core.TransactionInfo;
+import org.ethereum.kafka.Kafka;
+import org.ethereum.kafka.models.TransactionInfoList;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
@@ -34,7 +36,6 @@ import javax.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 /**
  * Storage (tx hash) => List of (block idx, tx idx, TransactionReceipt)
@@ -52,12 +53,10 @@ import java.util.concurrent.ExecutionException;
 public class TransactionStore extends ObjectDataSource<List<TransactionInfo>> {
     private static final Logger logger = LoggerFactory.getLogger("db");
 
-    private final LRUMap<ByteArrayWrapper, Object> lastSavedTxHash = new LRUMap<>(5000);
-    private final Object object = new Object();
+    protected final LRUMap<ByteArrayWrapper, Object> lastSavedTxHash = new LRUMap<>(5000);
+    protected final Object object = new Object();
 
-    private final KafkaProducer<String, Object> kafkaProducer;
-
-    private final static Serializer<List<TransactionInfo>, byte[]> serializer =
+    protected final static Serializer<List<TransactionInfo>, byte[]> serializer =
             new Serializer<List<TransactionInfo>, byte[]>() {
         @Override
         public byte[] serialize(List<TransactionInfo> object) {
@@ -114,12 +113,6 @@ public class TransactionStore extends ObjectDataSource<List<TransactionInfo>> {
         }
         existingInfos.add(tx);
 
-        try {
-            this.kafkaProducer.send(new ProducerRecord<>("transactions", ByteUtil.toHexString(txHash), new TransactionInfosList(existingInfos))).get();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
         put(txHash, existingInfos);
 
         return true;
@@ -135,21 +128,8 @@ public class TransactionStore extends ObjectDataSource<List<TransactionInfo>> {
         return null;
     }
 
-    public TransactionStore(Source<byte[], byte[]> src, KafkaProducer<String, Object> kafkaProducer) {
+    public TransactionStore(Source<byte[], byte[]> src) {
         super(src, serializer, 256);
-        this.kafkaProducer = kafkaProducer;
-    }
-
-    private final class TransactionInfosList {
-        private final List<TransactionInfo> infos;
-
-        private TransactionInfosList(List<TransactionInfo> infos) {
-            this.infos = infos;
-        }
-
-        public List<TransactionInfo> getInfos() {
-            return infos;
-        }
     }
 
     @PreDestroy

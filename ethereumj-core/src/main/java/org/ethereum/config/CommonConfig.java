@@ -17,12 +17,6 @@
  */
 package org.ethereum.config;
 
-import com.github.jcustenborder.kafka.serialization.jackson.JacksonSerializer;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.BytesSerializer;
-import org.apache.kafka.common.serialization.LongSerializer;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.ethereum.core.Repository;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
@@ -30,6 +24,7 @@ import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.leveldb.LevelDbDataSource;
 import org.ethereum.datasource.rocksdb.RocksDbDataSource;
 import org.ethereum.db.*;
+import org.ethereum.kafka.config.KafkaSystemProperties;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.handler.Eth63;
@@ -42,7 +37,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static java.util.Arrays.asList;
 
@@ -70,7 +68,7 @@ public class CommonConfig {
 
     @Bean
     public SystemProperties systemProperties() {
-        return SystemProperties.getSpringDefault();
+        return KafkaSystemProperties.getKafkaSystemProperties();
     }
 
     @Bean
@@ -79,8 +77,7 @@ public class CommonConfig {
     }
 
 
-    @Bean
-    @Primary
+    @Bean @Primary
     public Repository repository() {
         return new RepositoryWrapper();
     }
@@ -90,8 +87,7 @@ public class CommonConfig {
         return new RepositoryRoot(stateSource(), null);
     }
 
-    @Bean
-    @Scope("prototype")
+    @Bean @Scope("prototype")
     public Repository repository(byte[] stateRoot) {
         return new RepositoryRoot(stateSource(), stateRoot);
     }
@@ -99,7 +95,7 @@ public class CommonConfig {
     /**
      * A source of nodes for state trie and all contract storage tries. <br/>
      * This source provides contract code too. <br/><br/>
-     * <p>
+     *
      * Picks node by 16-bytes prefix of its key. <br/>
      * Within {@link NodeKeyCompositor} this source is a part of ref counting workaround<br/><br/>
      *
@@ -114,8 +110,7 @@ public class CommonConfig {
     public Source<byte[], byte[]> trieNodeSource() {
         DbSource<byte[]> db = blockchainDB();
         Source<byte[], byte[]> src = new PrefixLookupSource<>(db, NodeKeyCompositor.PREFIX_BYTES);
-        final XorDataSource<byte[]> xorDataSource = new XorDataSource<>(src, HashUtil.sha3("state".getBytes()));
-        return new KafkaListeningDataSource(xorDataSource, stateKafkaProducer());
+        return new XorDataSource<>(src, HashUtil.sha3("state".getBytes()));
     }
 
     @Bean
@@ -227,39 +222,6 @@ public class CommonConfig {
         }
     }
 
-    @Bean
-    public KafkaProducer<Long, Object> longKeyedKafkaProducer() {
-        final Properties props = new Properties();
-        // TODO make configurable
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        props.put(ProducerConfig.CLIENT_ID_CONFIG, "ethj-1");
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, LongSerializer.class.getName());
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JacksonSerializer.class.getName());
-        return new KafkaProducer<>(props);
-    }
-
-    @Bean
-    public KafkaProducer<String, Object> stringKeyedKafkaProducer() {
-        final Properties props = new Properties();
-        // TODO make configurable
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        props.put(ProducerConfig.CLIENT_ID_CONFIG, "ethj-2");
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JacksonSerializer.class.getName());
-        return new KafkaProducer<>(props);
-    }
-
-    @Bean
-    public KafkaProducer<String, byte[]> stateKafkaProducer() {
-        final Properties props = new Properties();
-        // TODO make configurable
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        props.put(ProducerConfig.CLIENT_ID_CONFIG, "ethj-state");
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, BytesSerializer.class.getName());
-        return new KafkaProducer<>(props);
-    }
-
     @Bean(name = "EthereumListener")
     public CompositeEthereumListener ethereumListener() {
         return new CompositeEthereumListener();
@@ -277,7 +239,7 @@ public class CommonConfig {
         DbSource<byte[]> dataSource = headerSource();
 
         WriteCache.BytesKey<byte[]> cache = new WriteCache.BytesKey<>(
-                new BatchSourceWriter<>(dataSource), WriteCache.CacheType.SIMPLE);
+            new BatchSourceWriter<>(dataSource), WriteCache.CacheType.SIMPLE);
         cache.setFlushSource(true);
         dbFlushManager().addCache(cache);
 
@@ -308,7 +270,6 @@ public class CommonConfig {
             public byte[] serialize(ProgramPrecompile object) {
                 return object == null ? null : object.serialize();
             }
-
             public ProgramPrecompile deserialize(byte[] stream) {
                 return stream == null ? null : ProgramPrecompile.deserialize(stream);
             }

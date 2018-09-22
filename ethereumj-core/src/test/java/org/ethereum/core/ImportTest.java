@@ -65,7 +65,7 @@ public class ImportTest {
         public BlockStore blockStore(){
 
             IndexedBlockStore blockStore = new IndexedBlockStore();
-            blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>(), null, null);
+            blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>());
 
             return blockStore;
         }

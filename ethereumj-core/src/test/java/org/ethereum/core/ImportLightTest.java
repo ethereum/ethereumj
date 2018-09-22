@@ -890,7 +890,7 @@ public class ImportLightTest {
 
     public static BlockchainImpl createBlockchain(Genesis genesis) {
         IndexedBlockStore blockStore = new IndexedBlockStore();
-        blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>(), null, null);
+        blockStore.init(new HashMapDB<byte[]>(), new HashMapDB<byte[]>());
 
         RepositoryRoot repository = new RepositoryRoot(new NoDeleteSource<>(new HashMapDB<byte[]>()));
 
