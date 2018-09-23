@@ -97,7 +97,7 @@ public class KafkaIndexedBlockStore extends IndexedBlockStore {
       .setGasLimit(ByteBuffer.wrap(h.getGasLimit()))
       .setGasUsed(h.getGasUsed())
       .setMixHash(ByteBuffer.wrap(h.getMixHash()))
-      .setExtraData(ByteBuffer.wrap(h.getExtraData()))
+      .setExtraData(h.getExtraData() != null ? ByteBuffer.wrap(h.getExtraData()) : ByteBuffer.wrap(new byte[0]))
       .setNonce(ByteBuffer.wrap(h.getNonce()))
       .build();
 

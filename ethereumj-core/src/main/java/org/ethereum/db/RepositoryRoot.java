@@ -76,6 +76,7 @@ public class RepositoryRoot extends RepositoryImpl {
     private Source<byte[], byte[]> stateDS;
     private CachedSource.BytesKey<byte[]> trieCache;
     private Trie<byte[]> stateTrie;
+    private Kafka kafka;
 
     public RepositoryRoot(Source<byte[], byte[]> stateDS) {
         this(stateDS, null);
@@ -83,7 +84,7 @@ public class RepositoryRoot extends RepositoryImpl {
 
     public RepositoryRoot(final Source<byte[], byte[]> stateDS, byte[] root, Kafka kafka) {
       this.stateDS = stateDS;
-
+      this.kafka = kafka;
       trieCache = new WriteCache.BytesKey<>(stateDS, WriteCache.CacheType.COUNTING);
       stateTrie = new SecureTrie(trieCache, root);
 
@@ -151,7 +152,7 @@ public class RepositoryRoot extends RepositoryImpl {
 
     @Override
     public Repository getSnapshotTo(byte[] root) {
-        return new RepositoryRoot(stateDS, root);
+        return new RepositoryRoot(stateDS, root, kafka);
     }
 
     @Override
