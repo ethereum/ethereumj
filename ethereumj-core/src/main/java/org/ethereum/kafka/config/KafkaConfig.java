@@ -24,6 +24,8 @@ import org.ethereum.kafka.Kafka;
 import org.ethereum.kafka.db.KafkaIndexedBlockStore;
 import org.ethereum.kafka.db.KafkaListeningDataSource;
 import org.ethereum.kafka.db.KafkaTransactionStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -31,8 +33,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 @Configuration
-@Import(DefaultConfig.class)
 public class KafkaConfig {
+
+  private static Logger logger = LoggerFactory.getLogger("general");
 
   @Autowired
   ApplicationContext appCtx;
@@ -43,15 +46,20 @@ public class KafkaConfig {
   @Autowired
   SystemProperties config;
 
+  public KafkaConfig() {
+    // TODO: We can intercept KafkaException to stop completely the app in case of a bad crash
+    Thread.setDefaultUncaughtExceptionHandler((t, e) -> logger.error("Uncaught exception", e));
+  }
+
   @Bean
   public BlockStore blockStore() {
     commonConfig.fastSyncCleanUp();
-    KafkaIndexedBlockStore indexedBlockStore = new KafkaIndexedBlockStore();
+
     Source<byte[], byte[]> block = commonConfig.cachedDbSource("block");
     Source<byte[], byte[]> index = commonConfig.cachedDbSource("index");
 
+    KafkaIndexedBlockStore indexedBlockStore = new KafkaIndexedBlockStore();
     indexedBlockStore.init(index, block, kafka());
-
     return indexedBlockStore;
   }
 
@@ -67,8 +75,12 @@ public class KafkaConfig {
   @Bean
   public PruneManager pruneManager() {
     if (config.databasePruneDepth() >= 0) {
-      return new PruneManager((IndexedBlockStore) blockStore(), commonConfig.stateSource().getJournalSource(),
-          commonConfig.stateSource().getNoJournalSource(), config.databasePruneDepth());
+      return new PruneManager(
+          (IndexedBlockStore) blockStore(),
+          commonConfig.stateSource().getJournalSource(),
+          commonConfig.stateSource().getNoJournalSource(),
+          config.databasePruneDepth()
+      );
     } else {
       return new PruneManager(null, null, null, -1); // dummy
     }
@@ -84,9 +96,11 @@ public class KafkaConfig {
 
   @Bean
   public Kafka kafka() {
+    final String bootstrapServers = ((KafkaSystemProperties) config).getKafkaBootstrapServers();
+
     // Long - Object Producer
     final Properties props1 = new Properties();
-    props1.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, ((KafkaSystemProperties) config).getKafkaBootstrapServers());
+    props1.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
     props1.put(ProducerConfig.CLIENT_ID_CONFIG, "ethj-1");
     props1.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, LongSerializer.class.getName());
     props1.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JacksonSerializer.class.getName());
@@ -95,7 +109,7 @@ public class KafkaConfig {
 
     // String - Object Producer
     final Properties props2 = new Properties();
-    props2.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, ((KafkaSystemProperties) config).getKafkaBootstrapServers());
+    props2.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
     props2.put(ProducerConfig.CLIENT_ID_CONFIG, "ethj-2");
     props2.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
     props2.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JacksonSerializer.class.getName());
@@ -104,7 +118,7 @@ public class KafkaConfig {
 
     // String - Byte Producer
     final Properties props3 = new Properties();
-    props3.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, ((KafkaSystemProperties) config).getKafkaBootstrapServers());
+    props3.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
     props3.put(ProducerConfig.CLIENT_ID_CONFIG, "ethj-state-producer");
     props3.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
     props3.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, BytesSerializer.class.getName());

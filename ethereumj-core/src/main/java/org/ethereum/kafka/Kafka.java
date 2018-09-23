@@ -4,6 +4,7 @@ import java.util.concurrent.Future;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.KafkaException;
 
 public class Kafka {
 
@@ -37,14 +38,18 @@ public class Kafka {
   public <K, V> Future<RecordMetadata> send(Producer producer, K key, V value) {
     final ProducerRecord<K, V> record = new ProducerRecord<>(producer.topic, key, value);
     final KafkaProducer kafkaProducer = toProducer(producer);
-    return kafkaProducer.send(record);
+    try {
+      return kafkaProducer.send(record);
+    } catch (Exception e) {
+      throw new KafkaProducerException(e);
+    }
   }
 
   public <K, V> void sendSync(Producer producer, K key, V value) {
     try {
       send(producer, key, value).get();
     } catch (Exception e) {
-      throw new RuntimeException(e);
+      throw new KafkaProducerException(e);
     }
   }
 
@@ -60,5 +65,11 @@ public class Kafka {
         return stateProducer;
     }
     throw new IllegalArgumentException("Invalid producer passed!");
+  }
+
+  public static class KafkaProducerException extends KafkaException {
+    KafkaProducerException(Throwable cause) {
+      super(cause);
+    }
   }
 }
