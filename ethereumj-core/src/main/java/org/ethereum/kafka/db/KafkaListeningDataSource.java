@@ -16,7 +16,7 @@ public class KafkaListeningDataSource extends AbstractChainedSource<byte[], byte
 
     @Override
     public void put(byte[] key, byte[] val) {
-        kafka.sendSync(Kafka.Producer.STATE, ByteUtil.toHexString(key), val);
+        kafka.sendSync(Kafka.Producer.ACCOUNT_STATE, ByteUtil.toHexString(key), val);
         getSource().put(key, val);
     }
 
@@ -27,7 +27,7 @@ public class KafkaListeningDataSource extends AbstractChainedSource<byte[], byte
 
     @Override
     public void delete(byte[] key) {
-        kafka.sendSync(Kafka.Producer.STATE, ByteUtil.toHexString(key), null);
+        kafka.sendSync(Kafka.Producer.ACCOUNT_STATE, ByteUtil.toHexString(key), null);
         getSource().delete(key);
     }
 

@@ -1,14 +1,23 @@
 package org.ethereum.kafka.db;
 
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
+import io.enkrypt.avro.Bytes20;
+import io.enkrypt.avro.Bytes32;
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
+import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionReceipt;
 import org.ethereum.datasource.Source;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.kafka.Kafka;
 import org.ethereum.kafka.models.BlockInfoList;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.vm.LogInfo;
+
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class KafkaIndexedBlockStore extends IndexedBlockStore {
 
@@ -30,8 +39,14 @@ public class KafkaIndexedBlockStore extends IndexedBlockStore {
 
     putBlockInfo(blockInfos, blockInfo);
 
-    kafka.sendSync(Kafka.Producer.BLOCKS_INFO, block.getNumber(), new BlockInfoList(blockInfos));
-    kafka.sendSync(Kafka.Producer.BLOCKS, ByteUtil.toHexString(block.getHash()), block);
+    // TODO use kafka transactions
+
+
+    blockInfos.forEach(bi -> {
+      final byte[] numberBytes = ByteUtil.longToBytes(block.getNumber());
+      kafka.sendSync(Kafka.Producer.BLOCKS_INFO, numberBytes, toAvro(bi));
+    });
+    kafka.sendSync(Kafka.Producer.BLOCKS, block.getHash(), toAvro(block));
 
     index.set((int) block.getNumber(), blockInfos);
     blocks.put(block.getHash(), block);
@@ -41,4 +56,68 @@ public class KafkaIndexedBlockStore extends IndexedBlockStore {
     kafka.sendSync(Kafka.Producer.BLOCKS_INFO, level, new BlockInfoList(infos));
     index.set((int) level, infos);
   }
+
+  private io.enkrypt.avro.BlockInfo toAvro(BlockInfo b) {
+    if(b == null) { return null; }
+
+    return io.enkrypt.avro.BlockInfo.newBuilder()
+      .setHash(ByteBuffer.wrap(b.getHash()))
+      .setDifficulty(ByteBuffer.wrap(b.getTotalDifficulty().toByteArray()))
+      .setMainChain(b.isMainChain())
+      .build();
+  }
+
+  private io.enkrypt.avro.Block toAvro(Block b ){
+    if(b == null) { return null; }
+
+    return io.enkrypt.avro.Block.newBuilder()
+      .setHash(new Bytes32(b.getHash()))
+      .setHeader(toAvro(b.getHeader()))
+      .setTransactions(b.getTransactionsList().stream().map(this::toAvro).collect(Collectors.toList()))
+      .setUncleList(b.getUncleList().stream().map(this::toAvro).collect(Collectors.toList()))
+      .setBlockStats(null)
+      .setBlockInfo(null)
+      .build();
+  }
+
+  private io.enkrypt.avro.BlockHeader toAvro(BlockHeader h) {
+    if(h == null) { return null; }
+
+    return io.enkrypt.avro.BlockHeader.newBuilder()
+      .setParentHash(new Bytes32(h.getParentHash()))
+      .setUnclesHash(new Bytes32(h.getUnclesHash()))
+      .setCoinbase(new Bytes20(h.getCoinbase()))
+      .setStateRoot(new Bytes32(h.getStateRoot()))
+      .setTxTrieRoot(new Bytes32(h.getTxTrieRoot()))
+      .setReceiptTrieRoot(new Bytes32(h.getReceiptsRoot()))
+      .setLogsBloom(ByteBuffer.wrap(h.getLogsBloom()))
+      .setDifficulty(ByteBuffer.wrap(h.getDifficulty()))
+      .setTimestamp(h.getTimestamp())
+      .setNumber(h.getNumber())
+      .setGasLimit(ByteBuffer.wrap(h.getGasLimit()))
+      .setGasUsed(h.getGasUsed())
+      .setMixHash(ByteBuffer.wrap(h.getMixHash()))
+      .setExtraData(ByteBuffer.wrap(h.getExtraData()))
+      .setNonce(ByteBuffer.wrap(h.getNonce()))
+      .build();
+
+  }
+
+  private io.enkrypt.avro.Transaction toAvro(Transaction t) {
+    if(t == null) { return null; }
+
+    return io.enkrypt.avro.Transaction.newBuilder()
+      .setHash(new Bytes32(t.getHash()))
+      .setNonce(ByteBuffer.wrap(t.getNonce()))
+      .setFrom(t.getSender() != null ? new Bytes20(t.getSender()) : null)
+      .setTo(t.getReceiveAddress() != null ? new Bytes20(t.getReceiveAddress()) : null)
+      .setValue(ByteBuffer.wrap(t.getValue()))
+      .setGasPrice(ByteBuffer.wrap(t.getGasPrice()))
+      .setGasLimit(ByteBuffer.wrap(t.getGasLimit()))
+      .setData(t.getData() != null ? ByteBuffer.wrap(t.getData()) : null)
+      .setReceipt(null)
+      .build();
+
+  }
+
 }

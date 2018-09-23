@@ -31,6 +31,10 @@ public class KafkaSystemProperties extends SystemProperties {
     return getConfig().getString("kafka.bootstrapServers");
   }
 
+  String getSchemaRegistryUrl() {
+    return getConfig().getString("kafka.schema.registryUrl");
+  }
+
   String getKafkaSchemaRegistryUrl() {
     return getConfig().getString("kafka.schemaRegistryUrl");
   }

@@ -20,6 +20,8 @@ package org.ethereum.db;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Repository;
 import org.ethereum.datasource.*;
+import org.ethereum.kafka.Kafka;
+import org.ethereum.kafka.cache.KafkaAccountStateSourceCodec;
 import org.ethereum.trie.*;
 import org.ethereum.vm.DataWord;
 
@@ -78,6 +80,24 @@ public class RepositoryRoot extends RepositoryImpl {
     public RepositoryRoot(Source<byte[], byte[]> stateDS) {
         this(stateDS, null);
     }
+
+    public RepositoryRoot(final Source<byte[], byte[]> stateDS, byte[] root, Kafka kafka) {
+      this.stateDS = stateDS;
+
+      trieCache = new WriteCache.BytesKey<>(stateDS, WriteCache.CacheType.COUNTING);
+      stateTrie = new SecureTrie(trieCache, root);
+
+      final KafkaAccountStateSourceCodec kafkaAccountStateSourceCodec = new KafkaAccountStateSourceCodec(stateTrie, Serializers.AccountStateSerializer, kafka);
+      final ReadWriteCache.BytesKey<AccountState> accountStateCache = new ReadWriteCache.BytesKey<>(kafkaAccountStateSourceCodec, WriteCache.CacheType.SIMPLE);
+
+      final MultiCache<StorageCache> storageCache = new MultiStorageCache();
+
+      // counting as there can be 2 contracts with the same code, 1 can suicide
+      Source<byte[], byte[]> codeCache = new WriteCache.BytesKey<>(stateDS, WriteCache.CacheType.COUNTING);
+
+      init(accountStateCache, codeCache, storageCache);
+    }
+
 
     /**
      * Building the following structure for snapshot Repository:

@@ -82,16 +82,6 @@ public class CommonConfig {
         return new RepositoryWrapper();
     }
 
-    @Bean
-    public Repository defaultRepository() {
-        return new RepositoryRoot(stateSource(), null);
-    }
-
-    @Bean @Scope("prototype")
-    public Repository repository(byte[] stateRoot) {
-        return new RepositoryRoot(stateSource(), stateRoot);
-    }
-
     /**
      * A source of nodes for state trie and all contract storage tries. <br/>
      * This source provides contract code too. <br/><br/>
