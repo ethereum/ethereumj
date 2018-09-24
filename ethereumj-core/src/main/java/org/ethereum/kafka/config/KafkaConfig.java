@@ -94,14 +94,13 @@ public class KafkaConfig {
     final String bootstrapServers = ((KafkaSystemProperties) config).getKafkaBootstrapServers();
     final String schemaRegistryUrl = ((KafkaSystemProperties) config).getSchemaRegistryUrl();
 
-    // Long - Object Producer
     final Properties props = new Properties();
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+    props.put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl);
     props.put(ProducerConfig.CLIENT_ID_CONFIG, "ethj");
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class.getName());
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class.getName());
     props.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, 2000000000);
-    props.put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl);
 
     return new Kafka(new KafkaProducer<>(props));
   }

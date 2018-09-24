@@ -34,8 +34,4 @@ public class KafkaSystemProperties extends SystemProperties {
   String getSchemaRegistryUrl() {
     return getConfig().getString("kafka.schema.registryUrl");
   }
-
-  String getKafkaSchemaRegistryUrl() {
-    return getConfig().getString("kafka.schemaRegistryUrl");
-  }
 }

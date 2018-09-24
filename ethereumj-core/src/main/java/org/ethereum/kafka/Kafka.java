@@ -1,16 +1,10 @@
 package org.ethereum.kafka;
 
 import java.util.concurrent.Future;
-
-import io.enkrypt.avro.Block;
-import io.enkrypt.avro.BlockInfo;
-import io.enkrypt.avro.Transaction;
-import io.enkrypt.avro.TransactionReceipt;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.KafkaException;
-import org.ethereum.core.AccountState;
 
 public class Kafka {
 
