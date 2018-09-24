@@ -1,12 +1,13 @@
-FROM frolvlad/alpine-oraclejdk8
+FROM gizmotronic/oracle-java:java8
 
-RUN apk add --no-cache ca-certificates zsh curl git
+RUN apt-get update  && \
+    apt-get install -y git curl zsh
 
 ENV SHELL /bin/zsh
 
 RUN mkdir /ethereumj
 WORKDIR /ethereumj
 
-ADD . /ethereumj
+COPY . /ethereumj
 
 CMD "./gradlew run"
