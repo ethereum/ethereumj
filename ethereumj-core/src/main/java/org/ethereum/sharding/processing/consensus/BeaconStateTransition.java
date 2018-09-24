@@ -7,6 +7,8 @@ import org.ethereum.sharding.processing.state.CrystallizedState;
 import org.ethereum.sharding.processing.state.Dynasty;
 import org.ethereum.sharding.processing.state.Finality;
 import org.ethereum.sharding.service.ValidatorRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.ethereum.sharding.processing.consensus.BeaconConstants.CYCLE_LENGTH;
 
@@ -16,20 +18,18 @@ import static org.ethereum.sharding.processing.consensus.BeaconConstants.CYCLE_L
  */
 public class BeaconStateTransition implements StateTransition<BeaconState> {
 
-    StateTransition<ValidatorSet> validatorSetTransition;
+    private static final Logger logger = LoggerFactory.getLogger("beacon");
+
     StateTransition<Dynasty> dynastyTransition;
     StateTransition<Finality> finalityTransition;
 
     public BeaconStateTransition(ValidatorRepository validatorRepository) {
-        this.validatorSetTransition = new ValidatorSetTransition(validatorRepository);
-        this.dynastyTransition = new DynastyTransition();
+        this.dynastyTransition = new DynastyTransition(new ValidatorSetTransition(validatorRepository));
         this.finalityTransition = new FinalityTransition();
     }
 
-    public BeaconStateTransition(StateTransition<ValidatorSet> validatorSetTransition,
-                                 StateTransition<Dynasty> dynastyTransition,
+    public BeaconStateTransition(StateTransition<Dynasty> dynastyTransition,
                                  StateTransition<Finality> finalityTransition) {
-        this.validatorSetTransition = validatorSetTransition;
         this.dynastyTransition = dynastyTransition;
         this.finalityTransition = finalityTransition;
     }
@@ -40,10 +40,10 @@ public class BeaconStateTransition implements StateTransition<BeaconState> {
         CrystallizedState crystallized = to.getCrystallizedState();
 
         if (block.getSlotNumber() - crystallized.getLastStateRecalc() >= CYCLE_LENGTH) {
+            logger.info("Calculate new crystallized state, slot: {}", block.getSlotNumber());
+
             Finality finality = finalityTransition.applyBlock(block, crystallized.getFinality());
-            ValidatorSet validatorSet = validatorSetTransition.applyBlock(block, crystallized.getDynasty().getValidatorSet());
-            Dynasty dynasty = crystallized.getDynasty().withValidatorSet(validatorSet);
-            dynasty = dynastyTransition.applyBlock(block, dynasty);
+            Dynasty dynasty = dynastyTransition.applyBlock(block, crystallized.getDynasty());
 
             crystallized = crystallized
                     .withDynasty(dynasty)
