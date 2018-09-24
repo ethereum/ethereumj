@@ -65,7 +65,10 @@ public class BeaconProposerImpl implements BeaconProposer {
         this.mainChainRef = getMainChainRef(ethereum.getBlockchain().getBestBlock());
 
         // init head
-        publisher.subscribe(BeaconChainLoaded.class, data -> head = data.getHead());
+        publisher.subscribe(BeaconChainLoaded.class, data -> {
+            head = data.getHead();
+            recentState = this.repository.get(data.getHead().getStateHash());
+        });
 
         // update head
         publisher.subscribe(BeaconBlockImported.class, data -> {
