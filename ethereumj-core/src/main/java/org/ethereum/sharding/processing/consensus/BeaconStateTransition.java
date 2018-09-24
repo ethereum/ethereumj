@@ -39,14 +39,15 @@ public class BeaconStateTransition implements StateTransition<BeaconState> {
         CrystallizedState crystallized = to.getCrystallizedState();
 
         if (block.getSlotNumber() - crystallized.getLastStateRecalc() >= CYCLE_LENGTH) {
-            logger.info("Calculate new crystallized state, slot: {}", block.getSlotNumber());
+            logger.info("Calculate new crystallized state, slot: {}, prev slot: {}",
+                    block.getSlotNumber(), crystallized.getLastStateRecalc());
 
             Finality finality = finalityTransition.applyBlock(block, crystallized.getFinality());
             Dynasty dynasty = dynastyTransition.applyBlock(block, crystallized.getDynasty());
 
             crystallized = crystallized
                     .withDynasty(dynasty)
-                    .withLastStateRecalcIncrement(CYCLE_LENGTH)
+                    .withLastStateRecalc(block.getSlotNumber() - block.getSlotNumber() % CYCLE_LENGTH)
                     .withFinality(finality);
         }
 

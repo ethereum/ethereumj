@@ -101,4 +101,8 @@ public class Dynasty {
     public Dynasty withCommittees(Committee[][] committees) {
         return new Dynasty(validatorSet, committees, number, seed, seedLastReset, startSlot);
     }
+
+    public Dynasty withStartSlot(long startSlot) {
+        return new Dynasty(validatorSet, committees, number, seed, seedLastReset, startSlot);
+    }
 }
