@@ -75,7 +75,7 @@ public class ShufflingCommitteeFactory implements CommitteeFactory {
      *     Otherwise, returns {@code value} that results in size of committees lay
      *     between {@code MIN_COMMITTEE_SIZE} and {@code MIN_COMMITTEE_SIZE * 2}. <br/>
      *
-     *     Size of committees approaches {@code MIN_COMMITTEE_SIZE * 2} at infinity.
+     *     Size of committees approaches {@code MIN_COMMITTEE_SIZE * 2} if active validator set is rather big.
      *
      * <p>
      *     Examples:
