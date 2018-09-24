@@ -1,7 +1,9 @@
-package org.ethereum.kafka.db;
+package io.enkrypt.kafka.db;
 
 import io.enkrypt.avro.Bytes20;
 import io.enkrypt.avro.Bytes32;
+import io.enkrypt.kafka.Kafka;
+import io.enkrypt.kafka.models.BlockInfoList;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -12,8 +14,6 @@ import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Transaction;
 import org.ethereum.datasource.Source;
 import org.ethereum.db.IndexedBlockStore;
-import org.ethereum.kafka.Kafka;
-import org.ethereum.kafka.models.BlockInfoList;
 import org.ethereum.util.ByteUtil;
 
 public class KafkaIndexedBlockStore extends IndexedBlockStore {

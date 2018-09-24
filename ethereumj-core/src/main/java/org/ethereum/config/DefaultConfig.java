@@ -53,30 +53,30 @@ public class DefaultConfig {
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> logger.error("Uncaught exception", e));
     }
 
-//    @Bean
-//    public BlockStore blockStore(){
-//        commonConfig.fastSyncCleanUp();
-//        IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
-//        Source<byte[], byte[]> block = commonConfig.cachedDbSource("block");
-//        Source<byte[], byte[]> index = commonConfig.cachedDbSource("index");
-//        indexedBlockStore.init(index, block);
-//
-//        return indexedBlockStore;
-//    }
+    @Bean
+    public BlockStore blockStore(){
+        commonConfig.fastSyncCleanUp();
+        IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
+        Source<byte[], byte[]> block = commonConfig.cachedDbSource("block");
+        Source<byte[], byte[]> index = commonConfig.cachedDbSource("index");
+        indexedBlockStore.init(index, block);
 
-//    @Bean
-//    public TransactionStore transactionStore() {
-//        commonConfig.fastSyncCleanUp();
-//        return new TransactionStore(commonConfig.cachedDbSource("transactions"));
-//    }
+        return indexedBlockStore;
+    }
 
-//    @Bean
-//    public PruneManager pruneManager() {
-//        if (config.databasePruneDepth() >= 0) {
-//            return new PruneManager((IndexedBlockStore) blockStore(), commonConfig.stateSource().getJournalSource(),
-//                commonConfig.stateSource().getNoJournalSource(), config.databasePruneDepth());
-//        } else {
-//            return new PruneManager(null, null, null, -1); // dummy
-//        }
-//    }
+    @Bean
+    public TransactionStore transactionStore() {
+        commonConfig.fastSyncCleanUp();
+        return new TransactionStore(commonConfig.cachedDbSource("transactions"));
+    }
+
+    @Bean
+    public PruneManager pruneManager() {
+        if (config.databasePruneDepth() >= 0) {
+            return new PruneManager((IndexedBlockStore) blockStore(), commonConfig.stateSource().getJournalSource(),
+                commonConfig.stateSource().getNoJournalSource(), config.databasePruneDepth());
+        } else {
+            return new PruneManager(null, null, null, -1); // dummy
+        }
+    }
 }

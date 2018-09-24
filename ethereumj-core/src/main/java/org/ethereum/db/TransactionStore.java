@@ -18,13 +18,8 @@
 package org.ethereum.db;
 
 import org.apache.commons.collections4.map.LRUMap;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.ethereum.datasource.*;
 import org.ethereum.core.TransactionInfo;
-import org.ethereum.kafka.Kafka;
-import org.ethereum.kafka.models.TransactionInfoList;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;

@@ -1,7 +1,7 @@
-package org.ethereum.kafka;
+package io.enkrypt.kafka;
 
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.kafka.config.KafkaConfig;
+import io.enkrypt.kafka.config.KafkaConfig;
 
 public class EthereumKafkaStarter {
 

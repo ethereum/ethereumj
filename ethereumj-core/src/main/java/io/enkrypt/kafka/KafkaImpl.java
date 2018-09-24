@@ -1,4 +1,4 @@
-package org.ethereum.kafka;
+package io.enkrypt.kafka;
 
 import java.util.concurrent.Future;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -6,25 +6,11 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.KafkaException;
 
-public class Kafka {
-
-  public enum Producer {
-    BLOCKS("blocks"),
-    BLOCKS_INFO("info"),
-    TRANSACTIONS("transactions"),
-    PENDING_TRANSACTIONS("pending-transactions"),
-    ACCOUNT_STATE("account-state");
-
-    public String topic;
-
-    Producer(String topic) {
-      this.topic = topic;
-    }
-  }
+public class KafkaImpl implements Kafka {
 
   private final KafkaProducer kafkaProducer;
 
-  public Kafka(KafkaProducer kafkaProducer) {
+  public KafkaImpl(KafkaProducer kafkaProducer) {
     this.kafkaProducer = kafkaProducer;
   }
 

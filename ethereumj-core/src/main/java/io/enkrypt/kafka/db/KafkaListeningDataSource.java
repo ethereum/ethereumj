@@ -1,8 +1,8 @@
-package org.ethereum.kafka.db;
+package io.enkrypt.kafka.db;
 
+import io.enkrypt.kafka.Kafka;
 import org.ethereum.datasource.AbstractChainedSource;
 import org.ethereum.datasource.Source;
-import org.ethereum.kafka.Kafka;
 import org.ethereum.util.ByteUtil;
 
 public class KafkaListeningDataSource extends AbstractChainedSource<byte[], byte[], byte[], byte[]> {

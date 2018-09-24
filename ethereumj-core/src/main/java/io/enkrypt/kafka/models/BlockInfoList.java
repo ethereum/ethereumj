@@ -1,4 +1,4 @@
-package org.ethereum.kafka.models;
+package io.enkrypt.kafka.models;
 
 import java.util.List;
 import org.ethereum.db.IndexedBlockStore;

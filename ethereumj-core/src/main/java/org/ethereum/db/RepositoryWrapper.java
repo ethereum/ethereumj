@@ -17,11 +17,11 @@
  */
 package org.ethereum.db;
 
+import io.enkrypt.kafka.Kafka;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.Repository;
-import org.ethereum.kafka.Kafka;
 import org.ethereum.vm.DataWord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

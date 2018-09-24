@@ -1,14 +1,14 @@
-package org.ethereum.kafka.db;
+package io.enkrypt.kafka.db;
 
 import io.enkrypt.avro.Bytes20;
 import io.enkrypt.avro.Bytes32;
+import io.enkrypt.kafka.Kafka;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionInfo;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.datasource.Source;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.TransactionStore;
-import org.ethereum.kafka.Kafka;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.vm.LogInfo;
 

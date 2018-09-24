@@ -17,11 +17,11 @@
  */
 package org.ethereum.db;
 
+import io.enkrypt.kafka.Kafka;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Repository;
 import org.ethereum.datasource.*;
-import org.ethereum.kafka.Kafka;
-import org.ethereum.kafka.cache.KafkaAccountStateSourceCodec;
+import io.enkrypt.kafka.cache.KafkaAccountStateSourceCodec;
 import org.ethereum.trie.*;
 import org.ethereum.vm.DataWord;
 

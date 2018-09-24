@@ -1,7 +1,10 @@
-package org.ethereum.kafka.config;
+package io.enkrypt.kafka.config;
 
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
+import io.enkrypt.kafka.Kafka;
+import io.enkrypt.kafka.KafkaImpl;
+import io.enkrypt.kafka.NullKafka;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.ethereum.config.CommonConfig;
@@ -10,9 +13,8 @@ import org.ethereum.core.Repository;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
 import org.ethereum.db.*;
-import org.ethereum.kafka.Kafka;
-import org.ethereum.kafka.db.KafkaIndexedBlockStore;
-import org.ethereum.kafka.db.KafkaTransactionStore;
+import io.enkrypt.kafka.db.KafkaIndexedBlockStore;
+import io.enkrypt.kafka.db.KafkaTransactionStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,8 +93,13 @@ public class KafkaConfig {
 
   @Bean
   public Kafka kafka() {
+    final boolean enabled = ((KafkaSystemProperties) config).isKafkaEnabled();
     final String bootstrapServers = ((KafkaSystemProperties) config).getKafkaBootstrapServers();
     final String schemaRegistryUrl = ((KafkaSystemProperties) config).getSchemaRegistryUrl();
+
+    if (!enabled) {
+      return new NullKafka();
+    }
 
     final Properties props = new Properties();
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
@@ -102,6 +109,6 @@ public class KafkaConfig {
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class.getName());
     props.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, 2000000000);
 
-    return new Kafka(new KafkaProducer<>(props));
+    return new KafkaImpl(new KafkaProducer<>(props));
   }
 }
