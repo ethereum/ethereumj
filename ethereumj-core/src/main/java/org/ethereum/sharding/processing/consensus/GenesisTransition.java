@@ -23,6 +23,7 @@ import org.ethereum.sharding.domain.BeaconGenesis;
 import org.ethereum.sharding.domain.Validator;
 import org.ethereum.sharding.processing.db.ValidatorSet;
 import org.ethereum.sharding.processing.state.BeaconState;
+import org.ethereum.sharding.processing.state.Committee;
 import org.ethereum.sharding.processing.state.Crosslink;
 import org.ethereum.sharding.processing.state.CrystallizedState;
 import org.ethereum.sharding.processing.state.Dynasty;
@@ -44,6 +45,7 @@ public class GenesisTransition implements StateTransition<BeaconState> {
 
     ValidatorRepository validatorRepository;
     StateTransition<ValidatorSet> validatorSetTransition = new ValidatorSetInitiator();
+    CommitteeFactory committeeFactory = new ShufflingCommitteeFactory();
     byte[] mainChainRef;
 
     public GenesisTransition(ValidatorRepository validatorRepository) {
@@ -67,8 +69,12 @@ public class GenesisTransition implements StateTransition<BeaconState> {
         ValidatorSet validatorSet = validatorSetTransition.applyBlock(block,
                 to.getCrystallizedState().getDynasty().getValidatorSet());
 
+        Committee[][] committees = committeeFactory.create(genesis.getRandaoReveal(),
+                validatorSet.getActiveIndices(), 0);
+
         Dynasty dynasty = to.getCrystallizedState().getDynasty()
                 .withValidatorSet(validatorSet)
+                .withCommittees(committees)
                 .withNumber(1L);
 
         CrystallizedState crystallizedState = to.getCrystallizedState()
