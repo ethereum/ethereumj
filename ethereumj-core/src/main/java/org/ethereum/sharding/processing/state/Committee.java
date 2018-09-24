@@ -21,9 +21,7 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
 import static org.ethereum.util.ByteUtil.byteArrayToInt;
-import static org.ethereum.util.ByteUtil.byteArrayToLong;
 import static org.ethereum.util.ByteUtil.intToBytesNoLeadZeroes;
-import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
 
 /**
  * @author Mikhail Kalinin
@@ -31,7 +29,7 @@ import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
  */
 public class Committee {
 
-    private final long shardId;
+    private final int shardId;
     private final int[] validators;
 
     public Committee(short shardId, int[] validators) {
@@ -41,7 +39,7 @@ public class Committee {
 
     public Committee(byte[] encoded) {
         RLPList list = RLP.unwrapList(encoded);
-        this.shardId = byteArrayToLong(list.get(0).getRLPData());
+        this.shardId = byteArrayToInt(list.get(0).getRLPData());
 
         RLPList validatorList = RLP.unwrapList(list.get(1).getRLPData());
         this.validators = new int[validatorList.size()];
@@ -49,7 +47,7 @@ public class Committee {
             this.validators[i] = byteArrayToInt(validatorList.get(i).getRLPData());
     }
 
-    public long getShardId() {
+    public int getShardId() {
         return shardId;
     }
 
@@ -62,7 +60,7 @@ public class Committee {
         for (int i = 0; i < validators.length; i++)
             encodedValidators[i] = intToBytesNoLeadZeroes(validators[i]);
 
-        return RLP.wrapList(longToBytesNoLeadZeroes(shardId), RLP.wrapList(encodedValidators));
+        return RLP.wrapList(intToBytesNoLeadZeroes(shardId), RLP.wrapList(encodedValidators));
     }
 
     @Override
