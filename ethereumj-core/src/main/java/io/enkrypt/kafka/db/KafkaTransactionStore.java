@@ -3,16 +3,19 @@ package io.enkrypt.kafka.db;
 import io.enkrypt.avro.Bytes20;
 import io.enkrypt.avro.Bytes32;
 import io.enkrypt.kafka.Kafka;
+import org.apache.kafka.common.utils.Bytes;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionInfo;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.datasource.Source;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.TransactionStore;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.vm.LogInfo;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -52,9 +55,17 @@ public class KafkaTransactionStore extends TransactionStore {
     existingInfos.add(tx);
 
     if(tx.isPending()) {
-      kafka.send(Kafka.Producer.PENDING_TRANSACTIONS, tx.getParentBlockHash(), toAvro(tx.getReceipt()));
+      kafka.send(
+        Kafka.Producer.PENDING_TRANSACTIONS,
+        tx.getParentBlockHash(),
+        toAvro(tx.getReceipt())
+      );
     } else {
-      kafka.sendSync(Kafka.Producer.TRANSACTIONS, tx.getBlockHash(), toAvro(tx.getReceipt()));
+      kafka.sendSync(
+        Kafka.Producer.TRANSACTIONS,
+        tx.getBlockHash(),
+        toAvro(tx.getReceipt())
+      );
     }
 
     put(txHash, existingInfos);

@@ -7,7 +7,7 @@ public interface Kafka {
 
   enum Producer {
     BLOCKS("blocks"),
-    BLOCKS_INFO("info"),
+    BLOCKS_INFO("blocks-info"),
     TRANSACTIONS("transactions"),
     PENDING_TRANSACTIONS("pending-transactions"),
     ACCOUNT_STATE("account-state");

@@ -1,10 +1,12 @@
 package io.enkrypt.kafka.cache;
 
 import io.enkrypt.kafka.Kafka;
+import org.apache.kafka.common.utils.Bytes;
 import org.ethereum.core.AccountState;
 import org.ethereum.datasource.Serializer;
 import org.ethereum.datasource.Source;
 import org.ethereum.datasource.SourceCodec;
+import org.ethereum.util.ByteUtil;
 
 import java.nio.ByteBuffer;
 

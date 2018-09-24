@@ -9,6 +9,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.apache.kafka.common.utils.Bytes;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Transaction;
@@ -49,7 +51,12 @@ public class KafkaIndexedBlockStore extends IndexedBlockStore {
   }
 
   protected synchronized void setBlockInfoForLevel(long level, List<BlockInfo> infos) {
-    kafka.sendSync(Kafka.Producer.BLOCKS_INFO, level, new BlockInfoList(infos));
+
+    infos.forEach(bi -> {
+      final byte[] numberBytes = ByteUtil.longToBytes(level);
+      kafka.sendSync(Kafka.Producer.BLOCKS_INFO, numberBytes, toAvro(bi));
+    });
+
     index.set((int) level, infos);
   }
 
