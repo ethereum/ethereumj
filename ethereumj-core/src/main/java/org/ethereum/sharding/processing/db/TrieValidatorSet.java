@@ -29,6 +29,7 @@ import org.ethereum.util.RLP;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 /**
  * Validator set implementation based on {@link Trie} structure.
@@ -113,6 +114,11 @@ public class TrieValidatorSet implements ValidatorSet {
     @Override
     public ValidatorSet getSnapshotTo(byte[] hash) {
         return new TrieValidatorSet(underlyingSrc, hash);
+    }
+
+    @Override
+    public int[] getActiveIndices() {
+        return IntStream.range(0, size).toArray();
     }
 
     void setSize(int size) {

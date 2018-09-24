@@ -31,7 +31,7 @@ public class Dynasty {
     /** What active validators are part of the attester set,
      * at what height, and in what shard.
      * Starts at slot {@link #startSlot} - {@link BeaconConstants#CYCLE_LENGTH} */
-    private final Committee[] committees;
+    private final Committee[][] committees;
     /* The number of dynasty transitions including this one */
     private final long number;
     /* Used to select the committees for each shard */
@@ -41,7 +41,7 @@ public class Dynasty {
     /* Slot that current dynasty is stared from */
     private final long startSlot;
 
-    public Dynasty(ValidatorSet validatorSet, Committee[] committees, long number,
+    public Dynasty(ValidatorSet validatorSet, Committee[][] committees, long number,
                    byte[] seed, long seedLastReset, long startSlot) {
         this.validatorSet = validatorSet;
         this.committees = committees;
@@ -55,8 +55,19 @@ public class Dynasty {
         return validatorSet;
     }
 
-    public Committee[] getCommittees() {
+    public Committee[][] getCommittees() {
         return committees;
+    }
+
+    public int getCommitteesEndShard() {
+        if (committees.length == 0)
+            return 0;
+
+        Committee[] endSlot = committees[committees.length - 1];
+        if (endSlot.length == 0)
+            return 0;
+
+        return endSlot[endSlot.length - 1].getShardId();
     }
 
     public long getNumber() {
@@ -85,5 +96,9 @@ public class Dynasty {
 
     public Dynasty withNumberIncrement(long addition) {
         return new Dynasty(validatorSet, committees, number + addition, seed, seedLastReset, startSlot);
+    }
+
+    public Dynasty withCommittees(Committee[][] committees) {
+        return new Dynasty(validatorSet, committees, number, seed, seedLastReset, startSlot);
     }
 }

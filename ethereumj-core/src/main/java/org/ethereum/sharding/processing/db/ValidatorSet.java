@@ -85,4 +85,9 @@ public interface ValidatorSet extends Source<Integer, Validator> {
      * Returns a sample of validator set that corresponds to specified hash.
      */
     ValidatorSet getSnapshotTo(byte[] hash);
+
+    /**
+     * Returns indices array of active validators.
+     */
+    int[] getActiveIndices();
 }

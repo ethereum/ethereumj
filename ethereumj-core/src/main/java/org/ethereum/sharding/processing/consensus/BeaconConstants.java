@@ -34,7 +34,7 @@ public interface BeaconConstants {
     /**
      *  Number of slots in each cycle
      */
-    long CYCLE_LENGTH = 64;
+    int CYCLE_LENGTH = 64;
 
     /**
      * Number of shards
@@ -50,4 +50,9 @@ public interface BeaconConstants {
      * Validator registration deposit in wei
      */
     BigInteger DEPOSIT_WEI = convert(32, EtherUtil.Unit.ETHER);
+
+    /**
+     * Minimal number of validators in shard attestation committee
+     */
+    int MIN_COMMITTEE_SIZE = 128;
 }
