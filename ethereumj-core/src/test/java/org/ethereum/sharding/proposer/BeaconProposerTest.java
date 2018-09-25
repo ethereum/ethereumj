@@ -142,7 +142,8 @@ public class BeaconProposerTest {
             Randao randao = new Randao(new HashMapDB<>());
             randao.generate(1000);
 
-            StateRepository repository = new BeaconStateRepository(new HashMapDB<>(), new HashMapDB<>(), new HashMapDB<>());
+            StateRepository repository = new BeaconStateRepository(new HashMapDB<>(), new HashMapDB<>(),
+                    new HashMapDB<>(), new HashMapDB<>());
             StateTransition<BeaconState> stateTransition = new NoTransition();
 
             CompositeEthereumListenerMock listener = new CompositeEthereumListenerMock();

@@ -60,7 +60,8 @@ public class StateTransitionTest {
     }
 
     BeaconState getExpected(Beacon block, Validator validator) {
-        ValidatorSet validatorSet = validatorTransition(validator).applyBlock(block, new TrieValidatorSet(new HashMapDB<>()));
+        ValidatorSet validatorSet = validatorTransition(validator).applyBlock(block,
+                new TrieValidatorSet(new HashMapDB<>(), new HashMapDB<byte[]>()));
         Dynasty dynasty = dynastyTransition(validatorTransition(validator))
                 .applyBlock(block, getOrigin().getCrystallizedState().getDynasty())
                 .withValidatorSet(validatorSet);
@@ -75,7 +76,7 @@ public class StateTransitionTest {
     }
 
     BeaconState getOrigin() {
-        ValidatorSet validatorSet = new TrieValidatorSet(new HashMapDB<>());
+        ValidatorSet validatorSet = new TrieValidatorSet(new HashMapDB<>(), new HashMapDB<>());
         Dynasty dynasty = new Dynasty(validatorSet, new Committee[0][], 0L, new byte[32], 0L, 0L);
         Finality finality = Finality.empty();
 

@@ -47,7 +47,8 @@ public class CrystallizedStateTest {
 
     CrystallizedState fromEncoded(byte[] encoded) {
         CrystallizedState.Flattened flattened = new CrystallizedState.Flattened(encoded);
-        ValidatorSet validatorSet = new TrieValidatorSet(new HashMapDB<>(), flattened.getValidatorSetHash());
+        ValidatorSet validatorSet = new TrieValidatorSet(new HashMapDB<>(), new HashMapDB<>(),
+                flattened.getValidatorSetHash());
         Dynasty dynasty = new Dynasty(validatorSet, flattened.getCommittees(),
                 flattened.getCurrentDynasty(), flattened.getDynastySeed(),
                 flattened.getDynastySeedLastReset(), flattened.getDynastyStart());
@@ -62,7 +63,7 @@ public class CrystallizedStateTest {
     CrystallizedState getRandomState() {
         Random rnd = new Random();
 
-        ValidatorSet validatorSet = new TrieValidatorSet(new HashMapDB<>());
+        ValidatorSet validatorSet = new TrieValidatorSet(new HashMapDB<>(), new HashMapDB<>());
         Committee[][] committees = new Committee[abs(rnd.nextInt()) % 1000 + 1][];
         for (int i = 0; i < committees.length; i++) {
             Committee[] slot = new Committee[abs(rnd.nextInt()) % 18 + 1];

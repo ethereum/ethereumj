@@ -160,8 +160,9 @@ public class BeaconConfig {
     public StateRepository beaconStateRepository() {
         Source<byte[], byte[]> src = cachedBeaconChainSource("beacon_state");
         Source<byte[], byte[]> validatorSrc = cachedBeaconChainSource("validator_set");
+        Source<byte[], byte[]> validatorIndexSrc = cachedBeaconChainSource("validator_index");
         Source<byte[], byte[]> crystallizedSrc = cachedBeaconChainSource("crystallized_state");
-        return new BeaconStateRepository(src, crystallizedSrc, validatorSrc);
+        return new BeaconStateRepository(src, crystallizedSrc, validatorSrc, validatorIndexSrc);
     }
 
     @Bean
