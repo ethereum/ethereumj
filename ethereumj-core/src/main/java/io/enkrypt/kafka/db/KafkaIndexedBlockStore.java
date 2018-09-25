@@ -3,17 +3,15 @@ package io.enkrypt.kafka.db;
 import io.enkrypt.avro.Bytes20;
 import io.enkrypt.avro.Bytes32;
 import io.enkrypt.kafka.Kafka;
-import io.enkrypt.kafka.models.BlockInfoList;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import org.apache.kafka.common.utils.Bytes;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Transaction;
+import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.Source;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.util.ByteUtil;
@@ -51,7 +49,6 @@ public class KafkaIndexedBlockStore extends IndexedBlockStore {
   }
 
   protected synchronized void setBlockInfoForLevel(long level, List<BlockInfo> infos) {
-
     infos.forEach(bi -> {
       final byte[] numberBytes = ByteUtil.longToBytes(level);
       kafka.sendSync(Kafka.Producer.BLOCKS_INFO, numberBytes, toAvro(bi));
@@ -116,9 +113,12 @@ public class KafkaIndexedBlockStore extends IndexedBlockStore {
       return null;
     }
 
+    final ECKey.ECDSASignature signature = t.getSignature();
+
     return io.enkrypt.avro.Transaction.newBuilder()
         .setHash(new Bytes32(t.getHash()))
         .setNonce(ByteBuffer.wrap(t.getNonce()))
+        .setTransactionIndex(null)
         .setFrom(t.getSender() != null ? new Bytes20(t.getSender()) : null)
         .setTo(t.getReceiveAddress() != null ? new Bytes20(t.getReceiveAddress()) : null)
         .setValue(ByteBuffer.wrap(t.getValue()))
@@ -126,6 +126,9 @@ public class KafkaIndexedBlockStore extends IndexedBlockStore {
         .setGasLimit(ByteBuffer.wrap(t.getGasLimit()))
         .setData(t.getData() != null ? ByteBuffer.wrap(t.getData()) : null)
         .setReceipt(null)
+        .setV(ByteBuffer.wrap(new byte[] {signature.v}))
+        .setR(ByteBuffer.wrap(signature.r.toByteArray()))
+        .setS(ByteBuffer.wrap(signature.s.toByteArray()))
         .build();
   }
 }

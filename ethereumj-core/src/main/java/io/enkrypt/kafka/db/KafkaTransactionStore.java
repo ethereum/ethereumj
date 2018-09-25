@@ -7,6 +7,7 @@ import org.apache.kafka.common.utils.Bytes;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionInfo;
 import org.ethereum.core.TransactionReceipt;
+import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.Source;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.TransactionStore;
@@ -54,17 +55,17 @@ public class KafkaTransactionStore extends TransactionStore {
     }
     existingInfos.add(tx);
 
-    if(tx.isPending()) {
+    if (tx.isPending()) {
       kafka.send(
         Kafka.Producer.PENDING_TRANSACTIONS,
         tx.getParentBlockHash(),
-        toAvro(tx.getReceipt())
+        toAvro(tx)
       );
     } else {
       kafka.sendSync(
         Kafka.Producer.TRANSACTIONS,
         tx.getBlockHash(),
-        toAvro(tx.getReceipt())
+        toAvro(tx)
       );
     }
 
@@ -74,8 +75,9 @@ public class KafkaTransactionStore extends TransactionStore {
 
   }
 
-  private io.enkrypt.avro.Transaction toAvro(TransactionReceipt r) {
-    if(r == null) {
+  private io.enkrypt.avro.Transaction toAvro(TransactionInfo tx) {
+    final TransactionReceipt r = tx.getReceipt();
+    if (r == null) {
       return null;
     }
 
@@ -91,26 +93,28 @@ public class KafkaTransactionStore extends TransactionStore {
       .build();
 
     final Transaction t = r.getTransaction();
+    final ECKey.ECDSASignature signature = t.getSignature();
 
     io.enkrypt.avro.Transaction.Builder builder = io.enkrypt.avro.Transaction.newBuilder()
       .setHash(new Bytes32(t.getHash()))
       .setNonce(ByteBuffer.wrap(t.getNonce()))
+      .setTransactionIndex(tx.isPending() ? null : tx.getIndex())
       .setFrom(t.getSender() != null ? new Bytes20(t.getSender()) : null)
       .setTo(t.getReceiveAddress() != null ? new Bytes20(t.getReceiveAddress()) : null)
       .setValue(ByteBuffer.wrap(t.getValue()))
       .setGasPrice(ByteBuffer.wrap(t.getGasPrice()))
       .setGasLimit(ByteBuffer.wrap(t.getGasLimit()))
-      .setReceipt(receipt);
-
-    if(t.getData() != null) {
-      builder.setData(ByteBuffer.wrap(t.getData()));
-    }
+      .setData(t.getData() != null ? ByteBuffer.wrap(t.getData()) : null)
+      .setReceipt(receipt)
+      .setV(ByteBuffer.wrap(new byte[]{signature.v}))
+      .setR(ByteBuffer.wrap(signature.r.toByteArray()))
+      .setS(ByteBuffer.wrap(signature.s.toByteArray()));
 
     return builder.build();
   }
 
   private io.enkrypt.avro.LogInfo toAvro(LogInfo i) {
-    if (i == null){
+    if (i == null) {
       return null;
     }
 
