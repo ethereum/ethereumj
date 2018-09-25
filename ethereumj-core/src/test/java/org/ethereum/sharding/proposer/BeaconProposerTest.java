@@ -126,7 +126,7 @@ public class BeaconProposerTest {
                 recentState = stateTransition.applyBlock(block, recentState);
             }
             repository.insert(recentState);
-            publisher.publish(Events.onBeaconBlock(block, true));
+            publisher.publish(Events.onBeaconBlock(block, recentState, true));
         }
 
         byte[] newMainChainBlockHash() {

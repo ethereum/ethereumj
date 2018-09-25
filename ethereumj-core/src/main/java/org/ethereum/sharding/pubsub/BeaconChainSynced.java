@@ -18,6 +18,7 @@
 package org.ethereum.sharding.pubsub;
 
 import org.ethereum.sharding.domain.Beacon;
+import org.ethereum.sharding.processing.state.BeaconState;
 
 /**
  * @author Mikhail Kalinin
@@ -27,17 +28,23 @@ public class BeaconChainSynced extends Event<BeaconChainSynced.Data> {
 
     public static class Data {
         private final Beacon head;
+        private final BeaconState state;
 
-        public Data(Beacon head) {
+        public Data(Beacon head, BeaconState state) {
             this.head = head;
+            this.state = state;
         }
 
         public Beacon getHead() {
             return head;
         }
+
+        public BeaconState getState() {
+            return state;
+        }
     }
 
-    public BeaconChainSynced(Beacon head) {
-        super(new Data(head));
+    public BeaconChainSynced(Beacon head, BeaconState state) {
+        super(new Data(head, state));
     }
 }

@@ -36,25 +36,33 @@ public class Validator {
     private long withdrawalShard;
     private byte[] withdrawalAddress;
     private byte[] randao;
+    private int index = -1;
 
     public Validator(byte[] encoded) {
         RLPList list = RLP.unwrapList(encoded);
 
         this.pubKey = list.get(0).getRLPData();
-        this.withdrawalShard = ByteUtil.bytesToBigInteger(list.get(1).getRLPData()).longValue();
+        this.withdrawalShard = ByteUtil.byteArrayToLong(list.get(1).getRLPData());
         this.withdrawalAddress = list.get(2).getRLPData();
         this.randao = list.get(3).getRLPData();
+        this.index = ByteUtil.byteArrayToInt(list.get(4).getRLPData());
     }
 
     public Validator(byte[] pubKey, long withdrawalShard, byte[] withdrawalAddress, byte[] randao) {
+        this(pubKey, withdrawalShard, withdrawalAddress, randao, -1);
+    }
+
+    public Validator(byte[] pubKey, long withdrawalShard, byte[] withdrawalAddress, byte[] randao, int index) {
         this.pubKey = pubKey;
         this.withdrawalShard = withdrawalShard;
         this.withdrawalAddress = withdrawalAddress;
         this.randao = randao;
+        this.index = index;
     }
 
     public byte[] getEncoded() {
-        return RLP.wrapList(pubKey, BigInteger.valueOf(withdrawalShard).toByteArray(), withdrawalAddress, randao);
+        return RLP.wrapList(pubKey, ByteUtil.longToBytes(withdrawalShard), withdrawalAddress,
+                randao, ByteUtil.intToBytes(index));
     }
 
     public byte[] getPubKey() {
@@ -71,6 +79,14 @@ public class Validator {
 
     public byte[] getRandao() {
         return randao;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public Validator withIndex(int index) {
+        return new Validator(pubKey, withdrawalShard, withdrawalAddress, randao, index);
     }
 
     public static final Serializer<Validator, byte[]> Serializer = new Serializer<Validator, byte[]>() {

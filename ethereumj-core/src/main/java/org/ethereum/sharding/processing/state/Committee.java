@@ -63,6 +63,79 @@ public class Committee {
         return RLP.wrapList(intToBytesNoLeadZeroes(shardId), RLP.wrapList(encodedValidators));
     }
 
+    public static class Index {
+        /* shard Id */
+        private final int shardId;
+        /* an offset from cycle start slot */
+        private final int slotOffset;
+        /* index in slot committees array */
+        private final int committeeIdx;
+        /* length of validators array */
+        private final int committeeSize;
+        /* index in validators array */
+        private final int validatorIdx;
+
+        public static final Index EMPTY = new Index(-1, -1, -1, -1, -1);
+
+        public Index(int shardId, int slotOffset, int committeeIdx, int committeeSize, int validatorIdx) {
+            this.shardId = shardId;
+            this.slotOffset = slotOffset;
+            this.committeeIdx = committeeIdx;
+            this.committeeSize = committeeSize;
+            this.validatorIdx = validatorIdx;
+        }
+
+        public boolean isEmpty() {
+            return shardId < 0 || slotOffset < 0 || committeeIdx < 0;
+        }
+
+        public int getShardId() {
+            return shardId;
+        }
+
+        public int getSlotOffset() {
+            return slotOffset;
+        }
+
+        public int getCommitteeIdx() {
+            return committeeIdx;
+        }
+
+        public int getCommitteeSize() {
+            return committeeSize;
+        }
+
+        public int getValidatorIdx() {
+            return validatorIdx;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Index index = (Index) o;
+
+            if (shardId != index.shardId) return false;
+            if (slotOffset != index.slotOffset) return false;
+            if (committeeIdx != index.committeeIdx) return false;
+            if (committeeSize != index.committeeSize) return false;
+            return validatorIdx == index.validatorIdx;
+
+        }
+
+        @Override
+        public String toString() {
+            return "Index{" +
+                    "shardId=" + shardId +
+                    ", slotOffset=" + slotOffset +
+                    ", committeeIdx=" + committeeIdx +
+                    ", committeeSize=" + committeeSize +
+                    ", validatorIdx=" + validatorIdx +
+                    '}';
+        }
+    }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();

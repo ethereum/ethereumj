@@ -19,6 +19,7 @@ package org.ethereum.sharding.processing.state;
 
 import org.ethereum.datasource.Serializer;
 import org.ethereum.sharding.domain.Beacon;
+import org.ethereum.sharding.processing.db.ValidatorSet;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
@@ -49,6 +50,14 @@ public class BeaconState {
 
     public Flattened flatten() {
         return new Flattened(crystallizedState);
+    }
+
+    public Committee[][] getCommittees() {
+        return crystallizedState.getDynasty().getCommittees();
+    }
+
+    public ValidatorSet getValidatorSet() {
+        return crystallizedState.getDynasty().getValidatorSet();
     }
 
     @Override

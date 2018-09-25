@@ -28,6 +28,7 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.spongycastle.util.encoders.Hex;
 
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
@@ -82,6 +83,14 @@ public class TrieValidatorSet implements ValidatorSet {
         return validators.get(index);
     }
 
+    @Nullable
+    @Override
+    public Validator getByPupKey(byte[] pubKey) {
+        // TODO update with the logic
+        int idx = 0;
+        return get(idx);
+    }
+
     @Override
     public int size() {
         return size;
@@ -90,7 +99,7 @@ public class TrieValidatorSet implements ValidatorSet {
     @Override
     public synchronized int add(Validator validator) {
         int newIndex = size;
-        validators.put(newIndex, validator);
+        validators.put(newIndex, validator.withIndex(newIndex));
         setSize(newIndex + 1);
         return newIndex;
     }

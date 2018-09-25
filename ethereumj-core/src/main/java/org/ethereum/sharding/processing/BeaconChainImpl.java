@@ -17,7 +17,9 @@
  */
 package org.ethereum.sharding.processing;
 
+import org.ethereum.core.Block;
 import org.ethereum.db.DbFlushManager;
+import org.ethereum.sharding.processing.consensus.GenesisTransition;
 import org.ethereum.sharding.pubsub.Event;
 import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.processing.consensus.ScoreFunction;
@@ -89,7 +91,7 @@ public class BeaconChainImpl implements BeaconChain {
                 repository.get(store.getCanonicalHead().getStateHash()));
 
         publish(onBeaconChainLoaded(canonicalHead.block));
-        publish(onBeaconChainSynced(canonicalHead.block));
+        publish(onBeaconChainSynced(canonicalHead.block, canonicalHead.state));
 
         logger.info("Chain loaded with head: {}", canonicalHead.block);
     }
@@ -155,11 +157,16 @@ public class BeaconChainImpl implements BeaconChain {
         ProcessingResult res = canonicalHead.equals(newHead) ? ProcessingResult.Best : ProcessingResult.NotBest;
 
         // publish beacon block event
-        publish(onBeaconBlock(block, res == ProcessingResult.Best));
+        publish(onBeaconBlock(block, newState, res == ProcessingResult.Best));
 
         logger.info("Process block {}, status: {}", block.toString(), res);
 
         return res;
+    }
+
+    @Override
+    public void setBestBlock(Block block) {
+        ((GenesisTransition) genesisStateTransition).withMainChainRef(block.getHash());
     }
 
     private Beacon pullParent(Beacon block) {

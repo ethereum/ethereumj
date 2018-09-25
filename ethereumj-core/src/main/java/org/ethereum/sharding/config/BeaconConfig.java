@@ -129,7 +129,8 @@ public class BeaconConfig {
     @Bean
     public ProposerService proposerService() {
         if (validatorConfig().isEnabled()) {
-            ProposerService proposerService = new ProposerServiceImpl(beaconProposer(), beaconChain(), publisher());
+            ProposerService proposerService = new ProposerServiceImpl(beaconProposer(), beaconChain(),
+                    publisher(), validatorConfig());
             shardingWorldManager.setProposerService(proposerService);
             return proposerService;
         } else {
