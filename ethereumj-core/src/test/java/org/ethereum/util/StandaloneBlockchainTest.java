@@ -121,7 +121,7 @@ public class StandaloneBlockchainTest {
         a.callFunction("f", "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         BigInteger r = (BigInteger) a.callConstFunction("a")[0];
         System.out.println(r.toString(16));
-        Assert.assertEquals(new BigInteger(Hex.decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")), r);
+        Assert.assertEquals(new BigInteger(1, Hex.decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")), r);
     }
 
     @Test
