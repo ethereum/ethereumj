@@ -82,14 +82,13 @@ public class KafkaTransactionStore extends TransactionStore {
     }
 
     io.enkrypt.avro.TransactionReceipt receipt = io.enkrypt.avro.TransactionReceipt.newBuilder()
-      .setTxHash(ByteBuffer.wrap(r.getTransaction().getHash()))
+      .setStatus(r.isValid() ? 1 : 0)
       .setPostTxState(ByteBuffer.wrap(r.getPostTxState()))
       .setCumulativeGas(ByteBuffer.wrap(r.getCumulativeGas()))
-      .setBloomFilter(ByteBuffer.wrap(r.getBloomFilter().getData()))
       .setGasUsed(ByteBuffer.wrap(r.getGasUsed()))
+      .setBloomFilter(ByteBuffer.wrap(r.getBloomFilter().getData()))
       .setExecutionResult(ByteBuffer.wrap(r.getExecutionResult()))
       .setLogs(r.getLogInfoList().stream().map(this::toAvro).collect(Collectors.toList()))
-      .setError(r.getError())
       .build();
 
     final Transaction t = r.getTransaction();
@@ -97,8 +96,9 @@ public class KafkaTransactionStore extends TransactionStore {
 
     io.enkrypt.avro.Transaction.Builder builder = io.enkrypt.avro.Transaction.newBuilder()
       .setHash(new Bytes32(t.getHash()))
-      .setNonce(ByteBuffer.wrap(t.getNonce()))
+      .setBlockHash(tx.getBlockHash() != null ? new Bytes32(tx.getBlockHash()) : null)
       .setTransactionIndex(tx.isPending() ? null : tx.getIndex())
+      .setNonce(ByteBuffer.wrap(t.getNonce()))
       .setFrom(t.getSender() != null ? new Bytes20(t.getSender()) : null)
       .setTo(t.getReceiveAddress() != null ? new Bytes20(t.getReceiveAddress()) : null)
       .setValue(ByteBuffer.wrap(t.getValue()))
