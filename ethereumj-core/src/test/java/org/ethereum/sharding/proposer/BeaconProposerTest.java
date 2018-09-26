@@ -61,25 +61,6 @@ import static org.junit.Assert.assertTrue;
 public class BeaconProposerTest {
 
     @Test
-    public void testSlotCalculations() {
-        Helper helper = Helper.newInstance();
-        BeaconProposer proposer = helper.proposer;
-
-        long genesisTimestamp = BeaconGenesis.instance().getTimestamp();
-
-        assertEquals(0L, proposer.getSlotNumber(genesisTimestamp));
-        assertEquals(0L, proposer.getSlotNumber(genesisTimestamp + SLOT_DURATION / 2));
-        assertEquals(1L, proposer.getSlotNumber(genesisTimestamp + SLOT_DURATION));
-        assertEquals(1L, proposer.getSlotNumber(genesisTimestamp + SLOT_DURATION + SLOT_DURATION / 2));
-        assertEquals(49L, proposer.getSlotNumber(genesisTimestamp + SLOT_DURATION * 49));
-        assertEquals(49L, proposer.getSlotNumber(genesisTimestamp + SLOT_DURATION * 49 + SLOT_DURATION / 100));
-
-        assertEquals(genesisTimestamp, proposer.getTimestamp(0L));
-        assertEquals(genesisTimestamp + SLOT_DURATION, proposer.getTimestamp(1L));
-        assertEquals(genesisTimestamp + SLOT_DURATION * 49, proposer.getTimestamp(49L));
-    }
-
-    @Test
     public void testBlockProposing() {
         Helper helper = Helper.newInstance();
         BeaconProposer proposer = helper.proposer;

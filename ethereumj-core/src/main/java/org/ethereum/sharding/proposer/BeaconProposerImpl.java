@@ -24,7 +24,6 @@ import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.sharding.domain.Beacon;
-import org.ethereum.sharding.domain.BeaconGenesis;
 import org.ethereum.sharding.pubsub.BeaconBlockImported;
 import org.ethereum.sharding.pubsub.BeaconChainLoaded;
 import org.ethereum.sharding.pubsub.Publisher;
@@ -101,20 +100,5 @@ public class BeaconProposerImpl implements BeaconProposer {
 
         logger.info("New block created {}", block);
         return block;
-    }
-
-    @Override
-    public long getTimestamp(long slotNumber) {
-        return BeaconGenesis.instance().getTimestamp() + slotNumber * SLOT_DURATION;
-    }
-
-    @Override
-    public long getSlotNumber(long timestamp) {
-        return (timestamp - BeaconGenesis.instance().getTimestamp()) / SLOT_DURATION;
-    }
-
-    @Override
-    public long getCurrentSlotNumber() {
-        return getSlotNumber(System.currentTimeMillis());
     }
 }

@@ -35,6 +35,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import static org.ethereum.sharding.util.BeaconUtils.calcNextProposingSlot;
+import static org.ethereum.sharding.util.BeaconUtils.getCurrentSlotNumber;
+import static org.ethereum.sharding.util.BeaconUtils.getSlotStartTime;
 import static org.ethereum.sharding.util.BeaconUtils.scanCommittees;
 
 /**
@@ -108,7 +110,7 @@ public class ProposerServiceImpl implements ProposerService {
             return;
 
         // get number of the next slot that validator is eligible to propose
-        long slotNumber = calcNextProposingSlot(proposer.getCurrentSlotNumber(), index.getSlotOffset());
+        long slotNumber = calcNextProposingSlot(getCurrentSlotNumber(), index.getSlotOffset());
 
         // not an obvious way of calculating proposer index,
         // proposer = committee[X % len(committee)], X = slotNumber
@@ -123,14 +125,14 @@ public class ProposerServiceImpl implements ProposerService {
         if (proposerThread == null) return;
 
         // skip slots that start in the past
-        if (slotNumber <= proposer.getCurrentSlotNumber())
+        if (slotNumber <= getCurrentSlotNumber())
             return;
 
         // always cancel current task and create a new one
         if (currentTask != null)
             currentTask.cancel(false);
 
-        long delayMillis = proposer.getTimestamp(slotNumber) - System.currentTimeMillis();
+        long delayMillis = getSlotStartTime(slotNumber) - System.currentTimeMillis();
         currentTask = proposerThread.schedule(() -> {
             try {
                 Beacon newBlock = proposer.createNewBlock(slotNumber);

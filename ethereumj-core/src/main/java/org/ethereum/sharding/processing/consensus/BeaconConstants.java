@@ -55,4 +55,9 @@ public interface BeaconConstants {
      * Minimal number of validators in shard attestation committee
      */
     int MIN_COMMITTEE_SIZE = 128;
+
+    /**
+     * Slot duration for the beacon chain
+     */
+    long SLOT_DURATION = 8 * 1000; // 8 seconds
 }

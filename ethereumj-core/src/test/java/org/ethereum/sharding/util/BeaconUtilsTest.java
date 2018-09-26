@@ -17,10 +17,13 @@
  */
 package org.ethereum.sharding.util;
 
+import org.ethereum.sharding.domain.BeaconGenesis;
 import org.ethereum.sharding.processing.consensus.BeaconConstants;
 import org.ethereum.sharding.processing.state.Committee;
+import org.ethereum.sharding.proposer.BeaconProposer;
 import org.junit.Test;
 
+import static org.ethereum.sharding.proposer.BeaconProposer.SLOT_DURATION;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -60,5 +63,22 @@ public class BeaconUtilsTest {
 
         idx = BeaconUtils.scanCommittees(11, committees);
         assertEquals(new Committee.Index(s2, sl2, ci2, 3, 1), idx);
+    }
+
+    @Test
+    public void testSlotCalculations() {
+
+        long genesisTimestamp = BeaconGenesis.instance().getTimestamp();
+
+        assertEquals(0L, BeaconUtils.getSlotNumber(genesisTimestamp));
+        assertEquals(0L, BeaconUtils.getSlotNumber(genesisTimestamp + SLOT_DURATION / 2));
+        assertEquals(1L, BeaconUtils.getSlotNumber(genesisTimestamp + SLOT_DURATION));
+        assertEquals(1L, BeaconUtils.getSlotNumber(genesisTimestamp + SLOT_DURATION + SLOT_DURATION / 2));
+        assertEquals(49L, BeaconUtils.getSlotNumber(genesisTimestamp + SLOT_DURATION * 49));
+        assertEquals(49L, BeaconUtils.getSlotNumber(genesisTimestamp + SLOT_DURATION * 49 + SLOT_DURATION / 100));
+
+        assertEquals(genesisTimestamp, BeaconUtils.getSlotStartTime(0L));
+        assertEquals(genesisTimestamp + SLOT_DURATION, BeaconUtils.getSlotStartTime(1L));
+        assertEquals(genesisTimestamp + SLOT_DURATION * 49, BeaconUtils.getSlotStartTime(49L));
     }
 }
