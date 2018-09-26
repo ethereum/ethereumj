@@ -13,8 +13,8 @@ import org.apache.avro.message.SchemaStore;
 @SuppressWarnings("all")
 @org.apache.avro.specific.AvroGenerated
 public class Transaction extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  private static final long serialVersionUID = -6160171362863691782L;
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Transaction\",\"namespace\":\"io.enkrypt.avro\",\"fields\":[{\"name\":\"hash\",\"type\":{\"type\":\"fixed\",\"name\":\"Bytes32\",\"size\":32}},{\"name\":\"nonce\",\"type\":\"bytes\"},{\"name\":\"transactionIndex\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"from\",\"type\":[\"null\",{\"type\":\"fixed\",\"name\":\"Bytes20\",\"size\":20}]},{\"name\":\"to\",\"type\":[\"null\",\"Bytes20\"]},{\"name\":\"value\",\"type\":\"bytes\"},{\"name\":\"gasPrice\",\"type\":\"bytes\"},{\"name\":\"gasLimit\",\"type\":\"bytes\"},{\"name\":\"data\",\"type\":[\"null\",\"bytes\"],\"default\":null},{\"name\":\"receipt\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"TransactionReceipt\",\"fields\":[{\"name\":\"postTxState\",\"type\":\"bytes\"},{\"name\":\"cumulativeGas\",\"type\":\"bytes\"},{\"name\":\"bloomFilter\",\"type\":\"bytes\"},{\"name\":\"gasUsed\",\"type\":\"bytes\"},{\"name\":\"executionResult\",\"type\":\"bytes\"},{\"name\":\"logs\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"LogInfo\",\"fields\":[{\"name\":\"address\",\"type\":\"Bytes20\"},{\"name\":\"topics\",\"type\":{\"type\":\"array\",\"items\":\"bytes\"}},{\"name\":\"data\",\"type\":\"bytes\"}]}}},{\"name\":\"error\",\"type\":[\"null\",\"string\"]},{\"name\":\"txHash\",\"type\":[\"null\",\"bytes\"]}]}]},{\"name\":\"v\",\"type\":\"bytes\"},{\"name\":\"r\",\"type\":\"bytes\"},{\"name\":\"s\",\"type\":\"bytes\"}]}");
+  private static final long serialVersionUID = 529150552887942992L;
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Transaction\",\"namespace\":\"io.enkrypt.avro\",\"fields\":[{\"name\":\"hash\",\"type\":{\"type\":\"fixed\",\"name\":\"Bytes32\",\"size\":32}},{\"name\":\"blockHash\",\"type\":[\"null\",\"Bytes32\"],\"default\":null},{\"name\":\"nonce\",\"type\":\"bytes\"},{\"name\":\"transactionIndex\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"from\",\"type\":[\"null\",{\"type\":\"fixed\",\"name\":\"Bytes20\",\"size\":20}]},{\"name\":\"to\",\"type\":[\"null\",\"Bytes20\"],\"default\":null},{\"name\":\"value\",\"type\":\"bytes\"},{\"name\":\"gasPrice\",\"type\":\"bytes\"},{\"name\":\"gasLimit\",\"type\":\"bytes\"},{\"name\":\"data\",\"type\":[\"null\",\"bytes\"],\"default\":null},{\"name\":\"receipt\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"TransactionReceipt\",\"fields\":[{\"name\":\"status\",\"type\":\"int\"},{\"name\":\"postTxState\",\"type\":\"bytes\"},{\"name\":\"cumulativeGas\",\"type\":\"bytes\"},{\"name\":\"bloomFilter\",\"type\":\"bytes\"},{\"name\":\"gasUsed\",\"type\":\"bytes\"},{\"name\":\"executionResult\",\"type\":\"bytes\"},{\"name\":\"logs\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"LogInfo\",\"fields\":[{\"name\":\"address\",\"type\":\"Bytes20\"},{\"name\":\"topics\",\"type\":{\"type\":\"array\",\"items\":\"bytes\"}},{\"name\":\"data\",\"type\":\"bytes\"}]}}}]}]},{\"name\":\"v\",\"type\":\"bytes\"},{\"name\":\"r\",\"type\":\"bytes\"},{\"name\":\"s\",\"type\":\"bytes\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   private static SpecificData MODEL$ = new SpecificData();
@@ -52,6 +52,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
   }
 
   @Deprecated public io.enkrypt.avro.Bytes32 hash;
+  @Deprecated public io.enkrypt.avro.Bytes32 blockHash;
   @Deprecated public java.nio.ByteBuffer nonce;
   @Deprecated public java.lang.Integer transactionIndex;
   @Deprecated public io.enkrypt.avro.Bytes20 from;
@@ -75,6 +76,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
   /**
    * All-args constructor.
    * @param hash The new value for hash
+   * @param blockHash The new value for blockHash
    * @param nonce The new value for nonce
    * @param transactionIndex The new value for transactionIndex
    * @param from The new value for from
@@ -88,8 +90,9 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
    * @param r The new value for r
    * @param s The new value for s
    */
-  public Transaction(io.enkrypt.avro.Bytes32 hash, java.nio.ByteBuffer nonce, java.lang.Integer transactionIndex, io.enkrypt.avro.Bytes20 from, io.enkrypt.avro.Bytes20 to, java.nio.ByteBuffer value, java.nio.ByteBuffer gasPrice, java.nio.ByteBuffer gasLimit, java.nio.ByteBuffer data, io.enkrypt.avro.TransactionReceipt receipt, java.nio.ByteBuffer v, java.nio.ByteBuffer r, java.nio.ByteBuffer s) {
+  public Transaction(io.enkrypt.avro.Bytes32 hash, io.enkrypt.avro.Bytes32 blockHash, java.nio.ByteBuffer nonce, java.lang.Integer transactionIndex, io.enkrypt.avro.Bytes20 from, io.enkrypt.avro.Bytes20 to, java.nio.ByteBuffer value, java.nio.ByteBuffer gasPrice, java.nio.ByteBuffer gasLimit, java.nio.ByteBuffer data, io.enkrypt.avro.TransactionReceipt receipt, java.nio.ByteBuffer v, java.nio.ByteBuffer r, java.nio.ByteBuffer s) {
     this.hash = hash;
+    this.blockHash = blockHash;
     this.nonce = nonce;
     this.transactionIndex = transactionIndex;
     this.from = from;
@@ -109,18 +112,19 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
   public java.lang.Object get(int field$) {
     switch (field$) {
     case 0: return hash;
-    case 1: return nonce;
-    case 2: return transactionIndex;
-    case 3: return from;
-    case 4: return to;
-    case 5: return value;
-    case 6: return gasPrice;
-    case 7: return gasLimit;
-    case 8: return data;
-    case 9: return receipt;
-    case 10: return v;
-    case 11: return r;
-    case 12: return s;
+    case 1: return blockHash;
+    case 2: return nonce;
+    case 3: return transactionIndex;
+    case 4: return from;
+    case 5: return to;
+    case 6: return value;
+    case 7: return gasPrice;
+    case 8: return gasLimit;
+    case 9: return data;
+    case 10: return receipt;
+    case 11: return v;
+    case 12: return r;
+    case 13: return s;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -130,18 +134,19 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
     case 0: hash = (io.enkrypt.avro.Bytes32)value$; break;
-    case 1: nonce = (java.nio.ByteBuffer)value$; break;
-    case 2: transactionIndex = (java.lang.Integer)value$; break;
-    case 3: from = (io.enkrypt.avro.Bytes20)value$; break;
-    case 4: to = (io.enkrypt.avro.Bytes20)value$; break;
-    case 5: value = (java.nio.ByteBuffer)value$; break;
-    case 6: gasPrice = (java.nio.ByteBuffer)value$; break;
-    case 7: gasLimit = (java.nio.ByteBuffer)value$; break;
-    case 8: data = (java.nio.ByteBuffer)value$; break;
-    case 9: receipt = (io.enkrypt.avro.TransactionReceipt)value$; break;
-    case 10: v = (java.nio.ByteBuffer)value$; break;
-    case 11: r = (java.nio.ByteBuffer)value$; break;
-    case 12: s = (java.nio.ByteBuffer)value$; break;
+    case 1: blockHash = (io.enkrypt.avro.Bytes32)value$; break;
+    case 2: nonce = (java.nio.ByteBuffer)value$; break;
+    case 3: transactionIndex = (java.lang.Integer)value$; break;
+    case 4: from = (io.enkrypt.avro.Bytes20)value$; break;
+    case 5: to = (io.enkrypt.avro.Bytes20)value$; break;
+    case 6: value = (java.nio.ByteBuffer)value$; break;
+    case 7: gasPrice = (java.nio.ByteBuffer)value$; break;
+    case 8: gasLimit = (java.nio.ByteBuffer)value$; break;
+    case 9: data = (java.nio.ByteBuffer)value$; break;
+    case 10: receipt = (io.enkrypt.avro.TransactionReceipt)value$; break;
+    case 11: v = (java.nio.ByteBuffer)value$; break;
+    case 12: r = (java.nio.ByteBuffer)value$; break;
+    case 13: s = (java.nio.ByteBuffer)value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -160,6 +165,22 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
    */
   public void setHash(io.enkrypt.avro.Bytes32 value) {
     this.hash = value;
+  }
+
+  /**
+   * Gets the value of the 'blockHash' field.
+   * @return The value of the 'blockHash' field.
+   */
+  public io.enkrypt.avro.Bytes32 getBlockHash() {
+    return blockHash;
+  }
+
+  /**
+   * Sets the value of the 'blockHash' field.
+   * @param value the value to set.
+   */
+  public void setBlockHash(io.enkrypt.avro.Bytes32 value) {
+    this.blockHash = value;
   }
 
   /**
@@ -387,6 +408,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
     implements org.apache.avro.data.RecordBuilder<Transaction> {
 
     private io.enkrypt.avro.Bytes32 hash;
+    private io.enkrypt.avro.Bytes32 blockHash;
     private java.nio.ByteBuffer nonce;
     private java.lang.Integer transactionIndex;
     private io.enkrypt.avro.Bytes20 from;
@@ -416,56 +438,60 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
         this.hash = data().deepCopy(fields()[0].schema(), other.hash);
         fieldSetFlags()[0] = true;
       }
-      if (isValidValue(fields()[1], other.nonce)) {
-        this.nonce = data().deepCopy(fields()[1].schema(), other.nonce);
+      if (isValidValue(fields()[1], other.blockHash)) {
+        this.blockHash = data().deepCopy(fields()[1].schema(), other.blockHash);
         fieldSetFlags()[1] = true;
       }
-      if (isValidValue(fields()[2], other.transactionIndex)) {
-        this.transactionIndex = data().deepCopy(fields()[2].schema(), other.transactionIndex);
+      if (isValidValue(fields()[2], other.nonce)) {
+        this.nonce = data().deepCopy(fields()[2].schema(), other.nonce);
         fieldSetFlags()[2] = true;
       }
-      if (isValidValue(fields()[3], other.from)) {
-        this.from = data().deepCopy(fields()[3].schema(), other.from);
+      if (isValidValue(fields()[3], other.transactionIndex)) {
+        this.transactionIndex = data().deepCopy(fields()[3].schema(), other.transactionIndex);
         fieldSetFlags()[3] = true;
       }
-      if (isValidValue(fields()[4], other.to)) {
-        this.to = data().deepCopy(fields()[4].schema(), other.to);
+      if (isValidValue(fields()[4], other.from)) {
+        this.from = data().deepCopy(fields()[4].schema(), other.from);
         fieldSetFlags()[4] = true;
       }
-      if (isValidValue(fields()[5], other.value)) {
-        this.value = data().deepCopy(fields()[5].schema(), other.value);
+      if (isValidValue(fields()[5], other.to)) {
+        this.to = data().deepCopy(fields()[5].schema(), other.to);
         fieldSetFlags()[5] = true;
       }
-      if (isValidValue(fields()[6], other.gasPrice)) {
-        this.gasPrice = data().deepCopy(fields()[6].schema(), other.gasPrice);
+      if (isValidValue(fields()[6], other.value)) {
+        this.value = data().deepCopy(fields()[6].schema(), other.value);
         fieldSetFlags()[6] = true;
       }
-      if (isValidValue(fields()[7], other.gasLimit)) {
-        this.gasLimit = data().deepCopy(fields()[7].schema(), other.gasLimit);
+      if (isValidValue(fields()[7], other.gasPrice)) {
+        this.gasPrice = data().deepCopy(fields()[7].schema(), other.gasPrice);
         fieldSetFlags()[7] = true;
       }
-      if (isValidValue(fields()[8], other.data)) {
-        this.data = data().deepCopy(fields()[8].schema(), other.data);
+      if (isValidValue(fields()[8], other.gasLimit)) {
+        this.gasLimit = data().deepCopy(fields()[8].schema(), other.gasLimit);
         fieldSetFlags()[8] = true;
       }
-      if (isValidValue(fields()[9], other.receipt)) {
-        this.receipt = data().deepCopy(fields()[9].schema(), other.receipt);
+      if (isValidValue(fields()[9], other.data)) {
+        this.data = data().deepCopy(fields()[9].schema(), other.data);
         fieldSetFlags()[9] = true;
+      }
+      if (isValidValue(fields()[10], other.receipt)) {
+        this.receipt = data().deepCopy(fields()[10].schema(), other.receipt);
+        fieldSetFlags()[10] = true;
       }
       if (other.hasReceiptBuilder()) {
         this.receiptBuilder = io.enkrypt.avro.TransactionReceipt.newBuilder(other.getReceiptBuilder());
       }
-      if (isValidValue(fields()[10], other.v)) {
-        this.v = data().deepCopy(fields()[10].schema(), other.v);
-        fieldSetFlags()[10] = true;
-      }
-      if (isValidValue(fields()[11], other.r)) {
-        this.r = data().deepCopy(fields()[11].schema(), other.r);
+      if (isValidValue(fields()[11], other.v)) {
+        this.v = data().deepCopy(fields()[11].schema(), other.v);
         fieldSetFlags()[11] = true;
       }
-      if (isValidValue(fields()[12], other.s)) {
-        this.s = data().deepCopy(fields()[12].schema(), other.s);
+      if (isValidValue(fields()[12], other.r)) {
+        this.r = data().deepCopy(fields()[12].schema(), other.r);
         fieldSetFlags()[12] = true;
+      }
+      if (isValidValue(fields()[13], other.s)) {
+        this.s = data().deepCopy(fields()[13].schema(), other.s);
+        fieldSetFlags()[13] = true;
       }
     }
 
@@ -479,54 +505,58 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
         this.hash = data().deepCopy(fields()[0].schema(), other.hash);
         fieldSetFlags()[0] = true;
       }
-      if (isValidValue(fields()[1], other.nonce)) {
-        this.nonce = data().deepCopy(fields()[1].schema(), other.nonce);
+      if (isValidValue(fields()[1], other.blockHash)) {
+        this.blockHash = data().deepCopy(fields()[1].schema(), other.blockHash);
         fieldSetFlags()[1] = true;
       }
-      if (isValidValue(fields()[2], other.transactionIndex)) {
-        this.transactionIndex = data().deepCopy(fields()[2].schema(), other.transactionIndex);
+      if (isValidValue(fields()[2], other.nonce)) {
+        this.nonce = data().deepCopy(fields()[2].schema(), other.nonce);
         fieldSetFlags()[2] = true;
       }
-      if (isValidValue(fields()[3], other.from)) {
-        this.from = data().deepCopy(fields()[3].schema(), other.from);
+      if (isValidValue(fields()[3], other.transactionIndex)) {
+        this.transactionIndex = data().deepCopy(fields()[3].schema(), other.transactionIndex);
         fieldSetFlags()[3] = true;
       }
-      if (isValidValue(fields()[4], other.to)) {
-        this.to = data().deepCopy(fields()[4].schema(), other.to);
+      if (isValidValue(fields()[4], other.from)) {
+        this.from = data().deepCopy(fields()[4].schema(), other.from);
         fieldSetFlags()[4] = true;
       }
-      if (isValidValue(fields()[5], other.value)) {
-        this.value = data().deepCopy(fields()[5].schema(), other.value);
+      if (isValidValue(fields()[5], other.to)) {
+        this.to = data().deepCopy(fields()[5].schema(), other.to);
         fieldSetFlags()[5] = true;
       }
-      if (isValidValue(fields()[6], other.gasPrice)) {
-        this.gasPrice = data().deepCopy(fields()[6].schema(), other.gasPrice);
+      if (isValidValue(fields()[6], other.value)) {
+        this.value = data().deepCopy(fields()[6].schema(), other.value);
         fieldSetFlags()[6] = true;
       }
-      if (isValidValue(fields()[7], other.gasLimit)) {
-        this.gasLimit = data().deepCopy(fields()[7].schema(), other.gasLimit);
+      if (isValidValue(fields()[7], other.gasPrice)) {
+        this.gasPrice = data().deepCopy(fields()[7].schema(), other.gasPrice);
         fieldSetFlags()[7] = true;
       }
-      if (isValidValue(fields()[8], other.data)) {
-        this.data = data().deepCopy(fields()[8].schema(), other.data);
+      if (isValidValue(fields()[8], other.gasLimit)) {
+        this.gasLimit = data().deepCopy(fields()[8].schema(), other.gasLimit);
         fieldSetFlags()[8] = true;
       }
-      if (isValidValue(fields()[9], other.receipt)) {
-        this.receipt = data().deepCopy(fields()[9].schema(), other.receipt);
+      if (isValidValue(fields()[9], other.data)) {
+        this.data = data().deepCopy(fields()[9].schema(), other.data);
         fieldSetFlags()[9] = true;
       }
-      this.receiptBuilder = null;
-      if (isValidValue(fields()[10], other.v)) {
-        this.v = data().deepCopy(fields()[10].schema(), other.v);
+      if (isValidValue(fields()[10], other.receipt)) {
+        this.receipt = data().deepCopy(fields()[10].schema(), other.receipt);
         fieldSetFlags()[10] = true;
       }
-      if (isValidValue(fields()[11], other.r)) {
-        this.r = data().deepCopy(fields()[11].schema(), other.r);
+      this.receiptBuilder = null;
+      if (isValidValue(fields()[11], other.v)) {
+        this.v = data().deepCopy(fields()[11].schema(), other.v);
         fieldSetFlags()[11] = true;
       }
-      if (isValidValue(fields()[12], other.s)) {
-        this.s = data().deepCopy(fields()[12].schema(), other.s);
+      if (isValidValue(fields()[12], other.r)) {
+        this.r = data().deepCopy(fields()[12].schema(), other.r);
         fieldSetFlags()[12] = true;
+      }
+      if (isValidValue(fields()[13], other.s)) {
+        this.s = data().deepCopy(fields()[13].schema(), other.s);
+        fieldSetFlags()[13] = true;
       }
     }
 
@@ -570,6 +600,45 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
     }
 
     /**
+      * Gets the value of the 'blockHash' field.
+      * @return The value.
+      */
+    public io.enkrypt.avro.Bytes32 getBlockHash() {
+      return blockHash;
+    }
+
+    /**
+      * Sets the value of the 'blockHash' field.
+      * @param value The value of 'blockHash'.
+      * @return This builder.
+      */
+    public io.enkrypt.avro.Transaction.Builder setBlockHash(io.enkrypt.avro.Bytes32 value) {
+      validate(fields()[1], value);
+      this.blockHash = value;
+      fieldSetFlags()[1] = true;
+      return this;
+    }
+
+    /**
+      * Checks whether the 'blockHash' field has been set.
+      * @return True if the 'blockHash' field has been set, false otherwise.
+      */
+    public boolean hasBlockHash() {
+      return fieldSetFlags()[1];
+    }
+
+
+    /**
+      * Clears the value of the 'blockHash' field.
+      * @return This builder.
+      */
+    public io.enkrypt.avro.Transaction.Builder clearBlockHash() {
+      blockHash = null;
+      fieldSetFlags()[1] = false;
+      return this;
+    }
+
+    /**
       * Gets the value of the 'nonce' field.
       * @return The value.
       */
@@ -583,9 +652,9 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       * @return This builder.
       */
     public io.enkrypt.avro.Transaction.Builder setNonce(java.nio.ByteBuffer value) {
-      validate(fields()[1], value);
+      validate(fields()[2], value);
       this.nonce = value;
-      fieldSetFlags()[1] = true;
+      fieldSetFlags()[2] = true;
       return this;
     }
 
@@ -594,7 +663,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       * @return True if the 'nonce' field has been set, false otherwise.
       */
     public boolean hasNonce() {
-      return fieldSetFlags()[1];
+      return fieldSetFlags()[2];
     }
 
 
@@ -604,7 +673,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       */
     public io.enkrypt.avro.Transaction.Builder clearNonce() {
       nonce = null;
-      fieldSetFlags()[1] = false;
+      fieldSetFlags()[2] = false;
       return this;
     }
 
@@ -622,9 +691,9 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       * @return This builder.
       */
     public io.enkrypt.avro.Transaction.Builder setTransactionIndex(java.lang.Integer value) {
-      validate(fields()[2], value);
+      validate(fields()[3], value);
       this.transactionIndex = value;
-      fieldSetFlags()[2] = true;
+      fieldSetFlags()[3] = true;
       return this;
     }
 
@@ -633,7 +702,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       * @return True if the 'transactionIndex' field has been set, false otherwise.
       */
     public boolean hasTransactionIndex() {
-      return fieldSetFlags()[2];
+      return fieldSetFlags()[3];
     }
 
 
@@ -643,7 +712,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       */
     public io.enkrypt.avro.Transaction.Builder clearTransactionIndex() {
       transactionIndex = null;
-      fieldSetFlags()[2] = false;
+      fieldSetFlags()[3] = false;
       return this;
     }
 
@@ -661,9 +730,9 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       * @return This builder.
       */
     public io.enkrypt.avro.Transaction.Builder setFrom(io.enkrypt.avro.Bytes20 value) {
-      validate(fields()[3], value);
+      validate(fields()[4], value);
       this.from = value;
-      fieldSetFlags()[3] = true;
+      fieldSetFlags()[4] = true;
       return this;
     }
 
@@ -672,7 +741,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       * @return True if the 'from' field has been set, false otherwise.
       */
     public boolean hasFrom() {
-      return fieldSetFlags()[3];
+      return fieldSetFlags()[4];
     }
 
 
@@ -682,7 +751,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       */
     public io.enkrypt.avro.Transaction.Builder clearFrom() {
       from = null;
-      fieldSetFlags()[3] = false;
+      fieldSetFlags()[4] = false;
       return this;
     }
 
@@ -700,9 +769,9 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       * @return This builder.
       */
     public io.enkrypt.avro.Transaction.Builder setTo(io.enkrypt.avro.Bytes20 value) {
-      validate(fields()[4], value);
+      validate(fields()[5], value);
       this.to = value;
-      fieldSetFlags()[4] = true;
+      fieldSetFlags()[5] = true;
       return this;
     }
 
@@ -711,7 +780,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       * @return True if the 'to' field has been set, false otherwise.
       */
     public boolean hasTo() {
-      return fieldSetFlags()[4];
+      return fieldSetFlags()[5];
     }
 
 
@@ -721,7 +790,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       */
     public io.enkrypt.avro.Transaction.Builder clearTo() {
       to = null;
-      fieldSetFlags()[4] = false;
+      fieldSetFlags()[5] = false;
       return this;
     }
 
@@ -739,9 +808,9 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       * @return This builder.
       */
     public io.enkrypt.avro.Transaction.Builder setValue(java.nio.ByteBuffer value) {
-      validate(fields()[5], value);
+      validate(fields()[6], value);
       this.value = value;
-      fieldSetFlags()[5] = true;
+      fieldSetFlags()[6] = true;
       return this;
     }
 
@@ -750,7 +819,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       * @return True if the 'value' field has been set, false otherwise.
       */
     public boolean hasValue() {
-      return fieldSetFlags()[5];
+      return fieldSetFlags()[6];
     }
 
 
@@ -760,7 +829,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       */
     public io.enkrypt.avro.Transaction.Builder clearValue() {
       value = null;
-      fieldSetFlags()[5] = false;
+      fieldSetFlags()[6] = false;
       return this;
     }
 
@@ -778,9 +847,9 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       * @return This builder.
       */
     public io.enkrypt.avro.Transaction.Builder setGasPrice(java.nio.ByteBuffer value) {
-      validate(fields()[6], value);
+      validate(fields()[7], value);
       this.gasPrice = value;
-      fieldSetFlags()[6] = true;
+      fieldSetFlags()[7] = true;
       return this;
     }
 
@@ -789,7 +858,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       * @return True if the 'gasPrice' field has been set, false otherwise.
       */
     public boolean hasGasPrice() {
-      return fieldSetFlags()[6];
+      return fieldSetFlags()[7];
     }
 
 
@@ -799,7 +868,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       */
     public io.enkrypt.avro.Transaction.Builder clearGasPrice() {
       gasPrice = null;
-      fieldSetFlags()[6] = false;
+      fieldSetFlags()[7] = false;
       return this;
     }
 
@@ -817,9 +886,9 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       * @return This builder.
       */
     public io.enkrypt.avro.Transaction.Builder setGasLimit(java.nio.ByteBuffer value) {
-      validate(fields()[7], value);
+      validate(fields()[8], value);
       this.gasLimit = value;
-      fieldSetFlags()[7] = true;
+      fieldSetFlags()[8] = true;
       return this;
     }
 
@@ -828,7 +897,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       * @return True if the 'gasLimit' field has been set, false otherwise.
       */
     public boolean hasGasLimit() {
-      return fieldSetFlags()[7];
+      return fieldSetFlags()[8];
     }
 
 
@@ -838,7 +907,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       */
     public io.enkrypt.avro.Transaction.Builder clearGasLimit() {
       gasLimit = null;
-      fieldSetFlags()[7] = false;
+      fieldSetFlags()[8] = false;
       return this;
     }
 
@@ -856,9 +925,9 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       * @return This builder.
       */
     public io.enkrypt.avro.Transaction.Builder setData(java.nio.ByteBuffer value) {
-      validate(fields()[8], value);
+      validate(fields()[9], value);
       this.data = value;
-      fieldSetFlags()[8] = true;
+      fieldSetFlags()[9] = true;
       return this;
     }
 
@@ -867,7 +936,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       * @return True if the 'data' field has been set, false otherwise.
       */
     public boolean hasData() {
-      return fieldSetFlags()[8];
+      return fieldSetFlags()[9];
     }
 
 
@@ -877,7 +946,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       */
     public io.enkrypt.avro.Transaction.Builder clearData() {
       data = null;
-      fieldSetFlags()[8] = false;
+      fieldSetFlags()[9] = false;
       return this;
     }
 
@@ -895,10 +964,10 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       * @return This builder.
       */
     public io.enkrypt.avro.Transaction.Builder setReceipt(io.enkrypt.avro.TransactionReceipt value) {
-      validate(fields()[9], value);
+      validate(fields()[10], value);
       this.receiptBuilder = null;
       this.receipt = value;
-      fieldSetFlags()[9] = true;
+      fieldSetFlags()[10] = true;
       return this;
     }
 
@@ -907,7 +976,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       * @return True if the 'receipt' field has been set, false otherwise.
       */
     public boolean hasReceipt() {
-      return fieldSetFlags()[9];
+      return fieldSetFlags()[10];
     }
 
     /**
@@ -951,7 +1020,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
     public io.enkrypt.avro.Transaction.Builder clearReceipt() {
       receipt = null;
       receiptBuilder = null;
-      fieldSetFlags()[9] = false;
+      fieldSetFlags()[10] = false;
       return this;
     }
 
@@ -969,9 +1038,9 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       * @return This builder.
       */
     public io.enkrypt.avro.Transaction.Builder setV(java.nio.ByteBuffer value) {
-      validate(fields()[10], value);
+      validate(fields()[11], value);
       this.v = value;
-      fieldSetFlags()[10] = true;
+      fieldSetFlags()[11] = true;
       return this;
     }
 
@@ -980,7 +1049,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       * @return True if the 'v' field has been set, false otherwise.
       */
     public boolean hasV() {
-      return fieldSetFlags()[10];
+      return fieldSetFlags()[11];
     }
 
 
@@ -990,7 +1059,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       */
     public io.enkrypt.avro.Transaction.Builder clearV() {
       v = null;
-      fieldSetFlags()[10] = false;
+      fieldSetFlags()[11] = false;
       return this;
     }
 
@@ -1008,9 +1077,9 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       * @return This builder.
       */
     public io.enkrypt.avro.Transaction.Builder setR(java.nio.ByteBuffer value) {
-      validate(fields()[11], value);
+      validate(fields()[12], value);
       this.r = value;
-      fieldSetFlags()[11] = true;
+      fieldSetFlags()[12] = true;
       return this;
     }
 
@@ -1019,7 +1088,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       * @return True if the 'r' field has been set, false otherwise.
       */
     public boolean hasR() {
-      return fieldSetFlags()[11];
+      return fieldSetFlags()[12];
     }
 
 
@@ -1029,7 +1098,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       */
     public io.enkrypt.avro.Transaction.Builder clearR() {
       r = null;
-      fieldSetFlags()[11] = false;
+      fieldSetFlags()[12] = false;
       return this;
     }
 
@@ -1047,9 +1116,9 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       * @return This builder.
       */
     public io.enkrypt.avro.Transaction.Builder setS(java.nio.ByteBuffer value) {
-      validate(fields()[12], value);
+      validate(fields()[13], value);
       this.s = value;
-      fieldSetFlags()[12] = true;
+      fieldSetFlags()[13] = true;
       return this;
     }
 
@@ -1058,7 +1127,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       * @return True if the 's' field has been set, false otherwise.
       */
     public boolean hasS() {
-      return fieldSetFlags()[12];
+      return fieldSetFlags()[13];
     }
 
 
@@ -1068,7 +1137,7 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       */
     public io.enkrypt.avro.Transaction.Builder clearS() {
       s = null;
-      fieldSetFlags()[12] = false;
+      fieldSetFlags()[13] = false;
       return this;
     }
 
@@ -1078,22 +1147,23 @@ public class Transaction extends org.apache.avro.specific.SpecificRecordBase imp
       try {
         Transaction record = new Transaction();
         record.hash = fieldSetFlags()[0] ? this.hash : (io.enkrypt.avro.Bytes32) defaultValue(fields()[0]);
-        record.nonce = fieldSetFlags()[1] ? this.nonce : (java.nio.ByteBuffer) defaultValue(fields()[1]);
-        record.transactionIndex = fieldSetFlags()[2] ? this.transactionIndex : (java.lang.Integer) defaultValue(fields()[2]);
-        record.from = fieldSetFlags()[3] ? this.from : (io.enkrypt.avro.Bytes20) defaultValue(fields()[3]);
-        record.to = fieldSetFlags()[4] ? this.to : (io.enkrypt.avro.Bytes20) defaultValue(fields()[4]);
-        record.value = fieldSetFlags()[5] ? this.value : (java.nio.ByteBuffer) defaultValue(fields()[5]);
-        record.gasPrice = fieldSetFlags()[6] ? this.gasPrice : (java.nio.ByteBuffer) defaultValue(fields()[6]);
-        record.gasLimit = fieldSetFlags()[7] ? this.gasLimit : (java.nio.ByteBuffer) defaultValue(fields()[7]);
-        record.data = fieldSetFlags()[8] ? this.data : (java.nio.ByteBuffer) defaultValue(fields()[8]);
+        record.blockHash = fieldSetFlags()[1] ? this.blockHash : (io.enkrypt.avro.Bytes32) defaultValue(fields()[1]);
+        record.nonce = fieldSetFlags()[2] ? this.nonce : (java.nio.ByteBuffer) defaultValue(fields()[2]);
+        record.transactionIndex = fieldSetFlags()[3] ? this.transactionIndex : (java.lang.Integer) defaultValue(fields()[3]);
+        record.from = fieldSetFlags()[4] ? this.from : (io.enkrypt.avro.Bytes20) defaultValue(fields()[4]);
+        record.to = fieldSetFlags()[5] ? this.to : (io.enkrypt.avro.Bytes20) defaultValue(fields()[5]);
+        record.value = fieldSetFlags()[6] ? this.value : (java.nio.ByteBuffer) defaultValue(fields()[6]);
+        record.gasPrice = fieldSetFlags()[7] ? this.gasPrice : (java.nio.ByteBuffer) defaultValue(fields()[7]);
+        record.gasLimit = fieldSetFlags()[8] ? this.gasLimit : (java.nio.ByteBuffer) defaultValue(fields()[8]);
+        record.data = fieldSetFlags()[9] ? this.data : (java.nio.ByteBuffer) defaultValue(fields()[9]);
         if (receiptBuilder != null) {
           record.receipt = this.receiptBuilder.build();
         } else {
-          record.receipt = fieldSetFlags()[9] ? this.receipt : (io.enkrypt.avro.TransactionReceipt) defaultValue(fields()[9]);
+          record.receipt = fieldSetFlags()[10] ? this.receipt : (io.enkrypt.avro.TransactionReceipt) defaultValue(fields()[10]);
         }
-        record.v = fieldSetFlags()[10] ? this.v : (java.nio.ByteBuffer) defaultValue(fields()[10]);
-        record.r = fieldSetFlags()[11] ? this.r : (java.nio.ByteBuffer) defaultValue(fields()[11]);
-        record.s = fieldSetFlags()[12] ? this.s : (java.nio.ByteBuffer) defaultValue(fields()[12]);
+        record.v = fieldSetFlags()[11] ? this.v : (java.nio.ByteBuffer) defaultValue(fields()[11]);
+        record.r = fieldSetFlags()[12] ? this.r : (java.nio.ByteBuffer) defaultValue(fields()[12]);
+        record.s = fieldSetFlags()[13] ? this.s : (java.nio.ByteBuffer) defaultValue(fields()[13]);
         return record;
       } catch (java.lang.Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);
