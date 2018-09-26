@@ -17,47 +17,36 @@
  */
 package org.ethereum.sharding.processing.consensus;
 
-import org.ethereum.util.blockchain.EtherUtil;
-
-import java.math.BigInteger;
-
-import static org.ethereum.util.blockchain.EtherUtil.convert;
+import org.ethereum.sharding.processing.state.Committee;
 
 /**
- * A global constants related to beacon chain consensus.
+ * An interface of committee factory.
+ *
+ * <p>
+ *     Used to produce new shards and committees array.
+ *
+ * <p>
+ *     in: {@code [validators]} <br/>
+ *     out: {@code [slot: [shardId, [validators]]]}
+ *
+ *
+ * @see Committee
  *
  * @author Mikhail Kalinin
- * @since 06.09.2018
+ * @since 14.09.2018
  */
-public interface BeaconConstants {
+public interface CommitteeFactory {
 
     /**
-     *  Number of slots in each cycle
+     * Creates new committees set.
+     *
+     * @param seed seed for random shuffling
+     * @param validators array of active validator numbers
+     * @param startShard shard id that first committee in resulting array will be assigned to
+     *
+     * @return shards and committee array for each slot of cycle
+     *
+     * @see BeaconConstants#CYCLE_LENGTH
      */
-    int CYCLE_LENGTH = 64;
-
-    /**
-     * Number of shards
-     */
-    int SHARD_COUNT = 1024;
-
-    /**
-     * Minimal number of slots in dynasty
-     */
-    long MIN_DYNASTY_LENGTH = 256;
-
-    /**
-     * Validator registration deposit in wei
-     */
-    BigInteger DEPOSIT_WEI = convert(32, EtherUtil.Unit.ETHER);
-
-    /**
-     * Minimal number of validators in shard attestation committee
-     */
-    int MIN_COMMITTEE_SIZE = 128;
-
-    /**
-     * Slot duration for the beacon chain
-     */
-    long SLOT_DURATION = 8 * 1000; // 8 seconds
+    Committee[][] create(byte[] seed, int[] validators, int startShard);
 }

@@ -21,6 +21,8 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.Source;
 import org.ethereum.sharding.domain.Validator;
 
+import javax.annotation.Nullable;
+
 /**
  * An interface to a validator set.
  *
@@ -48,6 +50,12 @@ public interface ValidatorSet extends Source<Integer, Validator> {
      * @throws IndexOutOfBoundsException if validator with given index does not exist
      */
     Validator get(Integer index);
+
+    /**
+     * Returns validator with given public key or {@code null} if it doesn't exist.
+     */
+    @Nullable
+    Validator getByPupKey(byte[] pubKey);
 
     /**
      * Replaces old validator entry with a new one.
@@ -85,4 +93,9 @@ public interface ValidatorSet extends Source<Integer, Validator> {
      * Returns a sample of validator set that corresponds to specified hash.
      */
     ValidatorSet getSnapshotTo(byte[] hash);
+
+    /**
+     * Returns indices array of active validators.
+     */
+    int[] getActiveIndices();
 }

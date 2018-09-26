@@ -148,7 +148,7 @@ public class ShardingWorldManager extends WorldManager {
         // start only if validator is enlisted and after sync is finished
         publisher.subscribe(BeaconChainSynced.class, data -> {
             if (validatorService.getState() == ValidatorService.State.Enlisted) {
-                proposerService.init();
+                proposerService.init(data.getState());
             }
         });
     }
@@ -157,7 +157,10 @@ public class ShardingWorldManager extends WorldManager {
         // PoC mode:
         // wait for validator initialization
         // it's needed to be sure that the validator is registered before beacon genesis state calculation
-        validatorServiceInit.runAfterBothAsync(contractInit, beaconChain::init);
+        validatorServiceInit.runAfterBothAsync(contractInit, () -> {
+            beaconChain.setBestBlock(getBlockchain().getBestBlock());
+            beaconChain.init();
+        });
     }
 
     public void setPublisher(Publisher publisher) {

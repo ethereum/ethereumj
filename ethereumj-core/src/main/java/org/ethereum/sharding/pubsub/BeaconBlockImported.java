@@ -18,6 +18,7 @@
 package org.ethereum.sharding.pubsub;
 
 import org.ethereum.sharding.domain.Beacon;
+import org.ethereum.sharding.processing.state.BeaconState;
 
 /**
  * Event is triggered when new block has been successfully imported into beacon chain.
@@ -32,10 +33,12 @@ public class BeaconBlockImported extends Event<BeaconBlockImported.Data> {
 
     public static class Data {
         private final Beacon block;
+        private final BeaconState state;
         private final boolean best;
 
-        private Data(Beacon block, boolean best) {
+        private Data(Beacon block, BeaconState state, boolean best) {
             this.block = block;
+            this.state = state;
             this.best = best;
         }
 
@@ -43,12 +46,16 @@ public class BeaconBlockImported extends Event<BeaconBlockImported.Data> {
             return block;
         }
 
+        public BeaconState getState() {
+            return state;
+        }
+
         public boolean isBest() {
             return best;
         }
     }
 
-    public BeaconBlockImported(Beacon block, boolean best) {
-        super(new Data(block, best));
+    public BeaconBlockImported(Beacon block, BeaconState state, boolean best) {
+        super(new Data(block, state, best));
     }
 }

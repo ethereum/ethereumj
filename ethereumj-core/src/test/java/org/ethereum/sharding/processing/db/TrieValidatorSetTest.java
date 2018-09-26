@@ -28,6 +28,7 @@ import java.util.Random;
 import static org.ethereum.crypto.HashUtil.randomHash;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 /**
@@ -53,13 +54,18 @@ public class TrieValidatorSetTest {
         assert !FastByteComparisons.equal(ValidatorSet.EMPTY_HASH, set.getHash());
 
         assertValidatorEquals(first, set.get(0));
+        assertValidatorEquals(first, set.getByPupKey(first.getPubKey()));
 
         idx = set.add(second);
         assertEquals(1, idx);
         assertEquals(2, set.size());
 
         assertValidatorEquals(first, set.get(0));
+        assertValidatorEquals(first, set.getByPupKey(first.getPubKey()));
         assertValidatorEquals(second, set.get(1));
+        assertValidatorEquals(second, set.getByPupKey(second.getPubKey()));
+
+        assertNull(set.getByPupKey(randomHash()));
     }
 
     @Test
@@ -178,7 +184,7 @@ public class TrieValidatorSetTest {
     }
 
     ValidatorSet emptySet() {
-        return new TrieValidatorSet(new HashMapDB<>());
+        return new TrieValidatorSet(new HashMapDB<>(), new HashMapDB<>());
     }
 
     Validator getRandomValidator() {

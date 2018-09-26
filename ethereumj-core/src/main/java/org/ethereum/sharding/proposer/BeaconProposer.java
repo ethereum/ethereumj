@@ -18,7 +18,6 @@
 package org.ethereum.sharding.proposer;
 
 import org.ethereum.sharding.domain.Beacon;
-import org.ethereum.sharding.domain.BeaconGenesis;
 
 /**
  * Beacon chain block proposer.
@@ -50,21 +49,4 @@ public interface BeaconProposer {
      * @return newly created block
      */
     Beacon createNewBlock(long slotNumber);
-
-    /**
-     * Calculates minimal timestamp for specified slot number.
-     *
-     * @param slotNumber slot number
-     * @return timestamp in milliseconds
-     */
-    long getTimestamp(long slotNumber);
-
-    /**
-     * Calculates a number of slot that given moment of time does fit to.
-     * Uses {@link BeaconGenesis#timestamp} and {@link #SLOT_DURATION}
-     *
-     * @param timestamp timestamp in milliseconds
-     * @return slot number
-     */
-    long getSlotNumber(long timestamp);
 }

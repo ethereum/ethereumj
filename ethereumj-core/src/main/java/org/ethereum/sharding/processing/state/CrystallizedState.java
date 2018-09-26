@@ -20,16 +20,12 @@ package org.ethereum.sharding.processing.state;
 import org.ethereum.datasource.Serializer;
 import org.ethereum.sharding.processing.consensus.BeaconConstants;
 import org.ethereum.sharding.processing.db.ValidatorSet;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
-import java.math.BigInteger;
-
 import static org.ethereum.crypto.HashUtil.blake2b;
-import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
+import static org.ethereum.util.ByteUtil.ZERO_BYTE_ARRAY;
 import static org.ethereum.util.ByteUtil.byteArrayToLong;
-import static org.ethereum.util.ByteUtil.bytesToBigInteger;
 import static org.ethereum.util.ByteUtil.isSingleZero;
 import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
 
@@ -58,8 +54,7 @@ public class CrystallizedState {
     public Flattened flatten() {
         return new Flattened(dynasty.getValidatorSet().getHash(), lastStateRecalc, dynasty.getCommittees(),
                 finality.getLastJustifiedSlot(), finality.getJustifiedStreak(), finality.getLastFinalizedSlot(),
-                dynasty.getNumber(), dynasty.getCrosslinkingStartShard(), crosslinks, dynasty.getTotalDeposits(),
-                dynasty.getSeed(), dynasty.getSeedLastReset(), dynasty.getStartSlot());
+                dynasty.getNumber(), crosslinks, dynasty.getSeed(), dynasty.getSeedLastReset(), dynasty.getStartSlot());
     }
 
     public byte[] getHash() {
@@ -110,7 +105,7 @@ public class CrystallizedState {
         /** What active validators are part of the attester set,
          * at what height, and in what shard.
          * Starts at slot {@link #lastStateRecalc} - {@link BeaconConstants#CYCLE_LENGTH} */
-        private final Committee[] committees;
+        private final Committee[][] committees;
         /* The last justified slot */
         private final long lastJustifiedSlot;
         /* Number of consecutive justified slots ending at this one */
@@ -119,12 +114,8 @@ public class CrystallizedState {
         private final long lastFinalizedSlot;
         /* The number of dynasty transitions including this one */
         private final long currentDynasty;
-        /* The next shard that crosslinking assignment will start from */
-        private final long crosslinkingStartShard;
         /* The most recent crosslinks for each shard */
         private final Crosslink[] crosslinks;
-        /* Total balance of deposits in wei */
-        private final BigInteger totalDeposits;
         /* Used to select the committees for each shard */
         private final byte[] dynastySeed;
         /* Last dynasty the seed was reset */
@@ -132,10 +123,9 @@ public class CrystallizedState {
         /* Slot that current dynasty is stared from */
         private final long dynastyStart;
 
-        public Flattened(byte[] validatorSetHash, long lastStateRecalc, Committee[] committees, long lastJustifiedSlot,
-                         long justifiedStreak, long lastFinalizedSlot, long currentDynasty, long crosslinkingStartShard,
-                         Crosslink[] crosslinks, BigInteger totalDeposits, byte[] dynastySeed, long dynastySeedLastReset,
-                         long dynastyStart) {
+        public Flattened(byte[] validatorSetHash, long lastStateRecalc, Committee[][] committees, long lastJustifiedSlot,
+                         long justifiedStreak, long lastFinalizedSlot, long currentDynasty, Crosslink[] crosslinks,
+                         byte[] dynastySeed, long dynastySeedLastReset, long dynastyStart) {
             this.validatorSetHash = validatorSetHash;
             this.lastStateRecalc = lastStateRecalc;
             this.committees = committees;
@@ -143,9 +133,7 @@ public class CrystallizedState {
             this.justifiedStreak = justifiedStreak;
             this.lastFinalizedSlot = lastFinalizedSlot;
             this.currentDynasty = currentDynasty;
-            this.crosslinkingStartShard = crosslinkingStartShard;
             this.crosslinks = crosslinks;
-            this.totalDeposits = totalDeposits;
             this.dynastySeed = dynastySeed;
             this.dynastySeedLastReset = dynastySeedLastReset;
             this.dynastyStart = dynastyStart;
@@ -160,23 +148,31 @@ public class CrystallizedState {
             this.justifiedStreak = byteArrayToLong(list.get(3).getRLPData());
             this.lastFinalizedSlot = byteArrayToLong(list.get(4).getRLPData());
             this.currentDynasty = byteArrayToLong(list.get(5).getRLPData());
-            this.totalDeposits = bytesToBigInteger(list.get(6).getRLPData());
+            this.dynastyStart = byteArrayToLong(list.get(6).getRLPData());
             this.dynastySeed = list.get(7).getRLPData();
             this.dynastySeedLastReset = byteArrayToLong(list.get(8).getRLPData());
-            this.crosslinkingStartShard = byteArrayToLong(list.get(9).getRLPData());
-            this.dynastyStart = byteArrayToLong(list.get(10).getRLPData());
 
-            if (!isSingleZero(list.get(11).getRLPData())) {
-                RLPList committeeList = RLP.unwrapList(list.get(11).getRLPData());
-                this.committees = new Committee[committeeList.size()];
-                for (int i = 0; i < committeeList.size(); i++)
-                    this.committees[i] = new Committee(committeeList.get(i).getRLPData());
+            if (!isSingleZero(list.get(9).getRLPData())) {
+                RLPList committeeList = RLP.unwrapList(list.get(9).getRLPData());
+                this.committees = new Committee[committeeList.size()][];
+                for (int i = 0; i < committeeList.size(); i++) {
+                    if (!isSingleZero(committeeList.get(i).getRLPData())) {
+                        RLPList slotList = RLP.unwrapList(committeeList.get(i).getRLPData());
+                        Committee[] slotCommittees = new Committee[slotList.size()];
+                        for (int j = 0; j < slotList.size(); j++) {
+                            slotCommittees[j] = new Committee(slotList.get(j).getRLPData());
+                        }
+                        this.committees[i] = slotCommittees;
+                    } else {
+                        this.committees[i] = new Committee[0];
+                    }
+                }
             } else {
-                this.committees = new Committee[0];
+                this.committees = new Committee[0][];
             }
 
-            if (!isSingleZero(list.get(12).getRLPData())) {
-                RLPList crosslinkList = RLP.unwrapList(list.get(12).getRLPData());
+            if (!isSingleZero(list.get(10).getRLPData())) {
+                RLPList crosslinkList = RLP.unwrapList(list.get(10).getRLPData());
                 this.crosslinks = new Crosslink[crosslinkList.size()];
                 for (int i = 0; i < crosslinkList.size(); i++)
                     this.crosslinks[i] = new Crosslink(crosslinkList.get(i).getRLPData());
@@ -190,8 +186,14 @@ public class CrystallizedState {
             byte[][] encodedCrosslinks = new byte[crosslinks.length][];
 
             if (committees.length > 0) {
-                for (int i = 0; i < committees.length; i++)
-                    encodedCommittees[i] = committees[i].getEncoded();
+                for (int i = 0; i < committees.length; i++) {
+                    Committee[] slotCommittees = committees[i];
+                    byte[][] encodedSlot = new byte[slotCommittees.length][];
+                    for (int j = 0; j < slotCommittees.length; j++) {
+                        encodedSlot[j] = slotCommittees[j].getEncoded();
+                    }
+                    encodedCommittees[i] = slotCommittees.length > 0 ? RLP.wrapList(encodedSlot) : ZERO_BYTE_ARRAY;
+                }
             }
 
             if (crosslinks.length > 0) {
@@ -202,10 +204,9 @@ public class CrystallizedState {
             return RLP.wrapList(validatorSetHash, longToBytesNoLeadZeroes(lastStateRecalc),
                     longToBytesNoLeadZeroes(lastJustifiedSlot), longToBytesNoLeadZeroes(justifiedStreak),
                     longToBytesNoLeadZeroes(lastFinalizedSlot), longToBytesNoLeadZeroes(currentDynasty),
-                    longToBytesNoLeadZeroes(crosslinkingStartShard), longToBytesNoLeadZeroes(dynastyStart),
-                    bigIntegerToBytes(totalDeposits), dynastySeed, longToBytesNoLeadZeroes(dynastySeedLastReset),
-                    encodedCommittees.length > 0 ? RLP.wrapList(encodedCommittees) : ByteUtil.ZERO_BYTE_ARRAY,
-                    encodedCrosslinks.length > 0 ? RLP.wrapList(encodedCrosslinks) : ByteUtil.ZERO_BYTE_ARRAY);
+                    longToBytesNoLeadZeroes(dynastyStart), dynastySeed, longToBytesNoLeadZeroes(dynastySeedLastReset),
+                    encodedCommittees.length > 0 ? RLP.wrapList(encodedCommittees) : ZERO_BYTE_ARRAY,
+                    encodedCrosslinks.length > 0 ? RLP.wrapList(encodedCrosslinks) : ZERO_BYTE_ARRAY);
         }
 
         public byte[] getHash() {
@@ -220,7 +221,7 @@ public class CrystallizedState {
             return lastStateRecalc;
         }
 
-        public Committee[] getCommittees() {
+        public Committee[][] getCommittees() {
             return committees;
         }
 
@@ -240,16 +241,8 @@ public class CrystallizedState {
             return currentDynasty;
         }
 
-        public long getCrosslinkingStartShard() {
-            return crosslinkingStartShard;
-        }
-
         public Crosslink[] getCrosslinks() {
             return crosslinks;
-        }
-
-        public BigInteger getTotalDeposits() {
-            return totalDeposits;
         }
 
         public byte[] getDynastySeed() {
@@ -269,8 +262,8 @@ public class CrystallizedState {
         }
 
         public static Flattened empty() {
-            return new Flattened(ValidatorSet.EMPTY_HASH, 0, new Committee[0], 0L, 0L, 0L, 0L, 0L,
-                    new Crosslink[0], BigInteger.ZERO, new byte[32], 0L, 0L);
+            return new Flattened(ValidatorSet.EMPTY_HASH, 0, new Committee[0][], 0L, 0L, 0L, 0L,
+                    new Crosslink[0], new byte[32], 0L, 0L);
         }
 
         public static final org.ethereum.datasource.Serializer<Flattened, byte[]> Serializer = new Serializer<Flattened, byte[]>() {

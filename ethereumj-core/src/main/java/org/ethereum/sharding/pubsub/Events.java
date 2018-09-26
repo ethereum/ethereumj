@@ -18,6 +18,7 @@
 package org.ethereum.sharding.pubsub;
 
 import org.ethereum.sharding.domain.Beacon;
+import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.service.ValidatorService;
 
 /**
@@ -28,16 +29,16 @@ import org.ethereum.sharding.service.ValidatorService;
  */
 public class Events {
 
-    public static BeaconBlockImported onBeaconBlock(Beacon block, boolean best) {
-        return new BeaconBlockImported(block, best);
+    public static BeaconBlockImported onBeaconBlock(Beacon block, BeaconState state, boolean best) {
+        return new BeaconBlockImported(block, state, best);
     }
 
     public static BeaconChainLoaded onBeaconChainLoaded(Beacon head) {
         return new BeaconChainLoaded(head);
     }
 
-    public static BeaconChainSynced onBeaconChainSynced(Beacon head) {
-        return new BeaconChainSynced(head);
+    public static BeaconChainSynced onBeaconChainSynced(Beacon head, BeaconState state) {
+        return new BeaconChainSynced(head, state);
     }
 
     public static ValidatorStateUpdated onValidatorStateUpdated(ValidatorService.State newState) {

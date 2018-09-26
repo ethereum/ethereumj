@@ -18,6 +18,7 @@
 package org.ethereum.sharding.processing.db;
 
 import org.ethereum.datasource.NoDeleteSource;
+import org.ethereum.datasource.ObjectDataSource;
 import org.ethereum.datasource.Serializer;
 import org.ethereum.datasource.Source;
 import org.ethereum.datasource.SourceCodec;
@@ -28,7 +29,9 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.spongycastle.util.encoders.Hex;
 
+import javax.annotation.Nullable;
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 /**
  * Validator set implementation based on {@link Trie} structure.
@@ -46,6 +49,9 @@ import java.util.Arrays;
  *     Size of validator set is kept in the same trie that is used to store validator items.
  *     Size item has a special path in the trie: {@code 0xffffff} which is higher than max index, thus, safe to be used.
  *
+ * <p>
+ *     {@link #getByPupKey(byte[])} method logic is supported with help of index {@code [pubKey: index]}.
+ *
  * @author Mikhail Kalinin
  * @since 04.09.2018
  */
@@ -54,17 +60,20 @@ public class TrieValidatorSet implements ValidatorSet {
     private static final byte[] SIZE_KEY = Hex.decode("ffffff");
 
     private Source<byte[], byte[]> underlyingSrc;
+    private Source<byte[], byte[]> indexSrc;
     private Source<byte[], byte[]> trieSrc;
     private Trie<byte[]> trie;
     private Source<Integer, Validator> validators;
+    private Source<byte[], Integer> index;
     private int size;
 
-    public TrieValidatorSet(Source<byte[], byte[]> src) {
-        this(src, EMPTY_HASH);
+    public TrieValidatorSet(Source<byte[], byte[]> src, Source<byte[], byte[]> indexSrc) {
+        this(src, indexSrc, EMPTY_HASH);
     }
 
-    public TrieValidatorSet(Source<byte[], byte[]> src, byte[] root) {
+    public TrieValidatorSet(Source<byte[], byte[]> src, Source<byte[], byte[]> indexSrc, byte[] root) {
         this.underlyingSrc = src;
+        this.indexSrc = indexSrc;
         // trie deletes ghost nodes by default, force keeping them in the source
         this.trieSrc = new NoDeleteSource<>(underlyingSrc);
         this.trie = new TrieImpl(trieSrc, root == EMPTY_HASH ? null : root);
@@ -73,12 +82,22 @@ public class TrieValidatorSet implements ValidatorSet {
         // load size
         byte[] encodedSize = trie.get(SIZE_KEY);
         this.size = encodedSize == null ? 0 : RLP.decodeInt(encodedSize, 0);
+
+        // index
+        this.index = new ObjectDataSource<>(this.indexSrc, IndexSerializer, 0);
     }
 
     @Override
     public synchronized Validator get(Integer index) {
         rangeCheck(index);
         return validators.get(index);
+    }
+
+    @Nullable
+    @Override
+    public Validator getByPupKey(byte[] pubKey) {
+        Integer idx = index.get(pubKey);
+        return idx == null ? null : get(idx);
     }
 
     @Override
@@ -89,9 +108,12 @@ public class TrieValidatorSet implements ValidatorSet {
     @Override
     public synchronized int add(Validator validator) {
         int newIndex = size;
-        validators.put(newIndex, validator);
-        setSize(newIndex + 1);
-        return newIndex;
+
+        validator = validator.withIndex(newIndex);
+        validators.put(validator.getIndex(), validator);
+        index.put(validator.getPubKey(), validator.getIndex());
+        setSize(validator.getIndex() + 1);
+        return validator.getIndex();
     }
 
     @Override
@@ -112,7 +134,12 @@ public class TrieValidatorSet implements ValidatorSet {
 
     @Override
     public ValidatorSet getSnapshotTo(byte[] hash) {
-        return new TrieValidatorSet(underlyingSrc, hash);
+        return new TrieValidatorSet(underlyingSrc, indexSrc, hash);
+    }
+
+    @Override
+    public int[] getActiveIndices() {
+        return IntStream.range(0, size).toArray();
     }
 
     void setSize(int size) {

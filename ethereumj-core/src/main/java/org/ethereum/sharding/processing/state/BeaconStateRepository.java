@@ -36,12 +36,14 @@ public class BeaconStateRepository implements StateRepository {
     Source<byte[], byte[]> crystallizedSrc;
     ObjectDataSource<CrystallizedState.Flattened> crystallizedDS;
     Source<byte[], byte[]> validatorSrc;
+    Source<byte[], byte[]> validatorIndexSrc;
 
     public BeaconStateRepository(Source<byte[], byte[]> src, Source<byte[], byte[]> crystallizedSrc,
-                                 Source<byte[], byte[]> validatorSrc) {
+                                 Source<byte[], byte[]> validatorSrc, Source<byte[], byte[]> validatorIndexSrc) {
         this.src = src;
         this.crystallizedSrc = crystallizedSrc;
         this.validatorSrc = validatorSrc;
+        this.validatorIndexSrc = validatorIndexSrc;
 
         this.stateDS = new ObjectDataSource<>(src, BeaconState.Flattened.Serializer, BeaconStore.BLOCKS_IN_MEM);
         this.crystallizedDS = new ObjectDataSource<>(crystallizedSrc,
@@ -80,10 +82,10 @@ public class BeaconStateRepository implements StateRepository {
     }
 
     CrystallizedState fromFlattened(CrystallizedState.Flattened flattened) {
-        ValidatorSet validatorSet = new TrieValidatorSet(validatorSrc, flattened.getValidatorSetHash());
+        ValidatorSet validatorSet = new TrieValidatorSet(validatorSrc, validatorIndexSrc,
+                flattened.getValidatorSetHash());
         Dynasty dynasty = new Dynasty(validatorSet, flattened.getCommittees(),
-                flattened.getCurrentDynasty(), flattened.getCrosslinkingStartShard(),
-                flattened.getTotalDeposits(), flattened.getDynastySeed(),
+                flattened.getCurrentDynasty(),flattened.getDynastySeed(),
                 flattened.getDynastySeedLastReset(), flattened.getDynastyStart());
 
         Finality finality = new Finality(flattened.getLastJustifiedSlot(),

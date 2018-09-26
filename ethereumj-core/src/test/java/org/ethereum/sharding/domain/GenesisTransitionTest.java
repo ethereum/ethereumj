@@ -23,6 +23,7 @@ import org.ethereum.sharding.processing.consensus.GenesisTransition;
 import org.ethereum.sharding.processing.db.ValidatorSet;
 import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.BeaconStateRepository;
+import org.ethereum.sharding.processing.state.Committee;
 import org.ethereum.sharding.processing.state.StateRepository;
 import org.ethereum.sharding.service.ValidatorRepository;
 import org.junit.Test;
@@ -36,6 +37,7 @@ import java.util.Random;
 import static org.ethereum.crypto.HashUtil.randomHash;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Mikhail Kalinin
@@ -53,13 +55,25 @@ public class GenesisTransitionTest {
 
         BeaconGenesis genesis = new BeaconGenesis(getJson(v1, v3, v4));
 
-        StateRepository stateRepository = new BeaconStateRepository(new HashMapDB<>(), new HashMapDB<>(), new HashMapDB<>());
+        StateRepository stateRepository = new BeaconStateRepository(new HashMapDB<>(), new HashMapDB<>(),
+                new HashMapDB<>(), new HashMapDB<>());
         ValidatorRepository validatorRepository = new PredefinedValidatorRepository(v1, v2, v3, v4);
 
         GenesisTransition transition = new GenesisTransition(validatorRepository);
         BeaconState newState = transition.applyBlock(genesis, stateRepository.getEmpty());
 
         checkValidatorSet(newState.getCrystallizedState().getDynasty().getValidatorSet(), v1, v3, v4);
+
+        // check committees
+        int cnt = 0;
+        for (Committee[] slot : newState.getCrystallizedState().getDynasty().getCommittees()) {
+            if (slot[0].getValidators().length > 0) {
+                cnt += 1;
+                assertEquals(0L, slot[0].getShardId());
+                assertTrue(slot[0].getValidators()[0] >= 0 && slot[0].getValidators()[0] <= 2);
+            }
+        }
+        assertEquals(cnt, 3);
     }
 
     BeaconGenesis.Json getJson(Validator... validators) {

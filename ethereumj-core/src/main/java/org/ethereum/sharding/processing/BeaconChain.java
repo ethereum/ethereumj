@@ -17,6 +17,7 @@
  */
 package org.ethereum.sharding.processing;
 
+import org.ethereum.core.Block;
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.processing.consensus.ScoreFunction;
 import org.ethereum.sharding.processing.consensus.StateTransition;
@@ -52,4 +53,10 @@ public interface BeaconChain {
      * @see StateTransition
      */
     ProcessingResult insert(Beacon block);
+
+    /**
+     * A hack for PoC mode, sets genesis mainChainRef to given block.
+     * Thus, makes initial validator induction pass correctly.
+     */
+    void setBestBlock(Block block);
 }

@@ -28,6 +28,7 @@ import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumImpl;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.sharding.config.ValidatorConfig;
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.domain.BeaconGenesis;
 import org.ethereum.sharding.processing.consensus.NoTransition;
@@ -59,25 +60,6 @@ import static org.junit.Assert.assertTrue;
  * @since 28.08.2018
  */
 public class BeaconProposerTest {
-
-    @Test
-    public void testSlotCalculations() {
-        Helper helper = Helper.newInstance();
-        BeaconProposer proposer = helper.proposer;
-
-        long genesisTimestamp = BeaconGenesis.instance().getTimestamp();
-
-        assertEquals(0L, proposer.getSlotNumber(genesisTimestamp));
-        assertEquals(0L, proposer.getSlotNumber(genesisTimestamp + SLOT_DURATION / 2));
-        assertEquals(1L, proposer.getSlotNumber(genesisTimestamp + SLOT_DURATION));
-        assertEquals(1L, proposer.getSlotNumber(genesisTimestamp + SLOT_DURATION + SLOT_DURATION / 2));
-        assertEquals(49L, proposer.getSlotNumber(genesisTimestamp + SLOT_DURATION * 49));
-        assertEquals(49L, proposer.getSlotNumber(genesisTimestamp + SLOT_DURATION * 49 + SLOT_DURATION / 100));
-
-        assertEquals(genesisTimestamp, proposer.getTimestamp(0L));
-        assertEquals(genesisTimestamp + SLOT_DURATION, proposer.getTimestamp(1L));
-        assertEquals(genesisTimestamp + SLOT_DURATION * 49, proposer.getTimestamp(49L));
-    }
 
     @Test
     public void testBlockProposing() {
@@ -126,7 +108,7 @@ public class BeaconProposerTest {
                 recentState = stateTransition.applyBlock(block, recentState);
             }
             repository.insert(recentState);
-            publisher.publish(Events.onBeaconBlock(block, true));
+            publisher.publish(Events.onBeaconBlock(block, recentState, true));
         }
 
         byte[] newMainChainBlockHash() {
@@ -142,7 +124,8 @@ public class BeaconProposerTest {
             Randao randao = new Randao(new HashMapDB<>());
             randao.generate(1000);
 
-            StateRepository repository = new BeaconStateRepository(new HashMapDB<>(), new HashMapDB<>(), new HashMapDB<>());
+            StateRepository repository = new BeaconStateRepository(new HashMapDB<>(), new HashMapDB<>(),
+                    new HashMapDB<>(), new HashMapDB<>());
             StateTransition<BeaconState> stateTransition = new NoTransition();
 
             CompositeEthereumListenerMock listener = new CompositeEthereumListenerMock();
@@ -152,10 +135,16 @@ public class BeaconProposerTest {
 
 
             Helper helper = new Helper();
-            helper.proposer = new BeaconProposerImpl(ethereum, publisher, randao, repository, stateTransition) {
+            helper.proposer = new BeaconProposerImpl(ethereum, publisher, randao, repository, stateTransition,
+                    ValidatorConfig.DISABLED) {
                 @Override
                 byte[] getMainChainRef(Block mainChainHead) {
                     return mainChainHead.getHash();
+                }
+
+                @Override
+                byte[] randaoReveal() {
+                    return randao.revealNext();
                 }
             };
             helper.listener = listener;
