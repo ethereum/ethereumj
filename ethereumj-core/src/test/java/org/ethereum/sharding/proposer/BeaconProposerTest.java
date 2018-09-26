@@ -28,6 +28,7 @@ import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumImpl;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.sharding.config.ValidatorConfig;
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.domain.BeaconGenesis;
 import org.ethereum.sharding.processing.consensus.NoTransition;
@@ -134,10 +135,16 @@ public class BeaconProposerTest {
 
 
             Helper helper = new Helper();
-            helper.proposer = new BeaconProposerImpl(ethereum, publisher, randao, repository, stateTransition) {
+            helper.proposer = new BeaconProposerImpl(ethereum, publisher, randao, repository, stateTransition,
+                    ValidatorConfig.DISABLED) {
                 @Override
                 byte[] getMainChainRef(Block mainChainHead) {
                     return mainChainHead.getHash();
+                }
+
+                @Override
+                byte[] randaoReveal() {
+                    return randao.revealNext();
                 }
             };
             helper.listener = listener;

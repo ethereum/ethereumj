@@ -23,7 +23,9 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.sharding.config.ValidatorConfig;
 import org.ethereum.sharding.domain.Beacon;
+import org.ethereum.sharding.domain.Validator;
 import org.ethereum.sharding.pubsub.BeaconBlockImported;
 import org.ethereum.sharding.pubsub.BeaconChainLoaded;
 import org.ethereum.sharding.pubsub.Publisher;
@@ -50,18 +52,21 @@ public class BeaconProposerImpl implements BeaconProposer {
     StateTransition<BeaconState> stateTransition;
     StateRepository repository;
     BlockStore blockStore;
+    ValidatorConfig config;
 
     private byte[] mainChainRef;
     private Beacon head;
     private BeaconState recentState;
 
     public BeaconProposerImpl(Ethereum ethereum, Publisher publisher, Randao randao,
-                              StateRepository repository, StateTransition<BeaconState> stateTransition) {
+                              StateRepository repository, StateTransition<BeaconState> stateTransition,
+                              ValidatorConfig config) {
         this.randao = randao;
         this.repository = repository;
         this.stateTransition = stateTransition;
         this.blockStore = ethereum.getBlockchain().getBlockStore();
         this.mainChainRef = getMainChainRef(ethereum.getBlockchain().getBestBlock());
+        this.config = config;
 
         // init head
         publisher.subscribe(BeaconChainLoaded.class, data -> {
@@ -91,9 +96,24 @@ public class BeaconProposerImpl implements BeaconProposer {
         return blockStore.getBlockHashByNumber(max(0L, mainChainHead.getNumber() - REORG_SAFE_DISTANCE));
     }
 
+    byte[] randaoReveal() {
+        if (!config.isEnabled()) {
+            logger.error("Failed to reveal Randao: validator is disabled in the config");
+            return new byte[] {};
+        }
+
+        Validator validator = recentState.getValidatorSet().getByPupKey(config.pubKey());
+        if (validator == null) {
+            logger.error("Failed to reveal Randao: validator does not exist in the set");
+            return new byte[] {};
+        }
+
+        return randao.reveal(validator.getRandao());
+    }
+
     @Override
     public Beacon createNewBlock(long slotNumber) {
-        Beacon block = new Beacon(head.getHash(), randao.revealNext(), mainChainRef,
+        Beacon block = new Beacon(head.getHash(), randaoReveal(), mainChainRef,
                 HashUtil.EMPTY_DATA_HASH, slotNumber);
         BeaconState newState = stateTransition.applyBlock(block, recentState);
         block.setStateHash(newState.getHash());
