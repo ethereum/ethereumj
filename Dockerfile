@@ -10,4 +10,6 @@ WORKDIR /ethereumj
 
 COPY . /ethereumj
 
+RUN ./gradlew --no-daemon build -x test
+
 CMD "./gradlew --no-daemon run"
