@@ -35,15 +35,13 @@ public class KafkaSystemProperties extends SystemProperties {
     super(configFile);
   }
 
+  String getkafkaClientId() { return getConfig().getString("kafka.clientId"); }
+
   boolean isKafkaEnabled() {
     return getConfig().getBoolean("kafka.enabled");
   }
 
   String getKafkaBootstrapServers() {
     return getConfig().getString("kafka.bootstrapServers");
-  }
-
-  String getSchemaRegistryUrl() {
-    return getConfig().getString("kafka.schema.registryUrl");
   }
 }

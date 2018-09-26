@@ -6,9 +6,11 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 public interface Kafka {
 
   enum Producer {
+
     BLOCKS("blocks"),
-    BLOCKS_INFO("blocks-info"),
     TRANSACTIONS("transactions"),
+    TRANSACTION_EXECUTIONS("transaction-executions"),
+    TRANSACTION_TRACES("transaction-traces"),
     PENDING_TRANSACTIONS("pending-transactions"),
     ACCOUNT_STATE("account-state");
 
