@@ -112,4 +112,9 @@ public class BeaconProposerImpl implements BeaconProposer {
     public long getSlotNumber(long timestamp) {
         return (timestamp - BeaconGenesis.instance().getTimestamp()) / SLOT_DURATION;
     }
+
+    @Override
+    public long getCurrentSlotNumber() {
+        return getSlotNumber(System.currentTimeMillis());
+    }
 }

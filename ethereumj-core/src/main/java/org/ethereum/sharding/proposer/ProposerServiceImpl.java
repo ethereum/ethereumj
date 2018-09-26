@@ -108,8 +108,7 @@ public class ProposerServiceImpl implements ProposerService {
             return;
 
         // get number of the next slot that validator is eligible to propose
-        long slotNumber = calcNextProposingSlot(proposer.getSlotNumber(System.currentTimeMillis()),
-                index.getSlotOffset());
+        long slotNumber = calcNextProposingSlot(proposer.getCurrentSlotNumber(), index.getSlotOffset());
 
         // not an obvious way of calculating proposer index,
         // proposer = committee[X % len(committee)], X = slotNumber
@@ -123,8 +122,8 @@ public class ProposerServiceImpl implements ProposerService {
     public void submit(long slotNumber) {
         if (proposerThread == null) return;
 
-        // skip slots that are in the past
-        if (slotNumber < proposer.getSlotNumber(System.currentTimeMillis()))
+        // skip slots that start in the past
+        if (slotNumber <= proposer.getCurrentSlotNumber())
             return;
 
         // always cancel current task and create a new one

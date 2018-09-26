@@ -60,11 +60,16 @@ public interface BeaconProposer {
     long getTimestamp(long slotNumber);
 
     /**
-     * Calculates a number of slot that given moment of time does fit to.
+     * Calculates a number of slot that given moment of time does fit into.
      * Uses {@link BeaconGenesis#timestamp} and {@link #SLOT_DURATION}
      *
      * @param timestamp timestamp in milliseconds
      * @return slot number
      */
     long getSlotNumber(long timestamp);
+
+    /**
+     * Calculates a number of the slot that current moment it time does fit into.
+     */
+    long getCurrentSlotNumber();
 }
