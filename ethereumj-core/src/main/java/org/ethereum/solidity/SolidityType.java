@@ -440,19 +440,18 @@ public abstract class SolidityType {
             return encodeInt(new BigInteger("" + i));
         }
         public static byte[] encodeInt(BigInteger bigInt) {
-            return ByteUtil.bigIntegerToBytesSigned(bigInt, 32);
+            if (bigInt.signum() == -1) {
+                throw new RuntimeException("Wrong value for uint type: " + bigInt);
+            }
+            return ByteUtil.bigIntegerToBytes(bigInt, 32);
         }
-
         @Override
-        public byte[] encode(Object value)
-        {
+        public byte[] encode(Object value) {
             BigInteger bigInt = encodeInternal(value);
             return encodeInt(bigInt);
         }
-
         @Override
-        public Object decode(byte[] encoded, int offset)
-        {
+        public Object decode(byte[] encoded, int offset) {
             return decodeInt(encoded, offset);
         }
     }
