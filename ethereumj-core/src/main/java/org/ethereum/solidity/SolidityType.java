@@ -359,15 +359,12 @@ public abstract class SolidityType {
     }
     
     public static abstract class NumericType extends SolidityType {
-        public NumericType(String name)
-        {
+        public NumericType(String name) {
             super(name);
         }
 
-        BigInteger encodeInternal(Object value)
-        {
+        BigInteger encodeInternal(Object value) {
             BigInteger bigInt;
-
             if (value instanceof String) {
                 String s = ((String)value).toLowerCase().trim();
                 int radix = 10;
@@ -402,7 +399,6 @@ public abstract class SolidityType {
             if (getName().equals("int")) return "int256";
             return super.getCanonicalName();
         }
-        
         public static BigInteger decodeInt(byte[] encoded, int offset) {
             return new BigInteger(Arrays.copyOfRange(encoded, offset, offset + 32));
         }
