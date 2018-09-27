@@ -49,6 +49,7 @@ import org.ethereum.sharding.proposer.BeaconProposer;
 import org.ethereum.sharding.proposer.BeaconProposerImpl;
 import org.ethereum.sharding.proposer.ProposerService;
 import org.ethereum.sharding.proposer.ProposerServiceImpl;
+import org.ethereum.sharding.service.MultiValidatorService;
 import org.ethereum.sharding.service.ValidatorRepositoryImpl;
 import org.ethereum.sharding.service.ValidatorService;
 import org.ethereum.sharding.crypto.DepositAuthority;
@@ -117,7 +118,7 @@ public class BeaconConfig {
     public ValidatorService validatorService() {
         ValidatorService validatorService;
         if (validatorConfig().isEnabled()) {
-            validatorService = new ValidatorServiceImpl(ethereum, validatorConfig(),
+            validatorService = new MultiValidatorService(ethereum, validatorConfig(),
                     depositContract(), depositAuthority(), randao(), publisher());
         } else {
             validatorService = new ValidatorService() {};
