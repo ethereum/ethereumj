@@ -23,6 +23,7 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.util.Arrays;
 
+import static java.lang.Math.min;
 import static org.ethereum.crypto.HashUtil.blake2b;
 import static org.ethereum.sharding.processing.consensus.BeaconConstants.CYCLE_LENGTH;
 import static org.ethereum.sharding.processing.consensus.BeaconConstants.MIN_COMMITTEE_SIZE;
@@ -89,10 +90,11 @@ public class ShufflingCommitteeFactory implements CommitteeFactory {
      *
      * <p>
      *     Returns {@code 1} unless {@code validatorsPerSlot > MIN_COMMITTEE_SIZE * 2}. <br/>
-     *     Otherwise, returns {@code value} that results in size of committees lay
-     *     between {@code MIN_COMMITTEE_SIZE} and {@code MIN_COMMITTEE_SIZE * 2}. <br/>
+     *     Otherwise, returns {@code value} that results in size of committees staring from {@code MIN_COMMITTEE_SIZE}.
      *
-     *     Size of committees approaches {@code MIN_COMMITTEE_SIZE * 2} if active validator set is rather big.
+     * <p>
+     *     Number of shards that are cross-linking in one slot is capped with {@code SHARD_COUNT / CYCLE_LENGTH},
+     *     thus, preventing a shard from being cross-linked twice.
      *
      * <p>
      *     Examples:
@@ -104,12 +106,12 @@ public class ShufflingCommitteeFactory implements CommitteeFactory {
      *              committee size is {@code 213}
      *
      *         <li> if {@code totalValidators = 8192000} then {@code validatorsPerSlot = 128000},
-     *              committee size is {@code 255}
+     *              committee size is {@code 8000}
      *     </ul>
      */
     int calcShardsPerSlot(int totalValidators) {
         int validatorsPerSlot = totalValidators / CYCLE_LENGTH;
-        return validatorsPerSlot / (MIN_COMMITTEE_SIZE * 2) + 1;
+        return min(validatorsPerSlot / (MIN_COMMITTEE_SIZE * 2) + 1, SHARD_COUNT / CYCLE_LENGTH);
     }
 
     /**
@@ -238,6 +240,6 @@ public class ShufflingCommitteeFactory implements CommitteeFactory {
         return shuffled;
     }
 
-    private static final int RAND_BYTES = 3;
-    private static final int MAX_SZ = 1 << (RAND_BYTES * Byte.SIZE);
+    static final int RAND_BYTES = 3;
+    static final int MAX_SZ = 1 << (RAND_BYTES * Byte.SIZE);
 }

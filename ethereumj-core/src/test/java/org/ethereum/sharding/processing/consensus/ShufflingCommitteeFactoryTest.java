@@ -58,6 +58,7 @@ public class ShufflingCommitteeFactoryTest {
     @Test
     public void slotsPerShard() {
         ShufflingCommitteeFactory factory = new ShufflingCommitteeFactory();
+        assertEquals(SHARD_COUNT / CYCLE_LENGTH, factory.calcShardsPerSlot(ShufflingCommitteeFactory.MAX_SZ));
         assertEquals(3, factory.calcShardsPerSlot(2 * MIN_COMMITTEE_SIZE * CYCLE_LENGTH * 2));
         assertEquals(2, factory.calcShardsPerSlot(2 * MIN_COMMITTEE_SIZE * CYCLE_LENGTH));
         assertEquals(1, factory.calcShardsPerSlot(CYCLE_LENGTH));
