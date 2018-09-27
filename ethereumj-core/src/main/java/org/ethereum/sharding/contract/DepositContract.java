@@ -28,7 +28,6 @@ import org.ethereum.listener.LogFilter;
 import org.ethereum.listener.RecommendedGasPriceTracker;
 import org.ethereum.sharding.crypto.DepositAuthority;
 import org.ethereum.sharding.domain.Validator;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.Futures;
 import org.ethereum.util.blockchain.EtherUtil;
@@ -83,9 +82,6 @@ public class DepositContract {
     Ethereum ethereum;
     RecommendedGasPriceTracker gasPriceTracker;
 
-    CompletableFuture<TransactionReceipt> depositFuture;
-    byte[] depositTxHash;
-
     public DepositContract(byte[] address, byte[] bin, String abi) {
         this.address = address;
         this.bin = bin;
@@ -98,7 +94,8 @@ public class DepositContract {
                                byte[] randao, DepositAuthority authority) {
 
         Transaction tx = depositTx(pubKey, withdrawalShard, withdrawalAddress, randao, authority);
-        depositTxHash = tx.getHash();
+        final byte[] depositTxHash = tx.getHash();
+        final CompletableFuture<TransactionReceipt> depositFuture = new CompletableFuture<>();
 
         ethereum.addListener(new EthereumListenerAdapter() {
             @Override
@@ -110,7 +107,6 @@ public class DepositContract {
             }
         });
 
-        depositFuture = new CompletableFuture<>();
         ethereum.submitTransaction(tx);
         logger.info("Register validator: {}, tx.hash: {}", HashUtil.shortHash(pubKey), Hex.toHexString(depositTxHash));
 
@@ -141,7 +137,7 @@ public class DepositContract {
 
         byte[] data = contract.getByName("deposit").encode(pubKey, withdrawalShard, withdrawalAddress, randao);
 
-        BigInteger nonce = ethereum.getRepository().getNonce(authority.address());
+        BigInteger nonce = ethereum.getPendingState().getNonce(authority.address());
         long gasPrice = gasPriceTracker.getRecommendedGasPrice();
         Integer chainId = ethereum.getChainIdForNextBlock();
         Transaction tx = new Transaction(bigIntegerToBytes(nonce), longToBytesNoLeadZeroes(gasPrice),
