@@ -100,8 +100,7 @@ public class ValidatorServiceImpl implements ValidatorService {
 
     byte[] initRandao() {
         // generate randao images
-        randao.generate(RANDAO_ROUNDS);
-        return randao.revealNext();
+        return randao.generate(RANDAO_ROUNDS);
     }
 
     void deposit(byte[] randao) {

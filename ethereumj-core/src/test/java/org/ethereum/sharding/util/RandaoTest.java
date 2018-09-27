@@ -37,10 +37,11 @@ public class RandaoTest {
         Randao rnd = new Randao(new HashMapDBSimple<>());
         int rounds = 1 << 10;
 
-        rnd.generate(rounds);
+        byte[] ret = rnd.generate(rounds);
 
         byte[] preImg = rnd.revealNext();
         assertNotNull(preImg);
+        assertArrayEquals(ret, preImg);
 
         for (int i = 0; i < rounds - 1; i++) {
             byte[] img = rnd.revealNext();
