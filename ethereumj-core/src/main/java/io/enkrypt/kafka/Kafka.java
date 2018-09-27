@@ -9,10 +9,8 @@ public interface Kafka {
 
     BLOCKS("blocks"),
     TRANSACTIONS("transactions"),
-    TRANSACTION_EXECUTIONS("transaction-executions"),
-    TRANSACTION_TRACES("transaction-traces"),
     PENDING_TRANSACTIONS("pending-transactions"),
-    ACCOUNT_STATE("account-state");
+    ADDRESSES("addresses");
 
     public String topic;
 

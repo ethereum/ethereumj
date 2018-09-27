@@ -1,19 +1,15 @@
 package io.enkrypt.kafka.config;
 
-import io.confluent.kafka.serializers.KafkaAvroSerializer;
-import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
 import io.enkrypt.kafka.Kafka;
-import io.enkrypt.kafka.listener.KafkaEthereumListener;
 import io.enkrypt.kafka.KafkaImpl;
 import io.enkrypt.kafka.NullKafka;
+import io.enkrypt.kafka.listener.KafkaEthereumListener;
+import java.util.Properties;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
-import org.apache.kafka.common.serialization.BytesSerializer;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
-import io.enkrypt.kafka.db.KafkaIndexedBlockStore;
-import io.enkrypt.kafka.db.KafkaTransactionStore;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.slf4j.Logger;
@@ -22,8 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.Properties;
 
 @Configuration
 public class KafkaConfig {
@@ -44,14 +38,8 @@ public class KafkaConfig {
     Thread.setDefaultUncaughtExceptionHandler((t, e) -> logger.error("Uncaught exception", e));
   }
 
-  /**
-   * Our main entry point into blockchain state
-   *
-   * @return
-   */
   @Bean(name = "EthereumListener")
   public CompositeEthereumListener ethereumListener() {
-
     final EthereumListener listener = new KafkaEthereumListener(kafka());
 
     final CompositeEthereumListener compositeListener = new CompositeEthereumListener();
@@ -64,7 +52,6 @@ public class KafkaConfig {
   public Kafka kafka() {
     final boolean enabled = ((KafkaSystemProperties) config).isKafkaEnabled();
     final String bootstrapServers = ((KafkaSystemProperties) config).getKafkaBootstrapServers();
-    final String schemaRegistryUrl = ((KafkaSystemProperties) config).getSchemaRegistryUrl();
 
     if (!enabled) {
       return new NullKafka();

@@ -17,11 +17,9 @@
  */
 package org.ethereum.db;
 
-import io.enkrypt.kafka.Kafka;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Repository;
 import org.ethereum.datasource.*;
-import io.enkrypt.kafka.cache.KafkaAccountStateSourceCodec;
 import org.ethereum.trie.*;
 import org.ethereum.vm.DataWord;
 
@@ -76,29 +74,10 @@ public class RepositoryRoot extends RepositoryImpl {
     private Source<byte[], byte[]> stateDS;
     private CachedSource.BytesKey<byte[]> trieCache;
     private Trie<byte[]> stateTrie;
-    private Kafka kafka;
 
     public RepositoryRoot(Source<byte[], byte[]> stateDS) {
         this(stateDS, null);
     }
-
-    public RepositoryRoot(final Source<byte[], byte[]> stateDS, byte[] root, Kafka kafka) {
-      this.stateDS = stateDS;
-      this.kafka = kafka;
-      trieCache = new WriteCache.BytesKey<>(stateDS, WriteCache.CacheType.COUNTING);
-      stateTrie = new SecureTrie(trieCache, root);
-
-      final KafkaAccountStateSourceCodec kafkaAccountStateSourceCodec = new KafkaAccountStateSourceCodec(stateTrie, Serializers.AccountStateSerializer, kafka);
-      final ReadWriteCache.BytesKey<AccountState> accountStateCache = new ReadWriteCache.BytesKey<>(kafkaAccountStateSourceCodec, WriteCache.CacheType.SIMPLE);
-
-      final MultiCache<StorageCache> storageCache = new MultiStorageCache();
-
-      // counting as there can be 2 contracts with the same code, 1 can suicide
-      Source<byte[], byte[]> codeCache = new WriteCache.BytesKey<>(stateDS, WriteCache.CacheType.COUNTING);
-
-      init(accountStateCache, codeCache, storageCache);
-    }
-
 
     /**
      * Building the following structure for snapshot Repository:
@@ -152,7 +131,7 @@ public class RepositoryRoot extends RepositoryImpl {
 
     @Override
     public Repository getSnapshotTo(byte[] root) {
-        return new RepositoryRoot(stateDS, root, kafka);
+        return new RepositoryRoot(stateDS, root);
     }
 
     @Override
