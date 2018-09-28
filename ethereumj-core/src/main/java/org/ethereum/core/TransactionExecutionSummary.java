@@ -17,6 +17,7 @@
  */
 package org.ethereum.core;
 
+import io.enkrypt.kafka.models.Account;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
@@ -43,6 +44,7 @@ public class TransactionExecutionSummary {
     private BigInteger gasLeftover = BigInteger.ZERO;
     private BigInteger gasRefund = BigInteger.ZERO;
 
+    private List<Account> touchedAccounts = emptyList();
     private List<DataWord> deletedAccounts = emptyList();
     private List<InternalTransaction> internalTransactions = emptyList();
     private Map<DataWord, DataWord> storageDiff = emptyMap();
@@ -83,12 +85,13 @@ public class TransactionExecutionSummary {
         this.gasUsed = decodeBigInteger(summary.get(4).getRLPData());
         this.gasLeftover = decodeBigInteger(summary.get(5).getRLPData());
         this.gasRefund = decodeBigInteger(summary.get(6).getRLPData());
-        this.deletedAccounts = decodeDeletedAccounts((RLPList) summary.get(7));
-        this.internalTransactions = decodeInternalTransactions((RLPList) summary.get(8));
-        this.touchedStorage = decodeTouchedStorage(summary.get(9));
-        this.result = summary.get(10).getRLPData();
-        this.logs = decodeLogs((RLPList) summary.get(11));
-        byte[] failed = summary.get(12).getRLPData();
+        this.touchedAccounts = decodeTouchedAccounts((RLPList) summary.get(7));
+        this.deletedAccounts = decodeDeletedAccounts((RLPList) summary.get(8));
+        this.internalTransactions = decodeInternalTransactions((RLPList) summary.get(9));
+        this.touchedStorage = decodeTouchedStorage(summary.get(10));
+        this.result = summary.get(11).getRLPData();
+        this.logs = decodeLogs((RLPList) summary.get(12));
+        byte[] failed = summary.get(13).getRLPData();
         this.failed = isNotEmpty(failed) && RLP.decodeInt(failed, 0) == 1;
     }
 
@@ -108,6 +111,7 @@ public class TransactionExecutionSummary {
                 RLP.encodeBigInteger(this.gasUsed),
                 RLP.encodeBigInteger(this.gasLeftover),
                 RLP.encodeBigInteger(this.gasRefund),
+                encodeTouchedAccounts(this.touchedAccounts),
                 encodeDeletedAccounts(this.deletedAccounts),
                 encodeInternalTransactions(this.internalTransactions),
                 encodeTouchedStorage(this.touchedStorage),
@@ -209,6 +213,24 @@ public class TransactionExecutionSummary {
         return result;
     }
 
+    private static byte[] encodeTouchedAccounts(List<Account> touchedAccounts) {
+        byte[][] result = new byte[touchedAccounts.size()][];
+        for (int i = 0; i < touchedAccounts.size(); i++) {
+            Account touchedAccount = touchedAccounts.get(i);
+            result[i] = RLP.encodeElement(touchedAccount.getRLPEncoded());
+
+        }
+        return RLP.encodeList(result);
+    }
+
+    private static List<Account> decodeTouchedAccounts(RLPList touchedAccounts) {
+        List<Account> result = new ArrayList<>();
+        for (RLPElement touchedAccount : touchedAccounts) {
+            result.add(new Account(touchedAccount.getRLPData()));
+        }
+        return result;
+    }
+
     private static byte[] encodeDeletedAccounts(List<DataWord> deletedAccounts) {
         byte[][] result = new byte[deletedAccounts.size()][];
         for (int i = 0; i < deletedAccounts.size(); i++) {
@@ -278,6 +300,11 @@ public class TransactionExecutionSummary {
     public BigInteger getValue() {
         if (!parsed) rlpParse();
         return value;
+    }
+
+    public List<Account> getTouchedAccounts() {
+        if (!parsed) rlpParse();
+        return touchedAccounts;
     }
 
     public List<DataWord> getDeletedAccounts() {
@@ -351,6 +378,12 @@ public class TransactionExecutionSummary {
 
         public Builder internalTransactions(List<InternalTransaction> internalTransactions) {
             summary.internalTransactions = unmodifiableList(internalTransactions);
+            return this;
+        }
+
+        public Builder touchedAccounts(List<Account> touchedAccounts) {
+            summary.touchedAccounts = new ArrayList<>();
+            summary.touchedAccounts.addAll(touchedAccounts);
             return this;
         }
 

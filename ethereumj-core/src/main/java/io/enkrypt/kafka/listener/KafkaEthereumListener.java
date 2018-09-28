@@ -1,7 +1,11 @@
 package io.enkrypt.kafka.listener;
 
 import io.enkrypt.kafka.Kafka;
+import io.enkrypt.kafka.models.Account;
+import java.math.BigInteger;
+import java.util.Iterator;
 import java.util.List;
+import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockSummary;
 import org.ethereum.core.PendingState;
@@ -9,6 +13,7 @@ import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionExecutionSummary;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
@@ -18,9 +23,11 @@ import org.ethereum.net.server.Channel;
 public class KafkaEthereumListener implements EthereumListener {
 
   private final Kafka kafka;
+  private final WorldManager worldManager;
 
-  public KafkaEthereumListener(Kafka kafka) {
+  public KafkaEthereumListener(Kafka kafka, WorldManager worldManager) {
     this.kafka = kafka;
+    this.worldManager = worldManager;
   }
 
   @Override
@@ -98,8 +105,17 @@ public class KafkaEthereumListener implements EthereumListener {
 
   @Override
   public void onBlock(BlockSummary blockSummary) {
-    final byte[] hash = blockSummary.getBlock().getHash();
+    // Send blocks
+    final byte[] hash = blockSummary.getBlock().getHash(); // TODO: Change to block number instead
     kafka.send(Kafka.Producer.BLOCKS, hash, blockSummary.getEncoded());
+
+    // Send account balances
+    for (TransactionExecutionSummary summary : blockSummary.getSummaries()) {
+      final List<Account> touchedAccounts = summary.getTouchedAccounts();
+      for (Account account : touchedAccounts) {
+        kafka.send(Kafka.Producer.ACCOUNT_STATE, account.getAddress(), account.getRLPEncoded());
+      }
+    }
   }
 
   @Override

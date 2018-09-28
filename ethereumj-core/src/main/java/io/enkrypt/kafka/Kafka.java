@@ -10,7 +10,7 @@ public interface Kafka {
     BLOCKS("blocks"),
     TRANSACTIONS("transactions"),
     PENDING_TRANSACTIONS("pending-transactions"),
-    ADDRESSES("addresses");
+    ACCOUNT_STATE("account-state");
 
     public String topic;
 
