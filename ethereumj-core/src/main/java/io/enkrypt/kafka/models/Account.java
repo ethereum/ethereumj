@@ -1,22 +1,34 @@
 package io.enkrypt.kafka.models;
 
 import java.math.BigInteger;
+import org.ethereum.core.AccountState;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
+
+import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
 
 public class Account {
 
   private final byte[] address;
   private final BigInteger nonce;
   private final BigInteger balance;
+  private final byte[] stateRoot;
+  private final byte[] codeHash;
 
   private byte[] rlpEncoded;
 
-  public Account(byte[] address, BigInteger nonce, BigInteger balance) {
+  public static Account fromAccountState(byte[] address, AccountState state) {
+    return new Account(address, state.getNonce(), state.getBalance(), state.getStateRoot(), state.getCodeHash());
+  }
+
+  public Account(byte[] address, BigInteger nonce, BigInteger balance, byte[] stateRoot, byte[] codeHash) {
     this.address = address;
     this.nonce = nonce;
     this.balance = balance;
+    this.stateRoot = stateRoot;
+    this.codeHash = codeHash;
   }
 
   public Account(byte[] rlpData) {
@@ -26,6 +38,8 @@ public class Account {
     this.address = items.get(0).getRLPData();
     this.nonce = ByteUtil.bytesToBigInteger(items.get(1).getRLPData());
     this.balance = ByteUtil.bytesToBigInteger(items.get(2).getRLPData());
+    this.stateRoot = items.get(3).getRLPData();
+    this.codeHash = items.get(4).getRLPData();
   }
 
   public byte[] getAddress() {
@@ -40,17 +54,27 @@ public class Account {
     return balance;
   }
 
+  public byte[] getStateRoot() {
+    return stateRoot;
+  }
+
+  public byte[] getCodeHash() {
+    return codeHash;
+  }
+
   public byte[] getRLPEncoded() {
     if (rlpEncoded == null) {
       byte[] address = RLP.encodeElement(this.address);
       byte[] nonce = RLP.encodeBigInteger(this.nonce);
       byte[] balance = RLP.encodeBigInteger(this.balance);
-      this.rlpEncoded = RLP.encodeList(address, nonce, balance);
+      byte[] stateRoot = RLP.encodeElement(this.stateRoot);
+      byte[] codeHash = RLP.encodeElement(this.codeHash);
+      this.rlpEncoded = RLP.encodeList(address, nonce, balance, stateRoot, codeHash);
     }
     return rlpEncoded;
   }
 
   public boolean isEmpty() {
-    return BigInteger.ZERO.equals(balance) && BigInteger.ZERO.equals(nonce);
+    return FastByteComparisons.equal(codeHash, EMPTY_DATA_HASH) && BigInteger.ZERO.equals(balance) && BigInteger.ZERO.equals(nonce);
   }
 }

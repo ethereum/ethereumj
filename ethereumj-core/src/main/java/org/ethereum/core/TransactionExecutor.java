@@ -471,7 +471,7 @@ public class TransactionExecutor {
             for (byte[] address : rawTouchedAccounts) {
                 final AccountState state = track.getAccountState(address);
                 if (state != null) {
-                    final Account account = new Account(address, state.getNonce(), state.getBalance());
+                    final Account account = Account.fromAccountState(address, state);
                     touched.add(account);
                 }
             }
