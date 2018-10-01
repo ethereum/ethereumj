@@ -423,10 +423,11 @@ public class TransactionExecutor {
 
             ContractDetails contractDetails = track.getContractDetails(addr);
             if (contractDetails != null) {
-                summaryBuilder.storageDiff(track.getContractDetails(addr).getStorage());
-                if (program != null) {
-                    summaryBuilder.touchedStorage(contractDetails.getStorage(), program.getStorageDiff());
-                }
+                // TODO
+                //summaryBuilder.storageDiff(track.getContractDetails(addr).getStorage());
+                //if (program != null) {
+                //    summaryBuilder.touchedStorage(contractDetails.getStorage(), program.getStorageDiff());
+                //}
             }
 
             if (result.getException() != null) {
