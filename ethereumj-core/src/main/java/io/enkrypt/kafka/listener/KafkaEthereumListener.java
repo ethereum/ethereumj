@@ -84,6 +84,7 @@ public class KafkaEthereumListener implements EthereumListener {
     byte[] txHash = txReceipt.getTransaction().getHash();
 
     switch (state) {
+
       case DROPPED:
       case INCLUDED:
         // send a tombstone to 'remove' as any included transactions will be sent in the onBlock and
@@ -92,9 +93,11 @@ public class KafkaEthereumListener implements EthereumListener {
         break;
 
       case NEW_PENDING:
-      case PENDING:
-        kafka.send(Kafka.Producer.PENDING_TRANSACTIONS, txHash, txReceipt.getEncoded());
+        kafka.send(Kafka.Producer.PENDING_TRANSACTIONS, txHash, txReceipt.getTransaction().getEncoded());
         break;
+
+      default:
+        // Do nothing
     }
   }
 
