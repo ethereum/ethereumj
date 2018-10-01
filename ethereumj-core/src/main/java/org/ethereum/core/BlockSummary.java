@@ -139,7 +139,6 @@ public class BlockSummary {
 
     private static <K, V> Map<K, V> decodeMap(RLPList list, Function<byte[], K> keyDecoder, Function<byte[], V> valueDecoder) {
         Map<K, V> result = new HashMap<>();
-
         for (RLPElement entry : list) {
             RLPList elements = RLP.unwrapList(entry.getRLPData());
             K key = keyDecoder.apply(elements.get(0).getRLPData());

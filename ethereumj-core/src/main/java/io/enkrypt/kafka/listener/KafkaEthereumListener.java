@@ -2,10 +2,7 @@ package io.enkrypt.kafka.listener;
 
 import io.enkrypt.kafka.Kafka;
 import io.enkrypt.kafka.models.Account;
-import java.math.BigInteger;
-import java.util.Iterator;
 import java.util.List;
-import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockSummary;
 import org.ethereum.core.PendingState;
@@ -13,7 +10,6 @@ import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionExecutionSummary;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.manager.WorldManager;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
@@ -118,19 +114,11 @@ public class KafkaEthereumListener implements EthereumListener {
 
   @Override
   public void onVMTraceCreated(String transactionHash, String trace) {
-    //final byte[] txHashBytes = ByteUtil.hexStringToBytes(transactionHash);
-    //kafka.send(Kafka.Producer.TRANSACTION_TRACES, txHashBytes, trace.getBytes());
+
   }
 
   @Override
   public void onTransactionExecuted(TransactionExecutionSummary summary) {
-    // NOTE currently the TransactionExecutor does not encode touched storage or storage diff.
-
-    // NOTE this will likely be called for pending and included transactions
-
-    // TODO modify TransactionExecutionSummary to include latest AccountState and other data which will be of interest
-    // instead of just differential changes. Look at TransactionExecutor Line 437
-
     //final byte[] txHash = summary.getTransactionHash();
     //kafka.send(Kafka.Producer.TRANSACTION_EXECUTIONS, txHash, summary.getEncoded());
   }
