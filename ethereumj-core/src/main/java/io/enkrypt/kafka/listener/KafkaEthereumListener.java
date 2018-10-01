@@ -23,11 +23,9 @@ import org.ethereum.net.server.Channel;
 public class KafkaEthereumListener implements EthereumListener {
 
   private final Kafka kafka;
-  private final WorldManager worldManager;
 
-  public KafkaEthereumListener(Kafka kafka, WorldManager worldManager) {
+  public KafkaEthereumListener(Kafka kafka) {
     this.kafka = kafka;
-    this.worldManager = worldManager;
   }
 
   @Override

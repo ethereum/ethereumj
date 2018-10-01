@@ -31,6 +31,22 @@ public class KafkaSystemProperties extends SystemProperties {
     return CONFIG;
   }
 
+  static SystemProperties getKafkaPrivateMinerSystemProperties() {
+    if (CONFIG == null) {
+      final String path = Thread.currentThread().getContextClassLoader().getResource("kafka-private-miner.conf").getPath();
+      CONFIG = new KafkaSystemProperties(new File(path));
+    }
+    return CONFIG;
+  }
+
+  static SystemProperties getKafkaPrivatePeerSystemProperties() {
+    if (CONFIG == null) {
+      final String path = Thread.currentThread().getContextClassLoader().getResource("kafka-private-peer.conf").getPath();
+      CONFIG = new KafkaSystemProperties(new File(path));
+    }
+    return CONFIG;
+  }
+
   private KafkaSystemProperties(File configFile) {
     super(configFile);
   }

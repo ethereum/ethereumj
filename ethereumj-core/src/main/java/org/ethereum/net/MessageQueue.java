@@ -74,6 +74,7 @@ public class MessageQueue {
 
     @Autowired
     EthereumListener ethereumListener;
+
     boolean hasPing = false;
     private ScheduledFuture<?> timerTask;
     private Channel channel;

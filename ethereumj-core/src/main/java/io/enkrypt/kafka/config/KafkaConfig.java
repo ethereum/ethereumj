@@ -34,22 +34,17 @@ public class KafkaConfig {
   @Autowired
   SystemProperties config;
 
-  @Autowired
-  WorldManager worldManager;
-
   public KafkaConfig() {
     // TODO: We can intercept KafkaException to stop completely the app in case of a bad crash
     Thread.setDefaultUncaughtExceptionHandler((t, e) -> logger.error("Uncaught exception", e));
   }
 
-  @Bean(name = "EthereumListener")
-  public CompositeEthereumListener ethereumListener() {
-    final EthereumListener listener = new KafkaEthereumListener(kafka(), worldManager);
-
-    final CompositeEthereumListener compositeListener = new CompositeEthereumListener();
-    compositeListener.addListener(listener);
-
-    return compositeListener;
+  @Bean()
+  public KafkaEthereumListener kafkaEthereumListener() {
+    // return Object to prevent clash with default listener. We only need to add a listener to the composite listener
+    final KafkaEthereumListener result = new KafkaEthereumListener(kafka());
+    commonConfig.ethereumListener().addListener(result);
+    return result;
   }
 
   @Bean

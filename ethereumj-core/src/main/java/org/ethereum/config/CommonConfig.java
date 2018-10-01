@@ -222,7 +222,7 @@ public class CommonConfig {
         }
     }
 
-    @Bean(name = "EthereumListener")
+    @Bean @Primary
     public CompositeEthereumListener ethereumListener() {
         return new CompositeEthereumListener();
     }
