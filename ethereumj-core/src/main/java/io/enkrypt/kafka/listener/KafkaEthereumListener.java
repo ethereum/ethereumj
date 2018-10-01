@@ -15,6 +15,7 @@ import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
+import org.ethereum.util.ByteUtil;
 
 public class KafkaEthereumListener implements EthereumListener {
 
@@ -100,8 +101,11 @@ public class KafkaEthereumListener implements EthereumListener {
   @Override
   public void onBlock(BlockSummary blockSummary) {
     // Send blocks
-    final byte[] hash = blockSummary.getBlock().getHash(); // TODO: Change to block number instead
-    kafka.send(Kafka.Producer.BLOCKS, hash, blockSummary.getEncoded());
+
+    final long number = blockSummary.getBlock().getNumber();
+    final byte[] key = ByteUtil.longToBytes(number);
+
+    kafka.send(Kafka.Producer.BLOCKS, key, blockSummary.getEncoded());
 
     // Send account balances
     for (TransactionExecutionSummary summary : blockSummary.getSummaries()) {
