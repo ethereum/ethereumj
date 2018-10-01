@@ -22,6 +22,10 @@ import org.ethereum.sharding.domain.BeaconGenesis;
 import org.ethereum.sharding.processing.consensus.BeaconConstants;
 import org.ethereum.sharding.processing.state.Committee;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
 import static org.ethereum.sharding.processing.consensus.BeaconConstants.SLOT_DURATION;
 
 
@@ -60,7 +64,7 @@ public class BeaconUtils {
                 int[] validators = committee.getValidators();
                 for (int idx = 0; idx < validators.length; idx++) {
                     if (validatorIdx == validators[idx]) {
-                        return new Committee.Index(committee.getShardId(), slotOffset,
+                        return new Committee.Index(validatorIdx, committee.getShardId(), slotOffset,
                                 committeeIdx, validators.length, idx);
                     }
                 }
@@ -68,6 +72,27 @@ public class BeaconUtils {
         }
 
         return Committee.Index.EMPTY;
+    }
+
+    /**
+     * A shortcut to {@link #scanCommittees(int, Committee[][])} that accepts a set of validator indices.
+     */
+    public static Set<Committee.Index> scanCommittees(Collection<Integer> validatorIndices, Committee[][] committees) {
+        Set<Committee.Index> ret = new HashSet<>();
+        for (int slotOffset = 0; slotOffset < committees.length; slotOffset++) {
+            for (int committeeIdx = 0; committeeIdx < committees[slotOffset].length; committeeIdx++) {
+                Committee committee = committees[slotOffset][committeeIdx];
+                int[] validators = committee.getValidators();
+                for (int idx = 0; idx < validators.length; idx++) {
+                    if (validatorIndices.contains(validators[idx])) {
+                        ret.add(new Committee.Index(validators[idx], committee.getShardId(), slotOffset,
+                                committeeIdx, validators.length, idx));
+                    }
+                }
+            }
+        }
+
+        return ret;
     }
 
     /**

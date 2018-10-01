@@ -30,7 +30,6 @@ import org.ethereum.util.RLP;
 import org.spongycastle.util.encoders.Hex;
 
 import javax.annotation.Nullable;
-import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
@@ -50,7 +49,7 @@ import java.util.stream.IntStream;
  *     Size item has a special path in the trie: {@code 0xffffff} which is higher than max index, thus, safe to be used.
  *
  * <p>
- *     {@link #getByPupKey(byte[])} method logic is supported with help of index {@code [pubKey: index]}.
+ *     {@link #getByPubKey(byte[])} method logic is supported with help of index {@code [pubKey: index]}.
  *
  * @author Mikhail Kalinin
  * @since 04.09.2018
@@ -95,7 +94,7 @@ public class TrieValidatorSet implements ValidatorSet {
 
     @Nullable
     @Override
-    public Validator getByPupKey(byte[] pubKey) {
+    public Validator getByPubKey(byte[] pubKey) {
         Integer idx = index.get(pubKey);
         return idx == null ? null : get(idx);
     }

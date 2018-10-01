@@ -46,7 +46,8 @@ public interface BeaconProposer {
      * Creates new block on top of the beacon chain head.
      *
      * @param slotNumber number of the slot that block does belong to.
+     * @param pubKey public key of the validator that the block will be created by
      * @return newly created block
      */
-    Beacon createNewBlock(long slotNumber);
+    Beacon createNewBlock(long slotNumber, byte[] pubKey);
 }

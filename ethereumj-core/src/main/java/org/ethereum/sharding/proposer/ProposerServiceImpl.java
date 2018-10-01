@@ -17,6 +17,7 @@
  */
 package org.ethereum.sharding.proposer;
 
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.sharding.config.ValidatorConfig;
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.domain.Validator;
@@ -27,12 +28,17 @@ import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.processing.BeaconChain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static org.ethereum.sharding.util.BeaconUtils.calcNextProposingSlot;
 import static org.ethereum.sharding.util.BeaconUtils.getCurrentSlotNumber;
@@ -55,8 +61,9 @@ public class ProposerServiceImpl implements ProposerService {
     ValidatorConfig config;
 
     private ScheduledExecutorService proposerThread;
-    private ScheduledFuture currentTask;
-    private int validatorIdx;
+    private Map<Integer, ScheduledFuture> currentTasks = new ConcurrentHashMap<>();
+    private Map<Integer, byte[]> pubKeysMap = new ConcurrentHashMap<>();
+    private Set<Integer> validatorIndices;
     private long lastStateRecalc;
 
     public ProposerServiceImpl(BeaconProposer proposer, BeaconChain beaconChain,
@@ -68,16 +75,24 @@ public class ProposerServiceImpl implements ProposerService {
     }
 
     @Override
-    public void init(BeaconState state) {
+    public void init(BeaconState state, byte[]... pubKeys) {
+        assert pubKeys.length > 0;
 
-        Validator validator = state.getValidatorSet().getByPupKey(config.pubKey());
-        // something went wrong
-        if (validator == null) {
-            logger.error("Failed to start proposer: validator {} does not exist", Hex.toHexString(config.pubKey()));
-            return;
+        this.validatorIndices = new HashSet<>();
+
+        for (byte[] pubKey : pubKeys) {
+            Validator validator = state.getValidatorSet().getByPubKey(pubKey);
+            if (validator != null) {
+                this.validatorIndices.add(validator.getIndex());
+                this.pubKeysMap.put(validator.getIndex(), validator.getPubKey());
+            } else {
+                // something went wrong
+                logger.error("Failed to start proposer for {}: validator does not exist", HashUtil.shortHash(pubKey));
+                return;
+            }
+
+            this.validatorIndices.add(validator.getIndex());
         }
-
-        this.validatorIdx = validator.getIndex();
 
         this.proposerThread = Executors.newSingleThreadScheduledExecutor((r) -> {
             Thread t = Executors.defaultThreadFactory().newThread(r);
@@ -101,27 +116,26 @@ public class ProposerServiceImpl implements ProposerService {
     }
 
     private void submitIfAssigned(Committee[][] committees) {
-        Committee.Index index = scanCommittees(validatorIdx, committees);
-        if (index.isEmpty())
-            return;
-
         // validator from only the first committee is eligible to propose beacon chain block
-        if (index.getCommitteeIdx() > 0)
-            return;
+        List<Committee.Index> indices = scanCommittees(validatorIndices, committees)
+                .stream().filter(idx -> idx.getCommitteeIdx() == 0).collect(Collectors.toList());
+        indices.sort((i1, i2) -> Integer.compare(i1.getSlotOffset(), i2.getSlotOffset()));
 
-        // get number of the next slot that validator is eligible to propose
-        long slotNumber = calcNextProposingSlot(getCurrentSlotNumber(), index.getSlotOffset());
+        for (Committee.Index index : indices) {
+            // get number of the next slot that validator is eligible to propose
+            long slotNumber = calcNextProposingSlot(getCurrentSlotNumber(), index.getSlotOffset());
 
-        // not an obvious way of calculating proposer index,
-        // proposer = committee[X % len(committee)], X = slotNumber
-        // from chat with Hsiao and Danny
-        if (slotNumber % index.getCommitteeSize() == index.getValidatorIdx()) {
-            this.submit(slotNumber);
+            // not an obvious way of calculating proposer index,
+            // proposer = committee[X % len(committee)], X = slotNumber
+            // taken from the spec
+            if (slotNumber % index.getCommitteeSize() == index.getArrayIdx()) {
+                this.submit(slotNumber, index.getValidatorIdx());
+            }
         }
     }
 
     @Override
-    public void submit(long slotNumber) {
+    public void submit(long slotNumber, int validatorIdx) {
         if (proposerThread == null) return;
 
         // skip slots that start in the past
@@ -129,13 +143,13 @@ public class ProposerServiceImpl implements ProposerService {
             return;
 
         // always cancel current task and create a new one
-        if (currentTask != null)
-            currentTask.cancel(false);
+        if (currentTasks.containsKey(validatorIdx))
+            currentTasks.get(validatorIdx).cancel(false);
 
         long delayMillis = getSlotStartTime(slotNumber) - System.currentTimeMillis();
-        currentTask = proposerThread.schedule(() -> {
+        ScheduledFuture newTask = proposerThread.schedule(() -> {
             try {
-                Beacon newBlock = proposer.createNewBlock(slotNumber);
+                Beacon newBlock = proposer.createNewBlock(slotNumber, pubKeysMap.get(validatorIdx));
                 beaconChain.insert(newBlock);
                 return newBlock;
             } catch (Throwable t) {
@@ -143,7 +157,8 @@ public class ProposerServiceImpl implements ProposerService {
                 throw t;
             }
         }, delayMillis, TimeUnit.MILLISECONDS);
+        currentTasks.put(validatorIdx, newTask);
 
-        logger.info("Schedule new block #{}, proposing in {}ms", slotNumber, delayMillis);
+        logger.info("Validator {}: schedule new block #{}, proposing in {}ms", validatorIdx, slotNumber, delayMillis);
     }
 }

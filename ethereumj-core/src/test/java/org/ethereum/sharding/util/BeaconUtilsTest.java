@@ -49,20 +49,20 @@ public class BeaconUtilsTest {
         int sl1 = BeaconConstants.CYCLE_LENGTH / 3, sl2 = BeaconConstants.CYCLE_LENGTH / 5;
         int ci1 = slotCommittees / 3, ci2 = slotCommittees / 5;
 
-        Committee c1 = new Committee(s1, new int[]{1, 2, 5, 4, 3, 6});
-        Committee c2 = new Committee(s2, new int[]{7, 11, 9});
+        Committee c1 = new Committee(s1, new int[] {1, 2, 5, 4, 3, 6});
+        Committee c2 = new Committee(s2, new int[] {7, 11, 9});
 
         committees[sl1][ci1] = c1;
         committees[sl2][ci2] = c2;
 
         Committee.Index idx = BeaconUtils.scanCommittees(1, committees);
-        assertEquals(new Committee.Index(s1, sl1, ci1, 6, 0), idx);
+        assertEquals(new Committee.Index(1, s1, sl1, ci1, 6, 0), idx);
 
         idx = BeaconUtils.scanCommittees(4, committees);
-        assertEquals(new Committee.Index(s1, sl1, ci1, 6, 3), idx);
+        assertEquals(new Committee.Index(4, s1, sl1, ci1, 6, 3), idx);
 
         idx = BeaconUtils.scanCommittees(11, committees);
-        assertEquals(new Committee.Index(s2, sl2, ci2, 3, 1), idx);
+        assertEquals(new Committee.Index(11, s2, sl2, ci2, 3, 1), idx);
     }
 
     @Test

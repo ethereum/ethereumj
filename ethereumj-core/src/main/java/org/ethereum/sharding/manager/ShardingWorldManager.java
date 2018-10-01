@@ -148,7 +148,7 @@ public class ShardingWorldManager extends WorldManager {
         // start only if validator is enlisted and after sync is finished
         publisher.subscribe(BeaconChainSynced.class, data -> {
             if (validatorService.getState() == ValidatorService.State.Enlisted) {
-                proposerService.init(data.getState());
+                proposerService.init(data.getState(), validatorService.pubKeys());
             }
         });
     }
