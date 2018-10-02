@@ -37,7 +37,9 @@ public class KafkaEthereumListener implements EthereumListener {
 
   @Override
   public void onEthStatusUpdated(Channel channel, StatusMessage status) {
-
+    final byte[] key = "best_block".getBytes();
+    final byte[] value = ByteUtil.toHexString(status.getBestHash()).getBytes();
+    kafka.send(Kafka.Producer.METADATA, key, value);
   }
 
   @Override
@@ -121,17 +123,13 @@ public class KafkaEthereumListener implements EthereumListener {
 
   @Override
   public void onVMTraceCreated(String transactionHash, String trace) {
-
   }
 
   @Override
   public void onTransactionExecuted(TransactionExecutionSummary summary) {
-    //final byte[] txHash = summary.getTransactionHash();
-    //kafka.send(Kafka.Producer.TRANSACTION_EXECUTIONS, txHash, summary.getEncoded());
   }
 
   @Override
   public void trace(String output) {
-
   }
 }
