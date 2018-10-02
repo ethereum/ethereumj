@@ -288,7 +288,19 @@ public class Abi extends ArrayList<Abi.Entry> {
             List<Object> result = new ArrayList<>(inputs.size());
 
             byte[][] argTopics = anonymous ? topics : subarray(topics, 1, topics.length);
-            List<?> indexed = Param.decodeList(filteredInputs(true), ByteUtil.merge(argTopics));
+            List<Param> indexedParams = filteredInputs(true);
+            List<Object> indexed = new ArrayList<>();
+            for (int i = 0; i < indexedParams.size(); i++) {
+                Object decodedTopic;
+                if (indexedParams.get(i).type.isDynamicType()) {
+                    // If arrays (including string and bytes) are used as indexed arguments,
+                    // the Keccak-256 hash of it is stored as topic instead.
+                    decodedTopic = SolidityType.Bytes32Type.decodeBytes32(argTopics[i]);
+                } else {
+                    decodedTopic = indexedParams.get(i).type.decode(argTopics[i]);
+                }
+                indexed.add(decodedTopic);
+            }
             List<?> notIndexed = Param.decodeList(filteredInputs(false), data);
 
             for (Param input : inputs) {
