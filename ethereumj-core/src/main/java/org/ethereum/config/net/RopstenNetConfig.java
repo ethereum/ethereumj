@@ -28,6 +28,5 @@ public class RopstenNetConfig extends BaseNetConfig {
         add(0, new HomesteadConfig());
         add(10, new RopstenConfig(new HomesteadConfig()));
         add(1_700_000, new RopstenConfig(new ByzantiumConfig(new DaoHFConfig())));
-        add(4_200_000, new RopstenConfig(new ConstantinopleConfig(new ByzantiumConfig(new DaoHFConfig()))));
     }
 }
