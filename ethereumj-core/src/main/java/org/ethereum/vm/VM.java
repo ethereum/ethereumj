@@ -320,11 +320,8 @@ public class VM {
                     break;
                 case SHA3:
                     gasCost = gasCosts.getSHA3() + calcMemGas(gasCosts, oldMemSize, memNeeded(stack.peek(), stack.get(stack.size() - 2)), 0);
-                    long size = stack.get(stack.size() - 2).longValueSafe();
-                    if (size == Long.MAX_VALUE) {
-                        throw Program.Exception.gasOverflow(BigInteger.valueOf(size), BigInteger.valueOf(Long.MAX_VALUE));
-                    }
-                    long chunkUsed = getSizeInWords(size);
+                    DataWord size = stack.get(stack.size() - 2);
+                    long chunkUsed = getSizeInWords(size.longValueSafe());
                     gasCost += chunkUsed * gasCosts.getSHA3_WORD();
                     break;
                 case CALLDATACOPY:
@@ -398,14 +395,10 @@ public class VM {
                             memNeeded(stack.get(stack.size() - 2), stack.get(stack.size() - 3)), 0);
                     break;
                 case CREATE2:
-                    gasCost = gasCosts.getCREATE() + calcMemGas(gasCosts, oldMemSize,
-                            memNeeded(stack.get(stack.size() - 2), stack.get(stack.size() - 3)), 0);
-                    long codeSize = stack.get(stack.size() - 3).longValueSafe();
-                    if (codeSize == Long.MAX_VALUE) {
-                        throw Program.Exception.gasOverflow(BigInteger.valueOf(codeSize), BigInteger.valueOf(Long.MAX_VALUE));
-                    }
-                    gasCost += getSizeInWords(codeSize) * gasCosts.getSHA3_WORD();
-
+                    DataWord codeSize = stack.get(stack.size() - 3);
+                    gasCost = gasCosts.getCREATE() +
+                            calcMemGas(gasCosts, oldMemSize, memNeeded(stack.get(stack.size() - 2), codeSize), 0) +
+                            getSizeInWords(codeSize.longValueSafe()) * gasCosts.getSHA3_WORD();
                     break;
                 case LOG0:
                 case LOG1:
