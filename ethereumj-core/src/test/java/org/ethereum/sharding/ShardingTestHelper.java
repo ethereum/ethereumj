@@ -43,8 +43,8 @@ import org.ethereum.sharding.crypto.UnsecuredDepositAuthority;
 import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.service.ValidatorRepository;
 import org.ethereum.sharding.service.ValidatorRepositoryImpl;
-import org.ethereum.sharding.service.ValidatorService;
-import org.ethereum.sharding.service.ValidatorServiceImpl;
+import org.ethereum.sharding.service.ValidatorRegistrationService;
+import org.ethereum.sharding.service.ValidatorRegistrationServiceImpl;
 import org.ethereum.sharding.util.Randao;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.ethereum.vm.program.ProgramResult;
@@ -95,6 +95,12 @@ public class ShardingTestHelper {
             }
         };
         Ethereum ethereum = sharding.ethereum = new EthereumImpl(systemProperties, standaloneBlockchain.getListener()) {
+
+            @Override
+            public org.ethereum.facade.Repository getPendingState() {
+                return standaloneBlockchain.getPendingState().getRepository();
+            }
+
             @Override
             public Future<Transaction> submitTransaction(Transaction transaction) {
                 sharding.standaloneBlockchain.submitTransaction(transaction);
@@ -165,7 +171,7 @@ public class ShardingTestHelper {
         standaloneBlockchain.createBlock();
 
         Randao randao = sharding.randao = new Randao(new HashMapDB<>());
-        sharding.validatorService = new ValidatorServiceImpl(ethereum, sharding.validatorConfig,
+        sharding.validatorRegistrationService = new ValidatorRegistrationServiceImpl(ethereum, sharding.validatorConfig,
                 sharding.depositContract, authority, randao, new Publisher(EventDispatchThread.getDefault()));
 
         sharding.validatorRepository = new ValidatorRepositoryImpl(standaloneBlockchain.getBlockchain().getBlockStore(),
@@ -174,15 +180,15 @@ public class ShardingTestHelper {
         return sharding;
     }
 
-    public static ValidatorService brandNewValidatorService(ShardingBootstrap bootstrap) {
-        return new ValidatorServiceImpl(bootstrap.ethereum,
+    public static ValidatorRegistrationService brandNewValidatorService(ShardingBootstrap bootstrap) {
+        return new ValidatorRegistrationServiceImpl(bootstrap.ethereum,
                 bootstrap.validatorConfig, bootstrap.depositContract, bootstrap.depositAuthority, bootstrap.randao,
                 new Publisher(EventDispatchThread.getDefault()));
     }
 
     public static class ShardingBootstrap {
         public StandaloneBlockchain standaloneBlockchain;
-        public ValidatorService validatorService;
+        public ValidatorRegistrationService validatorRegistrationService;
         public ValidatorRepository validatorRepository;
         public DepositContract depositContract;
         public ValidatorConfig validatorConfig;

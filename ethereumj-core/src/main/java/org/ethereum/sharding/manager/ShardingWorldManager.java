@@ -36,7 +36,7 @@ import org.ethereum.sharding.proposer.ProposerService;
 import org.ethereum.sharding.pubsub.BeaconChainSynced;
 import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.pubsub.ValidatorStateUpdated;
-import org.ethereum.sharding.service.ValidatorService;
+import org.ethereum.sharding.service.ValidatorRegistrationService;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +51,7 @@ import static org.ethereum.util.ByteUtil.longToBytes;
  * In addition to original {@link WorldManager} runs sharding bootstrap things:
  * <ul>
  *     <li> deploys validator registration contract to the empty blockchain
- *     <li> starts {@link ValidatorService} if it's enabled
+ *     <li> starts {@link ValidatorRegistrationService} if it's enabled
  * </ul>
  *
  * @author Mikhail Kalinin
@@ -69,10 +69,10 @@ public class ShardingWorldManager extends WorldManager {
     DbFlushManager dbFlushManager;
     DbFlushManager beaconDbFlusher;
     Publisher publisher;
-    ValidatorService validatorService;
+    ValidatorRegistrationService validatorRegistrationService;
 
     private CompletableFuture<Void> contractInit = new CompletableFuture<>();
-    private CompletableFuture<ValidatorService.State> validatorServiceInit = new CompletableFuture<>();
+    private CompletableFuture<ValidatorRegistrationService.State> validatorServiceInit = new CompletableFuture<>();
 
     public ShardingWorldManager(SystemProperties config, Repository repository, EthereumListener listener,
                                 Blockchain blockchain, BlockStore blockStore, DepositContractConfig contractConfig,
@@ -129,26 +129,26 @@ public class ShardingWorldManager extends WorldManager {
         contractInit.complete(null);
     }
 
-    public void setValidatorService(final ValidatorService validatorService) {
-        this.validatorService = validatorService;
-        if (validatorService.getState() == ValidatorService.State.Disabled) {
-            validatorServiceInit.complete(ValidatorService.State.Disabled);
+    public void setValidatorRegistrationService(final ValidatorRegistrationService validatorRegistrationService) {
+        this.validatorRegistrationService = validatorRegistrationService;
+        if (validatorRegistrationService.getState() == ValidatorRegistrationService.State.Disabled) {
+            validatorServiceInit.complete(ValidatorRegistrationService.State.Disabled);
         } else {
             publisher.subscribe(ValidatorStateUpdated.class, data -> {
-                if (data.getNewState() == ValidatorService.State.Enlisted ||
-                        data.getNewState() == ValidatorService.State.DepositFailed) {
+                if (data.getNewState() == ValidatorRegistrationService.State.Enlisted ||
+                        data.getNewState() == ValidatorRegistrationService.State.DepositFailed) {
                     validatorServiceInit.complete(data.getNewState());
                 }
             });
         }
-        contractInit.thenRunAsync(this.validatorService::init);
+        contractInit.thenRunAsync(this.validatorRegistrationService::init);
     }
 
     public void setProposerService(final ProposerService proposerService) {
         // start only if validator is enlisted and after sync is finished
         publisher.subscribe(BeaconChainSynced.class, data -> {
-            if (validatorService.getState() == ValidatorService.State.Enlisted) {
-                proposerService.init(data.getState(), validatorService.pubKeys());
+            if (validatorRegistrationService.getState() == ValidatorRegistrationService.State.Enlisted) {
+                proposerService.init(data.getState(), validatorRegistrationService.pubKeys());
             }
         });
     }

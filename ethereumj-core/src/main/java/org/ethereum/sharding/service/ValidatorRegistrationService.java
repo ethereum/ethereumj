@@ -25,7 +25,7 @@ import org.ethereum.sharding.config.ValidatorConfig;
  * @author Mikhail Kalinin
  * @since 26.07.2018
  */
-public interface ValidatorService {
+public interface ValidatorRegistrationService {
 
     /**
      * Deposit validator when sync is done.

@@ -1,6 +1,6 @@
 package org.ethereum.sharding.pubsub;
 
-import org.ethereum.sharding.service.ValidatorService;
+import org.ethereum.sharding.service.ValidatorRegistrationService;
 
 /**
  * @author Mikhail Kalinin
@@ -9,18 +9,18 @@ import org.ethereum.sharding.service.ValidatorService;
 public class ValidatorStateUpdated extends Event<ValidatorStateUpdated.Data> {
 
     public static class Data {
-        private final ValidatorService.State newState;
+        private final ValidatorRegistrationService.State newState;
 
-        public Data(ValidatorService.State newState) {
+        public Data(ValidatorRegistrationService.State newState) {
             this.newState = newState;
         }
 
-        public ValidatorService.State getNewState() {
+        public ValidatorRegistrationService.State getNewState() {
             return newState;
         }
     }
 
-    public ValidatorStateUpdated(ValidatorService.State newState) {
+    public ValidatorStateUpdated(ValidatorRegistrationService.State newState) {
         super(new Data(newState));
     }
 }
