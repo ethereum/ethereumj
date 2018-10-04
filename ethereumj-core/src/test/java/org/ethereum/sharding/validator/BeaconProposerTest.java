@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.sharding.proposer;
+package org.ethereum.sharding.validator;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
@@ -50,7 +50,6 @@ import java.util.function.Consumer;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.crypto.HashUtil.blake2b;
 import static org.ethereum.crypto.HashUtil.randomHash;
-import static org.ethereum.sharding.proposer.BeaconProposer.SLOT_DURATION;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

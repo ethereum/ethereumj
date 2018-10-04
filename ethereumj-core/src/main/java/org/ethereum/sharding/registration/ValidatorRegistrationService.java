@@ -15,28 +15,45 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.sharding.proposer;
+package org.ethereum.sharding.registration;
 
-import org.ethereum.sharding.processing.state.BeaconState;
+import org.ethereum.sharding.config.ValidatorConfig;
 
 /**
- * Service that is responsible for scheduling attestation and proposal tasks for the beacon chain validator.
+ * Deposit validator if it's enabled in {@link ValidatorConfig}
  *
  * @author Mikhail Kalinin
- * @since 28.08.2018
- *
- * @see BeaconProposer
+ * @since 26.07.2018
  */
-public interface ValidatorService {
+public interface ValidatorRegistrationService {
 
     /**
-     * Initializes service.
+     * Deposit validator when sync is done.
+     * Does nothing by default.
      */
-    default void init(BeaconState state, byte[]... pubKeys) {}
+    default void init() {}
 
     /**
-     * Submits a task to propose block with given slot number.
-     * Thread safe.
+     * Returns current state of the validator.
+     * Default state is Disabled.
      */
-    default void propose(long slotNumber, int validatorIdx) {}
+    default State getState() {
+        return State.Disabled;
+    }
+
+    /**
+     * Returns validators public keys,
+     * yep, there could be several keys, check implementation for details.
+     */
+    default byte[][] pubKeys() {
+        return new byte[][] {};
+    }
+
+    enum State {
+        Undefined,
+        Disabled,
+        WaitForDeposit,
+        DepositFailed,
+        Enlisted
+    }
 }

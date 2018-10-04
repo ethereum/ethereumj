@@ -25,7 +25,7 @@ import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.BeaconStateRepository;
 import org.ethereum.sharding.processing.state.Committee;
 import org.ethereum.sharding.processing.state.StateRepository;
-import org.ethereum.sharding.service.ValidatorRepository;
+import org.ethereum.sharding.registration.ValidatorRepository;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 

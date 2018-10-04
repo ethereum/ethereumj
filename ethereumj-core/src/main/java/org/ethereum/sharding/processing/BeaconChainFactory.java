@@ -21,17 +21,15 @@ import org.ethereum.core.Block;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.sharding.processing.consensus.BeaconStateTransition;
 import org.ethereum.sharding.processing.consensus.GenesisTransition;
-import org.ethereum.sharding.processing.consensus.NoTransition;
 import org.ethereum.sharding.processing.consensus.NumberAsScore;
 import org.ethereum.sharding.processing.consensus.ScoreFunction;
 import org.ethereum.sharding.processing.consensus.StateTransition;
 import org.ethereum.sharding.processing.db.BeaconStore;
-import org.ethereum.sharding.processing.db.ValidatorSet;
 import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.StateRepository;
 import org.ethereum.sharding.processing.validation.BeaconValidator;
 import org.ethereum.sharding.processing.validation.StateValidator;
-import org.ethereum.sharding.service.ValidatorRepository;
+import org.ethereum.sharding.registration.ValidatorRepository;
 
 /**
  * A factory that creates {@link BeaconChain} instance.

@@ -1,6 +1,6 @@
 package org.ethereum.sharding.pubsub;
 
-import org.ethereum.sharding.service.ValidatorRegistrationService;
+import org.ethereum.sharding.registration.ValidatorRegistrationService;
 
 /**
  * @author Mikhail Kalinin

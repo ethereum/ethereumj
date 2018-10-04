@@ -1,4 +1,4 @@
-package org.ethereum.sharding.service;
+package org.ethereum.sharding.registration;
 
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.facade.Ethereum;
@@ -22,12 +22,12 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import static org.ethereum.sharding.proposer.BeaconProposer.SLOT_DURATION;
+import static org.ethereum.sharding.validator.BeaconProposer.SLOT_DURATION;
 import static org.ethereum.sharding.pubsub.Events.onValidatorStateUpdated;
-import static org.ethereum.sharding.service.ValidatorRegistrationService.State.DepositFailed;
-import static org.ethereum.sharding.service.ValidatorRegistrationService.State.Enlisted;
-import static org.ethereum.sharding.service.ValidatorRegistrationService.State.Undefined;
-import static org.ethereum.sharding.service.ValidatorRegistrationService.State.WaitForDeposit;
+import static org.ethereum.sharding.registration.ValidatorRegistrationService.State.DepositFailed;
+import static org.ethereum.sharding.registration.ValidatorRegistrationService.State.Enlisted;
+import static org.ethereum.sharding.registration.ValidatorRegistrationService.State.Undefined;
+import static org.ethereum.sharding.registration.ValidatorRegistrationService.State.WaitForDeposit;
 
 /**
  * @author Mikhail Kalinin

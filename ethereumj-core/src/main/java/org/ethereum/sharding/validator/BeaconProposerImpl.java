@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.sharding.proposer;
+package org.ethereum.sharding.validator;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockSummary;
@@ -27,7 +27,6 @@ import org.ethereum.sharding.config.ValidatorConfig;
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.domain.Validator;
 import org.ethereum.sharding.pubsub.BeaconBlockImported;
-import org.ethereum.sharding.pubsub.BeaconChainLoaded;
 import org.ethereum.sharding.pubsub.BeaconChainSynced;
 import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.processing.consensus.StateTransition;

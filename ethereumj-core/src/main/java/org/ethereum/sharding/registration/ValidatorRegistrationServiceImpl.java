@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.sharding.service;
+package org.ethereum.sharding.registration;
 
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.facade.Ethereum;
@@ -32,12 +32,12 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.util.concurrent.CompletableFuture;
 
-import static org.ethereum.sharding.proposer.BeaconProposer.SLOT_DURATION;
+import static org.ethereum.sharding.validator.BeaconProposer.SLOT_DURATION;
 import static org.ethereum.sharding.pubsub.Events.onValidatorStateUpdated;
-import static org.ethereum.sharding.service.ValidatorRegistrationService.State.DepositFailed;
-import static org.ethereum.sharding.service.ValidatorRegistrationService.State.Enlisted;
-import static org.ethereum.sharding.service.ValidatorRegistrationService.State.Undefined;
-import static org.ethereum.sharding.service.ValidatorRegistrationService.State.WaitForDeposit;
+import static org.ethereum.sharding.registration.ValidatorRegistrationService.State.DepositFailed;
+import static org.ethereum.sharding.registration.ValidatorRegistrationService.State.Enlisted;
+import static org.ethereum.sharding.registration.ValidatorRegistrationService.State.Undefined;
+import static org.ethereum.sharding.registration.ValidatorRegistrationService.State.WaitForDeposit;
 
 /**
  * Default implementation of {@link ValidatorRegistrationService}

@@ -19,7 +19,7 @@ package org.ethereum.sharding.pubsub;
 
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.processing.state.BeaconState;
-import org.ethereum.sharding.service.ValidatorRegistrationService;
+import org.ethereum.sharding.registration.ValidatorRegistrationService;
 
 /**
  * Provides shortcuts to {@link Event} constructors.

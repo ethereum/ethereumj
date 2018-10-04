@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.sharding.proposer;
+package org.ethereum.sharding.validator;
 
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.sharding.config.ValidatorConfig;
