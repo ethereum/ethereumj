@@ -7,6 +7,7 @@ public interface Kafka {
 
   enum Producer {
 
+    METADATA("metadata"),
     BLOCKS("blocks"),
     TRANSACTIONS("transactions"),
     PENDING_TRANSACTIONS("pending-transactions"),
