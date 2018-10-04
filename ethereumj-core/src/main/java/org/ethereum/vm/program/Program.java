@@ -1208,6 +1208,15 @@ public class Program {
             throw Program.Exception.badJumpDestination(-1);
         }
         int ret = nextPC.intValue();
+        // sanity checks
+        if (ret < 0 || ret >= ops.length) {
+            throw Program.Exception.badJumpDestination(ret);
+        }
+        // additional check for init_code,
+        // avoid deeper analysis if there is no need for it
+        if (codeHash == null && OpCode.code(ops[ret]) != OpCode.JUMPDEST) {
+            throw Program.Exception.badJumpDestination(ret);
+        }
         if (!getProgramPrecompile().hasJumpDest(ret)) {
             throw Program.Exception.badJumpDestination(ret);
         }
