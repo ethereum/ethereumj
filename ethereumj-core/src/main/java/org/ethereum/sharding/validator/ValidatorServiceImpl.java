@@ -37,11 +37,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static java.lang.Math.max;
@@ -171,11 +174,22 @@ public class ValidatorServiceImpl implements ValidatorService {
 
     @Override
     public void propose(long slotNumber, int validatorIdx) {
-        if (executor == null) return;
+        long delay = submit(slotNumber, validatorIdx, () -> {
+            BeaconProposer.Input input = new BeaconProposer.Input(slotNumber, head, mainChainRef);
+            Beacon newBlock = proposer.createNewBlock(input, pubKeysMap.get(validatorIdx));
+            beaconChain.insert(newBlock);
+            return newBlock;
+        });
+
+        if (delay >= 0) logger.info("Proposer {}: schedule new slot #{} in {}ms", validatorIdx, slotNumber, delay);
+    }
+
+    <T> long submit(long slotNumber, int validatorIdx, Supplier<T> supplier) {
+        if (executor == null) return -1L;
 
         // skip slots that start in the past
         if (slotNumber <= getCurrentSlotNumber())
-            return;
+            return -1L;
 
         // always cancel current task and create a new one
         if (currentTasks.containsKey(validatorIdx))
@@ -184,17 +198,14 @@ public class ValidatorServiceImpl implements ValidatorService {
         long delayMillis = getSlotStartTime(slotNumber) - System.currentTimeMillis();
         ScheduledFuture newTask = executor.schedule(() -> {
             try {
-                BeaconProposer.Input input = new BeaconProposer.Input(slotNumber, head, mainChainRef);
-                Beacon newBlock = proposer.createNewBlock(input, pubKeysMap.get(validatorIdx));
-                beaconChain.insert(newBlock);
-                return newBlock;
+                return supplier.get();
             } catch (Throwable t) {
-                logger.error("Failed to propose block", t);
+                logger.error("Failed to execute validator task", t);
                 throw t;
             }
         }, delayMillis, TimeUnit.MILLISECONDS);
         currentTasks.put(validatorIdx, newTask);
 
-        logger.info("Validator {}: schedule new slot #{}, proposing in {}ms", validatorIdx, slotNumber, delayMillis);
+        return delayMillis;
     }
 }
