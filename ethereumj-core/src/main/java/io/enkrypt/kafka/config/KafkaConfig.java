@@ -8,13 +8,9 @@ import java.util.Properties;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
-import org.apache.kafka.common.serialization.IntegerSerializer;
-import org.apache.kafka.common.serialization.LongSerializer;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.listener.CompositeEthereumListener;
-import org.ethereum.listener.EthereumListener;
-import org.ethereum.manager.WorldManager;
+import org.ethereum.core.Blockchain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +32,9 @@ public class KafkaConfig {
   @Autowired
   SystemProperties config;
 
+  @Autowired
+  Blockchain blockchain;
+
   public KafkaConfig() {
     // TODO: We can intercept KafkaException to stop completely the app in case of a bad crash
     Thread.setDefaultUncaughtExceptionHandler((t, e) -> logger.error("Uncaught exception", e));
@@ -44,7 +43,7 @@ public class KafkaConfig {
   @Bean()
   public KafkaEthereumListener kafkaEthereumListener() {
     // return Object to prevent clash with default listener. We only need to add a listener to the composite listener
-    final KafkaEthereumListener result = new KafkaEthereumListener(kafka());
+    final KafkaEthereumListener result = new KafkaEthereumListener(kafka(), blockchain);
     commonConfig.ethereumListener().addListener(result);
     return result;
   }

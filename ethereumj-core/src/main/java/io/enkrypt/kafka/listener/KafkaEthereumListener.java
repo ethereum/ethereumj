@@ -2,13 +2,10 @@ package io.enkrypt.kafka.listener;
 
 import io.enkrypt.kafka.Kafka;
 import io.enkrypt.kafka.models.Account;
+
 import java.util.List;
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockSummary;
-import org.ethereum.core.PendingState;
-import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionExecutionSummary;
-import org.ethereum.core.TransactionReceipt;
+
+import org.ethereum.core.*;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
@@ -20,9 +17,23 @@ import org.ethereum.util.ByteUtil;
 public class KafkaEthereumListener implements EthereumListener {
 
   private final Kafka kafka;
+  private final Blockchain blockchain;
 
-  public KafkaEthereumListener(Kafka kafka) {
+  public KafkaEthereumListener(Kafka kafka, Blockchain blockchain) {
     this.kafka = kafka;
+    this.blockchain = blockchain;
+    init();
+  }
+
+  private void init(){
+    // TODO clear sync number pre-emptively on shut down
+    publishSyncNumber(-1L);
+  }
+
+  private void publishSyncNumber(long number) {
+    byte[] key = "sync_number".getBytes();
+    byte[] value = Long.toHexString(number).getBytes();
+    kafka.send(Kafka.Producer.METADATA, key, value);
   }
 
   @Override
@@ -37,9 +48,6 @@ public class KafkaEthereumListener implements EthereumListener {
 
   @Override
   public void onEthStatusUpdated(Channel channel, StatusMessage status) {
-    final byte[] key = "best_block".getBytes();
-    final byte[] value = ByteUtil.toHexString(status.getBestHash()).getBytes();
-    kafka.send(Kafka.Producer.METADATA, key, value);
   }
 
   @Override
@@ -54,7 +62,15 @@ public class KafkaEthereumListener implements EthereumListener {
 
   @Override
   public void onSyncDone(SyncState state) {
+    switch (state) {
 
+      case COMPLETE:
+        publishSyncNumber(blockchain.getBestBlock().getNumber());
+        break;
+
+      default:
+        throw new IllegalStateException("Unexpected state: " + state);
+    }
   }
 
   @Override
@@ -105,6 +121,7 @@ public class KafkaEthereumListener implements EthereumListener {
 
   @Override
   public void onBlock(BlockSummary blockSummary) {
+
     // Send blocks
 
     final long number = blockSummary.getBlock().getNumber();
