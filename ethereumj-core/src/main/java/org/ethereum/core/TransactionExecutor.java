@@ -17,6 +17,10 @@
  */
 package org.ethereum.core;
 
+import io.enkrypt.kafka.models.Account;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Set;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
@@ -420,16 +424,29 @@ public class TransactionExecutor {
             ContractDetails contractDetails = track.getContractDetails(addr);
             if (contractDetails != null) {
                 // TODO
-//                summaryBuilder.storageDiff(track.getContractDetails(addr).getStorage());
-//
-//                if (program != null) {
-//                    summaryBuilder.touchedStorage(contractDetails.getStorage(), program.getStorageDiff());
-//                }
+                //summaryBuilder.storageDiff(track.getContractDetails(addr).getStorage());
+                //if (program != null) {
+                //    summaryBuilder.touchedStorage(contractDetails.getStorage(), program.getStorageDiff());
+                //}
             }
 
             if (result.getException() != null) {
                 summaryBuilder.markAsFailed();
             }
+        }
+
+        // Grab what accounts have suffered modifications
+        if (result != null) {
+            Set<byte[]> rawTouchedAccounts = touchedAccounts;
+            List<Account> touched = new ArrayList<>(rawTouchedAccounts.size());
+            for (byte[] address : rawTouchedAccounts) {
+                final AccountState state = track.getAccountState(address);
+                if (state != null) {
+                    final Account account = Account.fromAccountState(address, state);
+                    touched.add(account);
+                }
+            }
+            summaryBuilder.touchedAccounts(touched);
         }
 
         TransactionExecutionSummary summary = summaryBuilder.build();
@@ -459,7 +476,6 @@ public class TransactionExecutor {
                 }
             }
         }
-
 
         listener.onTransactionExecuted(summary);
 

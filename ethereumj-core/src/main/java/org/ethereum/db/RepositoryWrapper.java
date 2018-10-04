@@ -17,7 +17,6 @@
  */
 package org.ethereum.db;
 
-import io.enkrypt.kafka.Kafka;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockchainImpl;
@@ -43,9 +42,6 @@ public class RepositoryWrapper implements Repository {
 
     @Autowired
     BlockchainImpl blockchain;
-
-    @Autowired
-    Kafka kafka;
 
     public RepositoryWrapper() {
     }
