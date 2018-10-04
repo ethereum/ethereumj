@@ -17,19 +17,17 @@
  */
 package org.ethereum.sharding.proposer;
 
-import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.processing.state.BeaconState;
-import org.ethereum.sharding.processing.state.Committee;
 
 /**
- * Service that is responsible for scheduling beacon chain proposal tasks.
+ * Service that is responsible for scheduling attestation and proposal tasks for the beacon chain validator.
  *
  * @author Mikhail Kalinin
  * @since 28.08.2018
  *
  * @see BeaconProposer
  */
-public interface ProposerService {
+public interface ValidatorService {
 
     /**
      * Initializes service.
@@ -40,13 +38,5 @@ public interface ProposerService {
      * Submits a task to propose block with given slot number.
      * Thread safe.
      */
-    default void submit(long slotNumber) {
-        submit(slotNumber, 0);
-    }
-
-    /**
-     * Submits a task to propose block with given slot number.
-     * Thread safe.
-     */
-    default void submit(long slotNumber, int validatorIdx) {}
+    default void propose(long slotNumber, int validatorIdx) {}
 }

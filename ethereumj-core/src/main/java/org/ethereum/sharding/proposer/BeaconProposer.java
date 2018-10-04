@@ -24,7 +24,7 @@ import org.ethereum.sharding.domain.Beacon;
  *
  * <p>
  *     Is responsible only for creating new block.
- *     Task scheduling is provided by {@link ProposerService}
+ *     Task scheduling is provided by {@link ValidatorService}
  *
  * @author Mikhail Kalinin
  * @since 28.08.2018

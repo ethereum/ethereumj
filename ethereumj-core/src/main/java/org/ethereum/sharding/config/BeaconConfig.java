@@ -45,8 +45,8 @@ import org.ethereum.sharding.processing.state.BeaconStateRepository;
 import org.ethereum.sharding.processing.state.StateRepository;
 import org.ethereum.sharding.proposer.BeaconProposer;
 import org.ethereum.sharding.proposer.BeaconProposerImpl;
-import org.ethereum.sharding.proposer.ProposerService;
-import org.ethereum.sharding.proposer.ProposerServiceImpl;
+import org.ethereum.sharding.proposer.ValidatorService;
+import org.ethereum.sharding.proposer.ValidatorServiceImpl;
 import org.ethereum.sharding.service.MultiValidatorRegistrationService;
 import org.ethereum.sharding.service.ValidatorRepositoryImpl;
 import org.ethereum.sharding.service.ValidatorRegistrationService;
@@ -125,14 +125,14 @@ public class BeaconConfig {
     }
 
     @Bean
-    public ProposerService proposerService() {
+    public ValidatorService validatorService() {
         if (validatorConfig().isEnabled()) {
-            ProposerService proposerService = new ProposerServiceImpl(beaconProposer(), beaconChain(),
+            ValidatorService validatorService = new ValidatorServiceImpl(beaconProposer(), beaconChain(),
                     publisher(), validatorConfig());
-            shardingWorldManager.setProposerService(proposerService);
-            return proposerService;
+            shardingWorldManager.setProposerService(validatorService);
+            return validatorService;
         } else {
-            return new ProposerService() {};
+            return new ValidatorService() {};
         }
     }
 

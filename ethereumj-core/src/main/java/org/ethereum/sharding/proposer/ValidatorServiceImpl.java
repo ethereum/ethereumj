@@ -46,12 +46,12 @@ import static org.ethereum.sharding.util.BeaconUtils.getSlotStartTime;
 import static org.ethereum.sharding.util.BeaconUtils.scanCommittees;
 
 /**
- * Implementation of {@link ProposerService} that is based on {@link ScheduledExecutorService}.
+ * Implementation of {@link ValidatorService} that is based on {@link ScheduledExecutorService}.
  *
  * @author Mikhail Kalinin
  * @since 28.08.2018
  */
-public class ProposerServiceImpl implements ProposerService {
+public class ValidatorServiceImpl implements ValidatorService {
 
     private static final Logger logger = LoggerFactory.getLogger("proposer");
 
@@ -60,14 +60,14 @@ public class ProposerServiceImpl implements ProposerService {
     Publisher publisher;
     ValidatorConfig config;
 
-    private ScheduledExecutorService proposerThread;
+    private ScheduledExecutorService executor;
     private Map<Integer, ScheduledFuture> currentTasks = new ConcurrentHashMap<>();
     private Map<Integer, byte[]> pubKeysMap = new ConcurrentHashMap<>();
     private Set<Integer> validatorIndices;
     private long lastStateRecalc;
 
-    public ProposerServiceImpl(BeaconProposer proposer, BeaconChain beaconChain,
-                               Publisher publisher, ValidatorConfig config) {
+    public ValidatorServiceImpl(BeaconProposer proposer, BeaconChain beaconChain,
+                                Publisher publisher, ValidatorConfig config) {
         this.proposer = proposer;
         this.beaconChain = beaconChain;
         this.publisher = publisher;
@@ -94,7 +94,7 @@ public class ProposerServiceImpl implements ProposerService {
             this.validatorIndices.add(validator.getIndex());
         }
 
-        this.proposerThread = Executors.newSingleThreadScheduledExecutor((r) -> {
+        this.executor = Executors.newSingleThreadScheduledExecutor((r) -> {
             Thread t = Executors.defaultThreadFactory().newThread(r);
             t.setName("beacon-proposer-thread");
             t.setDaemon(true);
@@ -129,14 +129,14 @@ public class ProposerServiceImpl implements ProposerService {
             // proposer = committee[X % len(committee)], X = slotNumber
             // taken from the spec
             if (slotNumber % index.getCommitteeSize() == index.getArrayIdx()) {
-                this.submit(slotNumber, index.getValidatorIdx());
+                this.propose(slotNumber, index.getValidatorIdx());
             }
         }
     }
 
     @Override
-    public void submit(long slotNumber, int validatorIdx) {
-        if (proposerThread == null) return;
+    public void propose(long slotNumber, int validatorIdx) {
+        if (executor == null) return;
 
         // skip slots that start in the past
         if (slotNumber <= getCurrentSlotNumber())
@@ -147,7 +147,7 @@ public class ProposerServiceImpl implements ProposerService {
             currentTasks.get(validatorIdx).cancel(false);
 
         long delayMillis = getSlotStartTime(slotNumber) - System.currentTimeMillis();
-        ScheduledFuture newTask = proposerThread.schedule(() -> {
+        ScheduledFuture newTask = executor.schedule(() -> {
             try {
                 Beacon newBlock = proposer.createNewBlock(slotNumber, pubKeysMap.get(validatorIdx));
                 beaconChain.insert(newBlock);
@@ -159,6 +159,6 @@ public class ProposerServiceImpl implements ProposerService {
         }, delayMillis, TimeUnit.MILLISECONDS);
         currentTasks.put(validatorIdx, newTask);
 
-        logger.info("Validator {}: schedule new block #{}, proposing in {}ms", validatorIdx, slotNumber, delayMillis);
+        logger.info("Validator {}: schedule new slot #{}, proposing in {}ms", validatorIdx, slotNumber, delayMillis);
     }
 }

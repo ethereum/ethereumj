@@ -32,7 +32,7 @@ import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.sharding.config.DepositContractConfig;
 import org.ethereum.sharding.processing.BeaconChain;
-import org.ethereum.sharding.proposer.ProposerService;
+import org.ethereum.sharding.proposer.ValidatorService;
 import org.ethereum.sharding.pubsub.BeaconChainSynced;
 import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.pubsub.ValidatorStateUpdated;
@@ -144,11 +144,11 @@ public class ShardingWorldManager extends WorldManager {
         contractInit.thenRunAsync(this.validatorRegistrationService::init);
     }
 
-    public void setProposerService(final ProposerService proposerService) {
+    public void setProposerService(final ValidatorService validatorService) {
         // start only if validator is enlisted and after sync is finished
         publisher.subscribe(BeaconChainSynced.class, data -> {
             if (validatorRegistrationService.getState() == ValidatorRegistrationService.State.Enlisted) {
-                proposerService.init(data.getState(), validatorRegistrationService.pubKeys());
+                validatorService.init(data.getState(), validatorRegistrationService.pubKeys());
             }
         });
     }
