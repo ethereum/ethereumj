@@ -17,6 +17,7 @@
  */
 package org.ethereum.sharding.validator;
 
+import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.processing.state.BeaconState;
 
 /**
@@ -30,13 +31,32 @@ import org.ethereum.sharding.processing.state.BeaconState;
 public interface ValidatorService {
 
     /**
+     * It is assumed that blocks which are distant from canonical chain head by this number or further
+     * can't be affected by reorg in the future. Thus, proved mainChainRef should start from that distance.
+     */
+    long REORG_SAFE_DISTANCE = 32;
+
+    /**
      * Initializes service.
      */
-    default void init(BeaconState state, byte[]... pubKeys) {}
+    default void init(ChainHead head, byte[]... pubKeys) {}
 
     /**
      * Submits a task to propose block with given slot number.
      * Thread safe.
      */
     default void propose(long slotNumber, int validatorIdx) {}
+
+    /**
+     * Handy aggregator
+     */
+    class ChainHead {
+        Beacon block;
+        BeaconState state;
+
+        public ChainHead(Beacon block, BeaconState state) {
+            this.block = block;
+            this.state = state;
+        }
+    }
 }

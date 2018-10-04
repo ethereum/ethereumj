@@ -128,7 +128,7 @@ public class BeaconConfig {
     public ValidatorService validatorService() {
         if (validatorConfig().isEnabled()) {
             ValidatorService validatorService = new ValidatorServiceImpl(beaconProposer(), beaconChain(),
-                    publisher(), validatorConfig());
+                    publisher(), validatorConfig(), ethereum, blockStore);
             shardingWorldManager.setProposerService(validatorService);
             return validatorService;
         } else {
@@ -216,7 +216,7 @@ public class BeaconConfig {
 
     @Bean
     public BeaconProposer beaconProposer() {
-        return new BeaconProposerImpl(ethereum, publisher(), randao(), beaconStateRepository(),
+        return new BeaconProposerImpl(randao(), beaconStateRepository(),
                 BeaconChainFactory.stateTransition(validatorRepository()), validatorConfig());
     }
 

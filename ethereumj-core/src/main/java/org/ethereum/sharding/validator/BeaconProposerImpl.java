@@ -17,18 +17,11 @@
  */
 package org.ethereum.sharding.validator;
 
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockSummary;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.db.BlockStore;
-import org.ethereum.facade.Ethereum;
-import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.sharding.config.ValidatorConfig;
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.domain.Validator;
-import org.ethereum.sharding.pubsub.BeaconBlockImported;
 import org.ethereum.sharding.pubsub.BeaconChainSynced;
-import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.processing.consensus.StateTransition;
 import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.StateRepository;
@@ -36,13 +29,11 @@ import org.ethereum.sharding.util.Randao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static java.lang.Math.max;
-
 /**
  * Default implementation of {@link BeaconProposer}.
  *
  * <p>
- *     <b>Note:</b> {@link #createNewBlock(long, byte[])} must not be called prior to {@link BeaconChainSynced} event,
+ *     <b>Note:</b> {@link #createNewBlock(Input, byte[])} must not be called prior to {@link BeaconChainSynced} event,
  *     handler of this event is used to finish proposer initialization
  *
  * @author Mikhail Kalinin
@@ -55,46 +46,14 @@ public class BeaconProposerImpl implements BeaconProposer {
     Randao randao;
     StateTransition<BeaconState> stateTransition;
     StateRepository repository;
-    BlockStore blockStore;
     ValidatorConfig config;
 
-    private byte[] mainChainRef;
-    private ChainHead head;
-
-    public BeaconProposerImpl(Ethereum ethereum, Publisher publisher, Randao randao,
-                              StateRepository repository, StateTransition<BeaconState> stateTransition,
-                              ValidatorConfig config) {
+    public BeaconProposerImpl(Randao randao, StateRepository repository,
+                              StateTransition<BeaconState> stateTransition, ValidatorConfig config) {
         this.randao = randao;
         this.repository = repository;
         this.stateTransition = stateTransition;
-        this.blockStore = ethereum.getBlockchain().getBlockStore();
-        this.mainChainRef = getMainChainRef(ethereum.getBlockchain().getBestBlock());
         this.config = config;
-
-        // init head
-        publisher.subscribe(BeaconChainSynced.class, data -> {
-            head = new ChainHead(data.getHead(), data.getState());
-        });
-
-        // update head
-        publisher.subscribe(BeaconBlockImported.class, data -> {
-            if (head != null && data.isBest()) {
-                head = new ChainHead(data.getBlock(), data.getState());
-            }
-        });
-
-        // update main chain ref
-        ethereum.addListener(new EthereumListenerAdapter() {
-            @Override
-            public void onBlock(BlockSummary blockSummary, boolean best) {
-                if (best)
-                    mainChainRef = getMainChainRef(blockSummary.getBlock());
-            }
-        });
-    }
-
-    byte[] getMainChainRef(Block mainChainHead) {
-        return blockStore.getBlockHashByNumber(max(0L, mainChainHead.getNumber() - REORG_SAFE_DISTANCE));
     }
 
     byte[] randaoReveal(BeaconState state, byte[] pubKey) {
@@ -113,24 +72,13 @@ public class BeaconProposerImpl implements BeaconProposer {
     }
 
     @Override
-    public Beacon createNewBlock(long slotNumber, byte[] pubKey) {
-        ChainHead recentHead = head;
-        Beacon block = new Beacon(recentHead.block.getHash(), randaoReveal(recentHead.state, pubKey), mainChainRef,
-                HashUtil.EMPTY_DATA_HASH, slotNumber);
-        BeaconState newState = stateTransition.applyBlock(block, recentHead.state);
+    public Beacon createNewBlock(Input in, byte[] pubKey) {
+        Beacon block = new Beacon(in.parent.getHash(), randaoReveal(in.state, pubKey), in.mainChainRef,
+                HashUtil.EMPTY_DATA_HASH, in.slotNumber);
+        BeaconState newState = stateTransition.applyBlock(block, in.state);
         block.setStateHash(newState.getHash());
 
         logger.info("New block created {}", block);
         return block;
-    }
-
-    class ChainHead {
-        Beacon block;
-        BeaconState state;
-
-        public ChainHead(Beacon block, BeaconState state) {
-            this.block = block;
-            this.state = state;
-        }
     }
 }

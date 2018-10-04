@@ -17,11 +17,15 @@
  */
 package org.ethereum.sharding.validator;
 
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockSummary;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.db.BlockStore;
+import org.ethereum.facade.Ethereum;
+import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.sharding.config.ValidatorConfig;
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.domain.Validator;
-import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.Committee;
 import org.ethereum.sharding.pubsub.BeaconBlockImported;
 import org.ethereum.sharding.pubsub.Publisher;
@@ -40,6 +44,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static java.lang.Math.max;
 import static org.ethereum.sharding.util.BeaconUtils.calcNextProposingSlot;
 import static org.ethereum.sharding.util.BeaconUtils.getCurrentSlotNumber;
 import static org.ethereum.sharding.util.BeaconUtils.getSlotStartTime;
@@ -59,29 +64,37 @@ public class ValidatorServiceImpl implements ValidatorService {
     BeaconChain beaconChain;
     Publisher publisher;
     ValidatorConfig config;
+    Ethereum ethereum;
+    BlockStore blockStore;
 
     private ScheduledExecutorService executor;
     private Map<Integer, ScheduledFuture> currentTasks = new ConcurrentHashMap<>();
     private Map<Integer, byte[]> pubKeysMap = new ConcurrentHashMap<>();
     private Set<Integer> validatorIndices;
     private long lastStateRecalc;
+    private ChainHead head;
+    private byte[] mainChainRef;
 
-    public ValidatorServiceImpl(BeaconProposer proposer, BeaconChain beaconChain,
-                                Publisher publisher, ValidatorConfig config) {
+    public ValidatorServiceImpl(BeaconProposer proposer, BeaconChain beaconChain, Publisher publisher,
+                                ValidatorConfig config, Ethereum ethereum, BlockStore blockStore) {
         this.proposer = proposer;
         this.beaconChain = beaconChain;
         this.publisher = publisher;
         this.config = config;
+        this.ethereum = ethereum;
+        this.blockStore = blockStore;
     }
 
     @Override
-    public void init(BeaconState state, byte[]... pubKeys) {
+    public void init(ChainHead head, byte[]... pubKeys) {
         assert pubKeys.length > 0;
 
         this.validatorIndices = new HashSet<>();
+        this.head = head;
+        this.mainChainRef = getMainChainRef(blockStore.getBestBlock());
 
         for (byte[] pubKey : pubKeys) {
-            Validator validator = state.getValidatorSet().getByPubKey(pubKey);
+            Validator validator = this.head.state.getValidatorSet().getByPubKey(pubKey);
             if (validator != null) {
                 this.validatorIndices.add(validator.getIndex());
                 this.pubKeysMap.put(validator.getIndex(), validator.getPubKey());
@@ -101,18 +114,40 @@ public class ValidatorServiceImpl implements ValidatorService {
             return t;
         });
 
-        this.lastStateRecalc = state.getCrystallizedState().getLastStateRecalc();
-        // submit initial task
-        submitIfAssigned(state.getCommittees());
+        this.lastStateRecalc = this.head.state.getCrystallizedState().getLastStateRecalc();
 
         // listen to state updates
         publisher.subscribe(BeaconBlockImported.class, (data) -> {
+            if (!data.isBest())
+                return;
+
             // trigger only if crystallized state has been recalculated
-            if (data.isBest() && data.getState().getCrystallizedState().getLastStateRecalc() > lastStateRecalc) {
+            if (data.getState().getCrystallizedState().getLastStateRecalc() > lastStateRecalc) {
                 this.lastStateRecalc = data.getState().getCrystallizedState().getLastStateRecalc();
                 this.submitIfAssigned(data.getState().getCommittees());
             }
+
+            // do not keep anything in mem if chain is not yet synced
+            if (this.head != null) {
+                this.head = new ChainHead(data.getBlock(), data.getState());
+            }
         });
+
+        // update main chain ref
+        ethereum.addListener(new EthereumListenerAdapter() {
+            @Override
+            public void onBlock(BlockSummary blockSummary, boolean best) {
+                if (best)
+                    mainChainRef = getMainChainRef(blockSummary.getBlock());
+            }
+        });
+
+        // and finally submit initial tasks
+        submitIfAssigned(this.head.state.getCommittees());
+    }
+
+    byte[] getMainChainRef(Block mainChainHead) {
+        return blockStore.getBlockHashByNumber(max(0L, mainChainHead.getNumber() - REORG_SAFE_DISTANCE));
     }
 
     private void submitIfAssigned(Committee[][] committees) {
@@ -149,7 +184,8 @@ public class ValidatorServiceImpl implements ValidatorService {
         long delayMillis = getSlotStartTime(slotNumber) - System.currentTimeMillis();
         ScheduledFuture newTask = executor.schedule(() -> {
             try {
-                Beacon newBlock = proposer.createNewBlock(slotNumber, pubKeysMap.get(validatorIdx));
+                BeaconProposer.Input input = new BeaconProposer.Input(slotNumber, head, mainChainRef);
+                Beacon newBlock = proposer.createNewBlock(input, pubKeysMap.get(validatorIdx));
                 beaconChain.insert(newBlock);
                 return newBlock;
             } catch (Throwable t) {

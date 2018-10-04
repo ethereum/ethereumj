@@ -18,6 +18,7 @@
 package org.ethereum.sharding.validator;
 
 import org.ethereum.sharding.domain.Beacon;
+import org.ethereum.sharding.processing.state.BeaconState;
 
 /**
  * Beacon chain block proposer.
@@ -37,17 +38,32 @@ public interface BeaconProposer {
     long SLOT_DURATION = 8 * 1000; // 8 seconds
 
     /**
-     * It is assumed that blocks which are distant from canonical chain head by this number or further
-     * can't be affected by reorg in the future. Thus, proved mainChainRef should start from that distance.
-     */
-    long REORG_SAFE_DISTANCE = 32;
-
-    /**
      * Creates new block on top of the beacon chain head.
      *
-     * @param slotNumber number of the slot that block does belong to.
+     * @param in inputs for the new block
      * @param pubKey public key of the validator that the block will be created by
      * @return newly created block
      */
-    Beacon createNewBlock(long slotNumber, byte[] pubKey);
+    Beacon createNewBlock(Input in, byte[] pubKey);
+
+    class Input {
+        long slotNumber;
+        Beacon parent;
+        BeaconState state;
+        byte[] mainChainRef;
+
+        public Input(long slotNumber, Beacon parent, BeaconState state, byte[] mainChainRef) {
+            this.slotNumber = slotNumber;
+            this.parent = parent;
+            this.state = state;
+            this.mainChainRef = mainChainRef;
+        }
+
+        public Input(long slotNumber, ValidatorService.ChainHead head, byte[] mainChainRef) {
+            this.slotNumber = slotNumber;
+            this.parent = head.block;
+            this.state = head.state;
+            this.mainChainRef = mainChainRef;
+        }
+    }
 }

@@ -64,7 +64,7 @@ public class BeaconChainImpl implements BeaconChain {
 
     Publisher publisher;
 
-    private ChainHead canonicalHead;
+    private ScoredChainHead canonicalHead;
 
     public BeaconChainImpl(DbFlushManager beaconDbFlusher, BeaconStore store,
                            StateTransition<BeaconState> transitionFunction, StateRepository repository,
@@ -87,7 +87,7 @@ public class BeaconChainImpl implements BeaconChain {
         if (store.getCanonicalHead() == null)
             insertGenesis();
 
-        canonicalHead = new ChainHead(store.getCanonicalHead(), store.getCanonicalHeadScore(),
+        canonicalHead = new ScoredChainHead(store.getCanonicalHead(), store.getCanonicalHeadScore(),
                 repository.get(store.getCanonicalHead().getStateHash()));
 
         publish(onBeaconChainLoaded(canonicalHead.block, canonicalHead.state));
@@ -132,7 +132,7 @@ public class BeaconChainImpl implements BeaconChain {
         BigInteger blockScore = scoreFunction.apply(block, newState);
         BigInteger chainScore = store.getChainScore(parent.getHash()).add(blockScore);
 
-        ChainHead newHead = new ChainHead(block, chainScore, newState);
+        ScoredChainHead newHead = new ScoredChainHead(block, chainScore, newState);
 
         beaconDbFlusher.commit(() -> {
 
@@ -181,34 +181,6 @@ public class BeaconChainImpl implements BeaconChain {
             return canonicalHead.state;
 
         return repository.get(block.getStateHash());
-    }
-
-    static class ChainHead {
-        final Beacon block;
-        final BigInteger score;
-        final BeaconState state;
-
-        public ChainHead(Beacon block, BigInteger score, BeaconState state) {
-            this.block = block;
-            this.score = score;
-            this.state = state;
-        }
-
-        public boolean isParentOf(ChainHead other) {
-            return this.block.isParentOf(other.block);
-        }
-
-        public boolean shouldReorgTo(ChainHead other) {
-            return !this.isParentOf(other) && this.score.compareTo(other.score) < 0;
-        }
-
-        @Override
-        public boolean equals(Object other) {
-            if (this == other) return true;
-            if (!(other instanceof ChainHead)) return false;
-
-            return this.block.equals(((ChainHead) other).block);
-        }
     }
 
     void publish(Event e) {
