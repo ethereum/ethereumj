@@ -42,7 +42,6 @@ public class KafkaConfig {
 
   @Bean()
   public KafkaEthereumListener kafkaEthereumListener() {
-    // return Object to prevent clash with default listener. We only need to add a listener to the composite listener
     final KafkaEthereumListener result = new KafkaEthereumListener(kafka(), blockchain);
     commonConfig.ethereumListener().addListener(result);
     return result;
