@@ -41,6 +41,7 @@ import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.ByteUtil.toHexString;
 import static org.ethereum.vm.OpCode.*;
+import static org.ethereum.vm.VMUtils.getSizeInWords;
 
 /**
  * The Ethereum Virtual Machine (EVM) is responsible for initialization
@@ -319,8 +320,11 @@ public class VM {
                     break;
                 case SHA3:
                     gasCost = gasCosts.getSHA3() + calcMemGas(gasCosts, oldMemSize, memNeeded(stack.peek(), stack.get(stack.size() - 2)), 0);
-                    DataWord size = stack.get(stack.size() - 2);
-                    long chunkUsed = (size.longValueSafe() + 31) / 32;
+                    long size = stack.get(stack.size() - 2).longValueSafe();
+                    if (size == Long.MAX_VALUE) {
+                        throw Program.Exception.gasOverflow(BigInteger.valueOf(size), BigInteger.valueOf(Long.MAX_VALUE));
+                    }
+                    long chunkUsed = getSizeInWords(size);
                     gasCost += chunkUsed * gasCosts.getSHA3_WORD();
                     break;
                 case CALLDATACOPY:
@@ -396,6 +400,12 @@ public class VM {
                 case CREATE2:
                     gasCost = gasCosts.getCREATE() + calcMemGas(gasCosts, oldMemSize,
                             memNeeded(stack.get(stack.size() - 2), stack.get(stack.size() - 3)), 0);
+                    long codeSize = stack.get(stack.size() - 3).longValueSafe();
+                    if (codeSize == Long.MAX_VALUE) {
+                        throw Program.Exception.gasOverflow(BigInteger.valueOf(codeSize), BigInteger.valueOf(Long.MAX_VALUE));
+                    }
+                    gasCost += getSizeInWords(codeSize) * gasCosts.getSHA3_WORD();
+
                     break;
                 case LOG0:
                 case LOG1:
