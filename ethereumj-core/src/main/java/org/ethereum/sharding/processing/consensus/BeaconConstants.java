@@ -34,7 +34,7 @@ public interface BeaconConstants {
     /**
      *  Number of slots in each cycle
      */
-    int CYCLE_LENGTH = 16;
+    int CYCLE_LENGTH = 64;
 
     /**
      * Number of shards

@@ -37,18 +37,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static java.lang.Math.max;
-import static org.ethereum.sharding.util.BeaconUtils.calcNextProposingSlot;
+import static org.ethereum.sharding.processing.consensus.BeaconConstants.SLOT_DURATION;
+import static org.ethereum.sharding.util.BeaconUtils.calcNextAssignedSlot;
 import static org.ethereum.sharding.util.BeaconUtils.getCurrentSlotNumber;
 import static org.ethereum.sharding.util.BeaconUtils.getSlotStartTime;
 import static org.ethereum.sharding.util.BeaconUtils.scanCommittees;
@@ -61,7 +60,7 @@ import static org.ethereum.sharding.util.BeaconUtils.scanCommittees;
  */
 public class ValidatorServiceImpl implements ValidatorService {
 
-    private static final Logger logger = LoggerFactory.getLogger("proposer");
+    private static final Logger logger = LoggerFactory.getLogger("validator");
 
     BeaconProposer proposer;
     BeaconChain beaconChain;
@@ -154,27 +153,29 @@ public class ValidatorServiceImpl implements ValidatorService {
     }
 
     private void submitIfAssigned(Committee[][] committees) {
-        // validator from only the first committee is eligible to propose beacon chain block
+        // validator from only the first committee is eligible to work on beacon chain
         List<Committee.Index> indices = scanCommittees(validatorIndices, committees)
                 .stream().filter(idx -> idx.getCommitteeIdx() == 0).collect(Collectors.toList());
         indices.sort((i1, i2) -> Integer.compare(i1.getSlotOffset(), i2.getSlotOffset()));
 
         for (Committee.Index index : indices) {
             // get number of the next slot that validator is eligible to propose
-            long slotNumber = calcNextProposingSlot(getCurrentSlotNumber(), index.getSlotOffset());
+            long slotNumber = calcNextAssignedSlot(getCurrentSlotNumber(), index.getSlotOffset());
 
             // not an obvious way of calculating proposer index,
             // proposer = committee[X % len(committee)], X = slotNumber
             // taken from the spec
             if (slotNumber % index.getCommitteeSize() == index.getArrayIdx()) {
                 this.propose(slotNumber, index.getValidatorIdx());
+            } else {
+                this.attest(slotNumber, index.getValidatorIdx());
             }
         }
     }
 
     @Override
     public void propose(long slotNumber, int validatorIdx) {
-        long delay = submit(slotNumber, validatorIdx, () -> {
+        long delay = submit(0L, slotNumber, validatorIdx, () -> {
             BeaconProposer.Input input = new BeaconProposer.Input(slotNumber, head, mainChainRef);
             Beacon newBlock = proposer.createNewBlock(input, pubKeysMap.get(validatorIdx));
             beaconChain.insert(newBlock);
@@ -184,7 +185,19 @@ public class ValidatorServiceImpl implements ValidatorService {
         if (delay >= 0) logger.info("Proposer {}: schedule new slot #{} in {}ms", validatorIdx, slotNumber, delay);
     }
 
-    <T> long submit(long slotNumber, int validatorIdx, Supplier<T> supplier) {
+    @Override
+    public void attest(long slotNumber, int validatorIdx) {
+        // attester's job should be triggered in the middle of slot's time period
+        long delay = submit(SLOT_DURATION / 2, slotNumber, validatorIdx, () -> {
+            // TODO add attester routine here
+            logger.info("Fake attestation on slot #{}", slotNumber);
+            return (Void) null;
+        });
+
+        if (delay >= 0) logger.info("Attester {}: schedule new slot #{} in {}ms", validatorIdx, slotNumber, delay);
+    }
+
+    <T> long submit(long delayShiftMillis, long slotNumber, int validatorIdx, Supplier<T> supplier) {
         if (executor == null) return -1L;
 
         // skip slots that start in the past
@@ -195,7 +208,7 @@ public class ValidatorServiceImpl implements ValidatorService {
         if (currentTasks.containsKey(validatorIdx))
             currentTasks.get(validatorIdx).cancel(false);
 
-        long delayMillis = getSlotStartTime(slotNumber) - System.currentTimeMillis();
+        long delayMillis = getSlotStartTime(slotNumber) + delayShiftMillis - System.currentTimeMillis();
         ScheduledFuture newTask = executor.schedule(() -> {
             try {
                 return supplier.get();

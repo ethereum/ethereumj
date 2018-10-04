@@ -48,6 +48,12 @@ public interface ValidatorService {
     default void propose(long slotNumber, int validatorIdx) {}
 
     /**
+     * Submits a task to make an attestation in a given slot number.
+     * Thread safe.
+     */
+    default void attest(long slotNumber, int validatorIdx) {}
+
+    /**
      * Handy aggregator
      */
     class ChainHead {
