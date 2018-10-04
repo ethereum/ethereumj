@@ -1,6 +1,7 @@
 package io.enkrypt.kafka.models;
 
 import java.math.BigInteger;
+import org.ethereum.config.BlockchainConfig;
 import org.ethereum.core.AccountState;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
@@ -76,5 +77,9 @@ public class Account {
 
   public boolean isEmpty() {
     return FastByteComparisons.equal(codeHash, EMPTY_DATA_HASH) && BigInteger.ZERO.equals(balance) && BigInteger.ZERO.equals(nonce);
+  }
+
+  public boolean isContract() {
+    return !FastByteComparisons.equal(codeHash, EMPTY_DATA_HASH);
   }
 }
