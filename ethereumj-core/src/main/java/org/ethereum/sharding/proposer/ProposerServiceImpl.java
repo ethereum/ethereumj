@@ -88,7 +88,7 @@ public class ProposerServiceImpl implements ProposerService {
             } else {
                 // something went wrong
                 logger.error("Failed to start proposer for {}: validator does not exist", HashUtil.shortHash(pubKey));
-                return;
+                throw new RuntimeException(HashUtil.shortHash(pubKey) + " validator does not exist");
             }
 
             this.validatorIndices.add(validator.getIndex());
