@@ -29,10 +29,9 @@ import org.ethereum.sharding.processing.BeaconChain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -62,8 +61,7 @@ public class ProposerServiceImpl implements ProposerService {
 
     private ScheduledExecutorService proposerThread;
     private Map<Integer, ScheduledFuture> currentTasks = new ConcurrentHashMap<>();
-    private Map<Integer, byte[]> pubKeysMap = new ConcurrentHashMap<>();
-    private Set<Integer> validatorIndices;
+    private Map<Integer, byte[]> pubKeysMap = new HashMap<>();
     private long lastStateRecalc;
 
     public ProposerServiceImpl(BeaconProposer proposer, BeaconChain beaconChain,
@@ -78,20 +76,15 @@ public class ProposerServiceImpl implements ProposerService {
     public void init(BeaconState state, byte[]... pubKeys) {
         assert pubKeys.length > 0;
 
-        this.validatorIndices = new HashSet<>();
-
         for (byte[] pubKey : pubKeys) {
             Validator validator = state.getValidatorSet().getByPubKey(pubKey);
             if (validator != null) {
-                this.validatorIndices.add(validator.getIndex());
                 this.pubKeysMap.put(validator.getIndex(), validator.getPubKey());
             } else {
                 // something went wrong
                 logger.error("Failed to start proposer for {}: validator does not exist", HashUtil.shortHash(pubKey));
                 throw new RuntimeException(HashUtil.shortHash(pubKey) + " validator does not exist");
             }
-
-            this.validatorIndices.add(validator.getIndex());
         }
 
         this.proposerThread = Executors.newSingleThreadScheduledExecutor((r) -> {
@@ -117,7 +110,7 @@ public class ProposerServiceImpl implements ProposerService {
 
     private void submitIfAssigned(Committee[][] committees) {
         // validator from only the first committee is eligible to propose beacon chain block
-        List<Committee.Index> indices = scanCommittees(validatorIndices, committees)
+        List<Committee.Index> indices = scanCommittees(pubKeysMap.keySet(), committees)
                 .stream().filter(idx -> idx.getCommitteeIdx() == 0).collect(Collectors.toList());
         indices.sort((i1, i2) -> Integer.compare(i1.getSlotOffset(), i2.getSlotOffset()));
 
