@@ -33,8 +33,8 @@ public class Events {
         return new BeaconBlockImported(block, state, best);
     }
 
-    public static BeaconChainLoaded onBeaconChainLoaded(Beacon head) {
-        return new BeaconChainLoaded(head);
+    public static BeaconChainLoaded onBeaconChainLoaded(Beacon head, BeaconState state) {
+        return new BeaconChainLoaded(head, state);
     }
 
     public static BeaconChainSynced onBeaconChainSynced(Beacon head, BeaconState state) {

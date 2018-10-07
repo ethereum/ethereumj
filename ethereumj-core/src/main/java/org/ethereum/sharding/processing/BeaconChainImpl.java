@@ -90,7 +90,7 @@ public class BeaconChainImpl implements BeaconChain {
         canonicalHead = new ChainHead(store.getCanonicalHead(), store.getCanonicalHeadScore(),
                 repository.get(store.getCanonicalHead().getStateHash()));
 
-        publish(onBeaconChainLoaded(canonicalHead.block));
+        publish(onBeaconChainLoaded(canonicalHead.block, canonicalHead.state));
         publish(onBeaconChainSynced(canonicalHead.block, canonicalHead.state));
 
         logger.info("Chain loaded with head: {}", canonicalHead.block);

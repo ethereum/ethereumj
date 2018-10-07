@@ -17,6 +17,7 @@
  */
 package org.ethereum.sharding.processing.consensus;
 
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.CrystallizedState;

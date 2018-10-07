@@ -75,7 +75,7 @@ public class BeaconProposerTest {
             byte[] mainChainRef = helper.newMainChainBlockHash();
             Beacon parent = newBlock;
 
-            newBlock = proposer.createNewBlock(slotNumber);
+            newBlock = proposer.createNewBlock(slotNumber, new byte[] {});
             helper.insertBlock(newBlock);
             helper.checkBlock(newBlock, parent, reveal, mainChainRef, slotNumber);
 
@@ -104,11 +104,12 @@ public class BeaconProposerTest {
             if (block.isGenesis()) {
                 recentState = repository.getEmpty();
                 block.setStateHash(recentState.getHash());
+                publisher.publish(Events.onBeaconChainSynced(block, recentState));
             } else {
                 recentState = stateTransition.applyBlock(block, recentState);
+                publisher.publish(Events.onBeaconBlock(block, recentState, true));
             }
             repository.insert(recentState);
-            publisher.publish(Events.onBeaconBlock(block, recentState, true));
         }
 
         byte[] newMainChainBlockHash() {
@@ -143,7 +144,7 @@ public class BeaconProposerTest {
                 }
 
                 @Override
-                byte[] randaoReveal() {
+                byte[] randaoReveal(BeaconState state, byte[] pubKey) {
                     return randao.revealNext();
                 }
             };

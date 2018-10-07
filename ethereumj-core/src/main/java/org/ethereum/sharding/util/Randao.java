@@ -50,13 +50,20 @@ public class Randao {
         this.nextKey = src.get(NEXT_KEY);
     }
 
-    public void generate(int rounds) {
+    public byte[] generate(int rounds) {
         byte[] seed = new byte[IMAGE_SIZE];
         new SecureRandom().nextBytes(seed);
-        generate(rounds, seed);
+        return generate(rounds, seed);
     }
 
-    public void generate(int rounds, byte[] seed) {
+    /**
+     * Generates a hash onion data.
+     *
+     * @param rounds number of hashes
+     * @param seed a seed to start hashing from
+     * @return latest generated pre-image from which hash onion row does start
+     */
+    public byte[] generate(int rounds, byte[] seed) {
         assert seed != null;
 
         // update seed length to IMAGE_SIZE if needed
@@ -72,6 +79,8 @@ public class Randao {
 
         updateNextKey(seed);
         flush();
+
+        return src.get(seed);
     }
 
     public byte[] reveal(byte[] preImage) {

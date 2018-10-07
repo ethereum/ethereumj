@@ -28,6 +28,7 @@ import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.domain.Validator;
 import org.ethereum.sharding.pubsub.BeaconBlockImported;
 import org.ethereum.sharding.pubsub.BeaconChainLoaded;
+import org.ethereum.sharding.pubsub.BeaconChainSynced;
 import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.processing.consensus.StateTransition;
 import org.ethereum.sharding.processing.state.BeaconState;
@@ -40,6 +41,10 @@ import static java.lang.Math.max;
 
 /**
  * Default implementation of {@link BeaconProposer}.
+ *
+ * <p>
+ *     <b>Note:</b> {@link #createNewBlock(long, byte[])} must not be called prior to {@link BeaconChainSynced} event,
+ *     handler of this event is used to finish proposer initialization
  *
  * @author Mikhail Kalinin
  * @since 28.08.2018
@@ -55,8 +60,7 @@ public class BeaconProposerImpl implements BeaconProposer {
     ValidatorConfig config;
 
     private byte[] mainChainRef;
-    private Beacon head;
-    private BeaconState recentState;
+    private ChainHead head;
 
     public BeaconProposerImpl(Ethereum ethereum, Publisher publisher, Randao randao,
                               StateRepository repository, StateTransition<BeaconState> stateTransition,
@@ -69,16 +73,14 @@ public class BeaconProposerImpl implements BeaconProposer {
         this.config = config;
 
         // init head
-        publisher.subscribe(BeaconChainLoaded.class, data -> {
-            head = data.getHead();
-            recentState = this.repository.get(data.getHead().getStateHash());
+        publisher.subscribe(BeaconChainSynced.class, data -> {
+            head = new ChainHead(data.getHead(), data.getState());
         });
 
         // update head
         publisher.subscribe(BeaconBlockImported.class, data -> {
-            if (data.isBest()) {
-                head = data.getBlock();
-                recentState = this.repository.get(data.getBlock().getStateHash());
+            if (head != null && data.isBest()) {
+                head = new ChainHead(data.getBlock(), data.getState());
             }
         });
 
@@ -96,13 +98,13 @@ public class BeaconProposerImpl implements BeaconProposer {
         return blockStore.getBlockHashByNumber(max(0L, mainChainHead.getNumber() - REORG_SAFE_DISTANCE));
     }
 
-    byte[] randaoReveal() {
+    byte[] randaoReveal(BeaconState state, byte[] pubKey) {
         if (!config.isEnabled()) {
             logger.error("Failed to reveal Randao: validator is disabled in the config");
             return new byte[] {};
         }
 
-        Validator validator = recentState.getValidatorSet().getByPupKey(config.pubKey());
+        Validator validator = state.getValidatorSet().getByPubKey(pubKey);
         if (validator == null) {
             logger.error("Failed to reveal Randao: validator does not exist in the set");
             return new byte[] {};
@@ -112,13 +114,24 @@ public class BeaconProposerImpl implements BeaconProposer {
     }
 
     @Override
-    public Beacon createNewBlock(long slotNumber) {
-        Beacon block = new Beacon(head.getHash(), randaoReveal(), mainChainRef,
+    public Beacon createNewBlock(long slotNumber, byte[] pubKey) {
+        ChainHead recentHead = head;
+        Beacon block = new Beacon(recentHead.block.getHash(), randaoReveal(recentHead.state, pubKey), mainChainRef,
                 HashUtil.EMPTY_DATA_HASH, slotNumber);
-        BeaconState newState = stateTransition.applyBlock(block, recentState);
+        BeaconState newState = stateTransition.applyBlock(block, recentHead.state);
         block.setStateHash(newState.getHash());
 
         logger.info("New block created {}", block);
         return block;
+    }
+
+    class ChainHead {
+        Beacon block;
+        BeaconState state;
+
+        public ChainHead(Beacon block, BeaconState state) {
+            this.block = block;
+            this.state = state;
+        }
     }
 }

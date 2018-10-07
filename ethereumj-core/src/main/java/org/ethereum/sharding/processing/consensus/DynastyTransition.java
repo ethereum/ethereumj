@@ -24,7 +24,6 @@ import org.ethereum.sharding.processing.state.Dynasty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.ethereum.sharding.processing.consensus.BeaconConstants.CYCLE_LENGTH;
 import static org.ethereum.sharding.processing.consensus.BeaconConstants.MIN_DYNASTY_LENGTH;
 import static org.ethereum.sharding.util.BeaconUtils.cycleStartSlot;
 
@@ -56,7 +55,10 @@ public class DynastyTransition implements StateTransition<Dynasty> {
         // committee transition
         int startShard = to.getCommitteesEndShard() + 1;
         int[] validators = validatorSet.getActiveIndices();
-        Committee[][] committees = committeeFactory.create(block.getHash(), validators, startShard);
+
+        // using parent hash to seed committees instead of hash of processing block,
+        // the reason is that proposer does not know hash of newly created block before it applies that block to a state
+        Committee[][] committees = committeeFactory.create(block.getParentHash(), validators, startShard);
 
         return to.withNumberIncrement(1L)
                 .withStartSlot(cycleStartSlot(block))

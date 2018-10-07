@@ -18,6 +18,7 @@
 package org.ethereum.sharding.pubsub;
 
 import org.ethereum.sharding.domain.Beacon;
+import org.ethereum.sharding.processing.state.BeaconState;
 
 /**
  * Event that is triggered when beacon chain is just loaded.
@@ -32,17 +33,23 @@ public class BeaconChainLoaded extends Event<BeaconChainLoaded.Data> {
 
     public static class Data {
         private final Beacon head;
+        private final BeaconState state;
 
-        public Data(Beacon head) {
+        public Data(Beacon head, BeaconState state) {
             this.head = head;
+            this.state = state;
         }
 
         public Beacon getHead() {
             return head;
         }
+
+        public BeaconState getState() {
+            return state;
+        }
     }
 
-    public BeaconChainLoaded(Beacon head) {
-        super(new Data(head));
+    public BeaconChainLoaded(Beacon head, BeaconState state) {
+        super(new Data(head, state));
     }
 }

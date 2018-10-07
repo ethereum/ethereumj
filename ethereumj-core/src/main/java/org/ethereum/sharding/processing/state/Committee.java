@@ -63,7 +63,27 @@ public class Committee {
         return RLP.wrapList(intToBytesNoLeadZeroes(shardId), RLP.wrapList(encodedValidators));
     }
 
+    /**
+     *  Following schema should bring some clarity on what this index does include:
+     *
+     *  <pre>
+     *
+     *  committees[slotOffset][]      each slot cross-links on a number of shards
+     *   \
+     *    committee[committeeIdx]     each committee has a validators array
+     *    \
+     *     validators[arrayIdx]       indices in this array are defined by shuffling
+     *     \
+     *      validatorIdx              this number is an index of validator from validator set
+     *
+     *  committeeSize = slot[slotOffset].length
+     *  shardId       = committee[committeeIdx].shardId
+     *
+     *  </pre>
+     */
     public static class Index {
+        /* index of validator in active validator set */
+        private final int validatorIdx;
         /* shard Id */
         private final int shardId;
         /* an offset from cycle start slot */
@@ -73,20 +93,25 @@ public class Committee {
         /* length of validators array */
         private final int committeeSize;
         /* index in validators array */
-        private final int validatorIdx;
+        private final int arrayIdx;
 
-        public static final Index EMPTY = new Index(-1, -1, -1, -1, -1);
+        public static final Index EMPTY = new Index(-1, -1, -1, -1, -1, -1);
 
-        public Index(int shardId, int slotOffset, int committeeIdx, int committeeSize, int validatorIdx) {
+        public Index(int validatorIdx, int shardId, int slotOffset, int committeeIdx, int committeeSize, int arrayIdx) {
+            this.validatorIdx = validatorIdx;
             this.shardId = shardId;
             this.slotOffset = slotOffset;
             this.committeeIdx = committeeIdx;
             this.committeeSize = committeeSize;
-            this.validatorIdx = validatorIdx;
+            this.arrayIdx = arrayIdx;
         }
 
         public boolean isEmpty() {
             return shardId < 0 || slotOffset < 0 || committeeIdx < 0;
+        }
+
+        public int getValidatorIdx() {
+            return validatorIdx;
         }
 
         public int getShardId() {
@@ -105,8 +130,8 @@ public class Committee {
             return committeeSize;
         }
 
-        public int getValidatorIdx() {
-            return validatorIdx;
+        public int getArrayIdx() {
+            return arrayIdx;
         }
 
         @Override
@@ -116,22 +141,24 @@ public class Committee {
 
             Index index = (Index) o;
 
+            if (validatorIdx != index.validatorIdx) return false;
             if (shardId != index.shardId) return false;
             if (slotOffset != index.slotOffset) return false;
             if (committeeIdx != index.committeeIdx) return false;
             if (committeeSize != index.committeeSize) return false;
-            return validatorIdx == index.validatorIdx;
+            return arrayIdx == index.arrayIdx;
 
         }
 
         @Override
         public String toString() {
             return "Index{" +
-                    "shardId=" + shardId +
+                    "validatorIdx=" + validatorIdx +
+                    ", shardId=" + shardId +
                     ", slotOffset=" + slotOffset +
                     ", committeeIdx=" + committeeIdx +
                     ", committeeSize=" + committeeSize +
-                    ", validatorIdx=" + validatorIdx +
+                    ", arrayIdx=" + arrayIdx +
                     '}';
         }
     }

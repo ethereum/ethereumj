@@ -34,11 +34,19 @@ public interface ProposerService {
     /**
      * Initializes service.
      */
-    default void init(BeaconState state) {}
+    default void init(BeaconState state, byte[]... pubKeys) {}
 
     /**
      * Submits a task to propose block with given slot number.
      * Thread safe.
      */
-    default void submit(long slotNumber) {}
+    default void submit(long slotNumber) {
+        submit(slotNumber, 0);
+    }
+
+    /**
+     * Submits a task to propose block with given slot number.
+     * Thread safe.
+     */
+    default void submit(long slotNumber, int validatorIdx) {}
 }

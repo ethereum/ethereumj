@@ -1,36 +1,27 @@
-/*
- * Copyright (c) [2016] [ <ether.camp> ]
- * This file is part of the ethereumJ library.
- *
- * The ethereumJ library is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * The ethereumJ library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
- */
 package org.ethereum.sharding.service;
 
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.listener.EthereumListenerAdapter;
-import org.ethereum.sharding.pubsub.Publisher;
-import org.ethereum.sharding.util.Randao;
 import org.ethereum.sharding.config.ValidatorConfig;
 import org.ethereum.sharding.contract.DepositContract;
 import org.ethereum.sharding.crypto.DepositAuthority;
+import org.ethereum.sharding.domain.BeaconGenesis;
 import org.ethereum.sharding.domain.Validator;
+import org.ethereum.sharding.pubsub.Publisher;
+import org.ethereum.sharding.util.Randao;
+import org.ethereum.util.ByteArraySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import static org.ethereum.sharding.proposer.BeaconProposer.SLOT_DURATION;
 import static org.ethereum.sharding.pubsub.Events.onValidatorStateUpdated;
@@ -40,12 +31,10 @@ import static org.ethereum.sharding.service.ValidatorService.State.Undefined;
 import static org.ethereum.sharding.service.ValidatorService.State.WaitForDeposit;
 
 /**
- * Default implementation of {@link ValidatorService}
- *
  * @author Mikhail Kalinin
- * @since 21.07.2018
+ * @since 27.09.2018
  */
-public class ValidatorServiceImpl implements ValidatorService {
+public class MultiValidatorService implements ValidatorService {
 
     private static final Logger logger = LoggerFactory.getLogger("beacon");
 
@@ -59,8 +48,9 @@ public class ValidatorServiceImpl implements ValidatorService {
     Publisher publisher;
 
     private State state = Undefined;
+    private List<byte[]> pubKeys;
 
-    public ValidatorServiceImpl(Ethereum ethereum, ValidatorConfig config, DepositContract depositContract,
+    public MultiValidatorService(Ethereum ethereum, ValidatorConfig config, DepositContract depositContract,
                                 DepositAuthority depositAuthority, Randao randao, Publisher publisher) {
         assert config.isEnabled();
 
@@ -70,6 +60,7 @@ public class ValidatorServiceImpl implements ValidatorService {
         this.depositAuthority = depositAuthority;
         this.randao = randao;
         this.publisher = publisher;
+        this.pubKeys = fetchPubKeys();
     }
 
     @Override
@@ -100,7 +91,7 @@ public class ValidatorServiceImpl implements ValidatorService {
 
     @Override
     public byte[][] pubKeys() {
-        return new byte[][] { config.pubKey() };
+        return pubKeys.toArray(new byte[pubKeys.size()][]);
     }
 
     byte[] initRandao() {
@@ -109,32 +100,64 @@ public class ValidatorServiceImpl implements ValidatorService {
     }
 
     void deposit(byte[] randao) {
-        CompletableFuture<Validator> future = depositContract.deposit(
-                config.pubKey(), config.withdrawalShard(), config.withdrawalAddress(),
-                randao, depositAuthority);
+        Set<byte[]> toRegistration = Collections.synchronizedSet(new ByteArraySet());
+        toRegistration.addAll(notYetDeposited());
 
-        future.whenCompleteAsync((validator, t) -> {
-            if (validator != null) {
-                updateState(Enlisted);
-            } else {
-                logger.error("Validator: {}, deposit failed with error: {}",
-                        HashUtil.shortHash(config.pubKey()), t.getMessage());
-                updateState(DepositFailed);
-            }
-        });
+        for (byte[] pubKey : notYetDeposited()) {
+            CompletableFuture<Validator> future = depositContract.deposit(
+                    pubKey, config.withdrawalShard(), config.withdrawalAddress(),
+                    randao, depositAuthority);
+
+            future.whenCompleteAsync((validator, t) -> {
+                if (validator != null) {
+                    toRegistration.remove(validator.getPubKey());
+                    logState(pubKey, Enlisted);
+
+                    // update service state only if all validators has been registered
+                    if (toRegistration.isEmpty()) {
+                        updateState(Enlisted);
+                    }
+                } else {
+                    logger.error("Validator: {}, deposit failed with error: {}",
+                            HashUtil.shortHash(config.pubKey()), t.getMessage());
+                    updateState(DepositFailed);
+                }
+            });
+        }
     }
 
-    void updateState(State newState) {
+    synchronized void updateState(State newState) {
+        if (state == newState) return;
         state = newState;
         publisher.publish(onValidatorStateUpdated(newState));
-        logState();
+        logger.info("Validator service state: {}", state);
     }
 
-    void logState() {
-        logger.info("Validator: {}, state: {}", HashUtil.shortHash(config.pubKey()), state);
+    void logState(byte[] pubKey, State state) {
+        logger.info("Validator: {}, state: {}", HashUtil.shortHash(pubKey), state);
+    }
+
+    List<byte[]> notYetDeposited() {
+        List<byte[]> ret = new ArrayList<>();
+        for (byte[] pubKey : pubKeys) {
+            if (!depositContract.usedPubKey(pubKey)) {
+                ret.add(pubKey);
+            }
+        }
+        return ret;
     }
 
     boolean isEnlisted() {
-        return depositContract.usedPubKey(config.pubKey());
+        for (byte[] pubKey : pubKeys) {
+            if (!depositContract.usedPubKey(pubKey)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    List<byte[]> fetchPubKeys() {
+        return BeaconGenesis.instance().getInitialValidators()
+                .stream().map(Hex::decode).collect(Collectors.toList());
     }
 }

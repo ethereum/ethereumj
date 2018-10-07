@@ -54,18 +54,18 @@ public class TrieValidatorSetTest {
         assert !FastByteComparisons.equal(ValidatorSet.EMPTY_HASH, set.getHash());
 
         assertValidatorEquals(first, set.get(0));
-        assertValidatorEquals(first, set.getByPupKey(first.getPubKey()));
+        assertValidatorEquals(first, set.getByPubKey(first.getPubKey()));
 
         idx = set.add(second);
         assertEquals(1, idx);
         assertEquals(2, set.size());
 
         assertValidatorEquals(first, set.get(0));
-        assertValidatorEquals(first, set.getByPupKey(first.getPubKey()));
+        assertValidatorEquals(first, set.getByPubKey(first.getPubKey()));
         assertValidatorEquals(second, set.get(1));
-        assertValidatorEquals(second, set.getByPupKey(second.getPubKey()));
+        assertValidatorEquals(second, set.getByPubKey(second.getPubKey()));
 
-        assertNull(set.getByPupKey(randomHash()));
+        assertNull(set.getByPubKey(randomHash()));
     }
 
     @Test

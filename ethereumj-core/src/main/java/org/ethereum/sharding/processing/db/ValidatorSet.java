@@ -55,7 +55,7 @@ public interface ValidatorSet extends Source<Integer, Validator> {
      * Returns validator with given public key or {@code null} if it doesn't exist.
      */
     @Nullable
-    Validator getByPupKey(byte[] pubKey);
+    Validator getByPubKey(byte[] pubKey);
 
     /**
      * Replaces old validator entry with a new one.
