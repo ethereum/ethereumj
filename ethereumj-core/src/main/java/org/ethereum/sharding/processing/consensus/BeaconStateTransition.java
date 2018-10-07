@@ -17,13 +17,12 @@
  */
 package org.ethereum.sharding.processing.consensus;
 
-import org.ethereum.crypto.HashUtil;
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.CrystallizedState;
 import org.ethereum.sharding.processing.state.Dynasty;
 import org.ethereum.sharding.processing.state.Finality;
-import org.ethereum.sharding.service.ValidatorRepository;
+import org.ethereum.sharding.registration.ValidatorRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.sharding.service;
+package org.ethereum.sharding.registration;
 
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.facade.Ethereum;
@@ -32,20 +32,20 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.util.concurrent.CompletableFuture;
 
-import static org.ethereum.sharding.proposer.BeaconProposer.SLOT_DURATION;
+import static org.ethereum.sharding.validator.BeaconProposer.SLOT_DURATION;
 import static org.ethereum.sharding.pubsub.Events.onValidatorStateUpdated;
-import static org.ethereum.sharding.service.ValidatorService.State.DepositFailed;
-import static org.ethereum.sharding.service.ValidatorService.State.Enlisted;
-import static org.ethereum.sharding.service.ValidatorService.State.Undefined;
-import static org.ethereum.sharding.service.ValidatorService.State.WaitForDeposit;
+import static org.ethereum.sharding.registration.ValidatorRegistrationService.State.DepositFailed;
+import static org.ethereum.sharding.registration.ValidatorRegistrationService.State.Enlisted;
+import static org.ethereum.sharding.registration.ValidatorRegistrationService.State.Undefined;
+import static org.ethereum.sharding.registration.ValidatorRegistrationService.State.WaitForDeposit;
 
 /**
- * Default implementation of {@link ValidatorService}
+ * Default implementation of {@link ValidatorRegistrationService}
  *
  * @author Mikhail Kalinin
  * @since 21.07.2018
  */
-public class ValidatorServiceImpl implements ValidatorService {
+public class ValidatorRegistrationServiceImpl implements ValidatorRegistrationService {
 
     private static final Logger logger = LoggerFactory.getLogger("beacon");
 
@@ -60,8 +60,8 @@ public class ValidatorServiceImpl implements ValidatorService {
 
     private State state = Undefined;
 
-    public ValidatorServiceImpl(Ethereum ethereum, ValidatorConfig config, DepositContract depositContract,
-                                DepositAuthority depositAuthority, Randao randao, Publisher publisher) {
+    public ValidatorRegistrationServiceImpl(Ethereum ethereum, ValidatorConfig config, DepositContract depositContract,
+                                            DepositAuthority depositAuthority, Randao randao, Publisher publisher) {
         assert config.isEnabled();
 
         this.ethereum = ethereum;

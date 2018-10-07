@@ -15,26 +15,20 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.sharding.proposer;
+package org.ethereum.sharding.validator;
 
 import org.ethereum.sharding.domain.Beacon;
+import org.ethereum.sharding.processing.state.BeaconState;
 
 /**
- * Beacon chain block proposer.
- *
- * <p>
- *     Is responsible only for creating new block.
- *     Task scheduling is provided by {@link ProposerService}
+ * Service that is responsible for scheduling attestation and proposal tasks for the beacon chain validator.
  *
  * @author Mikhail Kalinin
  * @since 28.08.2018
+ *
+ * @see BeaconProposer
  */
-public interface BeaconProposer {
-
-    /**
-     * Slot duration for the beacon chain
-     */
-    long SLOT_DURATION = 8 * 1000; // 8 seconds
+public interface ValidatorService {
 
     /**
      * It is assumed that blocks which are distant from canonical chain head by this number or further
@@ -43,11 +37,32 @@ public interface BeaconProposer {
     long REORG_SAFE_DISTANCE = 32;
 
     /**
-     * Creates new block on top of the beacon chain head.
-     *
-     * @param slotNumber number of the slot that block does belong to.
-     * @param pubKey public key of the validator that the block will be created by
-     * @return newly created block
+     * Initializes service.
      */
-    Beacon createNewBlock(long slotNumber, byte[] pubKey);
+    default void init(ChainHead head, byte[]... pubKeys) {}
+
+    /**
+     * Submits a task to propose block with given slot number.
+     * Thread safe.
+     */
+    default void propose(long slotNumber, int validatorIdx) {}
+
+    /**
+     * Submits a task to make an attestation in a given slot number.
+     * Thread safe.
+     */
+    default void attest(long slotNumber, int validatorIdx) {}
+
+    /**
+     * Handy aggregator
+     */
+    class ChainHead {
+        Beacon block;
+        BeaconState state;
+
+        public ChainHead(Beacon block, BeaconState state) {
+            this.block = block;
+            this.state = state;
+        }
+    }
 }

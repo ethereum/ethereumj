@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.sharding.service;
+package org.ethereum.sharding.registration;
 
 import org.ethereum.sharding.config.ValidatorConfig;
 
@@ -25,7 +25,7 @@ import org.ethereum.sharding.config.ValidatorConfig;
  * @author Mikhail Kalinin
  * @since 26.07.2018
  */
-public interface ValidatorService {
+public interface ValidatorRegistrationService {
 
     /**
      * Deposit validator when sync is done.

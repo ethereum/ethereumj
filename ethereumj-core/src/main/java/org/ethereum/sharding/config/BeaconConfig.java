@@ -35,8 +35,6 @@ import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.TransactionStore;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.manager.WorldManager;
-import org.ethereum.sharding.processing.db.TrieValidatorSet;
-import org.ethereum.sharding.processing.db.ValidatorSet;
 import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.manager.ShardingWorldManager;
 import org.ethereum.sharding.processing.BeaconChain;
@@ -45,19 +43,18 @@ import org.ethereum.sharding.processing.db.BeaconStore;
 import org.ethereum.sharding.processing.db.IndexedBeaconStore;
 import org.ethereum.sharding.processing.state.BeaconStateRepository;
 import org.ethereum.sharding.processing.state.StateRepository;
-import org.ethereum.sharding.proposer.BeaconProposer;
-import org.ethereum.sharding.proposer.BeaconProposerImpl;
-import org.ethereum.sharding.proposer.ProposerService;
-import org.ethereum.sharding.proposer.ProposerServiceImpl;
-import org.ethereum.sharding.service.MultiValidatorService;
-import org.ethereum.sharding.service.ValidatorRepositoryImpl;
-import org.ethereum.sharding.service.ValidatorService;
+import org.ethereum.sharding.validator.BeaconProposer;
+import org.ethereum.sharding.validator.BeaconProposerImpl;
+import org.ethereum.sharding.validator.ValidatorService;
+import org.ethereum.sharding.validator.ValidatorServiceImpl;
+import org.ethereum.sharding.registration.MultiValidatorRegistrationService;
+import org.ethereum.sharding.registration.ValidatorRepositoryImpl;
+import org.ethereum.sharding.registration.ValidatorRegistrationService;
 import org.ethereum.sharding.crypto.DepositAuthority;
 import org.ethereum.sharding.contract.DepositContract;
 import org.ethereum.sharding.crypto.UnsecuredDepositAuthority;
 import org.ethereum.sharding.util.Randao;
-import org.ethereum.sharding.service.ValidatorRepository;
-import org.ethereum.sharding.service.ValidatorServiceImpl;
+import org.ethereum.sharding.registration.ValidatorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Condition;
@@ -115,27 +112,27 @@ public class BeaconConfig {
     }
 
     @Bean
-    public ValidatorService validatorService() {
-        ValidatorService validatorService;
+    public ValidatorRegistrationService validatorRegistrationService() {
+        ValidatorRegistrationService validatorRegistrationService;
         if (validatorConfig().isEnabled()) {
-            validatorService = new MultiValidatorService(ethereum, validatorConfig(),
+            validatorRegistrationService = new MultiValidatorRegistrationService(ethereum, validatorConfig(),
                     depositContract(), depositAuthority(), randao(), publisher());
         } else {
-            validatorService = new ValidatorService() {};
+            validatorRegistrationService = new ValidatorRegistrationService() {};
         }
-        shardingWorldManager.setValidatorService(validatorService);
-        return validatorService;
+        shardingWorldManager.setValidatorRegistrationService(validatorRegistrationService);
+        return validatorRegistrationService;
     }
 
     @Bean
-    public ProposerService proposerService() {
+    public ValidatorService validatorService() {
         if (validatorConfig().isEnabled()) {
-            ProposerService proposerService = new ProposerServiceImpl(beaconProposer(), beaconChain(),
-                    publisher(), validatorConfig());
-            shardingWorldManager.setProposerService(proposerService);
-            return proposerService;
+            ValidatorService validatorService = new ValidatorServiceImpl(beaconProposer(), beaconChain(),
+                    publisher(), validatorConfig(), ethereum, blockStore);
+            shardingWorldManager.setProposerService(validatorService);
+            return validatorService;
         } else {
-            return new ProposerService() {};
+            return new ValidatorService() {};
         }
     }
 
@@ -219,7 +216,7 @@ public class BeaconConfig {
 
     @Bean
     public BeaconProposer beaconProposer() {
-        return new BeaconProposerImpl(ethereum, publisher(), randao(), beaconStateRepository(),
+        return new BeaconProposerImpl(randao(), beaconStateRepository(),
                 BeaconChainFactory.stateTransition(validatorRepository()), validatorConfig());
     }
 

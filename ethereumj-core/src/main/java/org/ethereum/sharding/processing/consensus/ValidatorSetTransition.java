@@ -19,7 +19,7 @@ package org.ethereum.sharding.processing.consensus;
 
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.processing.db.ValidatorSet;
-import org.ethereum.sharding.service.ValidatorRepository;
+import org.ethereum.sharding.registration.ValidatorRepository;
 
 /**
  * @author Mikhail Kalinin

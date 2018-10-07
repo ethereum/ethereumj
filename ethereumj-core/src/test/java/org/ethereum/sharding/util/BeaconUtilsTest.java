@@ -20,10 +20,9 @@ package org.ethereum.sharding.util;
 import org.ethereum.sharding.domain.BeaconGenesis;
 import org.ethereum.sharding.processing.consensus.BeaconConstants;
 import org.ethereum.sharding.processing.state.Committee;
-import org.ethereum.sharding.proposer.BeaconProposer;
 import org.junit.Test;
 
-import static org.ethereum.sharding.proposer.BeaconProposer.SLOT_DURATION;
+import static org.ethereum.sharding.validator.BeaconProposer.SLOT_DURATION;
 import static org.junit.Assert.assertEquals;
 
 /**

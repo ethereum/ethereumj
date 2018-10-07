@@ -19,7 +19,7 @@ package org.ethereum.sharding.pubsub;
 
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.processing.state.BeaconState;
-import org.ethereum.sharding.service.ValidatorService;
+import org.ethereum.sharding.registration.ValidatorRegistrationService;
 
 /**
  * Provides shortcuts to {@link Event} constructors.
@@ -41,7 +41,7 @@ public class Events {
         return new BeaconChainSynced(head, state);
     }
 
-    public static ValidatorStateUpdated onValidatorStateUpdated(ValidatorService.State newState) {
+    public static ValidatorStateUpdated onValidatorStateUpdated(ValidatorRegistrationService.State newState) {
         return new ValidatorStateUpdated(newState);
     }
 }

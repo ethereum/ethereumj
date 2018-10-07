@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.sharding.service;
+package org.ethereum.sharding.registration;
 
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.sharding.ShardingTestHelper;
@@ -30,19 +30,19 @@ import static org.junit.Assert.assertEquals;
  * @since 28.07.2018
  */
 @Ignore
-public class ValidatorServiceTest {
+public class ValidatorRegistrationServiceTest {
 
     @Test
     public void testRegistration() throws InterruptedException {
         ShardingTestHelper.ShardingBootstrap bootstrap = ShardingTestHelper.bootstrap();
 
-        ValidatorService validator = bootstrap.validatorService;
+        ValidatorRegistrationService validator = bootstrap.validatorRegistrationService;
         StandaloneBlockchain blockchain = bootstrap.standaloneBlockchain;
 
-        assertEquals(ValidatorService.State.Undefined, validator.getState());
+        assertEquals(ValidatorRegistrationService.State.Undefined, validator.getState());
 
         validator.init();
-        assertEquals(ValidatorService.State.WaitForDeposit, validator.getState());
+        assertEquals(ValidatorRegistrationService.State.WaitForDeposit, validator.getState());
 
         // trigger sync done, it runs validator registration
         blockchain.getListener().onSyncDone(EthereumListener.SyncState.COMPLETE);
@@ -51,18 +51,18 @@ public class ValidatorServiceTest {
         blockchain.createBlock();
 
         for (int i = 0; i < 10; i++) {
-            if (!validator.getState().equals(ValidatorService.State.WaitForDeposit)) {
+            if (!validator.getState().equals(ValidatorRegistrationService.State.WaitForDeposit)) {
                 break;
             }
             Thread.sleep(500);
         }
 
-        assertEquals(validator.getState(), ValidatorService.State.Enlisted);
+        assertEquals(validator.getState(), ValidatorRegistrationService.State.Enlisted);
 
         // check validator restart
-        ValidatorService cleanValidator = ShardingTestHelper.brandNewValidatorService(bootstrap);
+        ValidatorRegistrationService cleanValidator = ShardingTestHelper.brandNewValidatorService(bootstrap);
         cleanValidator.init();
 
-        assertEquals(cleanValidator.getState(), ValidatorService.State.Enlisted);
+        assertEquals(cleanValidator.getState(), ValidatorRegistrationService.State.Enlisted);
     }
 }

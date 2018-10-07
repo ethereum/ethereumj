@@ -15,19 +15,10 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.sharding.proposer;
+package org.ethereum.sharding.validator;
 
-import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
-import org.ethereum.core.BlockSummary;
-import org.ethereum.core.BlockchainImpl;
-import org.ethereum.core.EventDispatchThread;
 import org.ethereum.datasource.inmem.HashMapDB;
-import org.ethereum.facade.Blockchain;
-import org.ethereum.facade.Ethereum;
-import org.ethereum.facade.EthereumImpl;
-import org.ethereum.listener.CompositeEthereumListener;
-import org.ethereum.listener.EthereumListener;
 import org.ethereum.sharding.config.ValidatorConfig;
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.domain.BeaconGenesis;
@@ -36,21 +27,14 @@ import org.ethereum.sharding.processing.consensus.StateTransition;
 import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.BeaconStateRepository;
 import org.ethereum.sharding.processing.state.StateRepository;
-import org.ethereum.sharding.pubsub.Event;
-import org.ethereum.sharding.pubsub.Events;
-import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.util.Randao;
 import org.junit.Test;
 
 import java.math.BigInteger;
-import java.util.Collections;
-import java.util.List;
-import java.util.function.Consumer;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.crypto.HashUtil.blake2b;
 import static org.ethereum.crypto.HashUtil.randomHash;
-import static org.ethereum.sharding.proposer.BeaconProposer.SLOT_DURATION;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -75,7 +59,8 @@ public class BeaconProposerTest {
             byte[] mainChainRef = helper.newMainChainBlockHash();
             Beacon parent = newBlock;
 
-            newBlock = proposer.createNewBlock(slotNumber, new byte[] {});
+            BeaconProposer.Input in = new BeaconProposer.Input(slotNumber, parent, helper.recentState, mainChainRef);
+            newBlock = proposer.createNewBlock(in, new byte[] {});
             helper.insertBlock(newBlock);
             helper.checkBlock(newBlock, parent, reveal, mainChainRef, slotNumber);
 
@@ -85,8 +70,6 @@ public class BeaconProposerTest {
 
     static class Helper {
         BeaconProposer proposer;
-        EthereumListener listener;
-        Publisher publisher;
         Randao randao;
         StateTransition<BeaconState> stateTransition;
         StateRepository repository;
@@ -104,10 +87,8 @@ public class BeaconProposerTest {
             if (block.isGenesis()) {
                 recentState = repository.getEmpty();
                 block.setStateHash(recentState.getHash());
-                publisher.publish(Events.onBeaconChainSynced(block, recentState));
             } else {
                 recentState = stateTransition.applyBlock(block, recentState);
-                publisher.publish(Events.onBeaconBlock(block, recentState, true));
             }
             repository.insert(recentState);
         }
@@ -115,8 +96,6 @@ public class BeaconProposerTest {
         byte[] newMainChainBlockHash() {
             Block block = new Block(randomHash(), randomHash(), null, null, BigInteger.ONE.toByteArray(), 1L, new byte[]{0},
                                     0, 0, null, null, null, null, EMPTY_TRIE_HASH, randomHash(), null, null);
-            listener.onBlock(new BlockSummary(block, Collections.emptyMap(), Collections.emptyList(),
-                    Collections.emptyList()), true);
 
             return block.getHash();
         }
@@ -129,79 +108,20 @@ public class BeaconProposerTest {
                     new HashMapDB<>(), new HashMapDB<>());
             StateTransition<BeaconState> stateTransition = new NoTransition();
 
-            CompositeEthereumListenerMock listener = new CompositeEthereumListenerMock();
-            Ethereum ethereum = new EthereumMock(listener);
-
-            Publisher publisher = new PublisherMock();
-
-
             Helper helper = new Helper();
-            helper.proposer = new BeaconProposerImpl(ethereum, publisher, randao, repository, stateTransition,
+            helper.proposer = new BeaconProposerImpl(randao, repository, stateTransition,
                     ValidatorConfig.DISABLED) {
-                @Override
-                byte[] getMainChainRef(Block mainChainHead) {
-                    return mainChainHead.getHash();
-                }
 
                 @Override
                 byte[] randaoReveal(BeaconState state, byte[] pubKey) {
                     return randao.revealNext();
                 }
             };
-            helper.listener = listener;
-            helper.publisher = publisher;
             helper.randao = randao;
             helper.stateTransition = stateTransition;
             helper.repository = repository;
 
             return helper;
-        }
-    }
-
-    static class PublisherMock extends Publisher {
-        public PublisherMock() {
-            super(EventDispatchThread.getDefault());
-        }
-
-        @Override
-        public void publish(Event event) {
-            List<Consumer> subs = subscriptionMap.getOrDefault(event.getClass(), Collections.emptyList());
-            subs.forEach(s -> s.accept(event.getData()));
-        }
-    }
-
-    static class CompositeEthereumListenerMock extends CompositeEthereumListener {
-        @Override
-        public void onBlock(BlockSummary blockSummary, boolean best) {
-            for (EthereumListener l : listeners) {
-                l.onBlock(blockSummary, best);
-            }
-        }
-    }
-
-    static class EthereumMock extends EthereumImpl {
-
-        CompositeEthereumListener listener;
-
-        public EthereumMock(CompositeEthereumListener listener) {
-            super(SystemProperties.getDefault(), listener);
-            this.listener = listener;
-        }
-
-        @Override
-        public void addListener(EthereumListener listener) {
-            this.listener.addListener(listener);
-        }
-
-        @Override
-        public Blockchain getBlockchain() {
-            return new BlockchainImpl() {
-                @Override
-                public synchronized Block getBestBlock() {
-                    return new Block(randomHash(), randomHash(), null, null, BigInteger.ONE.toByteArray(),
-                            1L, new byte[]{0}, 0, 0, null, null, null, null, EMPTY_TRIE_HASH, randomHash(), null, null);
-                }
-            };
         }
     }
 }

@@ -15,13 +15,17 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.sharding.proposer;
+package org.ethereum.sharding.validator;
 
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockSummary;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.db.BlockStore;
+import org.ethereum.facade.Ethereum;
+import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.sharding.config.ValidatorConfig;
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.domain.Validator;
-import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.Committee;
 import org.ethereum.sharding.pubsub.BeaconBlockImported;
 import org.ethereum.sharding.pubsub.Publisher;
@@ -37,47 +41,59 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static org.ethereum.sharding.util.BeaconUtils.calcNextProposingSlot;
+import static java.lang.Math.max;
+import static org.ethereum.sharding.processing.consensus.BeaconConstants.SLOT_DURATION;
+import static org.ethereum.sharding.util.BeaconUtils.calcNextAssignedSlot;
 import static org.ethereum.sharding.util.BeaconUtils.getCurrentSlotNumber;
 import static org.ethereum.sharding.util.BeaconUtils.getSlotStartTime;
 import static org.ethereum.sharding.util.BeaconUtils.scanCommittees;
 
 /**
- * Implementation of {@link ProposerService} that is based on {@link ScheduledExecutorService}.
+ * Implementation of {@link ValidatorService} that is based on {@link ScheduledExecutorService}.
  *
  * @author Mikhail Kalinin
  * @since 28.08.2018
  */
-public class ProposerServiceImpl implements ProposerService {
+public class ValidatorServiceImpl implements ValidatorService {
 
-    private static final Logger logger = LoggerFactory.getLogger("proposer");
+    private static final Logger logger = LoggerFactory.getLogger("validator");
 
     BeaconProposer proposer;
     BeaconChain beaconChain;
     Publisher publisher;
     ValidatorConfig config;
+    Ethereum ethereum;
+    BlockStore blockStore;
 
-    private ScheduledExecutorService proposerThread;
+    private ScheduledExecutorService executor;
     private Map<Integer, ScheduledFuture> currentTasks = new ConcurrentHashMap<>();
     private Map<Integer, byte[]> pubKeysMap = new HashMap<>();
     private long lastStateRecalc;
+    private ChainHead head;
+    private byte[] mainChainRef;
 
-    public ProposerServiceImpl(BeaconProposer proposer, BeaconChain beaconChain,
-                               Publisher publisher, ValidatorConfig config) {
+    public ValidatorServiceImpl(BeaconProposer proposer, BeaconChain beaconChain, Publisher publisher,
+                                ValidatorConfig config, Ethereum ethereum, BlockStore blockStore) {
         this.proposer = proposer;
         this.beaconChain = beaconChain;
         this.publisher = publisher;
         this.config = config;
+        this.ethereum = ethereum;
+        this.blockStore = blockStore;
     }
 
     @Override
-    public void init(BeaconState state, byte[]... pubKeys) {
+    public void init(ChainHead head, byte[]... pubKeys) {
         assert pubKeys.length > 0;
 
+        this.head = head;
+        this.mainChainRef = getMainChainRef(blockStore.getBestBlock());
+
         for (byte[] pubKey : pubKeys) {
-            Validator validator = state.getValidatorSet().getByPubKey(pubKey);
+            Validator validator = this.head.state.getValidatorSet().getByPubKey(pubKey);
             if (validator != null) {
                 this.pubKeysMap.put(validator.getIndex(), validator.getPubKey());
             } else {
@@ -87,25 +103,47 @@ public class ProposerServiceImpl implements ProposerService {
             }
         }
 
-        this.proposerThread = Executors.newSingleThreadScheduledExecutor((r) -> {
+        this.executor = Executors.newSingleThreadScheduledExecutor((r) -> {
             Thread t = Executors.defaultThreadFactory().newThread(r);
             t.setName("beacon-proposer-thread");
             t.setDaemon(true);
             return t;
         });
 
-        this.lastStateRecalc = state.getCrystallizedState().getLastStateRecalc();
-        // submit initial task
-        submitIfAssigned(state.getCommittees());
+        this.lastStateRecalc = this.head.state.getCrystallizedState().getLastStateRecalc();
 
         // listen to state updates
         publisher.subscribe(BeaconBlockImported.class, (data) -> {
+            if (!data.isBest())
+                return;
+
             // trigger only if crystallized state has been recalculated
-            if (data.isBest() && data.getState().getCrystallizedState().getLastStateRecalc() > lastStateRecalc) {
+            if (data.getState().getCrystallizedState().getLastStateRecalc() > lastStateRecalc) {
                 this.lastStateRecalc = data.getState().getCrystallizedState().getLastStateRecalc();
                 this.submitIfAssigned(data.getState().getCommittees());
             }
+
+            // do not keep anything in mem if chain is not yet synced
+            if (this.head != null) {
+                this.head = new ChainHead(data.getBlock(), data.getState());
+            }
         });
+
+        // update main chain ref
+        ethereum.addListener(new EthereumListenerAdapter() {
+            @Override
+            public void onBlock(BlockSummary blockSummary, boolean best) {
+                if (best)
+                    mainChainRef = getMainChainRef(blockSummary.getBlock());
+            }
+        });
+
+        // and finally submit initial tasks
+        submitIfAssigned(this.head.state.getCommittees());
+    }
+
+    byte[] getMainChainRef(Block mainChainHead) {
+        return blockStore.getBlockHashByNumber(max(0L, mainChainHead.getNumber() - REORG_SAFE_DISTANCE));
     }
 
     private void submitIfAssigned(Committee[][] committees) {
@@ -116,42 +154,65 @@ public class ProposerServiceImpl implements ProposerService {
 
         for (Committee.Index index : indices) {
             // get number of the next slot that validator is eligible to propose
-            long slotNumber = calcNextProposingSlot(getCurrentSlotNumber(), index.getSlotOffset());
+            long slotNumber = calcNextAssignedSlot(getCurrentSlotNumber(), index.getSlotOffset());
 
             // not an obvious way of calculating proposer index,
             // proposer = committee[X % len(committee)], X = slotNumber
             // taken from the spec
             if (slotNumber % index.getCommitteeSize() == index.getArrayIdx()) {
-                this.submit(slotNumber, index.getValidatorIdx());
+                this.propose(slotNumber, index.getValidatorIdx());
+            } else {
+                this.attest(slotNumber, index.getValidatorIdx());
             }
         }
     }
 
     @Override
-    public void submit(long slotNumber, int validatorIdx) {
-        if (proposerThread == null) return;
+    public void propose(long slotNumber, int validatorIdx) {
+        long delay = submit(0L, slotNumber, validatorIdx, () -> {
+            BeaconProposer.Input input = new BeaconProposer.Input(slotNumber, head, mainChainRef);
+            Beacon newBlock = proposer.createNewBlock(input, pubKeysMap.get(validatorIdx));
+            beaconChain.insert(newBlock);
+            return newBlock;
+        });
+
+        if (delay >= 0) logger.info("Proposer {}: schedule new slot #{} in {}ms", validatorIdx, slotNumber, delay);
+    }
+
+    @Override
+    public void attest(long slotNumber, int validatorIdx) {
+        // attester's job should be triggered in the middle of slot's time period
+        long delay = submit(SLOT_DURATION / 2, slotNumber, validatorIdx, () -> {
+            // TODO add attester routine here
+            logger.info("Fake attestation on slot #{}", slotNumber);
+            return (Void) null;
+        });
+
+        if (delay >= 0) logger.info("Attester {}: schedule new slot #{} in {}ms", validatorIdx, slotNumber, delay);
+    }
+
+    <T> long submit(long delayShiftMillis, long slotNumber, int validatorIdx, Supplier<T> supplier) {
+        if (executor == null) return -1L;
 
         // skip slots that start in the past
         if (slotNumber <= getCurrentSlotNumber())
-            return;
+            return -1L;
 
         // always cancel current task and create a new one
         if (currentTasks.containsKey(validatorIdx))
             currentTasks.get(validatorIdx).cancel(false);
 
-        long delayMillis = getSlotStartTime(slotNumber) - System.currentTimeMillis();
-        ScheduledFuture newTask = proposerThread.schedule(() -> {
+        long delayMillis = getSlotStartTime(slotNumber) + delayShiftMillis - System.currentTimeMillis();
+        ScheduledFuture newTask = executor.schedule(() -> {
             try {
-                Beacon newBlock = proposer.createNewBlock(slotNumber, pubKeysMap.get(validatorIdx));
-                beaconChain.insert(newBlock);
-                return newBlock;
+                return supplier.get();
             } catch (Throwable t) {
-                logger.error("Failed to propose block", t);
+                logger.error("Failed to execute validator task", t);
                 throw t;
             }
         }, delayMillis, TimeUnit.MILLISECONDS);
         currentTasks.put(validatorIdx, newTask);
 
-        logger.info("Validator {}: schedule new block #{}, proposing in {}ms", validatorIdx, slotNumber, delayMillis);
+        return delayMillis;
     }
 }

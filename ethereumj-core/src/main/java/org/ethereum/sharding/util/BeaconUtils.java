@@ -96,14 +96,14 @@ public class BeaconUtils {
     }
 
     /**
-     * Calculates the next slot that proposer is assigned to
+     * Calculates the next slot that validator is assigned to
      *
      * @param currentSlot slot that current moment in time does land on
      * @param slotOffset offset of slot number, starting from the beginning of cycle
      *
      * @return number of slot in the next or current cycle
      */
-    public static long calcNextProposingSlot(long currentSlot, int slotOffset) {
+    public static long calcNextAssignedSlot(long currentSlot, int slotOffset) {
         long slotNumberInCurrentCycle = cycleStartSlot(currentSlot) + slotOffset;
         if (currentSlot >= slotNumberInCurrentCycle) {
             return slotNumberInCurrentCycle + BeaconConstants.CYCLE_LENGTH;

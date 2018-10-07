@@ -1,7 +1,6 @@
-package org.ethereum.sharding.service;
+package org.ethereum.sharding.registration;
 
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.sharding.config.ValidatorConfig;
@@ -23,18 +22,18 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import static org.ethereum.sharding.proposer.BeaconProposer.SLOT_DURATION;
+import static org.ethereum.sharding.validator.BeaconProposer.SLOT_DURATION;
 import static org.ethereum.sharding.pubsub.Events.onValidatorStateUpdated;
-import static org.ethereum.sharding.service.ValidatorService.State.DepositFailed;
-import static org.ethereum.sharding.service.ValidatorService.State.Enlisted;
-import static org.ethereum.sharding.service.ValidatorService.State.Undefined;
-import static org.ethereum.sharding.service.ValidatorService.State.WaitForDeposit;
+import static org.ethereum.sharding.registration.ValidatorRegistrationService.State.DepositFailed;
+import static org.ethereum.sharding.registration.ValidatorRegistrationService.State.Enlisted;
+import static org.ethereum.sharding.registration.ValidatorRegistrationService.State.Undefined;
+import static org.ethereum.sharding.registration.ValidatorRegistrationService.State.WaitForDeposit;
 
 /**
  * @author Mikhail Kalinin
  * @since 27.09.2018
  */
-public class MultiValidatorService implements ValidatorService {
+public class MultiValidatorRegistrationService implements ValidatorRegistrationService {
 
     private static final Logger logger = LoggerFactory.getLogger("beacon");
 
@@ -50,8 +49,8 @@ public class MultiValidatorService implements ValidatorService {
     private State state = Undefined;
     private List<byte[]> pubKeys;
 
-    public MultiValidatorService(Ethereum ethereum, ValidatorConfig config, DepositContract depositContract,
-                                DepositAuthority depositAuthority, Randao randao, Publisher publisher) {
+    public MultiValidatorRegistrationService(Ethereum ethereum, ValidatorConfig config, DepositContract depositContract,
+                                             DepositAuthority depositAuthority, Randao randao, Publisher publisher) {
         assert config.isEnabled();
 
         this.ethereum = ethereum;

@@ -27,14 +27,12 @@ import org.ethereum.sharding.processing.state.Committee;
 import org.ethereum.sharding.processing.state.Crosslink;
 import org.ethereum.sharding.processing.state.CrystallizedState;
 import org.ethereum.sharding.processing.state.Dynasty;
-import org.ethereum.sharding.service.ValidatorRepository;
+import org.ethereum.sharding.registration.ValidatorRepository;
 import org.spongycastle.util.encoders.Hex;
 
-import java.math.BigInteger;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.ethereum.sharding.processing.consensus.BeaconConstants.DEPOSIT_WEI;
 import static org.ethereum.sharding.processing.consensus.BeaconConstants.SHARD_COUNT;
 
 /**

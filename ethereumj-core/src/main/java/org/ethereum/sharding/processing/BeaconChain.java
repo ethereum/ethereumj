@@ -21,7 +21,10 @@ import org.ethereum.core.Block;
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.processing.consensus.ScoreFunction;
 import org.ethereum.sharding.processing.consensus.StateTransition;
+import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.validator.ValidationRule;
+
+import java.math.BigInteger;
 
 /**
  * Responsible for validating, importing and storing blocks of the beacon chain.
@@ -59,4 +62,32 @@ public interface BeaconChain {
      * Thus, makes initial validator induction pass correctly.
      */
     void setBestBlock(Block block);
+
+    class ScoredChainHead {
+        final Beacon block;
+        final BigInteger score;
+        final BeaconState state;
+
+        public ScoredChainHead(Beacon block, BigInteger score, BeaconState state) {
+            this.block = block;
+            this.score = score;
+            this.state = state;
+        }
+
+        public boolean isParentOf(ScoredChainHead other) {
+            return this.block.isParentOf(other.block);
+        }
+
+        public boolean shouldReorgTo(ScoredChainHead other) {
+            return !this.isParentOf(other) && this.score.compareTo(other.score) < 0;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) return true;
+            if (!(other instanceof ScoredChainHead)) return false;
+
+            return this.block.equals(((ScoredChainHead) other).block);
+        }
+    }
 }
