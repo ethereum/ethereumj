@@ -38,6 +38,9 @@ public class Subscription<E extends Event<D>, D> {
 
     private final static Logger log = LoggerFactory.getLogger("event");
 
+    /**
+     *
+     */
     public static class LifeCycle {
         private final Subscription subscription;
 
@@ -45,6 +48,9 @@ public class Subscription<E extends Event<D>, D> {
             this.subscription = subscription;
         }
 
+        /**
+         *
+         */
         public void unsubscribe() {
             subscription.unsubscribeAfter(data -> true);
         }
@@ -99,13 +105,23 @@ public class Subscription<E extends Event<D>, D> {
      * Optionally adds {@link #conditionally(Function)} and {@link #unsubscribeAfter(Function)} clauses with the same
      * condition. It helps achieve specific behavior, when subscriber consumes and then unsubscribe from event source.
      *
-     * @param condition
+     * @param condition that tests to execute and unsubscribe;
      * @return current {@link Subscription} instance to support fluent API.
      */
     public Subscription<E, D> oneOff(Function<D, Boolean> condition) {
         return this
                 .conditionally(condition)
                 .unsubscribeAfter(condition);
+    }
+
+    /**
+     * Make one-off subscription like {@link #oneOff(Function)} but without any conditions.
+     * Handles first matched event and unsubscribes after that.
+     *
+     * @return current {@link Subscription} instance to support fluent API.
+     */
+    public Subscription<E, D> oneOff() {
+        return oneOff(data -> true);
     }
 
     /**
@@ -145,6 +161,15 @@ public class Subscription<E extends Event<D>, D> {
         return nonNull(unsubscribeCondition) && unsubscribeCondition.apply(event.getPayload());
     }
 
+    /**
+     * Short static alias for {@link Subscription} constructor.
+     *
+     * @param eventType  event type to process;
+     * @param biConsumer callback that consumes event's payload and subscription's {@link LifeCycle} object to make extra manipulations;
+     * @param <E>        event type that should be process;
+     * @param <D>        payload's type of specified event type;
+     * @return new {@link Subscription} instance.
+     */
     public static <E extends Event<D>, D> Subscription<E, D> to(Class<E> eventType, BiConsumer<D, LifeCycle> biConsumer) {
         return new Subscription<>(eventType, biConsumer);
     }

@@ -57,6 +57,31 @@ public class SyncManager extends BlockDownloader {
 
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
+    public enum State {
+        /**
+         * When doing fast sync UNSECURE sync means that the full state is downloaded,
+         * chain is on the latest block, and blockchain operations may be executed
+         * (such as state querying, transaction submission)
+         * but the state isn't yet confirmed with  the whole block chain and can't be
+         * trusted.
+         * At this stage historical blocks and receipts are unavailable yet
+         */
+        UNSECURE,
+        /**
+         * When doing fast sync SECURE sync means that the full state is downloaded,
+         * chain is on the latest block, and blockchain operations may be executed
+         * (such as state querying, transaction submission)
+         * The state is now confirmed by the full chain (all block headers are
+         * downloaded and verified) and can be trusted
+         * At this stage historical blocks and receipts are unavailable yet
+         */
+        SECURE,
+        /**
+         * Sync is fully complete. All blocks and receipts are downloaded.
+         */
+        COMPLETE
+    }
+
     // Transaction.getSender() is quite heavy operation so we are prefetching this value on several threads
     // to unload the main block importing cycle
     private ExecutorPipeline<BlockWrapper, BlockWrapper> exec1 = new ExecutorPipeline<>

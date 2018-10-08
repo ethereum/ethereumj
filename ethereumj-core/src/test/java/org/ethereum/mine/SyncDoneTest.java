@@ -28,8 +28,6 @@ import org.ethereum.facade.EthereumImpl;
 import org.ethereum.facade.SyncStatus;
 import org.ethereum.net.eth.handler.Eth62;
 import org.ethereum.net.rlpx.Node;
-import org.ethereum.publish.event.BlockAdded;
-import org.ethereum.publish.event.PeerAddedToSyncPool;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.blockchain.EtherUtil;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
@@ -57,6 +55,8 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.publish.Subscription.to;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.PEER_ADDED_TO_SYNC_POOL;
 import static org.ethereum.util.FileUtil.recursiveDelete;
 import static org.junit.Assert.*;
 
@@ -161,7 +161,7 @@ public class SyncDoneTest {
         assertTrue(loadedBlocks > 0);
         final CountDownLatch semaphore = new CountDownLatch(1);
 
-        ethereumB.subscribe(to(BlockAdded.class, data -> semaphore.countDown())
+        ethereumB.subscribe(to(BLOCK_ADED, data -> semaphore.countDown())
                 .conditionally(data -> isBlockNumber(data.getBlockSummary(), loadedBlocks)));
 
         semaphore.await(MAX_SECONDS_WAIT, SECONDS);
@@ -171,14 +171,14 @@ public class SyncDoneTest {
         ethereumA.getBlockMiner().startMining();
 
         final CountDownLatch semaphore2 = new CountDownLatch(2);
-        ethereumB.subscribe(to(BlockAdded.class, data -> {
+        ethereumB.subscribe(BLOCK_ADED, data -> {
             if (isBlockNumber(data.getBlockSummary(), loadedBlocks + 2)) {
                 semaphore2.countDown();
                 ethereumA.getBlockMiner().stopMining();
             }
-        }));
+        });
 
-        ethereumA.subscribe(to(BlockAdded.class, data -> semaphore2.countDown())
+        ethereumA.subscribe(to(BLOCK_ADED, data -> semaphore2.countDown())
                 .conditionally(data -> isBlockNumber(data.getBlockSummary(), loadedBlocks + 2)));
 
         semaphore2.await(MAX_SECONDS_WAIT, SECONDS);
@@ -200,27 +200,27 @@ public class SyncDoneTest {
         );
         tx.sign(sender);
         final CountDownLatch txSemaphore = new CountDownLatch(1);
-        ethereumA.subscribe(to(BlockAdded.class, data -> {
+        ethereumA.subscribe(BLOCK_ADED, data -> {
             BlockSummary blockSummary = data.getBlockSummary();
             if (!blockSummary.getBlock().getTransactionsList().isEmpty() &&
                     FastByteComparisons.equal(blockSummary.getBlock().getTransactionsList().get(0).getSender(), sender.getAddress()) &&
                     blockSummary.getReceipts().get(0).isSuccessful()) {
                 txSemaphore.countDown();
             }
-        }));
+        });
 
         ethereumB.submitTransaction(tx);
 
         final CountDownLatch semaphore3 = new CountDownLatch(2);
-        ethereumB.subscribe(to(BlockAdded.class, data -> semaphore3.countDown())
+        ethereumB.subscribe(to(BLOCK_ADED, data -> semaphore3.countDown())
                 .conditionally(data -> isBlockNumber(data.getBlockSummary(), loadedBlocks + 5)));
 
-        ethereumA.subscribe(to(BlockAdded.class, data -> {
+        ethereumA.subscribe(BLOCK_ADED, data -> {
             if (isBlockNumber(data.getBlockSummary(), loadedBlocks + 5)) {
                 semaphore3.countDown();
                 ethereumA.getBlockMiner().stopMining();
             }
-        }));
+        });
         ethereumA.getBlockMiner().startMining();
 
         semaphore3.await(MAX_SECONDS_WAIT, SECONDS);
@@ -252,14 +252,14 @@ public class SyncDoneTest {
 
         final CountDownLatch semaphore4 = new CountDownLatch(2);
 
-        ethereumB.subscribe(to(BlockAdded.class, data -> {
+        ethereumB.subscribe(BLOCK_ADED, data -> {
             if (isBlockNumber(data.getBlockSummary(), loadedBlocks + 9)) {
                 semaphore4.countDown();
                 ethereumA.getBlockMiner().stopMining();
             }
-        }));
+        });
 
-        ethereumA.subscribe(to(BlockAdded.class, data -> semaphore4.countDown())
+        ethereumA.subscribe(to(BLOCK_ADED, data -> semaphore4.countDown())
                 .conditionally(data -> isBlockNumber(data.getBlockSummary(), loadedBlocks + 9)));
 
         semaphore4.await(MAX_SECONDS_WAIT, SECONDS);
@@ -280,7 +280,7 @@ public class SyncDoneTest {
 
         final CountDownLatch semaphore = new CountDownLatch(1);
 
-        ethereumB.subscribe(to(PeerAddedToSyncPool.class, channel -> semaphore.countDown()));
+        ethereumB.subscribe(PEER_ADDED_TO_SYNC_POOL, channel -> semaphore.countDown());
 
         ethereumB.connect(nodeA);
 

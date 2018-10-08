@@ -22,15 +22,14 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.mine.EthashValidationHelper;
 import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.BlockAdded;
-import org.ethereum.publish.event.SyncDone;
 import org.ethereum.util.FastByteComparisons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Random;
 
-import static org.ethereum.publish.Subscription.to;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.SYNC_DONE;
 import static org.ethereum.validator.EthashRule.ChainType.main;
 import static org.ethereum.validator.EthashRule.ChainType.reverse;
 import static org.ethereum.validator.EthashRule.Mode.fake;
@@ -107,12 +106,12 @@ public class EthashRule extends BlockHeaderRule {
 
             if (this.chain == main && publisher != null) {
                 publisher
-                        .subscribe(to(SyncDone.class, ss -> EthashRule.this.syncDone = true))
-                        .subscribe(to(BlockAdded.class, data -> {
+                        .subscribe(SYNC_DONE, ss -> EthashRule.this.syncDone = true)
+                        .subscribe(BLOCK_ADED, data -> {
                             if (data.isBest()) {
                                 ethashHelper.preCache(data.getBlockSummary().getBlock().getNumber());
                             }
-                        }));
+                        });
             }
         }
     }

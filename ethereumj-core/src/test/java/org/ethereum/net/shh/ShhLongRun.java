@@ -23,7 +23,6 @@ import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.rlpx.Node;
-import org.ethereum.publish.event.message.PeerHandshaked;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
@@ -40,6 +39,7 @@ import java.util.Date;
 import java.util.List;
 
 import static org.ethereum.publish.Subscription.to;
+import static org.ethereum.publish.event.Events.Type.PEER_HANDSHAKED;
 
 /**
  * This is not a JUnit test but rather a long running standalone test for messages exchange with another peer.
@@ -110,12 +110,12 @@ public class ShhLongRun extends Thread {
         @PostConstruct
         void init() {
             System.out.println("========= init");
-            worldManager.getPublisher().subscribe(to(PeerHandshaked.class, data -> {
+            worldManager.getPublisher().subscribe(PEER_HANDSHAKED, data -> {
                 System.out.println("========= onHandShakePeer");
                 if (!isAlive()) {
                     start();
                 }
-            }));
+            });
         }
 
         static class MessageMatcher extends MessageWatcher {

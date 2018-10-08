@@ -31,11 +31,6 @@ import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.rlpx.Node;
-import org.ethereum.publish.event.BlockAdded;
-import org.ethereum.publish.event.NodeDiscovered;
-import org.ethereum.publish.event.PeerAddedToSyncPool;
-import org.ethereum.publish.event.SyncDone;
-import org.ethereum.publish.event.message.EthStatusUpdated;
 import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +41,11 @@ import javax.annotation.PostConstruct;
 import java.util.*;
 
 import static org.ethereum.publish.Subscription.to;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.ETH_STATUS_UPDATED;
+import static org.ethereum.publish.event.Events.Type.NODE_DISCOVERED;
+import static org.ethereum.publish.event.Events.Type.PEER_ADDED_TO_SYNC_POOL;
+import static org.ethereum.publish.event.Events.Type.SYNC_DONE;
 
 /**
  * The base sample class which creates EthereumJ instance, tracks and report all the stages
@@ -136,12 +136,10 @@ public class BasicSample implements Runnable {
 
         // adding the main EthereumJ callback to be notified on different kind of events
         this.ethereum
-                .subscribe(to(SyncDone.class, syncState -> synced = true))
-                .subscribe(to(NodeDiscovered.class, node -> nodesDiscovered.add(node))
-                        .conditionally(node -> nodesDiscovered.size() < 1000))
-                .subscribe(to(EthStatusUpdated.class, data -> ethNodes.put(data.getChannel().getNode(), data.getMessage())))
-                .subscribe(to(PeerAddedToSyncPool.class, peer -> syncPeers.add(peer.getNode())))
-                .subscribe(to(BlockAdded.class, data -> {
+                .subscribe(SYNC_DONE, syncState -> synced = true)
+                .subscribe(ETH_STATUS_UPDATED, data -> ethNodes.put(data.getChannel().getNode(), data.getMessage()))
+                .subscribe(PEER_ADDED_TO_SYNC_POOL, peer -> syncPeers.add(peer.getNode()))
+                .subscribe(BLOCK_ADED, data -> {
                     BlockSummary blockSummary = data.getBlockSummary();
                     Block block = blockSummary.getBlock();
                     List<TransactionReceipt> receipts = blockSummary.getReceipts();
@@ -154,7 +152,9 @@ public class BasicSample implements Runnable {
                     if (syncComplete) {
                         logger.info("New block: " + block.getShortDescr());
                     }
-                }));
+                })
+                .subscribe(to(NODE_DISCOVERED, node -> nodesDiscovered.add(node))
+                        .conditionally(node -> nodesDiscovered.size() < 1000));
 
         logger.info("Sample component created. Listening for ethereum events...");
 

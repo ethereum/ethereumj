@@ -27,8 +27,6 @@ import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.shh.MessageWatcher;
 import org.ethereum.net.shh.WhisperMessage;
-import org.ethereum.publish.event.BlockAdded;
-import org.ethereum.publish.event.message.MessageReceived;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
@@ -41,6 +39,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.ethereum.publish.Subscription.to;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.MESSAGE_RECEIVED;
 
 /**
  * Created by Anton Nashatyrev on 13.10.2015.
@@ -112,13 +112,13 @@ public class SanityLongRunTest {
 
         final CountDownLatch semaphore = new CountDownLatch(1);
 
-        ethereum2.subscribe(to(MessageReceived.class, messageData -> {
+        ethereum2.subscribe(MESSAGE_RECEIVED, messageData -> {
             Message message = messageData.getMessage();
             if (message instanceof StatusMessage) {
                 System.out.println("=== Status received: " + message);
                 semaphore.countDown();
             }
-        }));
+        });
 
         semaphore.await(60, TimeUnit.SECONDS);
         if(semaphore.getCount() > 0) {
@@ -129,7 +129,7 @@ public class SanityLongRunTest {
         final CountDownLatch semaphoreFirstBlock = new CountDownLatch(1);
 
         AtomicInteger blocksCnt = new AtomicInteger();
-        ethereum2.subscribe(to(BlockAdded.class, data -> {
+        ethereum2.subscribe(BLOCK_ADED, data -> {
             blocksCnt.addAndGet(1);
             if (blocksCnt.get() % 1000 == 0 || blocksCnt.get() == 1) {
                 System.out.println("=== Blocks imported: " + blocksCnt);
@@ -141,7 +141,7 @@ public class SanityLongRunTest {
                 semaphoreBlocks.countDown();
                 System.out.println("=== Blocks task done.");
             }
-        }));
+        });
 
         semaphoreFirstBlock.await(180, TimeUnit.SECONDS);
         if(semaphoreFirstBlock.getCount() > 0) {

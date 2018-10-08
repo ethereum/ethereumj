@@ -13,7 +13,7 @@ import java.util.Collections;
 
 import static org.ethereum.publish.event.Events.onBlockAdded;
 import static org.ethereum.publish.event.Events.onSyncDone;
-import static org.ethereum.publish.event.SyncDone.State.COMPLETE;
+import static org.ethereum.sync.SyncManager.State.COMPLETE;
 import static org.ethereum.validator.BlockHeaderRule.Success;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;

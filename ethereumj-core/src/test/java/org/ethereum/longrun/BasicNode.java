@@ -27,9 +27,8 @@ import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
 import org.ethereum.publish.event.BlockAdded;
-import org.ethereum.publish.event.PeerAddedToSyncPool;
-import org.ethereum.publish.event.SyncDone;
 import org.ethereum.publish.event.message.EthStatusUpdated;
+import org.ethereum.sync.SyncManager;
 import org.ethereum.sync.SyncPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,8 +42,11 @@ import java.util.Map;
 import java.util.Vector;
 
 import static java.lang.Thread.sleep;
-import static org.ethereum.publish.Subscription.to;
-import static org.ethereum.publish.event.SyncDone.State.COMPLETE;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.ETH_STATUS_UPDATED;
+import static org.ethereum.publish.event.Events.Type.PEER_ADDED_TO_SYNC_POOL;
+import static org.ethereum.publish.event.Events.Type.SYNC_DONE;
+import static org.ethereum.sync.SyncManager.State.COMPLETE;
 
 /**
  * BasicNode of ethereum instance
@@ -107,10 +109,10 @@ class BasicNode implements Runnable {
         logger = LoggerFactory.getLogger(loggerName);
         // adding the main EthereumJ callback to be notified on different kind of events
         this.ethereum
-                .subscribe(to(SyncDone.class, this::onSyncDone))
-                .subscribe(to(BlockAdded.class, this::onBlock))
-                .subscribe(to(EthStatusUpdated.class, this::onEthStatusUpdated))
-                .subscribe(to(PeerAddedToSyncPool.class, this::onPeerAddedToSyncPool));
+                .subscribe(SYNC_DONE, this::onSyncDone)
+                .subscribe(BLOCK_ADED, this::onBlock)
+                .subscribe(ETH_STATUS_UPDATED, this::onEthStatusUpdated)
+                .subscribe(PEER_ADDED_TO_SYNC_POOL, this::onPeerAddedToSyncPool);
 
         logger.info("Sample component created. Listening for ethereum events...");
 
@@ -162,7 +164,7 @@ class BasicNode implements Runnable {
         logger.info("Monitoring new blocks in real-time...");
     }
 
-    public void onSyncDoneImpl(SyncDone.State state) {
+    public void onSyncDoneImpl(SyncManager.State state) {
         logger.info("onSyncDone: " + state);
     }
 
@@ -171,13 +173,13 @@ class BasicNode implements Runnable {
 
     protected Block bestBlock = null;
 
-    SyncDone.State syncState = null;
+    SyncManager.State syncState = null;
     boolean syncComplete = false;
 
     /**
      * The main EthereumJ callback.
      */
-    public void onSyncDone(SyncDone.State state) {
+    public void onSyncDone(SyncManager.State state) {
         syncState = state;
         if (state == COMPLETE) syncComplete = true;
         onSyncDoneImpl(state);

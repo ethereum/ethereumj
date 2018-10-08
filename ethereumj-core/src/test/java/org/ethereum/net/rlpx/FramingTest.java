@@ -23,7 +23,6 @@ import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
-import org.ethereum.publish.event.message.MessageReceived;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.context.annotation.Bean;
@@ -34,7 +33,7 @@ import java.io.FileNotFoundException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static org.ethereum.publish.Subscription.to;
+import static org.ethereum.publish.event.Events.Type.MESSAGE_RECEIVED;
 
 /**
  * Created by Anton Nashatyrev on 13.10.2015.
@@ -99,19 +98,19 @@ public class FramingTest {
 
         final CountDownLatch semaphore = new CountDownLatch(2);
 
-        ethereum1.subscribe(to(MessageReceived.class, messageData -> {
+        ethereum1.subscribe(MESSAGE_RECEIVED, messageData -> {
             if (messageData.getMessage() instanceof StatusMessage) {
                 System.out.println("1: -> " + messageData.getMessage());
                 semaphore.countDown();
             }
-        }));
-        ethereum2.subscribe(to(MessageReceived.class, messageData -> {
+        });
+        ethereum2.subscribe(MESSAGE_RECEIVED, messageData -> {
             Message message = messageData.getMessage();
             if (message instanceof StatusMessage) {
                 System.out.println("2: -> " + message);
                 semaphore.countDown();
             }
-        }));
+        });
 
         ethereum2.connect(new Node("enode://a560c55a0a5b5d137c638eb6973812f431974e4398c6644fa0c19181954fab530bb2a1e2c4eec7cc855f6bab9193ea41d6cf0bf2b8b41ed6b8b9e09c072a1e5a" +
                 "@localhost:30334"));

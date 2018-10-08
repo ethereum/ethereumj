@@ -31,7 +31,6 @@ import org.ethereum.core.TransactionReceipt;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.publish.event.BlockAdded;
 import org.ethereum.publish.event.PendingTransactionUpdated;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.util.FastByteComparisons;
@@ -53,8 +52,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static java.lang.Thread.sleep;
+import static org.ethereum.core.PendingTransaction.State.NEW_PENDING;
 import static org.ethereum.publish.Subscription.to;
-import static org.ethereum.publish.event.PendingTransactionUpdated.State.NEW_PENDING;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.PENDING_TRANSACTION_UPDATED;
 
 /**
  * Regular sync with load
@@ -227,8 +228,8 @@ public class SyncWithLoadTest {
         public void run() {
             try {
                 this.ethereum
-                        .subscribe(to(BlockAdded.class, this::onBlock))
-                        .subscribe(to(PendingTransactionUpdated.class, this::onPendingTransactionUpdated)
+                        .subscribe(to(BLOCK_ADED, this::onBlock))
+                        .subscribe(to(PENDING_TRANSACTION_UPDATED, this::onPendingTransactionUpdated)
                                 .conditionally(data -> data.getState() == NEW_PENDING));
 
                 // Run 1-30 minutes

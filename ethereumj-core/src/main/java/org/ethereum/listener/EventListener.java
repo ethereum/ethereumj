@@ -22,14 +22,18 @@ import org.ethereum.core.BlockSummary;
 import org.ethereum.core.Bloom;
 import org.ethereum.core.CallTransaction;
 import org.ethereum.core.PendingStateImpl;
+import org.ethereum.core.PendingTransaction;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.listener.EthereumListener.PendingTransactionState;
+import org.ethereum.publish.event.BlockAdded;
+import org.ethereum.publish.event.PendingTransactionUpdated;
 import org.ethereum.util.ByteArrayMap;
 import org.ethereum.util.Utils;
 import org.ethereum.vm.LogInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -38,6 +42,8 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static org.ethereum.core.PendingTransaction.State.DROPPED;
+import static org.ethereum.core.PendingTransaction.State.INCLUDED;
 import static org.ethereum.sync.BlockDownloader.MAX_IN_REQUEST;
 import static org.ethereum.util.ByteUtil.toHexString;
 
@@ -73,7 +79,7 @@ public abstract class EventListener<EventData> {
         public Block includedTo;
         // the latest block from the main branch
         public Block bestConfirmingBlock;
-        // if came from a block we take block time, it pending we take current time
+        // if came from a block we take block time, if pending we take current time
         public long created;
         // status of the Ethereum Tx
         public TxStatus txStatus;
@@ -82,13 +88,20 @@ public abstract class EventListener<EventData> {
             this.created = created;
         }
 
+        /**
+         * @deprecated use {@link #update(TransactionReceipt, List, PendingTransaction.State, Block)} instead of this method.
+         */
         public void update(TransactionReceipt receipt, List<EventData> txs, PendingTransactionState state, Block includedTo) {
+            update(receipt, txs, translate(state), includedTo);
+        }
+
+        public void update(TransactionReceipt receipt, List<EventData> txs, PendingTransaction.State state, Block includedTo) {
             this.receipt = receipt;
             this.eventData = txs;
-            this.bestConfirmingBlock = state == PendingTransactionState.INCLUDED ? includedTo : null;
-            this.includedTo = state == PendingTransactionState.INCLUDED ? includedTo : null;
+            this.bestConfirmingBlock = state == INCLUDED ? includedTo : null;
+            this.includedTo = state == INCLUDED ? includedTo : null;
             txStatus = state.isPending() ? TxStatus.PENDING :
-                    (state == PendingTransactionState.DROPPED ? TxStatus.REJECTED : TxStatus.getConfirmed(1));
+                    (state == DROPPED ? TxStatus.REJECTED : TxStatus.getConfirmed(1));
         }
 
         public boolean setBestConfirmingBlock(Block bestConfirmingBlock) {
@@ -141,6 +154,14 @@ public abstract class EventListener<EventData> {
         this.pendingState = pendingState;
     }
 
+    public void onBlock(BlockAdded.Data data) {
+        executor.submit(() -> onBlockImpl(data.getBlockSummary()));
+    }
+
+    public void onPendingTransactionUpdated(PendingTransactionUpdated.Data data) {
+        executor.submit(() -> onPendingTransactionUpdateImpl(data.getReceipt(), data.getState(), data.getBlock()));
+    }
+
     public void onBlockImpl(BlockSummary blockSummary) {
         if (!initialized) throw new RuntimeException("Event listener should be initialized");
         try {
@@ -180,9 +201,21 @@ public abstract class EventListener<EventData> {
         }
     }
 
+    private static PendingTransaction.State translate(PendingTransactionState state) {
+        return PendingTransaction.State.valueOf(state.name());
+    }
+
+    private static PendingTransactionState translate(PendingTransaction.State state) {
+        return PendingTransactionState.valueOf(state.name());
+    }
+
     public void onPendingTransactionUpdateImpl(TransactionReceipt txReceipt, PendingTransactionState state, Block block) {
+        onPendingTransactionUpdateImpl(txReceipt, translate(state), block);
+    }
+
+    public void onPendingTransactionUpdateImpl(TransactionReceipt txReceipt, PendingTransaction.State state, Block block) {
         try {
-            if (state != PendingTransactionState.DROPPED || pendings.containsKey(txReceipt.getTransaction().getHash())) {
+            if (state != DROPPED || pendings.containsKey(txReceipt.getTransaction().getHash())) {
                 logger.debug("onPendingTransactionUpdate: " + toHexString(txReceipt.getTransaction().getHash()) + ", " + state);
             }
             onReceipt(txReceipt, block, state);
@@ -213,7 +246,7 @@ public abstract class EventListener<EventData> {
 
     // checks the Tx receipt for the contract LogEvents
     // initiated on [onPendingTransactionUpdateImpl] callback only
-    private synchronized void onReceipt(TransactionReceipt receipt, Block block, PendingTransactionState state) {
+    private synchronized void onReceipt(TransactionReceipt receipt, Block block, PendingTransaction.State state) {
         if (!initialized) throw new RuntimeException("Event listener should be initialized");
         byte[] txHash = receipt.getTransaction().getHash();
         if (logFilter.matchBloom(receipt.getBloomFilter())) {
@@ -235,7 +268,7 @@ public abstract class EventListener<EventData> {
                 // cool, we've got some Events from this Tx, let's track further Tx lifecycle
                 onEventData(receipt, block, state, matchedTxs);
             }
-        } else if (state == PendingTransactionState.DROPPED && pendings.containsKey(txHash)) {
+        } else if (state == DROPPED && pendings.containsKey(txHash)) {
             PendingEvent event = pendings.get(txHash);
             onEventData(receipt, block, state, event.eventData);
         }
@@ -244,7 +277,7 @@ public abstract class EventListener<EventData> {
     // process the list of [EventData] generated by the Tx
     // initiated on [onPendingTransactionUpdateImpl] callback only
     private void onEventData(TransactionReceipt receipt, Block block,
-                             PendingTransactionState state, List<EventData> matchedTxs) {
+                             PendingTransaction.State state, List<EventData> matchedTxs) {
         byte[] txHash = receipt.getTransaction().getHash();
         PendingEvent event = pendings.get(txHash);
         boolean newEvent = false;
@@ -266,7 +299,20 @@ public abstract class EventListener<EventData> {
         pendingTransactionsUpdated();
     }
 
+    /**
+     * @deprecated use {@link #onLogMatch(LogInfo, Block, TransactionReceipt, int, PendingTransaction.State)} instead of this method.
+     * @param logInfo
+     * @param block
+     * @param receipt
+     * @param txCount
+     * @param state
+     * @return
+     */
     protected EventData onLogMatch(LogInfo logInfo, Block block, TransactionReceipt receipt, int txCount, PendingTransactionState state) {
+        return onLogMatch(logInfo, block,receipt, txCount, translate(state));
+    }
+
+    protected EventData onLogMatch(LogInfo logInfo, Block block, TransactionReceipt receipt, int txCount, PendingTransaction.State state) {
         CallTransaction.Invocation event = contract.parseEvent(logInfo);
 
         if (event == null) {
@@ -275,6 +321,15 @@ public abstract class EventListener<EventData> {
         }
 
         return onEvent(event, block, receipt, txCount, state);
+    }
+
+    /**
+     * @deprecated override {@link #onEvent(CallTransaction.Invocation, Block, TransactionReceipt, int, PendingTransaction.State)}
+     * instead of this method.
+     */
+    protected EventData onEvent(CallTransaction.Invocation event, Block block, TransactionReceipt receipt,
+                                         int txCount, PendingTransactionState state) {
+        throw new NotImplementedException();
     }
 
     /**
@@ -289,8 +344,11 @@ public abstract class EventListener<EventData> {
      * @param state   The state of Transaction (Pending/Rejected/Included)
      * @return  Either null if this [event] is not interesting for implementation class, or [event] representation
      */
-    protected abstract EventData onEvent(CallTransaction.Invocation event, Block block, TransactionReceipt receipt,
-                                         int txCount, PendingTransactionState state);
+    protected EventData onEvent(CallTransaction.Invocation event, Block block, TransactionReceipt receipt,
+                                         int txCount, PendingTransaction.State state) {
+        // proxies invoke to deprecated implementation for backward compatibility.
+        return onEvent(event, block, receipt, txCount, translate(state));
+    }
 
     /**
      * Called after one or more transactions updated

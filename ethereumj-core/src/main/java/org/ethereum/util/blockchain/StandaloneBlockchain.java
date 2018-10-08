@@ -34,7 +34,6 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.mine.Ethash;
 import org.ethereum.listener.BackwardCompatibilityEthereumListenerProxy;
 import org.ethereum.publish.Subscription;
-import org.ethereum.publish.event.BlockAdded;
 import org.ethereum.publish.event.Event;
 import org.ethereum.solidity.compiler.CompilationResult;
 import org.ethereum.solidity.compiler.CompilationResult.ContractMetadata;
@@ -57,6 +56,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 
 import static org.ethereum.publish.Subscription.to;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
 import static org.ethereum.util.ByteUtil.wrap;
 
 /**
@@ -445,7 +445,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         if (blockchain == null) {
             blockchain = createBlockchain(genesis);
             blockchain.setMinerCoinbase(coinbase);
-            subscribe(to(BlockAdded.class, data -> lastSummary = data.getBlockSummary()));
+            subscribe(to(BLOCK_ADED, data -> lastSummary = data.getBlockSummary()));
         }
         return blockchain;
     }

@@ -63,6 +63,7 @@ public class PrivateMinerSample {
                 // when more than 1 miner exist on the network extraData helps to identify the block creator
                 "mine.extraDataHex = cccccccccccccccccccc \n" +
                 "mine.cpuMineThreads = 2 \n" +
+                "mine.mine.fullDataSet = false \n" +
                 "cache.flush.blocks = 1";
 
         @Bean

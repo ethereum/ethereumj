@@ -29,8 +29,6 @@ import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumImpl;
 import org.ethereum.mine.MinerIfc.MiningResult;
 import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.PendingStateChanged;
-import org.ethereum.publish.event.SyncDone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +42,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import static java.lang.Math.max;
 import static org.ethereum.publish.Subscription.to;
+import static org.ethereum.publish.event.Events.Type.PENDING_STATE_CHANGED;
+import static org.ethereum.publish.event.Events.Type.SYNC_DONE;
 
 /**
  * Manages embedded CPU mining and allows to use external miners.
@@ -97,13 +97,13 @@ public class BlockMiner {
         this.fullMining = config.isMineFullDataset();
 
         publisher
-                .subscribe(to(PendingStateChanged.class, ps -> onPendingStateChanged()))
-                .subscribe(to(SyncDone.class, s -> {
+                .subscribe(PENDING_STATE_CHANGED, ps -> onPendingStateChanged())
+                .subscribe(SYNC_DONE, s -> {
                     if (config.minerStart() && config.isSyncEnabled()) {
                         logger.info("Sync complete, start mining...");
                         startMining();
                     }
-                }));
+                });
 
 
         if (config.minerStart() && !config.isSyncEnabled()) {

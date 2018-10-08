@@ -36,9 +36,7 @@ import org.ethereum.net.server.ChannelManager;
 import org.ethereum.net.shh.Whisper;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
-import org.ethereum.publish.Publisher;
 import org.ethereum.publish.Subscription;
-import org.ethereum.publish.event.BlockAdded;
 import org.ethereum.publish.event.Event;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.util.ByteUtil;
@@ -68,6 +66,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import static org.ethereum.publish.Subscription.to;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
@@ -123,7 +122,7 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
 
     @PostConstruct
     public void init() {
-        worldManager.subscribe(to(BlockAdded.class, data -> gasPriceTracker.onBlock(data.getBlockSummary())));
+        worldManager.subscribe(to(BLOCK_ADED, data -> gasPriceTracker.onBlock(data.getBlockSummary())));
     }
 
     @Override
@@ -176,17 +175,24 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
     }
 
     @Override
-    public Publisher subscribe(Subscription subscription) {
-        return worldManager.getPublisher().subscribe(subscription);
+    public Ethereum subscribe(Subscription subscription) {
+        worldManager.getPublisher().subscribe(subscription);
+        return this;
     }
 
     @Override
-    public <T> Publisher subscribe(Class<? extends Event<T>> type, Consumer<T> handler) {
+    public Ethereum unsubscribe(Subscription subscription) {
+        worldManager.getPublisher().unsubscribe(subscription);
+        return this;
+    }
+
+    @Override
+    public <T> Ethereum subscribe(Class<? extends Event<T>> type, Consumer<T> handler) {
         return subscribe(to(type, handler));
     }
 
     @Override
-    public <T> Publisher subscribe(Class<? extends Event<T>> type, BiConsumer<T, Subscription.LifeCycle> handler) {
+    public <T> Ethereum subscribe(Class<? extends Event<T>> type, BiConsumer<T, Subscription.LifeCycle> handler) {
         return subscribe(to(type, handler));
     }
 

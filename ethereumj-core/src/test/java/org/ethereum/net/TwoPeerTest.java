@@ -31,8 +31,6 @@ import org.ethereum.net.eth.message.BlockHeadersMessage;
 import org.ethereum.net.eth.message.GetBlockBodiesMessage;
 import org.ethereum.net.eth.message.GetBlockHeadersMessage;
 import org.ethereum.net.server.Channel;
-import org.ethereum.publish.event.BlockAdded;
-import org.ethereum.publish.event.message.EthStatusUpdated;
 import org.ethereum.util.RLP;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -52,7 +50,8 @@ import java.util.concurrent.TimeUnit;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.publish.Subscription.to;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.ETH_STATUS_UPDATED;
 
 /**
  * Created by Anton Nashatyrev on 13.10.2015.
@@ -226,17 +225,17 @@ public class TwoPeerTest {
         final CountDownLatch semaphore = new CountDownLatch(1);
 
         final Channel[] channel1 = new Channel[1];
-        ethereum1.subscribe(to(EthStatusUpdated.class, data -> {
+        ethereum1.subscribe(ETH_STATUS_UPDATED, data -> {
             channel1[0] = data.getChannel();
             System.out.println("==== Got the Channel: " + data.getChannel());
-        }));
+        });
 
-        ethereum2.subscribe(to(BlockAdded.class, data -> {
+        ethereum2.subscribe(BLOCK_ADED, data -> {
             Block block = data.getBlockSummary().getBlock();
             if (block.getNumber() == 4) {
                 semaphore.countDown();
             }
-        }));
+        });
 
         System.out.println("======= Waiting for block #4");
         semaphore.await(60, TimeUnit.SECONDS);

@@ -59,7 +59,7 @@ public class PublisherTest {
         final List<String> strings = new ArrayList<>();
 
         int subscribersCount = createPublisher()
-                .subscribe(to(Events.OneOffStringEvent.class, s -> strings.add(s)))
+                .subscribe(Events.OneOffStringEvent.class, s -> strings.add(s))
                 .publish(new Events.OneOffStringEvent(payload))
                 .subscribersCount(Events.OneOffStringEvent.class);
 

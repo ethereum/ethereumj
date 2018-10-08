@@ -23,7 +23,6 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Blockchain;
 import org.ethereum.db.BlockStore;
-import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessage;
@@ -31,14 +30,11 @@ import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.server.Channel;
-import org.ethereum.listener.BackwardCompatibilityEthereumListenerProxy;
 import org.ethereum.publish.Publisher;
 import org.ethereum.publish.Subscription;
 import org.ethereum.publish.event.BlockAdded;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static java.lang.String.format;
 
 /**
  * Process the messages between peers with 'eth' capability on the network<br>
@@ -53,7 +49,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     protected SystemProperties config;
 
-    protected EthereumListener ethereumListener;
+    protected Publisher publisher;
 
     protected Channel channel;
 
@@ -64,7 +60,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     protected boolean peerDiscoveryMode = false;
 
     protected Block bestBlock;
-    private Subscription<BlockAdded, BlockAdded.Data> bestBlockSub;
+    private Subscription<BlockAdded, BlockAdded.Data> bestBlockSubscription;
 
     protected boolean processTransactions = false;
 
@@ -74,14 +70,14 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     protected EthHandler(final EthVersion version, final SystemProperties config,
                          final Blockchain blockchain, final BlockStore blockStore,
-                         final EthereumListener listener) {
+                         final Publisher publisher) {
         this.version = version;
         this.config = config;
         this.blockchain = blockchain;
         this.bestBlock = blockStore.getBestBlock();
-        this.ethereumListener = listener;
-        this.bestBlockSub = Subscription.to(BlockAdded.class, this::setBestBlock);
-        getPublisher().subscribe(this.bestBlockSub);
+        this.publisher = publisher;
+        this.bestBlockSubscription = Subscription.to(BlockAdded.class, this::setBestBlock);
+        this.publisher.subscribe(this.bestBlockSubscription);
 
         // when sync enabled we delay transactions processing until sync is complete
         this.processTransactions = !config.isSyncEnabled();
@@ -93,19 +89,12 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, EthMessage msg) throws InterruptedException {
-
-        if (EthMessageCodes.inRange(msg.getCommand().asByte(), version))
+        if (EthMessageCodes.inRange(msg.getCommand().asByte(), version)) {
             logger.trace("EthHandler invoke: [{}]", msg.getCommand());
-
-        ethereumListener.trace(String.format("EthHandler invoke: [%s]", msg.getCommand()));
+        }
 
         channel.getNodeStatistics().ethInbound.add();
-
         msgQueue.receivedMessage(msg);
-    }
-
-    public Publisher getPublisher() {
-        return ((BackwardCompatibilityEthereumListenerProxy) ethereumListener).getPublisher();
     }
 
     @Override
@@ -117,13 +106,12 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
         logger.debug("handlerRemoved: kill timers in EthHandler");
-        getPublisher().unsubscribe(bestBlockSub);
+        publisher.unsubscribe(bestBlockSubscription);
         onShutdown();
     }
 
     public void activate() {
         logger.debug("ETH protocol activated");
-        ethereumListener.trace("ETH protocol activated");
         sendStatus();
     }
 

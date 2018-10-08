@@ -17,7 +17,11 @@
  */
 package org.ethereum.facade;
 
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockSummary;
+import org.ethereum.core.CallTransaction;
+import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionReceipt;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
@@ -63,31 +67,68 @@ public interface Ethereum {
      * Will be removed in future releases.
      *
      * @param listener
-     * @deprecated use {@link #subscribe(Subscription)} instead.
+     * @deprecated use {@link #subscribe(Subscription)} or other overloaded <code>subscribe(...)</code> methods instead.
      */
     @Deprecated
     void addListener(EthereumListener listener);
 
     /**
-     * Adds subscription for specific event.
+     * Adds specified subscription to Ethereum pub/sub system.<br>
+     * Use this method to get more control over {@link Subscription}, like adding handle condition and other supported stuff.
+     * <p>
+     * Could be used in conjunction with {@link #unsubscribe(Subscription)} method to get extra control
+     * over subscription lifecycle.
+     * <p>
+     * If you don't need any tricky subscription logic it's better to use more convenient subscription methods:
+     * <ul>
+     *     <li>{@link #subscribe(Class, Consumer)}</li>
+     *     <li>{@link #subscribe(Class, BiConsumer)}</li>
+     * </ul>
      *
-     * @param subscription
+     * @param subscription event subscription instance to add;
      * @return publisher instance to support fluent API.
      * @see Subscription
      * @see Publisher
      * @see Event
      */
-    Publisher subscribe(Subscription subscription);
+    Ethereum subscribe(Subscription subscription);
 
     /**
-     * More convenient version of {@link #subscribe(Subscription)}
+     * Removes specified subscription to Ethereum pub/sub system if it was subscribed before.<br>
+     * Usually unsubscribe client from event previously subscribed via {@link #subscribe(Subscription)} method.
+     *
+     * @param subscription event subscription instance to remove;
+     * @return publisher instance to support fluent API.
+     * @see Subscription
+     * @see Publisher
+     * @see Event
      */
-    <T> Publisher subscribe(Class<? extends Event<T>> type, Consumer<T> handler);
+    Ethereum unsubscribe(Subscription subscription);
 
     /**
-     * More convenient version of {@link #subscribe(Subscription)}
+     * Subscribes client's handler to specific Ethereum event.
+     * <p>
+     * Supported events list you can find here {@link org.ethereum.publish.event.Events.Type}
+     *
+     * @param type    event type to subscribe;
+     * @param handler event handler;
+     * @param <T>     event payload which will be passed to handler;
+     * @return {@link Ethereum} instance to support fluent API.
      */
-    <T> Publisher subscribe(Class<? extends Event<T>> type, BiConsumer<T, Subscription.LifeCycle> handler);
+    <T> Ethereum subscribe(Class<? extends Event<T>> type, Consumer<T> handler);
+
+    /**
+     * More advanced version of {@link #subscribe(Class, Consumer)}
+     * where besides event's payload to client handler passes subscription's {@link org.ethereum.publish.Subscription.LifeCycle}.
+     * <p>
+     * Supported events list you can find here {@link org.ethereum.publish.event.Events.Type}
+     *
+     * @param type    event type to subscribe;
+     * @param handler extended event handler;
+     * @param <T>     event payload which will be passed to handler;
+     * @return {@link Ethereum} instance to support fluent API.
+     */
+    <T> Ethereum subscribe(Class<? extends Event<T>> type, BiConsumer<T, Subscription.LifeCycle> handler);
 
     PeerClient getDefaultPeer();
 
@@ -238,8 +279,7 @@ public interface Ethereum {
     void initSyncing();
 
     /**
-     * @deprecated
-     * Calculates a 'reasonable' Gas price based on statistics of the latest transaction's Gas prices
+     * @deprecated Calculates a 'reasonable' Gas price based on statistics of the latest transaction's Gas prices
      * Normally the price returned should be sufficient to execute a transaction since ~25% of the latest
      * transactions were executed at this or lower price.
      * If the transaction is wanted to be executed promptly with higher chances the returned price might

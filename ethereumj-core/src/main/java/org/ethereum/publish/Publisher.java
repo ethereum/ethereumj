@@ -19,6 +19,7 @@ package org.ethereum.publish;
 
 import org.apache.commons.lang3.text.StrBuilder;
 import org.ethereum.core.EventDispatchThread;
+import org.ethereum.facade.Ethereum;
 import org.ethereum.publish.event.Event;
 import org.ethereum.publish.event.OneOffEvent;
 import org.slf4j.Logger;
@@ -30,9 +31,12 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import static java.util.Collections.emptyList;
 import static java.util.Objects.nonNull;
+import static org.ethereum.publish.Subscription.to;
 
 /**
  * Event publisher that uses pub/sub model to deliver event messages.<br>
@@ -150,6 +154,37 @@ public class Publisher {
         }
         return this;
     }
+
+    /**
+     * Subscribes client's handler to specific Ethereum event. Does the same thing as {@link #subscribe(Subscription)},
+     * in more convenient way, but you don't have access to created {@link Subscription} instance.
+     * <p>
+     * Supported events list you can find here {@link org.ethereum.publish.event.Events.Type}
+     *
+     * @param type    event type to subscribe;
+     * @param handler event handler;
+     * @param <T>     event payload which will be passed to handler;
+     * @return {@link Ethereum} instance to support fluent API.
+     */
+    public <T> Publisher subscribe(Class<? extends Event<T>> type, Consumer<T> handler){
+        return subscribe(to(type, handler));
+    }
+
+    /**
+     * More advanced version of {@link #subscribe(Class, Consumer)}
+     * where besides of event's payload to client's handler passes subscription's {@link org.ethereum.publish.Subscription.LifeCycle}.
+     * <p>
+     * Supported events list you can find here {@link org.ethereum.publish.event.Events.Type}
+     *
+     * @param type    event type to subscribe;
+     * @param handler extended event handler;
+     * @param <T>     event payload which will be passed to handler;
+     * @return {@link Publisher} instance to support fluent API.
+     */
+    public <T> Publisher subscribe(Class<? extends Event<T>> type, BiConsumer<T, Subscription.LifeCycle> handler) {
+        return subscribe(to(type, handler));
+    }
+
 
     /**
      * Removes specified {@link Subscription} from publisher.

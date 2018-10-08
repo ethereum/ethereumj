@@ -22,7 +22,6 @@ import org.ethereum.crypto.ECKey;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.publish.event.BlockAdded;
-import org.ethereum.publish.event.PendingTransactionUpdated;
 import org.ethereum.util.ByteUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -30,7 +29,9 @@ import org.springframework.context.annotation.Bean;
 import java.math.BigInteger;
 import java.util.*;
 
-import static org.ethereum.publish.event.PendingTransactionUpdated.State.NEW_PENDING;
+import static org.ethereum.core.PendingTransaction.State.NEW_PENDING;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.PENDING_TRANSACTION_UPDATED;
 import static org.ethereum.publish.Subscription.to;
 import static org.ethereum.util.ByteUtil.toHexString;
 
@@ -66,10 +67,10 @@ public class PendingStateSample extends TestNetSample {
     public void onSyncDone() {
         this.ethereum
                 // listening here when the PendingState is updated with new transactions
-                .subscribe(to(PendingTransactionUpdated.class, data -> onPendingTransactionReceived(data.getReceipt().getTransaction()))
+                .subscribe(to(PENDING_TRANSACTION_UPDATED, data -> onPendingTransactionReceived(data.getReceipt().getTransaction()))
                         .conditionally(data -> data.getState() == NEW_PENDING))
                 // when block arrives look for our included transactions
-                .subscribe(to(BlockAdded.class, d -> onBlock(d)));
+                .subscribe(BLOCK_ADED, d -> onBlock(d));
 
         new Thread(() -> {
             try {

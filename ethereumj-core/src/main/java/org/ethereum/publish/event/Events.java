@@ -20,6 +20,7 @@ package org.ethereum.publish.event;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockSummary;
 import org.ethereum.core.PendingState;
+import org.ethereum.core.PendingTransaction;
 import org.ethereum.core.TransactionExecutionSummary;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.net.eth.message.StatusMessage;
@@ -27,12 +28,43 @@ import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
+import org.ethereum.publish.event.message.AbstractMessageEvent;
 import org.ethereum.publish.event.message.EthStatusUpdated;
 import org.ethereum.publish.event.message.MessageReceived;
 import org.ethereum.publish.event.message.MessageSent;
 import org.ethereum.publish.event.message.PeerHandshaked;
+import org.ethereum.sync.SyncManager;
 
 public final class Events {
+
+    public interface Type {
+
+        Class<? extends Event<EthStatusUpdated.Data>> ETH_STATUS_UPDATED = EthStatusUpdated.class;
+
+        Class<? extends Event<AbstractMessageEvent.Data<Message>>> MESSAGE_RECEIVED = MessageReceived.class;
+
+        Class<? extends Event<AbstractMessageEvent.Data<Message>>> MESSAGE_SENT = MessageSent.class;
+
+        Class<? extends Event<PeerHandshaked.Data>> PEER_HANDSHAKED = PeerHandshaked.class;
+
+        Class<? extends Event<BlockAdded.Data>> BLOCK_ADED = BlockAdded.class;
+
+        Class<? extends Event<Node>> NODE_DISCOVERED = NodeDiscovered.class;
+
+        Class<? extends Event<Channel>> PEER_ADDED_TO_SYNC_POOL = PeerAddedToSyncPool.class;
+
+        Class<? extends Event<PeerDisconnected.Data>> PEER_DISCONNECTED = PeerDisconnected.class;
+
+        Class<? extends Event<PendingState>> PENDING_STATE_CHANGED = PendingStateChanged.class;
+
+        Class<? extends Event<PendingTransactionUpdated.Data>> PENDING_TRANSACTION_UPDATED = PendingTransactionUpdated.class;
+
+        Class<? extends Event<SyncManager.State>> SYNC_DONE = SyncDone.class;
+
+        Class<? extends Event<TransactionExecutionSummary>> TRANSACTION_EXECUTED = TransactionExecuted.class;
+
+        Class<? extends Event<VmTraceCreated.Data>> VM_TRACE_CREATED = VmTraceCreated.class;
+    }
 
     private Events() {
     }
@@ -77,11 +109,11 @@ public final class Events {
         return new PendingStateChanged(state);
     }
 
-    public static Event onPendingTransactionUpdated(Block block, TransactionReceipt receipt, PendingTransactionUpdated.State state) {
+    public static Event onPendingTransactionUpdated(Block block, TransactionReceipt receipt, PendingTransaction.State state) {
         return new PendingTransactionUpdated(block, receipt, state);
     }
 
-    public static Event onSyncDone(SyncDone.State state) {
+    public static Event onSyncDone(SyncManager.State state) {
         return new SyncDone(state);
     }
 

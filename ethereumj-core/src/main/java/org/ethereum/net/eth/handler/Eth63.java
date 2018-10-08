@@ -29,7 +29,6 @@ import org.ethereum.core.TransactionInfo;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.datasource.Source;
 import org.ethereum.db.BlockStore;
-import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessage;
 import org.ethereum.net.eth.message.GetNodeDataMessage;
@@ -37,6 +36,7 @@ import org.ethereum.net.eth.message.GetReceiptsMessage;
 import org.ethereum.net.eth.message.NodeDataMessage;
 import org.ethereum.net.eth.message.ReceiptsMessage;
 import org.ethereum.net.message.ReasonCode;
+import org.ethereum.publish.Publisher;
 import org.ethereum.sync.PeerState;
 import org.ethereum.util.ByteArraySet;
 import org.ethereum.util.Value;
@@ -76,8 +76,8 @@ public class Eth63 extends Eth62 {
 
     @Autowired
     public Eth63(final SystemProperties config, final Blockchain blockchain, BlockStore blockStore,
-                 final EthereumListener listener) {
-        super(version, config, blockchain, blockStore, listener);
+                 final Publisher publisher) {
+        super(version, config, blockchain, blockStore, publisher);
     }
 
     @Override

@@ -298,12 +298,12 @@ public class Ethash {
             AtomicLong taskStartNonce = new AtomicLong(startNonce >= 0 ? startNonce : new Random().nextLong());
             @Override
             public MiningResult call() throws Exception {
-                long threadStartNonce = taskStartNonce.getAndAdd(0x100000000L);
-                final long nonce = getEthashAlgo().mineLight(getFullSize(), getCacheLight(),
-                        sha3(block.getHeader().getEncodedWithoutNonce()),
-                        ByteUtil.byteArrayToLong(block.getHeader().getDifficulty()), threadStartNonce);
-                final Pair<byte[], byte[]> pair = hashimotoLight(block.getHeader(), nonce);
-                return new MiningResult(nonce, pair.getLeft(), block);
+                    long threadStartNonce = taskStartNonce.getAndAdd(0x100000000L);
+                    final long nonce = getEthashAlgo().mineLight(getFullSize(), getCacheLight(),
+                            sha3(block.getHeader().getEncodedWithoutNonce()),
+                            ByteUtil.byteArrayToLong(block.getHeader().getDifficulty()), threadStartNonce);
+                    final Pair<byte[], byte[]> pair = hashimotoLight(block.getHeader(), nonce);
+                    return new MiningResult(nonce, pair.getLeft(), block);
             }
         }).submit();
     }

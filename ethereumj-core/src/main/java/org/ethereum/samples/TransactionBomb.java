@@ -21,13 +21,14 @@ import org.ethereum.core.Transaction;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.publish.event.BlockAdded;
-import org.ethereum.publish.event.SyncDone;
+import org.ethereum.sync.SyncManager;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.Collections;
 
 import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.publish.Subscription.to;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.SYNC_DONE;
 import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
 import static org.ethereum.util.ByteUtil.toHexString;
 
@@ -38,10 +39,9 @@ public class TransactionBomb {
     boolean startedTxBomb = false;
 
     public TransactionBomb(Ethereum ethereum) {
-        this.ethereum = ethereum;
-        this.ethereum
-                .subscribe(to(SyncDone.class, this::onSyncDone))
-                .subscribe(to(BlockAdded.class, this::onBlock));
+        this.ethereum = ethereum
+                .subscribe(SYNC_DONE, this::onSyncDone)
+                .subscribe(BLOCK_ADED, this::onBlock);
     }
 
     public static void main(String[] args) {
@@ -49,7 +49,7 @@ public class TransactionBomb {
     }
 
 
-    public void onSyncDone(SyncDone.State state) {
+    public void onSyncDone(SyncManager.State state) {
         // We will send transactions only
         // after we have the full chain syncs
         // - in order to prevent old nonce usage

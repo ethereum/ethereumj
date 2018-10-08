@@ -2,14 +2,13 @@ package org.ethereum.manager;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.Blockchain;
-import org.ethereum.core.EventDispatchThread;
 import org.ethereum.core.Genesis;
 import org.ethereum.core.ImportResult;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.listener.CompositeEthereumListener;
+import org.ethereum.publish.Publisher;
 import org.ethereum.validator.BlockHeaderRule;
 import org.ethereum.validator.BlockHeaderValidator;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -28,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toList;
@@ -104,8 +102,8 @@ public class BlockLoaderTest {
         }
 
         @Bean
-        public EventDispatchThread dispatchThread() {
-            return EventDispatchThread.getDefault();
+        public Publisher publisher() {
+            return Mockito.mock(Publisher.class);
         }
 
         @Bean

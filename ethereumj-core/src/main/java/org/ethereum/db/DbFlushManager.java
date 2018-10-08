@@ -25,7 +25,6 @@ import org.ethereum.datasource.AsyncFlushable;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.datasource.Source;
 import org.ethereum.publish.Publisher;
-import org.ethereum.publish.event.SyncDone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +40,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import static org.ethereum.publish.Subscription.to;
-import static org.ethereum.publish.event.SyncDone.State.COMPLETE;
+import static org.ethereum.publish.event.Events.Type.SYNC_DONE;
+import static org.ethereum.sync.SyncManager.State.COMPLETE;
 
 /**
  * Created by Anton Nashatyrev on 01.12.2016.
@@ -81,7 +81,7 @@ public class DbFlushManager {
     public void setPublisher(Publisher publisher) {
         if (!flushAfterSyncDone) return;
 
-        publisher.subscribe(to(SyncDone.class, state -> {
+        publisher.subscribe(to(SYNC_DONE, state -> {
             if (state == COMPLETE) {
                 logger.info("DbFlushManager: long sync done, flushing each block now");
                 syncDone = true;
