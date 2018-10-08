@@ -27,8 +27,8 @@ import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 import org.ethereum.publish.event.BlockAdded;
 import org.ethereum.samples.util.Account;
-import org.ethereum.samples.util.TransactionSubmitter;
 import org.ethereum.samples.util.Contract;
+import org.ethereum.samples.util.TransactionSubmitter;
 import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.slf4j.Logger;
@@ -67,13 +67,9 @@ public class SingleMinerNetSample {
         @Autowired
         private ResourceLoader resourceLoader;
 
-        protected Resource loadSampleResource(String path) {
-            return resourceLoader.getResource("classpath:samples" + path);
-        }
-
         protected byte[] loadContractSource(String contractName) {
             try {
-                Resource resource = loadSampleResource("/contracts/" + contractName);
+                Resource resource = resourceLoader.getResource("classpath:contracts/" + contractName);
                 return readAllBytes(resource.getFile().toPath());
             } catch (IOException e) {
                 throw new RuntimeException(contractName + " contract source loading error: ", e);
@@ -128,7 +124,7 @@ public class SingleMinerNetSample {
 
         /**
          * Template method for custom accounts installing.
-         * Register own accounts via {@link org.ethereum.samples.util.Account.Register} to get some test ether.
+         * Register own accounts via {@link Account.Register} to get some test ether.
          * @param register
          */
         protected void registerAccounts(Account.Register register) {
@@ -143,7 +139,7 @@ public class SingleMinerNetSample {
         }
 
         /**
-         * Register your contract via {@link org.ethereum.samples.util.Contract.Register} to deploy it at sample prepare phase.
+         * Register your contract via {@link Contract.Register} to deploy it at sample prepare phase.
          * @param register
          */
         protected void registerContracts(Contract.Register register) {

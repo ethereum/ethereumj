@@ -102,9 +102,9 @@ public class PrivateMinerSample {
         }
 
         @Override
-        public void onDatasetUpdate(EthashListener.DatasetStatus minerStatus) {
+        public void onDatasetUpdate(DatasetStatus minerStatus) {
             logger.info("Miner status updated: {}", minerStatus);
-            if (minerStatus.equals(EthashListener.DatasetStatus.FULL_DATASET_GENERATE_START)) {
+            if (minerStatus.equals(DatasetStatus.FULL_DATASET_GENERATE_START)) {
                 logger.info("Generating Full Dataset (may take up to 10 min if not cached)...");
             }
             if (minerStatus.equals(DatasetStatus.FULL_DATASET_GENERATED)) {

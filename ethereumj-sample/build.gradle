@@ -1,0 +1,7 @@
+jar.enabled = false
+
+sourceCompatibility = 1.8
+
+dependencies {
+    compile project(':ethereumj-core')
+}

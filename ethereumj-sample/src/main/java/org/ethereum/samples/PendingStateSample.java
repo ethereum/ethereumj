@@ -17,7 +17,11 @@
  */
 package org.ethereum.samples;
 
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockSummary;
+import org.ethereum.core.PendingState;
+import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionReceipt;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.EthereumFactory;
@@ -27,12 +31,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 
 import java.math.BigInteger;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.ethereum.core.PendingTransaction.State.NEW_PENDING;
+import static org.ethereum.publish.Subscription.to;
 import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
 import static org.ethereum.publish.event.Events.Type.PENDING_TRANSACTION_UPDATED;
-import static org.ethereum.publish.Subscription.to;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
