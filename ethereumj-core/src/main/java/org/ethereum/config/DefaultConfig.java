@@ -22,13 +22,19 @@ import org.ethereum.db.BlockStore;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.PruneManager;
 import org.ethereum.db.TransactionStore;
+import org.ethereum.exception.FatalEthereumException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.FatalBeanException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+
+import java.util.List;
+
+import static java.util.Arrays.asList;
 
 /**
  *
@@ -49,8 +55,18 @@ public class DefaultConfig {
     @Autowired
     SystemProperties config;
 
+    private final static List<Class<? extends Exception>> FATAL_EXCEPTIONS = asList(
+            FatalBeanException.class,
+            FatalEthereumException.class);
+
     public DefaultConfig() {
-        Thread.setDefaultUncaughtExceptionHandler((t, e) -> logger.error("Uncaught exception", e));
+        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+            logger.error("Uncaught exception", e);
+            FATAL_EXCEPTIONS.stream()
+                    .filter(errType -> errType.isInstance(e))
+                    .findFirst()
+                    .ifPresent(errType -> System.exit(1));
+        });
     }
 
     @Bean

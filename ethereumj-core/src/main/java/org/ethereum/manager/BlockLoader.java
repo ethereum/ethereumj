@@ -18,12 +18,14 @@
 package org.ethereum.manager;
 
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Blockchain;
 import org.ethereum.core.ImportResult;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.DbFlushManager;
+import org.ethereum.exception.FatalEthereumException;
 import org.ethereum.util.ExecutorPipeline;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
@@ -31,7 +33,6 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -125,7 +126,9 @@ public class BlockLoader {
      * @return <code>true</code> if all blocks within all dumps have been successfully imported, <code>false</code> otherwise.
      */
     public boolean loadBlocks(Function<Path, DumpWalker> walkerFactory, Path... paths) {
-        Assert.notEmpty(paths, "There is nothing to import.");
+        if (ArrayUtils.isEmpty(paths)) {
+            throw new FatalEthereumException("There is nothing to import.");
+        }
 
         initPipelines();
 
