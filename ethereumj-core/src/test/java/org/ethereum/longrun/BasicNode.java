@@ -42,7 +42,7 @@ import java.util.Map;
 import java.util.Vector;
 
 import static java.lang.Thread.sleep;
-import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADDED;
 import static org.ethereum.publish.event.Events.Type.ETH_STATUS_UPDATED;
 import static org.ethereum.publish.event.Events.Type.PEER_ADDED_TO_SYNC_POOL;
 import static org.ethereum.publish.event.Events.Type.SYNC_DONE;
@@ -110,7 +110,7 @@ class BasicNode implements Runnable {
         // adding the main EthereumJ callback to be notified on different kind of events
         this.ethereum
                 .subscribe(SYNC_DONE, this::onSyncDone)
-                .subscribe(BLOCK_ADED, this::onBlock)
+                .subscribe(BLOCK_ADDED, this::onBlock)
                 .subscribe(ETH_STATUS_UPDATED, this::onEthStatusUpdated)
                 .subscribe(PEER_ADDED_TO_SYNC_POOL, this::onPeerAddedToSyncPool);
 

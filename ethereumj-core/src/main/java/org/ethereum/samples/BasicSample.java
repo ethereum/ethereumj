@@ -41,7 +41,7 @@ import javax.annotation.PostConstruct;
 import java.util.*;
 
 import static org.ethereum.publish.Subscription.to;
-import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADDED;
 import static org.ethereum.publish.event.Events.Type.ETH_STATUS_UPDATED;
 import static org.ethereum.publish.event.Events.Type.NODE_DISCOVERED;
 import static org.ethereum.publish.event.Events.Type.PEER_ADDED_TO_SYNC_POOL;
@@ -139,7 +139,7 @@ public class BasicSample implements Runnable {
                 .subscribe(SYNC_DONE, syncState -> synced = true)
                 .subscribe(ETH_STATUS_UPDATED, data -> ethNodes.put(data.getChannel().getNode(), data.getMessage()))
                 .subscribe(PEER_ADDED_TO_SYNC_POOL, peer -> syncPeers.add(peer.getNode()))
-                .subscribe(BLOCK_ADED, data -> {
+                .subscribe(BLOCK_ADDED, data -> {
                     BlockSummary blockSummary = data.getBlockSummary();
                     Block block = blockSummary.getBlock();
                     List<TransactionReceipt> receipts = blockSummary.getReceipts();

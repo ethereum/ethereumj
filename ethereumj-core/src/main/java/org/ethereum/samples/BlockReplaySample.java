@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 
 import static org.ethereum.publish.Subscription.to;
-import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADDED;
 
 public class BlockReplaySample extends SingleMinerNetSample {
 
@@ -21,7 +21,7 @@ public class BlockReplaySample extends SingleMinerNetSample {
 
     @Override
     protected void onSampleReady() {
-        ethereum.subscribe(to(BLOCK_ADED, this::enableReplay)
+        ethereum.subscribe(to(BLOCK_ADDED, this::enableReplay)
                 .oneOff(data -> data.getBlockSummary().getBlock().getNumber() % 50 == 0));
     }
 

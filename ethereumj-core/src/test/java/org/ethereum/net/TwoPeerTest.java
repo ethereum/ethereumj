@@ -50,7 +50,7 @@ import java.util.concurrent.TimeUnit;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADDED;
 import static org.ethereum.publish.event.Events.Type.ETH_STATUS_UPDATED;
 
 /**
@@ -230,7 +230,7 @@ public class TwoPeerTest {
             System.out.println("==== Got the Channel: " + data.getChannel());
         });
 
-        ethereum2.subscribe(BLOCK_ADED, data -> {
+        ethereum2.subscribe(BLOCK_ADDED, data -> {
             Block block = data.getBlockSummary().getBlock();
             if (block.getNumber() == 4) {
                 semaphore.countDown();

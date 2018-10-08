@@ -25,13 +25,13 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
-import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADDED;
 
 public class FollowAccount {
 
     public static void main(String[] args) {
         Ethereum ethereum = EthereumFactory.createEthereum();
-        ethereum.subscribe(BLOCK_ADED, data -> {
+        ethereum.subscribe(BLOCK_ADDED, data -> {
             byte[] cow = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
 
             // Get snapshot some time ago - 10% blocks ago

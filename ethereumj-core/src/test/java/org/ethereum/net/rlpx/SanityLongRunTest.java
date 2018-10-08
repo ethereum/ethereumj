@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.ethereum.publish.Subscription.to;
-import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADDED;
 import static org.ethereum.publish.event.Events.Type.MESSAGE_RECEIVED;
 
 /**
@@ -129,7 +129,7 @@ public class SanityLongRunTest {
         final CountDownLatch semaphoreFirstBlock = new CountDownLatch(1);
 
         AtomicInteger blocksCnt = new AtomicInteger();
-        ethereum2.subscribe(BLOCK_ADED, data -> {
+        ethereum2.subscribe(BLOCK_ADDED, data -> {
             blocksCnt.addAndGet(1);
             if (blocksCnt.get() % 1000 == 0 || blocksCnt.get() == 1) {
                 System.out.println("=== Blocks imported: " + blocksCnt);

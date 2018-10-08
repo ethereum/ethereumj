@@ -47,7 +47,7 @@ public final class Events {
 
         Class<? extends Event<PeerHandshaked.Data>> PEER_HANDSHAKED = PeerHandshaked.class;
 
-        Class<? extends Event<BlockAdded.Data>> BLOCK_ADED = BlockAdded.class;
+        Class<? extends Event<BlockAdded.Data>> BLOCK_ADDED = BlockAdded.class;
 
         Class<? extends Event<Node>> NODE_DISCOVERED = NodeDiscovered.class;
 

@@ -54,7 +54,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static java.lang.Thread.sleep;
 import static org.ethereum.core.PendingTransaction.State.NEW_PENDING;
 import static org.ethereum.publish.Subscription.to;
-import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADDED;
 import static org.ethereum.publish.event.Events.Type.PENDING_TRANSACTION_UPDATED;
 
 /**
@@ -228,7 +228,7 @@ public class SyncWithLoadTest {
         public void run() {
             try {
                 this.ethereum
-                        .subscribe(to(BLOCK_ADED, this::onBlock))
+                        .subscribe(to(BLOCK_ADDED, this::onBlock))
                         .subscribe(to(PENDING_TRANSACTION_UPDATED, this::onPendingTransactionUpdated)
                                 .conditionally(data -> data.getState() == NEW_PENDING));
 

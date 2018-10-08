@@ -17,13 +17,10 @@
  */
 package org.ethereum.util.blockchain;
 
-import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.blockchain.ByzantiumConfig;
-import org.ethereum.config.blockchain.DaoHFConfig;
 import org.ethereum.config.blockchain.DaoNoHFConfig;
-import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.blockchain.HomesteadConfig;
 import org.ethereum.core.*;
 import org.ethereum.core.genesis.GenesisLoader;
@@ -61,7 +58,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 
 import static org.ethereum.publish.Subscription.to;
-import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADDED;
 import static org.ethereum.util.ByteUtil.wrap;
 
 /**
@@ -450,7 +447,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
         if (blockchain == null) {
             blockchain = createBlockchain(genesis);
             blockchain.setMinerCoinbase(coinbase);
-            subscribe(to(BLOCK_ADED, data -> lastSummary = data.getBlockSummary()));
+            subscribe(to(BLOCK_ADDED, data -> lastSummary = data.getBlockSummary()));
         }
         return blockchain;
     }

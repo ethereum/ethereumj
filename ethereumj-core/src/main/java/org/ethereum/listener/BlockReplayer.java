@@ -37,7 +37,7 @@ import java.util.function.Consumer;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
-import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADDED;
 
 /**
  * Class capable of replaying stored blocks prior to 'going online' and
@@ -198,7 +198,7 @@ public class BlockReplayer {
             }
 
             BlockReplayer blockReplay = build();
-            ethereum.subscribe(BLOCK_ADED, blockReplay::onBlock);
+            ethereum.subscribe(BLOCK_ADDED, blockReplay::onBlock);
             new Thread(() -> blockReplay.replay()).start();
 
             return blockReplay;

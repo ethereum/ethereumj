@@ -34,7 +34,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADDED;
 
 /**
  * With this simple example you can send transaction from address to address in live public network
@@ -50,7 +50,7 @@ public class SendTransaction extends BasicSample {
     @Override
     public void onSyncDone() throws Exception {
         // when block arrives look for our included transactions
-        this.ethereum.subscribe(BLOCK_ADED, this::onBlock);
+        this.ethereum.subscribe(BLOCK_ADDED, this::onBlock);
 
         String toAddress = "";
         logger.info("Sending transaction to net and waiting for inclusion");

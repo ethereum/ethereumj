@@ -37,7 +37,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADDED;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
@@ -64,7 +64,7 @@ public class CreateContractSample extends TestNetSample {
     @Override
     public void onSyncDone() throws Exception {
         // when block arrives look for our included transactions
-        ethereum.subscribe(BLOCK_ADED, this::onBlock);
+        ethereum.subscribe(BLOCK_ADDED, this::onBlock);
 
         logger.info("Compiling contract...");
         SolidityCompiler.Result result = compiler.compileSrc(contract.getBytes(), true, true,

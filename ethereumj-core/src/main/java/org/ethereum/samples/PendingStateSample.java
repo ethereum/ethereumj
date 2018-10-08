@@ -30,7 +30,7 @@ import java.math.BigInteger;
 import java.util.*;
 
 import static org.ethereum.core.PendingTransaction.State.NEW_PENDING;
-import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADDED;
 import static org.ethereum.publish.event.Events.Type.PENDING_TRANSACTION_UPDATED;
 import static org.ethereum.publish.Subscription.to;
 import static org.ethereum.util.ByteUtil.toHexString;
@@ -70,7 +70,7 @@ public class PendingStateSample extends TestNetSample {
                 .subscribe(to(PENDING_TRANSACTION_UPDATED, data -> onPendingTransactionReceived(data.getReceipt().getTransaction()))
                         .conditionally(data -> data.getState() == NEW_PENDING))
                 // when block arrives look for our included transactions
-                .subscribe(BLOCK_ADED, d -> onBlock(d));
+                .subscribe(BLOCK_ADDED, d -> onBlock(d));
 
         new Thread(() -> {
             try {

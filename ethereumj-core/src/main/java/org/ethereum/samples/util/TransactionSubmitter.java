@@ -24,7 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static java.lang.String.format;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
-import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADDED;
 import static org.ethereum.publish.event.Events.Type.PENDING_TRANSACTION_UPDATED;
 import static org.ethereum.util.BIUtil.toBI;
 
@@ -37,7 +37,7 @@ public class TransactionSubmitter {
     public TransactionSubmitter(Ethereum ethereum) {
         this.ethereum = ethereum
                 .subscribe(PENDING_TRANSACTION_UPDATED, this::onPendingTransactionUpdated)
-                .subscribe(BLOCK_ADED, this::onBlockAdded);
+                .subscribe(BLOCK_ADDED, this::onBlockAdded);
     }
 
     public TransactionBuilder newTransaction(ECKey senderKey, byte[] receiverAddress) {

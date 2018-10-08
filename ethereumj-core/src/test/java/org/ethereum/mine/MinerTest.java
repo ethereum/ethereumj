@@ -47,7 +47,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.ethereum.core.PendingTransaction.State.NEW_PENDING;
 import static org.ethereum.publish.Subscription.to;
-import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADDED;
 import static org.ethereum.publish.event.Events.Type.PENDING_TRANSACTION_UPDATED;
 import static org.ethereum.publish.event.Events.Type.SYNC_DONE;
 
@@ -108,7 +108,7 @@ public class MinerTest {
         Ethereum ethereum2 = EthereumFactory.createEthereum(SysPropConfig2.props, SysPropConfig2.class);
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereum2.subscribe(BLOCK_ADED, data -> {
+        ethereum2.subscribe(BLOCK_ADDED, data -> {
             Block block = data.getBlockSummary().getBlock();
             System.err.println("=== New block: " + blockInfo(block));
             System.err.println(block);
@@ -207,7 +207,7 @@ public class MinerTest {
 
         final CountDownLatch semaphore = new CountDownLatch(1);
         ethereum1
-                .subscribe(BLOCK_ADED, data -> System.out.println("=== New block: " + blockInfo(data.getBlockSummary().getBlock())))
+                .subscribe(BLOCK_ADDED, data -> System.out.println("=== New block: " + blockInfo(data.getBlockSummary().getBlock())))
                 .subscribe(SYNC_DONE, syncState -> semaphore.countDown());
 
 //        ethereum2.addListener(new EthereumListenerAdapter() {

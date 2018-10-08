@@ -49,7 +49,7 @@ import java.util.concurrent.CompletableFuture;
 import static java.nio.file.Files.readAllBytes;
 import static org.ethereum.core.Denomination.ETHER;
 import static org.ethereum.publish.Subscription.to;
-import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADDED;
 
 /**
  * Basic class for independent private network samples.
@@ -217,8 +217,8 @@ public class SingleMinerNetSample {
     @PostConstruct
     public final void initSample() {
         this.ethereum
-                .subscribe(to(BLOCK_ADED, this::onImportStarted).oneOff())
-                .subscribe(to(BLOCK_ADED, this::printHeartbeat));
+                .subscribe(to(BLOCK_ADDED, this::onImportStarted).oneOff())
+                .subscribe(to(BLOCK_ADDED, this::printHeartbeat));
     }
 
     private void printHeartbeat(BlockAdded.Data data) {

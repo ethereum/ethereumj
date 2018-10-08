@@ -50,7 +50,7 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADDED;
 import static org.ethereum.publish.event.Events.Type.ETH_STATUS_UPDATED;
 import static org.ethereum.publish.event.Events.Type.MESSAGE_RECEIVED;
 import static org.ethereum.publish.event.Events.Type.PEER_ADDED_TO_SYNC_POOL;
@@ -160,7 +160,7 @@ public class LongSyncTest {
         // A == b10, B == genesis
 
         final CountDownLatch semaphore = new CountDownLatch(1);
-        ethereumB.subscribe(BLOCK_ADED, data -> {
+        ethereumB.subscribe(BLOCK_ADDED, data -> {
             if (data.getBlockSummary().getBlock().isEqual(b10)) {
                 semaphore.countDown();
             }
