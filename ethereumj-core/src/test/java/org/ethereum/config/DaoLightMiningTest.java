@@ -74,7 +74,7 @@ public class DaoLightMiningTest {
 
     private StandaloneBlockchain createBlockchain(boolean proFork) {
         final BaseNetConfig netConfig = new BaseNetConfig();
-        final FrontierConfig c1 = StandaloneBlockchain.getEasyMiningConfig();
+        final BlockchainConfig c1 = StandaloneBlockchain.getEasyMiningConfig();
         netConfig.add(0, StandaloneBlockchain.getEasyMiningConfig());
         netConfig.add(FORK_BLOCK, proFork ? new DaoHFConfig(c1, FORK_BLOCK) : new DaoNoHFConfig(c1, FORK_BLOCK));
 

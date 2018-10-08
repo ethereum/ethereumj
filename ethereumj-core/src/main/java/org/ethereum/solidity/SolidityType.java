@@ -58,7 +58,8 @@ public abstract class SolidityType {
     public static SolidityType getType(String typeName) {
         if (typeName.contains("[")) return ArrayType.getType(typeName);
         if ("bool".equals(typeName)) return new BoolType();
-        if (typeName.startsWith("int") || typeName.startsWith("uint")) return new IntType(typeName);
+        if (typeName.startsWith("int")) return new IntType(typeName);
+        if (typeName.startsWith("uint")) return new UnsignedIntType(typeName);
         if ("address".equals(typeName)) return new AddressType();
         if ("string".equals(typeName)) return new StringType();
         if ("bytes".equals(typeName)) return new BytesType();
@@ -356,23 +357,14 @@ public abstract class SolidityType {
             return ByteUtil.bigIntegerToBytes(bi, 20);
         }
     }
-
-    public static class IntType extends SolidityType {
-        public IntType(String name) {
+    
+    public static abstract class NumericType extends SolidityType {
+        public NumericType(String name) {
             super(name);
         }
 
-        @Override
-        public String getCanonicalName() {
-            if (getName().equals("int")) return "int256";
-            if (getName().equals("uint")) return "uint256";
-            return super.getCanonicalName();
-        }
-
-        @Override
-        public byte[] encode(Object value) {
+        BigInteger encodeInternal(Object value) {
             BigInteger bigInt;
-
             if (value instanceof String) {
                 String s = ((String)value).toLowerCase().trim();
                 int radix = 10;
@@ -393,14 +385,20 @@ public abstract class SolidityType {
             } else {
                 throw new RuntimeException("Invalid value for type '" + this + "': " + value + " (" + value.getClass() + ")");
             }
-            return encodeInt(bigInt);
+            return bigInt;
+        }
+    }
+
+    public static class IntType extends NumericType {
+        public IntType(String name) {
+            super(name);
         }
 
         @Override
-        public Object decode(byte[] encoded, int offset) {
-            return decodeInt(encoded, offset);
+        public String getCanonicalName() {
+            if (getName().equals("int")) return "int256";
+            return super.getCanonicalName();
         }
-
         public static BigInteger decodeInt(byte[] encoded, int offset) {
             return new BigInteger(Arrays.copyOfRange(encoded, offset, offset + 32));
         }
@@ -409,6 +407,48 @@ public abstract class SolidityType {
         }
         public static byte[] encodeInt(BigInteger bigInt) {
             return ByteUtil.bigIntegerToBytesSigned(bigInt, 32);
+        }
+        @Override
+        public Object decode(byte[] encoded, int offset) {
+            return decodeInt(encoded, offset);
+        }
+        @Override
+        public byte[] encode(Object value) {
+            BigInteger bigInt = encodeInternal(value);
+            return encodeInt(bigInt);
+        }
+    }
+    
+    public static class UnsignedIntType extends NumericType {
+        public UnsignedIntType(String name) {
+            super(name);
+        }
+        
+        @Override
+        public String getCanonicalName() {
+            if (getName().equals("uint")) return "uint256";
+            return super.getCanonicalName();
+        }
+        public static BigInteger decodeInt(byte[] encoded, int offset) {
+            return new BigInteger(1, Arrays.copyOfRange(encoded, offset, offset + 32));
+        }
+        public static byte[] encodeInt(int i) {
+            return encodeInt(new BigInteger("" + i));
+        }
+        public static byte[] encodeInt(BigInteger bigInt) {
+            if (bigInt.signum() == -1) {
+                throw new RuntimeException("Wrong value for uint type: " + bigInt);
+            }
+            return ByteUtil.bigIntegerToBytes(bigInt, 32);
+        }
+        @Override
+        public byte[] encode(Object value) {
+            BigInteger bigInt = encodeInternal(value);
+            return encodeInt(bigInt);
+        }
+        @Override
+        public Object decode(byte[] encoded, int offset) {
+            return decodeInt(encoded, offset);
         }
     }
 

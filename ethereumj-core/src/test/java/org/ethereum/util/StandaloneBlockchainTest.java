@@ -115,13 +115,27 @@ public class StandaloneBlockchainTest {
         StandaloneBlockchain sb = new StandaloneBlockchain().withAutoblock(true);
         SolidityContract a = sb.submitNewContract(
                 "contract A {" +
-                        "  uint public a;" +
-                        "  function f(uint a_) {a = a_;}" +
+                        "  int public a;" +
+                        "  function f(int a_) {a = a_;}" +
                         "}");
         a.callFunction("f", "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         BigInteger r = (BigInteger) a.callConstFunction("a")[0];
         System.out.println(r.toString(16));
         Assert.assertEquals(new BigInteger(Hex.decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")), r);
+    }
+    
+    @Test
+    public void encodeTest2() {
+        StandaloneBlockchain sb = new StandaloneBlockchain().withAutoblock(true);
+        SolidityContract a = sb.submitNewContract(
+                "contract A {" +
+                       "  uint public a;" +
+                       "  function f(uint a_) {a = a_;}" +
+                "}");
+        a.callFunction("f", "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        BigInteger r = (BigInteger) a.callConstFunction("a")[0];
+        System.out.println(r.toString(16));
+        Assert.assertEquals(new BigInteger(1, Hex.decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")), r);
     }
 
     @Test
