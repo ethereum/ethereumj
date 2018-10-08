@@ -25,7 +25,6 @@ import org.ethereum.core.Blockchain;
 import org.ethereum.core.ImportResult;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.DbFlushManager;
-import org.ethereum.exception.FatalEthereumException;
 import org.ethereum.util.ExecutorPipeline;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
@@ -127,7 +126,8 @@ public class BlockLoader {
      */
     public boolean loadBlocks(Function<Path, DumpWalker> walkerFactory, Path... paths) {
         if (ArrayUtils.isEmpty(paths)) {
-            throw new FatalEthereumException("There is nothing to import.");
+            logger.warn("There is nothing to import.");
+            return false;
         }
 
         initPipelines();
