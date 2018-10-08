@@ -109,7 +109,7 @@ public class BackwardCompatibilityEthereumListenerProxy implements EthereumListe
     @Override
     public void onBlock(BlockSummary blockSummary) {
         compositeListener.onBlock(blockSummary);
-        publisher.publish(Events.onBlockAdded(blockSummary));
+        publisher.publish(Events.onBlockAdded(blockSummary, false));
     }
 
     @Override

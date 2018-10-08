@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -51,7 +52,7 @@ public class DbFlushManager {
 
     List<AbstractCachedSource<byte[], ?>> writeCaches = new CopyOnWriteArrayList<>();
     List<Source<byte[], ?>> sources = new CopyOnWriteArrayList<>();
-    Set<DbSource> dbSources ;
+    Set<DbSource> dbSources = new HashSet<>();
     AbstractCachedSource<byte[], byte[]> stateDbCache;
 
     long sizeThreshold;

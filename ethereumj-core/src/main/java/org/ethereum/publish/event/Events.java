@@ -89,10 +89,6 @@ public final class Events {
         return new BlockAdded(summary, isBest);
     }
 
-    public static Event onBlockAdded(BlockSummary summary) {
-        return onBlockAdded(summary, false);
-    }
-
     public static Event onNodeDiscovered(Node node) {
         return new NodeDiscovered(node);
     }
