@@ -39,7 +39,7 @@ public class Subscription<E extends Event<D>, D> {
     private final static Logger log = LoggerFactory.getLogger("event");
 
     /**
-     *
+     * Abstraction that helps manage subscription state
      */
     public static class LifeCycle {
         private final Subscription subscription;
@@ -49,7 +49,7 @@ public class Subscription<E extends Event<D>, D> {
         }
 
         /**
-         *
+         * Unsubscribes owner's subscription from current event flow.
          */
         public void unsubscribe() {
             subscription.unsubscribeAfter(data -> true);
