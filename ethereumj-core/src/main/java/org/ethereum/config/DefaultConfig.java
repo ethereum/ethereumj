@@ -17,12 +17,11 @@
  */
 package org.ethereum.config;
 
-import org.ethereum.datasource.*;
+import org.ethereum.datasource.Source;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.PruneManager;
 import org.ethereum.db.TransactionStore;
-import org.ethereum.exception.FatalEthereumException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.FatalBeanException;
@@ -55,9 +54,7 @@ public class DefaultConfig {
     @Autowired
     SystemProperties config;
 
-    private final static List<Class<? extends Exception>> FATAL_EXCEPTIONS = asList(
-            FatalBeanException.class,
-            FatalEthereumException.class);
+    private final static List<Class<? extends Exception>> FATAL_EXCEPTIONS = asList(FatalBeanException.class);
 
     public DefaultConfig() {
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
