@@ -63,6 +63,24 @@ public class Committee {
         return RLP.wrapList(intToBytesNoLeadZeroes(shardId), RLP.wrapList(encodedValidators));
     }
 
+    /**
+     *  Following schema should bring some clarity on what this index does include:
+     *
+     *  <pre>
+     *
+     *  committees[slotOffset][]      each slot cross-links on a number of shards
+     *   \
+     *    committee[committeeIdx]     each committee has a validators array
+     *    \
+     *     validators[arrayIdx]       indices in this array are defined by shuffling
+     *     \
+     *      validatorIdx              this number is an index of validator from validator set
+     *
+     *  committeeSize = slot[slotOffset].length
+     *  shardId       = committee[committeeIdx].shardId
+     *
+     *  </pre>
+     */
     public static class Index {
         /* index of validator in active validator set */
         private final int validatorIdx;
