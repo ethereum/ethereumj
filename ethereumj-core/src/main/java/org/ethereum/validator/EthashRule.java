@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Random;
 
-import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADDED;
 import static org.ethereum.publish.event.Events.Type.SYNC_DONE;
 import static org.ethereum.validator.EthashRule.ChainType.main;
 import static org.ethereum.validator.EthashRule.ChainType.reverse;
@@ -107,7 +107,7 @@ public class EthashRule extends BlockHeaderRule {
             if (this.chain == main && publisher != null) {
                 publisher
                         .subscribe(SYNC_DONE, ss -> EthashRule.this.syncDone = true)
-                        .subscribe(BLOCK_ADED, data -> {
+                        .subscribe(BLOCK_ADDED, data -> {
                             if (data.isBest()) {
                                 ethashHelper.preCache(data.getBlockSummary().getBlock().getNumber());
                             }

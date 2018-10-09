@@ -49,7 +49,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.ethereum.publish.Subscription.to;
-import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADDED;
 import static org.ethereum.publish.event.Events.Type.ETH_STATUS_UPDATED;
 import static org.ethereum.publish.event.Events.Type.MESSAGE_RECEIVED;
 import static org.ethereum.publish.event.Events.Type.MESSAGE_SENT;
@@ -124,7 +124,7 @@ public class BlockTxForwardTest {
                     .subscribe(SYNC_DONE, syncState -> synced = true)
                     .subscribe(ETH_STATUS_UPDATED, data -> ethNodes.put(data.getChannel().getNode(), data.getMessage()))
                     .subscribe(PEER_ADDED_TO_SYNC_POOL, peer -> syncPeers.add(peer.getNode()))
-                    .subscribe(BLOCK_ADED, data -> {
+                    .subscribe(BLOCK_ADDED, data -> {
                         bestBlock = data.getBlockSummary().getBlock();
                         if (syncComplete) {
                             logger.info("New block: " + bestBlock.getShortDescr());
@@ -482,7 +482,7 @@ public class BlockTxForwardTest {
         Ethereum miner = EthereumFactory.createEthereum(MinerConfig.class);
 
         miner
-                .subscribe(BLOCK_ADED, data -> {
+                .subscribe(BLOCK_ADDED, data -> {
                     Block block = data.getBlockSummary().getBlock();
                     if (block.getNumber() != 0L) {
                         blocks.put(Hex.toHexString(block.getHash()), Boolean.FALSE);

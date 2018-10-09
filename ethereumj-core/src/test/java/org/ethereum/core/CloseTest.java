@@ -26,7 +26,7 @@ import org.junit.Test;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADDED;
 
 /**
  * Created by Anton Nashatyrev on 24.06.2016.
@@ -43,7 +43,7 @@ public class CloseTest {
             Assert.assertNotNull(bestBlock);
             final CountDownLatch latch = new CountDownLatch(1);
             AtomicInteger counter = new AtomicInteger();
-            ethereum.subscribe(BLOCK_ADED, data -> {
+            ethereum.subscribe(BLOCK_ADDED, data -> {
                 if (counter.addAndGet(1) > 1100)  {
                     latch.countDown();
                 }

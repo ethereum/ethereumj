@@ -66,7 +66,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import static org.ethereum.publish.Subscription.to;
-import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADDED;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
@@ -122,7 +122,7 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
 
     @PostConstruct
     public void init() {
-        worldManager.subscribe(to(BLOCK_ADED, data -> gasPriceTracker.onBlock(data.getBlockSummary())));
+        worldManager.subscribe(to(BLOCK_ADDED, data -> gasPriceTracker.onBlock(data.getBlockSummary())));
     }
 
     @Override

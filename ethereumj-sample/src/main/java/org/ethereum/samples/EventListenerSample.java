@@ -33,7 +33,7 @@ import org.springframework.context.annotation.Bean;
 
 import java.math.BigInteger;
 
-import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADDED;
 import static org.ethereum.publish.event.Events.Type.PENDING_TRANSACTION_UPDATED;
 
 /**
@@ -139,7 +139,7 @@ public class EventListenerSample extends SingleMinerNetSample {
         IncEventListener eventListener = new IncEventListener(pendingState, contract.getAbi(), contract.getAddress());
 
         this.ethereum
-                .subscribe(BLOCK_ADED, eventListener::onBlock)
+                .subscribe(BLOCK_ADDED, eventListener::onBlock)
                 .subscribe(PENDING_TRANSACTION_UPDATED, eventListener::onPendingTransactionUpdated);
 
         Contract.Caller cow = contractCaller("cow", "sample");

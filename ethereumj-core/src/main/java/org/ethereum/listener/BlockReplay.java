@@ -37,6 +37,8 @@ import java.util.List;
 import static org.ethereum.sync.BlockDownloader.MAX_IN_REQUEST;
 
 /**
+ * @deprecated This component uses deprecated {@link EthereumListenerAdapter}, use {@link BlockReplayer} instead.
+ *
  * Class capable of replaying stored blocks prior to 'going online' and
  * notifying on newly imported blocks
  *

@@ -27,7 +27,7 @@ import org.spongycastle.util.encoders.Hex;
 import java.util.Collections;
 
 import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADDED;
 import static org.ethereum.publish.event.Events.Type.SYNC_DONE;
 import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
 import static org.ethereum.util.ByteUtil.toHexString;
@@ -41,7 +41,7 @@ public class TransactionBomb {
     public TransactionBomb(Ethereum ethereum) {
         this.ethereum = ethereum
                 .subscribe(SYNC_DONE, this::onSyncDone)
-                .subscribe(BLOCK_ADED, this::onBlock);
+                .subscribe(BLOCK_ADDED, this::onBlock);
     }
 
     public static void main(String[] args) {

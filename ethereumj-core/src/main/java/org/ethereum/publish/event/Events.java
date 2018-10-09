@@ -47,7 +47,7 @@ public final class Events {
 
         Class<? extends Event<PeerHandshaked.Data>> PEER_HANDSHAKED = PeerHandshaked.class;
 
-        Class<? extends Event<BlockAdded.Data>> BLOCK_ADED = BlockAdded.class;
+        Class<? extends Event<BlockAdded.Data>> BLOCK_ADDED = BlockAdded.class;
 
         Class<? extends Event<Node>> NODE_DISCOVERED = NodeDiscovered.class;
 
@@ -87,10 +87,6 @@ public final class Events {
 
     public static Event onBlockAdded(BlockSummary summary, boolean isBest) {
         return new BlockAdded(summary, isBest);
-    }
-
-    public static Event onBlockAdded(BlockSummary summary) {
-        return onBlockAdded(summary, false);
     }
 
     public static Event onNodeDiscovered(Node node) {

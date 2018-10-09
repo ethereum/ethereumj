@@ -22,7 +22,6 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.listener.EthereumListener;
 import org.ethereum.publish.event.BlockAdded;
 import org.ethereum.publish.event.PendingTransactionUpdated;
 import org.ethereum.util.blockchain.SolidityContract;
@@ -47,7 +46,7 @@ import static org.ethereum.core.PendingTransaction.State.DROPPED;
 import static org.ethereum.core.PendingTransaction.State.INCLUDED;
 import static org.ethereum.core.PendingTransaction.State.NEW_PENDING;
 import static org.ethereum.core.PendingTransaction.State.PENDING;
-import static org.ethereum.publish.event.Events.Type.BLOCK_ADED;
+import static org.ethereum.publish.event.Events.Type.BLOCK_ADDED;
 import static org.ethereum.publish.event.Events.Type.PENDING_STATE_CHANGED;
 import static org.ethereum.publish.event.Events.Type.PENDING_TRANSACTION_UPDATED;
 import static org.ethereum.publish.Subscription.to;
@@ -123,7 +122,7 @@ public class PendingStateTest {
     public void testSimple() throws InterruptedException {
         PendingListener l = new PendingListener();
         StandaloneBlockchain bc = new StandaloneBlockchain()
-                .subscribe(to(BLOCK_ADED, l::onBlock))
+                .subscribe(to(BLOCK_ADDED, l::onBlock))
                 .subscribe(to(PENDING_STATE_CHANGED, l::onPendingStateChanged))
                 .subscribe(to(PENDING_TRANSACTION_UPDATED, l::onPendingTransactionUpdate));
 
@@ -198,7 +197,7 @@ public class PendingStateTest {
     public void testRebranch1() throws InterruptedException {
         PendingListener l = new PendingListener();
         StandaloneBlockchain bc = new StandaloneBlockchain()
-                .subscribe(to(BLOCK_ADED, l::onBlock))
+                .subscribe(to(BLOCK_ADDED, l::onBlock))
                 .subscribe(to(PENDING_STATE_CHANGED, l::onPendingStateChanged))
                 .subscribe(to(PENDING_TRANSACTION_UPDATED, l::onPendingTransactionUpdate));
 
@@ -267,7 +266,7 @@ public class PendingStateTest {
     public void testRebranch2() throws InterruptedException {
         PendingListener l = new PendingListener();
         StandaloneBlockchain bc = new StandaloneBlockchain()
-                .subscribe(to(BLOCK_ADED, l::onBlock))
+                .subscribe(to(BLOCK_ADDED, l::onBlock))
                 .subscribe(to(PENDING_STATE_CHANGED, l::onPendingStateChanged))
                 .subscribe(to(PENDING_TRANSACTION_UPDATED, l::onPendingTransactionUpdate));
 
@@ -357,7 +356,7 @@ public class PendingStateTest {
     public void testRebranch3() throws InterruptedException {
         PendingListener l = new PendingListener();
         StandaloneBlockchain bc = new StandaloneBlockchain()
-                .subscribe(to(BLOCK_ADED, l::onBlock))
+                .subscribe(to(BLOCK_ADDED, l::onBlock))
                 .subscribe(to(PENDING_STATE_CHANGED, l::onPendingStateChanged))
                 .subscribe(to(PENDING_TRANSACTION_UPDATED, l::onPendingTransactionUpdate));
 
@@ -409,7 +408,7 @@ public class PendingStateTest {
     public void testOldBlockIncluded() throws InterruptedException {
         PendingListener l = new PendingListener();
         StandaloneBlockchain bc = new StandaloneBlockchain()
-                .subscribe(to(BLOCK_ADED, l::onBlock))
+                .subscribe(to(BLOCK_ADDED, l::onBlock))
                 .subscribe(to(PENDING_STATE_CHANGED, l::onPendingStateChanged))
                 .subscribe(to(PENDING_TRANSACTION_UPDATED, l::onPendingTransactionUpdate));
 
@@ -447,7 +446,7 @@ public class PendingStateTest {
     public void testBlockOnlyIncluded() throws InterruptedException {
         PendingListener l = new PendingListener();
         StandaloneBlockchain bc = new StandaloneBlockchain()
-                .subscribe(to(BLOCK_ADED, l::onBlock))
+                .subscribe(to(BLOCK_ADDED, l::onBlock))
                 .subscribe(to(PENDING_STATE_CHANGED, l::onPendingStateChanged))
                 .subscribe(to(PENDING_TRANSACTION_UPDATED, l::onPendingTransactionUpdate));
 
@@ -476,7 +475,7 @@ public class PendingStateTest {
     public void testTrackTx1() throws InterruptedException {
         PendingListener l = new PendingListener();
         StandaloneBlockchain bc = new StandaloneBlockchain()
-                .subscribe(to(BLOCK_ADED, l::onBlock))
+                .subscribe(to(BLOCK_ADDED, l::onBlock))
                 .subscribe(to(PENDING_STATE_CHANGED, l::onPendingStateChanged))
                 .subscribe(to(PENDING_TRANSACTION_UPDATED, l::onPendingTransactionUpdate));
 
@@ -530,7 +529,7 @@ public class PendingStateTest {
 
         PendingListener l = new PendingListener();
         bc
-                .subscribe(to(BLOCK_ADED, l::onBlock))
+                .subscribe(to(BLOCK_ADDED, l::onBlock))
                 .subscribe(to(PENDING_STATE_CHANGED, l::onPendingStateChanged))
                 .subscribe(to(PENDING_TRANSACTION_UPDATED, l::onPendingTransactionUpdate));
 
@@ -547,7 +546,7 @@ public class PendingStateTest {
     public void testTrackTx2() throws InterruptedException {
         PendingListener l = new PendingListener();
         StandaloneBlockchain bc = new StandaloneBlockchain()
-                .subscribe(to(BLOCK_ADED, l::onBlock))
+                .subscribe(to(BLOCK_ADDED, l::onBlock))
                 .subscribe(to(PENDING_STATE_CHANGED, l::onPendingStateChanged))
                 .subscribe(to(PENDING_TRANSACTION_UPDATED, l::onPendingTransactionUpdate));
 
@@ -580,7 +579,7 @@ public class PendingStateTest {
     public void testRejected1() throws InterruptedException {
         PendingListener l = new PendingListener();
         StandaloneBlockchain bc = new StandaloneBlockchain()
-                .subscribe(to(BLOCK_ADED, l::onBlock))
+                .subscribe(to(BLOCK_ADDED, l::onBlock))
                 .subscribe(to(PENDING_STATE_CHANGED, l::onPendingStateChanged))
                 .subscribe(to(PENDING_TRANSACTION_UPDATED, l::onPendingTransactionUpdate));
 
@@ -629,7 +628,7 @@ public class PendingStateTest {
         // the transaction becomes the main chain
         PendingListener l = new PendingListener();
         StandaloneBlockchain bc = new StandaloneBlockchain()
-                .subscribe(to(BLOCK_ADED, l::onBlock))
+                .subscribe(to(BLOCK_ADDED, l::onBlock))
                 .subscribe(to(PENDING_STATE_CHANGED, l::onPendingStateChanged))
                 .subscribe(to(PENDING_TRANSACTION_UPDATED, l::onPendingTransactionUpdate));
 
@@ -683,7 +682,7 @@ public class PendingStateTest {
         };
 
         StandaloneBlockchain bc = new StandaloneBlockchain()
-                .subscribe(to(BLOCK_ADED, l::onBlock))
+                .subscribe(to(BLOCK_ADDED, l::onBlock))
                 .subscribe(to(PENDING_STATE_CHANGED, l::onPendingStateChanged))
                 .subscribe(to(PENDING_TRANSACTION_UPDATED, l::onPendingTransactionUpdate));
 
