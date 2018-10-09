@@ -19,6 +19,7 @@ package org.ethereum.sharding.validator;
 
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.processing.state.BeaconState;
+import org.ethereum.sharding.processing.state.Committee;
 
 /**
  * Service that is responsible for scheduling attestation and proposal tasks for the beacon chain validator.
@@ -45,13 +46,13 @@ public interface ValidatorService {
      * Submits a task to propose block with given slot number.
      * Thread safe.
      */
-    default void propose(long slotNumber, int validatorIdx) {}
+    default void propose(long slotNumber, Committee.Index index) {}
 
     /**
      * Submits a task to make an attestation in a given slot number.
      * Thread safe.
      */
-    default void attest(long slotNumber, int validatorIdx) {}
+    default void attest(long slotNumber, Committee.Index index) {}
 
     /**
      * Handy aggregator

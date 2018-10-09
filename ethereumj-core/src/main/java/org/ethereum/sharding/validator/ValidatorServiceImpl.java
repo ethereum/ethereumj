@@ -26,7 +26,9 @@ import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.sharding.config.ValidatorConfig;
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.domain.Validator;
+import org.ethereum.sharding.processing.state.AttestationRecord;
 import org.ethereum.sharding.processing.state.Committee;
+import org.ethereum.sharding.pubsub.BeaconBlockAttested;
 import org.ethereum.sharding.pubsub.BeaconBlockImported;
 import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.processing.BeaconChain;
@@ -63,6 +65,7 @@ public class ValidatorServiceImpl implements ValidatorService {
     private static final Logger logger = LoggerFactory.getLogger("validator");
 
     BeaconProposer proposer;
+    BeaconAttester attester;
     BeaconChain beaconChain;
     Publisher publisher;
     ValidatorConfig config;
@@ -77,9 +80,10 @@ public class ValidatorServiceImpl implements ValidatorService {
     private ChainHead head;
     private byte[] mainChainRef;
 
-    public ValidatorServiceImpl(BeaconProposer proposer, BeaconChain beaconChain, Publisher publisher,
-                                ValidatorConfig config, Ethereum ethereum, BlockStore blockStore) {
+    public ValidatorServiceImpl(BeaconProposer proposer, BeaconAttester attester, BeaconChain beaconChain,
+                                Publisher publisher, ValidatorConfig config, Ethereum ethereum, BlockStore blockStore) {
         this.proposer = proposer;
+        this.attester = attester;
         this.beaconChain = beaconChain;
         this.publisher = publisher;
         this.config = config;
@@ -166,35 +170,41 @@ public class ValidatorServiceImpl implements ValidatorService {
             // proposer = committee[X % len(committee)], X = slotNumber
             // taken from the spec
             if (slotNumber % index.getCommitteeSize() == index.getArrayIdx()) {
-                this.propose(slotNumber, index.getValidatorIdx());
+                this.propose(slotNumber, index);
             } else {
-                this.attest(slotNumber, index.getValidatorIdx());
+                this.attest(slotNumber, index);
             }
         }
     }
 
     @Override
-    public void propose(long slotNumber, int validatorIdx) {
-        long delay = submit(0L, slotNumber, validatorIdx, () -> {
-            BeaconProposer.Input input = new BeaconProposer.Input(slotNumber, head, mainChainRef);
-            Beacon newBlock = proposer.createNewBlock(input, pubKeysMap.get(validatorIdx));
+    public void propose(long slotNumber, Committee.Index index) {
+        long delay = submit(0L, slotNumber, index.getValidatorIdx(), () -> {
+            BeaconProposer.Input input = new BeaconProposer.Input(slotNumber, index, head, mainChainRef);
+            Beacon newBlock = proposer.createNewBlock(input, pubKeysMap.get(index.getValidatorIdx()));
             beaconChain.insert(newBlock);
             return newBlock;
         });
 
-        if (delay >= 0) logger.info("Proposer {}: schedule new slot #{} in {}ms", validatorIdx, slotNumber, delay);
+        if (delay >= 0) logger.info("Proposer {}: schedule new slot #{} in {}ms", index.getValidatorIdx(), slotNumber, delay);
     }
 
     @Override
-    public void attest(long slotNumber, int validatorIdx) {
+    public void attest(long slotNumber, Committee.Index index) {
         // attester's job should be triggered in the middle of slot's time period
-        long delay = submit(SLOT_DURATION / 2, slotNumber, validatorIdx, () -> {
-            // TODO add attester routine here
-            logger.info("Fake attestation on slot #{}", slotNumber);
-            return (Void) null;
+        long delay = submit(SLOT_DURATION / 2, slotNumber, index.getValidatorIdx(), () -> {
+            AttestationRecord attestation = attester.attestBlock(
+                    slotNumber,
+                    index,
+                    beaconChain.getCanonicalHead(), // FIXME: how could we be sure that it's a correct block?
+                    pubKeysMap.get(index.getValidatorIdx())
+            );
+            logger.info("Attestation by #{} on slot #{}", index.getValidatorIdx(), slotNumber);
+            publisher.publish(new BeaconBlockAttested(attestation));
+            return attestation;
         });
 
-        if (delay >= 0) logger.info("Attester {}: schedule new slot #{} in {}ms", validatorIdx, slotNumber, delay);
+        if (delay >= 0) logger.info("Attester {}: schedule new slot #{} in {}ms", index.getValidatorIdx(), slotNumber, delay);
     }
 
     <T> long submit(long delayShiftMillis, long slotNumber, int validatorIdx, Supplier<T> supplier) {

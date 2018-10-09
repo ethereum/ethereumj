@@ -43,6 +43,8 @@ import org.ethereum.sharding.processing.db.BeaconStore;
 import org.ethereum.sharding.processing.db.IndexedBeaconStore;
 import org.ethereum.sharding.processing.state.BeaconStateRepository;
 import org.ethereum.sharding.processing.state.StateRepository;
+import org.ethereum.sharding.validator.BeaconAttester;
+import org.ethereum.sharding.validator.BeaconAttesterImpl;
 import org.ethereum.sharding.validator.BeaconProposer;
 import org.ethereum.sharding.validator.BeaconProposerImpl;
 import org.ethereum.sharding.validator.ValidatorService;
@@ -127,8 +129,8 @@ public class BeaconConfig {
     @Bean
     public ValidatorService validatorService() {
         if (validatorConfig().isEnabled()) {
-            ValidatorService validatorService = new ValidatorServiceImpl(beaconProposer(), beaconChain(),
-                    publisher(), validatorConfig(), ethereum, blockStore);
+            ValidatorService validatorService = new ValidatorServiceImpl(beaconProposer(), beaconAttester(),
+                    beaconChain(), publisher(), validatorConfig(), ethereum, blockStore);
             shardingWorldManager.setProposerService(validatorService);
             return validatorService;
         } else {
@@ -216,8 +218,13 @@ public class BeaconConfig {
 
     @Bean
     public BeaconProposer beaconProposer() {
-        return new BeaconProposerImpl(randao(), beaconStateRepository(),
+        return new BeaconProposerImpl(randao(), beaconStateRepository(), beaconStore(),
                 BeaconChainFactory.stateTransition(validatorRepository()), validatorConfig());
+    }
+
+    @Bean
+    public BeaconAttester beaconAttester() {
+        return new BeaconAttesterImpl(beaconStateRepository(), beaconStore(), validatorConfig());
     }
 
     @Bean

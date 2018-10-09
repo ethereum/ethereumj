@@ -35,13 +35,19 @@ import static org.ethereum.crypto.HashUtil.blake2b;
 public class BeaconState {
 
     private final CrystallizedState crystallizedState;
+    private final ActiveState activeState;
 
-    public BeaconState(CrystallizedState crystallizedState) {
+    public BeaconState(CrystallizedState crystallizedState, ActiveState activeState) {
         this.crystallizedState = crystallizedState;
+        this.activeState = activeState;
     }
 
     public CrystallizedState getCrystallizedState() {
         return crystallizedState;
+    }
+
+    public ActiveState getActiveState() {
+        return activeState;
     }
 
     public byte[] getHash() {
@@ -49,7 +55,7 @@ public class BeaconState {
     }
 
     public Flattened flatten() {
-        return new Flattened(crystallizedState);
+        return new Flattened(crystallizedState, activeState);
     }
 
     public Committee[][] getCommittees() {
@@ -70,18 +76,25 @@ public class BeaconState {
 
     public static class Flattened {
         private final byte[] crystallizedStateHash;
+        private final byte[] activeStateHash;
 
-        public Flattened(CrystallizedState crystallizedState) {
+        public Flattened(CrystallizedState crystallizedState, ActiveState activeState) {
             this.crystallizedStateHash = crystallizedState.getHash();
+            this.activeStateHash = activeState.getHash();
         }
 
         public Flattened(byte[] encoded) {
             RLPList list = RLP.unwrapList(encoded);
             this.crystallizedStateHash = list.get(0).getRLPData();
+            this.activeStateHash = list.get(1).getRLPData();
         }
 
         public byte[] getCrystallizedStateHash() {
             return crystallizedStateHash;
+        }
+
+        public byte[] getActiveStateHash() {
+            return activeStateHash;
         }
 
         public byte[] getHash() {
@@ -89,7 +102,7 @@ public class BeaconState {
         }
 
         public byte[] encode() {
-            return RLP.wrapList(crystallizedStateHash);
+            return RLP.wrapList(crystallizedStateHash, activeStateHash);
         }
 
         public static final org.ethereum.datasource.Serializer<Flattened, byte[]> Serializer = new Serializer<Flattened, byte[]>() {

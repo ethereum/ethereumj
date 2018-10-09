@@ -18,6 +18,7 @@
 package org.ethereum.sharding.domain;
 
 import org.ethereum.datasource.Serializer;
+import org.ethereum.sharding.processing.state.AttestationRecord;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
@@ -46,13 +47,17 @@ public class Beacon {
     private byte[] stateHash;
     /* Slot number */
     private long slotNumber;
+    /* Attestations */
+    private AttestationRecord[] attestations;
 
-    public Beacon(byte[] parentHash, byte[] randaoReveal, byte[] mainChainRef, byte[] stateHash, long slotNumber) {
+    public Beacon(byte[] parentHash, byte[] randaoReveal, byte[] mainChainRef, byte[] stateHash,
+                  long slotNumber, AttestationRecord[] attestations) {
         this.parentHash = parentHash;
         this.randaoReveal = randaoReveal;
         this.mainChainRef = mainChainRef;
         this.stateHash = stateHash;
         this.slotNumber = slotNumber;
+        this.attestations = attestations;
     }
 
     public Beacon(byte[] rlp) {
@@ -62,6 +67,12 @@ public class Beacon {
         this.mainChainRef = items.get(2).getRLPData();
         this.stateHash = items.get(3).getRLPData();
         this.slotNumber = ByteUtil.bytesToBigInteger(items.get(4).getRLPData()).longValue();
+
+        RLPList attestationsRlp = RLP.unwrapList(items.get(5).getRLPData());
+        this.attestations = new AttestationRecord[attestationsRlp.size()];
+        for (int i = 0; i < attestationsRlp.size(); ++i) {
+            attestations[i] = new AttestationRecord(attestationsRlp.get(i).getRLPData());
+        }
     }
 
     public byte[] getEncoded() {
@@ -93,12 +104,20 @@ public class Beacon {
         return slotNumber;
     }
 
+    public AttestationRecord[] getAttestations() {
+        return attestations;
+    }
+
     public boolean isParentOf(Beacon other) {
         return FastByteComparisons.equal(this.getHash(), other.getParentHash());
     }
 
     public void setStateHash(byte[] stateHash) {
         this.stateHash = stateHash;
+    }
+
+    public void setAttestations(AttestationRecord[] attestations) {
+        this.attestations = attestations;
     }
 
     @Override
