@@ -295,7 +295,7 @@ public class Abi extends ArrayList<Abi.Entry> {
                 if (indexedParams.get(i).type.isDynamicType()) {
                     // If arrays (including string and bytes) are used as indexed arguments,
                     // the Keccak-256 hash of it is stored as topic instead.
-                    decodedTopic = SolidityType.Bytes32Type.decodeBytes32(argTopics[i]);
+                    decodedTopic = SolidityType.Bytes32Type.decodeBytes32(argTopics[i], 0);
                 } else {
                     decodedTopic = indexedParams.get(i).type.decode(argTopics[i]);
                 }
