@@ -22,5 +22,7 @@ public interface Kafka {
 
   <K, V> Future<RecordMetadata> send(Kafka.Producer producer, K key, V value);
 
+  <K, V> Future<RecordMetadata> send(Kafka.Producer producer, int partition, K key, V value);
+
   <K, V> void sendSync(Kafka.Producer producer, K key, V value);
 }

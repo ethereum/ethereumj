@@ -37,6 +37,7 @@ import org.ethereum.util.RLP;
 import org.ethereum.validator.DependentBlockHeaderRule;
 import org.ethereum.validator.ParentBlockHeaderValidator;
 import org.ethereum.vm.hook.VMHook;
+import org.ethereum.vm.program.InternalTransaction;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.slf4j.Logger;
@@ -52,6 +53,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.lang.Math.max;
 import static java.lang.Runtime.getRuntime;
@@ -61,6 +63,7 @@ import static java.util.Collections.emptyList;
 import static org.ethereum.core.Denomination.SZABO;
 import static org.ethereum.core.ImportResult.*;
 import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.bytesToBigInteger;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
@@ -852,7 +855,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             return applyBlock(track, block);
         }
         else {
-            return new BlockSummary(block, new HashMap<byte[], BigInteger>(), new ArrayList<TransactionReceipt>(), new ArrayList<TransactionExecutionSummary>());
+            return new BlockSummary(block, new HashMap<byte[], BigInteger>(), new ArrayList<TransactionReceipt>(), new ArrayList<TransactionExecutionSummary>(), new BlockStatistics());
         }
     }
 
@@ -929,7 +932,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         adminInfo.addBlockExecTime(totalTime);
         logger.debug("block: num: [{}] hash: [{}], executed after: [{}]nano", block.getNumber(), block.getShortHash(), totalTime);
 
-        return new BlockSummary(block, rewards, receipts, summaries);
+      final BlockStatistics statistics = BlockStatistics.forBlock(block, receipts, summaries);
+
+      return new BlockSummary(block, rewards, receipts, summaries, statistics);
     }
 
     /**

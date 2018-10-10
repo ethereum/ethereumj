@@ -16,6 +16,8 @@ import org.ethereum.util.ByteUtil;
 
 public class KafkaEthereumListener implements EthereumListener {
 
+  private static final int NO_BLOCK_PARTITIONS = 10;
+
   private final Kafka kafka;
   private final Blockchain blockchain;
 

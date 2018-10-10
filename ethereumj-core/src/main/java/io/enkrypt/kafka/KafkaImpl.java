@@ -24,6 +24,17 @@ public class KafkaImpl implements Kafka {
     }
   }
 
+  @Override
+  public <K, V> Future<RecordMetadata> send(Producer producer, int partition, K key, V value) {
+    final ProducerRecord<K, V> record = new ProducerRecord<>(producer.topic, partition, key, value);
+
+    try {
+      return kafkaProducer.send(record);
+    } catch (Exception e) {
+      throw new KafkaProducerException(e);
+    }
+  }
+
   public <K, V> void sendSync(Producer producer, K key, V value) {
     try {
       send(producer, key, value).get();

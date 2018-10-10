@@ -13,6 +13,11 @@ public class NullKafka implements Kafka {
     return CompletableFuture.completedFuture(EMPTY_RECORD_METADATA);
   }
 
+  @Override
+  public <K, V> Future<RecordMetadata> send(Producer producer, int partition, K key, V value) {
+    return CompletableFuture.completedFuture(EMPTY_RECORD_METADATA);
+  }
+
   @Override public <K, V> void sendSync(Kafka.Producer producer, K key, V value) {
   }
 }
