@@ -327,7 +327,11 @@ public abstract class SolidityType {
 
         @Override
         public Object decode(byte[] encoded, int offset) {
-            return Arrays.copyOfRange(encoded, offset, offset + getFixedSize());
+            return decodeBytes32(encoded, offset);
+        }
+
+        public static byte[] decodeBytes32(byte[] encoded, int offset) {
+            return Arrays.copyOfRange(encoded, offset, offset + 32);
         }
     }
 
