@@ -47,32 +47,20 @@ public class BeaconAttesterImpl implements BeaconAttester {
     }
 
     @Override
-    public AttestationRecord attestBlock(long slotNumber, Committee.Index index, Beacon block, byte[] pubKey) {
-        if (block.getAttestations().length == 0) {
-            throw new RuntimeException("Block should have at least 1 attestation of its proposer");
-        }
-
-        // validate that block doesn't contain our attestation
-        for (AttestationRecord attestationRecord : block.getAttestations()) {
-            if (Bitfield.hasVoted(attestationRecord.getAttesterBitfield(), index.getValidatorIdx())) {
-                throw new RuntimeException("Shouldn't attest block again");
-            }
-        }
-
-        BeaconState headState = repository.get(store.getCanonicalHead().getHash());
-        long lastJustified = headState.getCrystallizedState().getFinality().getLastJustifiedSlot();
+    public AttestationRecord attestBlock(Input in, byte[] pubKey) {
+        long lastJustified = in.state.getCrystallizedState().getFinality().getLastJustifiedSlot();
         AttestationRecord attestationRecord = new AttestationRecord(
-                slotNumber,
-                index.getShardId(),
-                new byte[0][0], // FIXME: obliqueParentHashes
-                new byte[32], // FIXME: shardBlockHash??
-                Bitfield.markVote(Bitfield.createEmpty(index.getCommitteeSize()), index.getValidatorIdx()),
+                in.slotNumber,
+                in.index.getShardId(),
+                new byte[0][0],
+                in.block.getHash(),
+                Bitfield.markVote(Bitfield.createEmpty(in.index.getCommitteeSize()), in.index.getValidatorIdx()),
                 lastJustified,
                 store.getCanonicalByNumber(lastJustified) == null ? new byte[32] : store.getCanonicalByNumber(lastJustified).getHash(),
-                Sign.aggSigns(new byte[][] {Sign.sign(block.getEncoded(), pubKey)})
+                Sign.aggSigns(new byte[][] {Sign.sign(in.block.getEncoded(), pubKey)})
         );
 
-        logger.info("Block {} attested by #{} in slot {} ", block, index.getValidatorIdx(), slotNumber);
+        logger.info("Block {} attested by #{} in slot {} ", in.block, in.index.getValidatorIdx(), in.slotNumber);
         return attestationRecord;
     }
 }

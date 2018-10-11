@@ -19,6 +19,7 @@ package org.ethereum.sharding.validator;
 
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.processing.state.AttestationRecord;
+import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.Committee;
 
 /**
@@ -29,11 +30,31 @@ public interface BeaconAttester {
     /**
      * Attests block
      *
-     * @param slotNumber   Current slot number
-     * @param index        Commitee index with validator id etc
-     * @param block        Block to attest
+     * @param in           Input data
      * @param pubKey       Public key of the attestation validator
      * @return Attestation record
      */
-    AttestationRecord attestBlock(long slotNumber, Committee.Index index, Beacon block, byte[] pubKey);
+    AttestationRecord attestBlock(Input in, byte[] pubKey);
+
+
+    class Input {
+        long slotNumber;
+        Committee.Index index;
+        Beacon block;
+        BeaconState state;
+
+        public Input(long slotNumber, Committee.Index index, Beacon block, BeaconState state) {
+            this.slotNumber = slotNumber;
+            this.index = index;
+            this.block = block;
+            this.state = state;
+        }
+
+        public Input(long slotNumber, Committee.Index index, ValidatorService.ChainHead head) {
+            this.slotNumber = slotNumber;
+            this.index = index;
+            this.block = head.block;
+            this.state = head.state;
+        }
+    }
 }

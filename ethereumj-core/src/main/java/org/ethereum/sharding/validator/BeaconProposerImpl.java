@@ -34,6 +34,8 @@ import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+
 /**
  * Default implementation of {@link BeaconProposer}.
  *
@@ -81,25 +83,9 @@ public class BeaconProposerImpl implements BeaconProposer {
     @Override
     public Beacon createNewBlock(Input in, byte[] pubKey) {
         Beacon block = new Beacon(in.parent.getHash(), randaoReveal(in.state, pubKey), in.mainChainRef,
-                HashUtil.EMPTY_DATA_HASH, in.slotNumber, new AttestationRecord[0]);
+                HashUtil.EMPTY_DATA_HASH, in.slotNumber, new ArrayList<>());
         BeaconState newState = stateTransition.applyBlock(block, in.state);
         block.setStateHash(newState.getHash());
-
-        AttestationRecord[] attestationRecords = new AttestationRecord[1];
-        byte[] emptyBitfield = Bitfield.createEmpty(in.index.getCommitteeSize());
-        long lastJustified = in.state.getCrystallizedState().getFinality().getLastJustifiedSlot();
-        attestationRecords[0] = new AttestationRecord(
-                in.slotNumber,
-                in.index.getShardId(),
-                new byte[0][0],
-                new byte[32], // FIXME: shardBlockHash??
-                Bitfield.markVote(emptyBitfield, in.index.getValidatorIdx()),
-                lastJustified,
-                store.getCanonicalByNumber(lastJustified) == null ? new byte[32] : store.getCanonicalByNumber(lastJustified).getHash(),
-                Sign.aggSigns(new byte[][] {Sign.sign(block.getEncoded(), pubKey)})
-        );
-        block.setAttestations(attestationRecords);
-
         logger.info("New block created {}", block);
         return block;
     }

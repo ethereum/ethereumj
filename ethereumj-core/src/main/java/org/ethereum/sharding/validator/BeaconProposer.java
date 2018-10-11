@@ -19,7 +19,6 @@ package org.ethereum.sharding.validator;
 
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.processing.state.BeaconState;
-import org.ethereum.sharding.processing.state.Committee;
 
 /**
  * Beacon chain block proposer.
@@ -49,22 +48,19 @@ public interface BeaconProposer {
 
     class Input {
         long slotNumber;
-        Committee.Index index;
         Beacon parent;
         BeaconState state;
         byte[] mainChainRef;
 
-        public Input(long slotNumber, Committee.Index index, Beacon parent, BeaconState state, byte[] mainChainRef) {
+        public Input(long slotNumber, Beacon parent, BeaconState state, byte[] mainChainRef) {
             this.slotNumber = slotNumber;
-            this.index = index;
             this.parent = parent;
             this.state = state;
             this.mainChainRef = mainChainRef;
         }
 
-        public Input(long slotNumber, Committee.Index index, ValidatorService.ChainHead head, byte[] mainChainRef) {
+        public Input(long slotNumber, ValidatorService.ChainHead head, byte[] mainChainRef) {
             this.slotNumber = slotNumber;
-            this.index = index;
             this.parent = head.block;
             this.state = head.state;
             this.mainChainRef = mainChainRef;

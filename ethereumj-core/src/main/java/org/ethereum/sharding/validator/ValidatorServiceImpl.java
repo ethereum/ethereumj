@@ -164,7 +164,7 @@ public class ValidatorServiceImpl implements ValidatorService {
             // proposer = committee[X % len(committee)], X = slotNumber
             // taken from the spec
             if (slotNumber % index.getCommitteeSize() == index.getArrayIdx()) {
-                this.propose(slotNumber, index);
+                this.propose(slotNumber, index.getValidatorIdx());
             } else {
                 this.attest(slotNumber, index);
             }
@@ -172,27 +172,23 @@ public class ValidatorServiceImpl implements ValidatorService {
     }
 
     @Override
-    public void propose(long slotNumber, Committee.Index index) {
-        long delay = submit(0L, slotNumber, index.getValidatorIdx(), () -> {
-            BeaconProposer.Input input = new BeaconProposer.Input(slotNumber, index, head, mainChainRef);
-            Beacon newBlock = proposer.createNewBlock(input, pubKeysMap.get(index.getValidatorIdx()));
+    public void propose(long slotNumber, int validatorIdx) {
+        long delay = submit(0L, slotNumber, validatorIdx, () -> {
+            BeaconProposer.Input input = new BeaconProposer.Input(slotNumber, head, mainChainRef);
+            Beacon newBlock = proposer.createNewBlock(input, pubKeysMap.get(validatorIdx));
             beaconChain.insert(newBlock);
             return newBlock;
         });
 
-        if (delay >= 0) logger.info("Proposer {}: schedule new slot #{} in {}ms", index.getValidatorIdx(), slotNumber, delay);
+        if (delay >= 0) logger.info("Proposer {}: schedule new slot #{} in {}ms", validatorIdx, slotNumber, delay);
     }
 
     @Override
     public void attest(long slotNumber, Committee.Index index) {
         // attester's job should be triggered in the middle of slot's time period
         long delay = submit(SLOT_DURATION / 2, slotNumber, index.getValidatorIdx(), () -> {
-            AttestationRecord attestation = attester.attestBlock(
-                    slotNumber,
-                    index,
-                    beaconChain.getCanonicalHead(), // FIXME: how could we be sure that it's a correct block?
-                    pubKeysMap.get(index.getValidatorIdx())
-            );
+            BeaconAttester.Input input = new BeaconAttester.Input(slotNumber, index, head);
+            AttestationRecord attestation = attester.attestBlock(input, pubKeysMap.get(index.getValidatorIdx()));
             logger.info("Attestation by #{} on slot #{}", index.getValidatorIdx(), slotNumber);
             publisher.publish(new BeaconBlockAttested(attestation));
             return attestation;
