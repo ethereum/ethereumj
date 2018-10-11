@@ -109,7 +109,7 @@ public class ActiveState {
     public String toString() {
         StringBuilder builder = new StringBuilder().append("ActiveState{")
                 .append("pendingAttestations=[").append(pendingAttestations.length).append(" item(s)]")
-                .append(", recentBlockHashes=[...")
+                .append(", recentBlockHashes=[...");
 
         for (int i = Math.max(0, recentBlockHashes.length - 3); i < recentBlockHashes.length; ++i) {
             builder.append(", ").append(toHexString(recentBlockHashes[i]));
