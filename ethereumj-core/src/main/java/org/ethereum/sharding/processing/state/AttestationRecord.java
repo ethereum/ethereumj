@@ -23,6 +23,7 @@ import org.ethereum.util.RLPList;
 
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.BitSet;
 
 import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
 import static org.ethereum.util.ByteUtil.byteArrayToLong;
@@ -46,7 +47,7 @@ public class AttestationRecord {
     // Block hash in the shard that we are attesting to
     private final byte[] shardBlockHash;
     // Who is participating
-    private final byte[] attesterBitfield;
+    private final BitSet attesterBitfield;
     // Last justified block
     private final long justifiedSlot;
     private final byte[] justifiedBlockHash;
@@ -54,7 +55,7 @@ public class AttestationRecord {
     private final BigInteger[] aggregateSig; // Defined by two BigIntegers?
 
     public AttestationRecord(long slot, int shardId, byte[][] obliqueParentHashes, byte[] shardBlockHash,
-                             byte[] attesterBitfield, long justifiedSlot, byte[] justifiedBlockHash,
+                             BitSet attesterBitfield, long justifiedSlot, byte[] justifiedBlockHash,
                              BigInteger[] aggregateSig) {
         this.slot = slot;
         this.shardId = shardId;
@@ -78,7 +79,7 @@ public class AttestationRecord {
             this.obliqueParentHashes[i] = hashesList.get(i).getRLPData();
 
         this.shardBlockHash = list.get(3).getRLPData();
-        this.attesterBitfield = list.get(4).getRLPData();
+        this.attesterBitfield = BitSet.valueOf(list.get(4).getRLPData());
         this.justifiedSlot = byteArrayToLong(list.get(5).getRLPData());
         this.justifiedBlockHash = list.get(6).getRLPData();
 
@@ -104,7 +105,7 @@ public class AttestationRecord {
         return shardBlockHash;
     }
 
-    public byte[] getAttesterBitfield() {
+    public BitSet getAttesterBitfield() {
         return attesterBitfield;
     }
 
@@ -129,7 +130,7 @@ public class AttestationRecord {
                 intToBytesNoLeadZeroes(shardId),
                 RLP.wrapList(obliqueParentHashes),
                 shardBlockHash,
-                attesterBitfield,
+                attesterBitfield.toByteArray(),
                 longToBytesNoLeadZeroes(justifiedSlot),
                 justifiedBlockHash,
                 RLP.wrapList(encodedAggSig));
@@ -142,7 +143,7 @@ public class AttestationRecord {
         AttestationRecord that = (AttestationRecord) o;
         return slot == that.slot &&
                 shardId == that.shardId &&
-                Arrays.equals(attesterBitfield, that.attesterBitfield) &&
+                attesterBitfield == that.attesterBitfield &&
                 justifiedSlot == that.justifiedSlot &&
                 Arrays.equals(obliqueParentHashes, that.obliqueParentHashes) &&
                 Arrays.equals(shardBlockHash, that.shardBlockHash) &&
@@ -158,7 +159,7 @@ public class AttestationRecord {
                 .append(", shardId=").append(shardId)
                 .append(", obliqueParentHashes=[").append(obliqueParentHashes.length).append(" item(s)]")
                 .append(", shardBlockHash=").append(toHexString(shardBlockHash))
-                .append(", attesterBitfield=").append(toHexString(attesterBitfield))
+                .append(", attesterBitfield=").append(attesterBitfield)
                 .append(", justifiedSlot=").append(justifiedSlot)
                 .append(", justifiedBlockHash=").append(toHexString(justifiedBlockHash))
                 .append(", aggregateSig=[").append(aggregateSig.length).append(" item(s)]}");
