@@ -202,6 +202,11 @@ public class RepositoryWrapper implements Repository {
     }
 
     @Override
+    public Repository clone() {
+        return getSnapshotTo(getRoot());
+    }
+
+    @Override
     public int getStorageSize(byte[] addr) {
         return blockchain.getRepository().getStorageSize(addr);
     }

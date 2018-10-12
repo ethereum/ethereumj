@@ -301,5 +301,47 @@ public class GitHubStateTest {
     public void stCodeCopyTest() throws IOException {
         suite.runAll("stCodeCopyTest");
     }
+
+
+    @Test
+    @Ignore("Fails on pre-configured commit, update after test is merged in develop of Github tests")
+    public void stExtCodeHashCallCode() throws IOException {
+        String commit = "10ab37c095bb87d2e781bcf112b6104912fccb44";
+        String filePath = "stExtCodeHash/extCodeHashCallCode.json";
+        GeneralStateTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Constantinople);
+        GeneralStateTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Byzantium);
+    }
+
+    @Test
+    @Ignore("Fails on pre-configured commit, update after test is merged in develop of Github tests")
+    public void stExtCodeHashCall() throws IOException {
+        String commit = "10ab37c095bb87d2e781bcf112b6104912fccb44";
+        String filePath = "stExtCodeHash/extCodeHashCall.json";
+        GeneralStateTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Constantinople);
+        GeneralStateTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Byzantium);
+    }
+
+    @Test
+    @Ignore("Update after all tests could pass latest develop")
+    public void stShiftTest() throws IOException {
+        suite.runAll("stShift");
+// TODO: Update all, this one passes with following settings:
+//        String commit = "ad2184adca367c0b68c65b44519dba16e1d0b9e2";
+//        String treeSha = "4dd59a4f448dc06c3641bd5cb9c35cf6a099e438";
+//           targetNets += GitHubJSONTestSuite.Network.Constantinople
+    }
+
+    @Test
+    @Ignore("Update after all tests could pass latest develop")
+    public void stCreate2Test() throws IOException {
+        suite.runAll("stCreate2", new HashSet<>(Arrays.asList(
+                "RevertInCreateInInit",   // Tests excluded because they test unreal prestate
+                "create2collisionStorage" // (nonce, balance 0, code empty, but some storage)
+        )));
+// TODO: Update all, this one passes with following settings:
+//        String commitSHA = "3f5febc901913ef698f1b09dda8705babd729e4a";
+//        String treeSHA = "222ea3812849ed982ef0268ec41b609e5b13c412";
+//           targetNets += GitHubJSONTestSuite.Network.Constantinople
+    }
 }
 

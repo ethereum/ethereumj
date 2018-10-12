@@ -135,6 +135,11 @@ public class RepositoryRoot extends RepositoryImpl {
     }
 
     @Override
+    public Repository clone() {
+        return getSnapshotTo(getRoot());
+    }
+
+    @Override
     public synchronized String dumpStateTrie() {
         return ((TrieImpl) stateTrie).dumpTrie();
     }

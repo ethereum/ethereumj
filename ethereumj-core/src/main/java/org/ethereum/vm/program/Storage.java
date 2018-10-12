@@ -45,6 +45,11 @@ public class Storage implements Repository, ProgramListenerAware {
         this.repository = programInvoke.getRepository();
     }
 
+    private Storage(Repository repository, DataWord address) {
+        this.repository = repository;
+        this.address = address;
+    }
+
     @Override
     public void setProgramListener(ProgramListener listener) {
         this.programListener = listener;
@@ -118,7 +123,7 @@ public class Storage implements Repository, ProgramListenerAware {
     }
 
     private boolean canListenTrace(byte[] address) {
-        return (programListener != null) && this.address.equals(new DataWord(address));
+        return (programListener != null) && this.address.equals(DataWord.of(address));
     }
 
     @Override
@@ -222,6 +227,11 @@ public class Storage implements Repository, ProgramListenerAware {
     @Override
     public Repository getSnapshotTo(byte[] root) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Repository clone() {
+        return new Storage(repository.getSnapshotTo(getRoot()), address);
     }
 
     @Override

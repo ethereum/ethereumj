@@ -563,10 +563,10 @@ public class TransactionTest {
                 "    }" +
                 "    function multipleHomocide() {" +
                 "        PsychoKiller k  = this;" +
-                "        k.homicide();" +
-                "        k.homicide();" +
-                "        k.homicide();" +
-                "        k.homicide();" +
+                "        k.homicide.gas(10000)();" +
+                "        k.homicide.gas(10000)();" +
+                "        k.homicide.gas(10000)();" +
+                "        k.homicide.gas(10000)();" +
                 "    }" +
                 "}";
         SolidityCompiler.Result res = SolidityCompiler.compile(

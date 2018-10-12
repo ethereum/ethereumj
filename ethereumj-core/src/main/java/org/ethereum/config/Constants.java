@@ -17,6 +17,8 @@
  */
 package org.ethereum.config;
 
+import org.ethereum.util.blockchain.EtherUtil;
+
 import java.math.BigInteger;
 
 /**
@@ -37,9 +39,11 @@ public class Constants {
 
     private static final int BEST_NUMBER_DIFF_LIMIT = 100;
 
-    private static final BigInteger BLOCK_REWARD = new BigInteger("1500000000000000000");
+    private static final BigInteger BLOCK_REWARD = EtherUtil.convert(1500, EtherUtil.Unit.FINNEY);  // 1.5 ETH
 
     private static final BigInteger SECP256K1N = new BigInteger("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16);
+
+    private static final int LONGEST_CHAIN = 192;
 
     public int getDURATION_LIMIT() {
         return 8;
@@ -109,5 +113,9 @@ public class Constants {
      */
     public static BigInteger getSECP256K1N() {
         return SECP256K1N;
+    }
+
+    public static int getLONGEST_CHAIN() {
+        return LONGEST_CHAIN;
     }
 }

@@ -33,6 +33,7 @@ import org.ethereum.sync.SyncManager;
 import org.ethereum.util.*;
 import org.ethereum.validator.DependentBlockHeaderRule;
 import org.ethereum.validator.ParentBlockHeaderValidator;
+import org.ethereum.vm.hook.VMHook;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.slf4j.Logger;
@@ -158,6 +159,10 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     @Autowired
     DbFlushManager dbFlushManager;
 
+    @Autowired
+    private VMHook vmHook;
+
+
     SystemProperties config = SystemProperties.getDefault();
 
     private List<Chain> altChains = new ArrayList<>();
@@ -221,6 +226,11 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     public BlockchainImpl withParentBlockHeaderValidator(ParentBlockHeaderValidator parentHeaderValidator) {
         this.parentHeaderValidator = parentHeaderValidator;
+        return this;
+    }
+
+    public BlockchainImpl withVmHook(VMHook vmHook) {
+        this.vmHook = vmHook;
         return this;
     }
 
@@ -455,7 +465,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         }
 
         if (ret.isSuccessful()) {
-            listener.onBlock(summary);
+            listener.onBlock(summary, ret == IMPORTED_BEST);
             listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
 
             if (ret == IMPORTED_BEST) {
@@ -875,8 +885,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             stateLogger.debug("apply block: [{}] tx: [{}] ", block.getNumber(), i);
 
             Repository txTrack = track.startTracking();
-            TransactionExecutor executor = new TransactionExecutor(tx, block.getCoinbase(),
-                    txTrack, blockStore, programInvokeFactory, block, listener, totalGasUsed)
+            TransactionExecutor executor = new TransactionExecutor(
+                    tx, block.getCoinbase(),
+                    txTrack, blockStore, programInvokeFactory, block, listener, totalGasUsed, vmHook)
                     .withCommonConfig(commonConfig);
 
             executor.init();
@@ -895,8 +906,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                 receipt.setPostTxState(track.getRoot());
             }
 
-            stateLogger.info("block: [{}] executed tx: [{}] \n  state: [{}]", block.getNumber(), i,
-                    toHexString(track.getRoot()));
+            if (stateLogger.isInfoEnabled())
+                stateLogger.info("block: [{}] executed tx: [{}] \n  state: [{}]", block.getNumber(), i,
+                        toHexString(track.getRoot()));
 
             stateLogger.info("[{}] ", receipt.toString());
 
@@ -915,9 +927,10 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         Map<byte[], BigInteger> rewards = addReward(track, block, summaries);
 
-        stateLogger.info("applied reward for block: [{}]  \n  state: [{}]",
-                block.getNumber(),
-                toHexString(track.getRoot()));
+        if (stateLogger.isInfoEnabled())
+            stateLogger.info("applied reward for block: [{}]  \n  state: [{}]",
+                    block.getNumber(),
+                    toHexString(track.getRoot()));
 
 
         // TODO

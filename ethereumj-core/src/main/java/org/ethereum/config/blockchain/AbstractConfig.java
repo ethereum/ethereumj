@@ -140,7 +140,7 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
         if (requestedGas.compareTo(availableGas) > 0) {
             throw Program.Exception.notEnoughOpGas(op, requestedGas, availableGas);
         }
-        return requestedGas.clone();
+        return requestedGas;
     }
 
     @Override
@@ -190,6 +190,26 @@ public abstract class AbstractConfig implements BlockchainConfig, BlockchainNetC
 
     @Override
     public boolean eip658() {
+        return false;
+    }
+
+    @Override
+    public boolean eip1052() {
+        return false;
+    }
+
+    @Override
+    public boolean eip145() {
+        return false;
+    }
+
+    @Override
+    public boolean eip1283() {
+        return false;
+    }
+
+    @Override
+    public boolean eip1014() {
         return false;
     }
 

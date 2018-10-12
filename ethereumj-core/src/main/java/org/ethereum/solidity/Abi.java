@@ -172,6 +172,7 @@ public class Abi extends ArrayList<Abi.Entry> {
                     result = new Constructor(inputs, outputs);
                     break;
                 case function:
+                case fallback:
                     result = new Function(constant, name, inputs, outputs, payable);
                     break;
                 case event:

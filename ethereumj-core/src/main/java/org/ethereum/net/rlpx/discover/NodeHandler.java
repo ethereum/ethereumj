@@ -126,6 +126,7 @@ public class NodeHandler {
     boolean waitForPong = false;
     long pingSent;
     int pingTrials = 3;
+    boolean waitForNeighbors = false;
     NodeHandler replaceCandidate;
 
     public NodeHandler(Node node, NodeManager nodeManager) {
@@ -240,9 +241,12 @@ public class NodeHandler {
     void handleNeighbours(NeighborsMessage msg) {
         logMessage(msg, true);
 //        logMessage(" ===> [NEIGHBOURS] " + this + ", Count: " + msg.getNodes().size());
-        getNodeStatistics().discoverInNeighbours.add();
-        for (Node n : msg.getNodes()) {
-            nodeManager.getNodeHandler(n);
+        if (waitForNeighbors) {
+            waitForNeighbors = false;
+            getNodeStatistics().discoverInNeighbours.add();
+            for (Node n : msg.getNodes()) {
+                nodeManager.getNodeHandler(n);
+            }
         }
     }
 
@@ -322,6 +326,7 @@ public class NodeHandler {
 //        logMessage("<===  [FIND_NODE] " + this);
         Message findNode = FindNodeMessage.create(target, nodeManager.key);
         logMessage(findNode, false);
+        waitForNeighbors = true;
         sendMessage(findNode);
         getNodeStatistics().discoverOutFind.add();
     }
@@ -333,7 +338,7 @@ public class NodeHandler {
     @Override
     public String toString() {
         return "NodeHandler[state: " + state + ", node: " + node.getHost() + ":" + node.getPort() + ", id="
-                + (node.getId().length > 0 ? Hex.toHexString(node.getId(), 0, 4) : "empty") + "]";
+                + (node.getId().length >= 4 ? Hex.toHexString(node.getId(), 0, 4) : "empty") + "]";
     }
 
 

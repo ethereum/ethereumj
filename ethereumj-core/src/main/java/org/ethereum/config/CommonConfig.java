@@ -17,13 +17,14 @@
  */
 package org.ethereum.config;
 
-import org.ethereum.core.*;
+import org.ethereum.core.Repository;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.leveldb.LevelDbDataSource;
 import org.ethereum.datasource.rocksdb.RocksDbDataSource;
 import org.ethereum.db.*;
+import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.handler.Eth63;
 import org.ethereum.sync.FastSyncManager;
@@ -34,7 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.*;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -44,7 +44,6 @@ import java.util.Set;
 import static java.util.Arrays.asList;
 
 @Configuration
-@EnableTransactionManagement
 @ComponentScan(
         basePackages = "org.ethereum",
         excludeFilters = @ComponentScan.Filter(NoAutoscan.class))
@@ -195,6 +194,7 @@ public class CommonConfig {
     }
 
     public void fastSyncCleanUp() {
+        if (!systemProperties().isSyncEnabled()) return;
         byte[] fastsyncStageBytes = blockchainDB().get(FastSyncManager.FASTSYNC_DB_KEY_SYNC_STAGE);
         if (fastsyncStageBytes == null) return; // no uncompleted fast sync
         if (!systemProperties().blocksLoader().isEmpty()) return; // blocks loader enabled
@@ -219,6 +219,11 @@ public class CommonConfig {
         } else {
             throw new Error("Cannot cleanup non-db Source");
         }
+    }
+
+    @Bean(name = "EthereumListener")
+    public CompositeEthereumListener ethereumListener() {
+        return new CompositeEthereumListener();
     }
 
     @Bean
@@ -252,9 +257,9 @@ public class CommonConfig {
         return new SourceCodec<byte[], ProgramPrecompile, byte[], byte[]>(source,
                 new Serializer<byte[], byte[]>() {
                     public byte[] serialize(byte[] object) {
-                        DataWord ret = new DataWord(object);
-                        ret.add(new DataWord(1));
-                        return ret.getLast20Bytes();
+                        DataWord ret = DataWord.of(object);
+                        DataWord addResult = ret.add(DataWord.ONE);
+                        return addResult.getLast20Bytes();
                     }
                     public byte[] deserialize(byte[] stream) {
                         throw new RuntimeException("Shouldn't be called");
@@ -289,7 +294,7 @@ public class CommonConfig {
         List<BlockHeaderRule> rules = new ArrayList<>(asList(
                 new GasValueRule(),
                 new ExtraDataRule(systemProperties()),
-                new ProofOfWorkRule(),
+                EthashRule.createRegular(systemProperties(), ethereumListener()),
                 new GasLimitRule(systemProperties()),
                 new BlockHashRule(systemProperties())
         ));

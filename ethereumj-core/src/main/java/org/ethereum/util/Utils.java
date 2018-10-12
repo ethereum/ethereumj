@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
 import javax.swing.*;
 
 public class Utils {
-    private static final DataWord DIVISOR = new DataWord(64);
+    private static final DataWord DIVISOR = DataWord.of(64);
 
     private static SecureRandom random = new SecureRandom();
 
@@ -230,11 +230,8 @@ public class Utils {
     }
 
     public static DataWord allButOne64th(DataWord dw) {
-        DataWord ret = dw.clone();
-        DataWord d = dw.clone();
-        d.div(DIVISOR);
-        ret.sub(d);
-        return ret;
+        DataWord divResult = dw.div(DIVISOR);
+        return dw.sub(divResult);
     }
 
     /**

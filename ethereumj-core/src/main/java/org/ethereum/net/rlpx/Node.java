@@ -85,12 +85,11 @@ public class Node implements Serializable {
         this.port = port;
     }
 
-
-    public Node(byte[] rlp) {
-
-        RLPList nodeRLP = RLP.decode2(rlp);
-        nodeRLP = (RLPList) nodeRLP.get(0);
-
+    /**
+     * Instantiates node from RLP list containing node data.
+     * @throws IllegalArgumentException if node id is not a valid EC point.
+     */
+    public Node(RLPList nodeRLP) {
         byte[] hostB = nodeRLP.get(0).getRLPData();
         byte[] portB = nodeRLP.get(1).getRLPData();
         byte[] idB;
@@ -105,7 +104,13 @@ public class Node implements Serializable {
 
         this.host = bytesToIp(hostB);
         this.port = port;
-        this.id = idB;
+
+        // a tricky way to check whether given data is a valid EC point or not
+        this.id = ECKey.fromNodeId(idB).getNodeId();
+    }
+
+    public Node(byte[] rlp) {
+        this((RLPList) RLP.decode2(rlp).get(0));
     }
 
     /**

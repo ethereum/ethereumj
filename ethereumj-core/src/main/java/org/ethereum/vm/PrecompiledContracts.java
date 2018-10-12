@@ -30,6 +30,7 @@ import static org.ethereum.util.BIUtil.addSafely;
 import static org.ethereum.util.BIUtil.isLessThan;
 import static org.ethereum.util.BIUtil.isZero;
 import static org.ethereum.util.ByteUtil.*;
+import static org.ethereum.vm.VMUtils.getSizeInWords;
 
 /**
  * @author Roman Mandeleil
@@ -46,14 +47,14 @@ public class PrecompiledContracts {
     private static final BN128Multiplication altBN128Mul = new BN128Multiplication();
     private static final BN128Pairing altBN128Pairing = new BN128Pairing();
 
-    private static final DataWord ecRecoverAddr =       new DataWord("0000000000000000000000000000000000000000000000000000000000000001");
-    private static final DataWord sha256Addr =          new DataWord("0000000000000000000000000000000000000000000000000000000000000002");
-    private static final DataWord ripempd160Addr =      new DataWord("0000000000000000000000000000000000000000000000000000000000000003");
-    private static final DataWord identityAddr =        new DataWord("0000000000000000000000000000000000000000000000000000000000000004");
-    private static final DataWord modExpAddr =          new DataWord("0000000000000000000000000000000000000000000000000000000000000005");
-    private static final DataWord altBN128AddAddr =     new DataWord("0000000000000000000000000000000000000000000000000000000000000006");
-    private static final DataWord altBN128MulAddr =     new DataWord("0000000000000000000000000000000000000000000000000000000000000007");
-    private static final DataWord altBN128PairingAddr = new DataWord("0000000000000000000000000000000000000000000000000000000000000008");
+    private static final DataWord ecRecoverAddr =       DataWord.of("0000000000000000000000000000000000000000000000000000000000000001");
+    private static final DataWord sha256Addr =          DataWord.of("0000000000000000000000000000000000000000000000000000000000000002");
+    private static final DataWord ripempd160Addr =      DataWord.of("0000000000000000000000000000000000000000000000000000000000000003");
+    private static final DataWord identityAddr =        DataWord.of("0000000000000000000000000000000000000000000000000000000000000004");
+    private static final DataWord modExpAddr =          DataWord.of("0000000000000000000000000000000000000000000000000000000000000005");
+    private static final DataWord altBN128AddAddr =     DataWord.of("0000000000000000000000000000000000000000000000000000000000000006");
+    private static final DataWord altBN128MulAddr =     DataWord.of("0000000000000000000000000000000000000000000000000000000000000007");
+    private static final DataWord altBN128PairingAddr = DataWord.of("0000000000000000000000000000000000000000000000000000000000000008");
 
     public static PrecompiledContract getContractForAddress(DataWord address, BlockchainConfig config) {
 
@@ -102,7 +103,7 @@ public class PrecompiledContracts {
             // gas charge for the execution:
             // minimum 1 and additional 1 for each 32 bytes word (round  up)
             if (data == null) return 15;
-            return 15 + (data.length + 31) / 32 * 3;
+            return 15 + getSizeInWords(data.length) * 3;
         }
 
         @Override
@@ -120,7 +121,7 @@ public class PrecompiledContracts {
             // gas charge for the execution:
             // minimum 50 and additional 50 for each 32 bytes word (round  up)
             if (data == null) return 60;
-            return 60 + (data.length + 31) / 32 * 12;
+            return 60 + getSizeInWords(data.length) * 12;
         }
 
         @Override
@@ -142,7 +143,7 @@ public class PrecompiledContracts {
             // gas charge for the execution:
             // minimum 50 and additional 50 for each 32 bytes word (round  up)
             if (data == null) return 600;
-            return 600 + (data.length + 31) / 32 * 120;
+            return 600 + getSizeInWords(data.length) * 120;
         }
 
         @Override
@@ -152,7 +153,7 @@ public class PrecompiledContracts {
             if (data == null) result = HashUtil.ripemd160(EMPTY_BYTE_ARRAY);
             else result = HashUtil.ripemd160(data);
 
-            return Pair.of(true, new DataWord(result).getData());
+            return Pair.of(true, DataWord.of(result).getData());
         }
     }
 
@@ -184,7 +185,7 @@ public class PrecompiledContracts {
 
                 ECKey.ECDSASignature signature = ECKey.ECDSASignature.fromComponents(r, s, v[31]);
                 if (validateV(v) && signature.validateComponents()) {
-                    out = new DataWord(ECKey.signatureToAddress(h, signature));
+                    out = DataWord.of(ECKey.signatureToAddress(h, signature));
                 }
             } catch (Throwable any) {
             }
@@ -302,7 +303,7 @@ public class PrecompiledContracts {
 
         private int parseLen(byte[] data, int idx) {
             byte[] bytes = parseBytes(data, 32 * idx, 32);
-            return new DataWord(bytes).intValueSafe();
+            return DataWord.of(bytes).intValueSafe();
         }
 
         private BigInteger parseArg(byte[] data, int offset, int len) {
@@ -458,7 +459,7 @@ public class PrecompiledContracts {
             check.run();
             int result = check.result();
 
-            return Pair.of(true, new DataWord(result).getData());
+            return Pair.of(true, DataWord.of(result).getData());
         }
 
         private Pair<BN128G1, BN128G2> decodePair(byte[] in, int offset) {

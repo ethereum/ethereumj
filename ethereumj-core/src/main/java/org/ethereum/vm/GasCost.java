@@ -51,6 +51,7 @@ public class GasCost {
     private final int SET_SSTORE = 20000;
     private final int RESET_SSTORE = 5000;
     private final int REFUND_SSTORE = 15000;
+    private final int REUSE_SSTORE = 200;
     private final int CREATE = 32000;
 
     private final int JUMPDEST = 1;
@@ -82,6 +83,7 @@ public class GasCost {
     private final int EC_RECOVER = 3000;
     private final int EXT_CODE_SIZE = 20;
     private final int EXT_CODE_COPY = 20;
+    private final int EXT_CODE_HASH = 400;
     private final int NEW_ACCT_SUICIDE = 0;
 
     public int getSTEP() {
@@ -166,6 +168,10 @@ public class GasCost {
 
     public int getREFUND_SSTORE() {
         return REFUND_SSTORE;
+    }
+
+    public int getREUSE_SSTORE() {
+        return REUSE_SSTORE;
     }
 
     public int getCREATE() {
@@ -290,5 +296,9 @@ public class GasCost {
 
     public int getEXT_CODE_COPY() {
         return EXT_CODE_COPY;
+    }
+
+    public int getEXT_CODE_HASH() {
+        return EXT_CODE_HASH;
     }
 }

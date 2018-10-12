@@ -7,17 +7,21 @@ import static java.lang.System.arraycopy;
 import static org.ethereum.crypto.HashUtil.sha3;
 
 /**
- * Composes keys for contract storage nodes. <br/><br/>
+ * Composes keys for contract storage nodes.
  *
- * <b>Input:</b> 32-bytes node key, 20-bytes contract address <br/>
- * <b>Output:</b> 32-bytes composed key <i>[first 16-bytes of node key : first 16-bytes of address hash]</i> <br/><br/>
+ * <p>
+ *     <b>Input:</b> 32-bytes node key, 20-bytes contract address
+ * <br/>
+ *     <b>Output:</b> 32-bytes composed key <i>[first 16-bytes of node key : first 16-bytes of address hash]</i>
  *
- * Example: <br/>
- * Contract address hash <i>a9539c810cc2e8fa20785bdd78ec36ccb25e1b5be78dbadf6c4e817c6d170bbb</i> <br/>
- * Key of one of the storage nodes <i>bbbbbb5be78dbadf6c4e817c6d170bbb47e9916f8f6cc4607c5f3819ce98497b</i> <br/>
- * Composed key will be <i>a9539c810cc2e8fa20785bdd78ec36ccbbbbbb5be78dbadf6c4e817c6d170bbb</i> <br/><br/>
+ * <p>
+ *     Example: <br/>
+ *     Contract address hash <i>a9539c810cc2e8fa20785bdd78ec36ccb25e1b5be78dbadf6c4e817c6d170bbb</i> <br/>
+ *     Key of one of the storage nodes <i>bbbbbb5be78dbadf6c4e817c6d170bbb47e9916f8f6cc4607c5f3819ce98497b</i> <br/>
+ *     Composed key will be <i>bbbbbb5be78dbadf6c4e817c6d170bbba9539c810cc2e8fa20785bdd78ec36cc</i>
  *
- * This mechanism is a part of flat storage source which is free from reference counting
+ * <p>
+ *     This mechanism is a part of flat storage source which is free from reference counting
  *
  * @see CommonConfig#trieNodeSource()
  * @see RepositoryRoot#RepositoryRoot(Source, byte[])

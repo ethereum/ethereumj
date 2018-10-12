@@ -163,4 +163,28 @@ public interface BlockchainConfig {
      * Replaces the intermediate state root field of the receipt with the status
      */
     boolean eip658();
+
+    /**
+     * EIP145: https://eips.ethereum.org/EIPS/eip-145
+     * Bitwise shifting instructions in EVM
+     */
+    boolean eip145();
+
+    /**
+     * EIP1052: https://eips.ethereum.org/EIPS/eip-1052
+     * EXTCODEHASH opcode
+     */
+    boolean eip1052();
+
+    /**
+     * EIP 1283: https://eips.ethereum.org/EIPS/eip-1283
+     * Net gas metering for SSTORE without dirty maps
+     */
+    boolean eip1283();
+
+    /**
+     * EIP 1014: https://eips.ethereum.org/EIPS/eip-1014
+     * Skinny CREATE2: same as CREATE but with deterministic address
+     */
+    boolean eip1014();
 }
