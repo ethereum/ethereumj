@@ -18,9 +18,9 @@
 package org.ethereum.core;
 
 import io.enkrypt.kafka.models.Account;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Set;
+
+import java.util.*;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
@@ -40,7 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
-import java.util.List;
 
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.ArrayUtils.getLength;
@@ -438,13 +437,10 @@ public class TransactionExecutor {
         // Grab what accounts have suffered modifications
         if (result != null) {
             Set<byte[]> rawTouchedAccounts = touchedAccounts;
-            List<Account> touched = new ArrayList<>(rawTouchedAccounts.size());
+            Map<byte[], AccountState> touched = new HashMap<>(rawTouchedAccounts.size());
             for (byte[] address : rawTouchedAccounts) {
                 final AccountState state = track.getAccountState(address);
-                if (state != null) {
-                    final Account account = Account.fromAccountState(address, state);
-                    touched.add(account);
-                }
+                touched.put(address, state);
             }
             summaryBuilder.touchedAccounts(touched);
         }

@@ -4,6 +4,7 @@ import io.enkrypt.kafka.Kafka;
 import io.enkrypt.kafka.models.Account;
 
 import java.util.List;
+import java.util.Map;
 
 import org.ethereum.core.*;
 import org.ethereum.listener.EthereumListener;
@@ -133,9 +134,9 @@ public class KafkaEthereumListener implements EthereumListener {
 
     // Send account balances
     for (TransactionExecutionSummary summary : blockSummary.getSummaries()) {
-      final List<Account> touchedAccounts = summary.getTouchedAccounts();
-      for (Account account : touchedAccounts) {
-        kafka.send(Kafka.Producer.ACCOUNT_STATE, account.getAddress(), account.getRLPEncoded());
+      final Map<byte[], AccountState> touchedAccounts = summary.getTouchedAccounts();
+      for (Map.Entry<byte[], AccountState> entry : touchedAccounts.entrySet()) {
+        kafka.send(Kafka.Producer.ACCOUNT_STATE, entry.getKey(), entry.getValue().getEncoded());
       }
     }
   }
