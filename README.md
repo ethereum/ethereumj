@@ -18,7 +18,7 @@ We keep EthereumJ as thin as possible. For [JSON-RPC](https://github.com/ethereu
    <dependency>
      <groupId>org.ethereum</groupId>
      <artifactId>ethereumj-core</artifactId>
-     <version>1.8.1-RELEASE</version>
+     <version>1.9.0-RELEASE</version>
    </dependency>
 ```
 
@@ -30,7 +30,7 @@ We keep EthereumJ as thin as possible. For [JSON-RPC](https://github.com/ethereu
        jcenter()
        maven { url "https://dl.bintray.com/ethereum/maven/" }
    }
-   implementation "org.ethereum:ethereumj-core:1.8.+"
+   implementation "org.ethereum:ethereumj-core:1.9.+"
 ```
 
 As a starting point for your own project take a look at https://github.com/ether-camp/ethereumj.starter
