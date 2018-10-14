@@ -80,7 +80,7 @@ public class GenesisTransition implements StateTransition<BeaconState> {
                 .withLastStateRecalc(0L)
                 .withCrosslinks(Crosslink.empty(SHARD_COUNT));
 
-        return new BeaconState(crystallizedState);
+        return new BeaconState(crystallizedState, to.getActiveState());
     }
 
     class ValidatorSetInitiator implements StateTransition<ValidatorSet> {

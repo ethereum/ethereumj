@@ -6,6 +6,7 @@ import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.domain.Validator;
 import org.ethereum.sharding.processing.db.TrieValidatorSet;
 import org.ethereum.sharding.processing.db.ValidatorSet;
+import org.ethereum.sharding.processing.state.ActiveState;
 import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.Committee;
 import org.ethereum.sharding.processing.state.Crosslink;
@@ -14,6 +15,7 @@ import org.ethereum.sharding.processing.state.Dynasty;
 import org.ethereum.sharding.processing.state.Finality;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 import static org.ethereum.crypto.HashUtil.randomHash;
@@ -32,10 +34,10 @@ public class StateTransitionTest {
         StateTransition<BeaconState> transitionFunction = new BeaconStateTransition(
                 dynastyTransition(validatorTransition(validator)), finalityTransition());
 
-        Beacon b1 = new Beacon(new byte[32], new byte[32], new byte[32], new byte[32], 1L);
-        Beacon b2 = new Beacon(new byte[32], new byte[32], new byte[32], new byte[32], 63L);
-        Beacon b3 = new Beacon(new byte[32], new byte[32], new byte[32], new byte[32], 64L);
-        Beacon b4 = new Beacon(new byte[32], new byte[32], new byte[32], new byte[32], 72L);
+        Beacon b1 = new Beacon(new byte[32], new byte[32], new byte[32], new byte[32], 1L, new ArrayList<>());
+        Beacon b2 = new Beacon(new byte[32], new byte[32], new byte[32], new byte[32], 63L, new ArrayList<>());
+        Beacon b3 = new Beacon(new byte[32], new byte[32], new byte[32], new byte[32], 64L, new ArrayList<>());
+        Beacon b4 = new Beacon(new byte[32], new byte[32], new byte[32], new byte[32], 72L, new ArrayList<>());
 
         assertEquals(getOrigin(), transitionFunction.applyBlock(b1, getOrigin()));
         assertEquals(getOrigin(), transitionFunction.applyBlock(b2, getOrigin()));
@@ -72,7 +74,7 @@ public class StateTransitionTest {
                 dynasty, finality, new Crosslink[0]
         );
 
-        return new BeaconState(crystallized);
+        return new BeaconState(crystallized, getOrigin().getActiveState());
     }
 
     BeaconState getOrigin() {
@@ -81,7 +83,7 @@ public class StateTransitionTest {
         Finality finality = Finality.empty();
 
         CrystallizedState crystallized = new CrystallizedState(0L, dynasty, finality, new Crosslink[0]);
-        return new BeaconState(crystallized);
+        return new BeaconState(crystallized, ActiveState.createEmpty());
     }
 
     Validator getRandomValidator() {

@@ -69,6 +69,6 @@ public class BeaconStateTransition implements StateTransition<BeaconState> {
                     .withFinality(finality);
         }
 
-        return new BeaconState(crystallized);
+        return new BeaconState(crystallized, to.getActiveState());
     }
 }

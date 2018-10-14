@@ -17,6 +17,7 @@
  */
 package org.ethereum.sharding.processing.state;
 
+import org.ethereum.datasource.Serializer;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
@@ -133,4 +134,16 @@ public class ActiveState {
 
         return builder.toString();
     }
+
+    public static final org.ethereum.datasource.Serializer<ActiveState, byte[]> Serializer = new Serializer<ActiveState, byte[]>() {
+        @Override
+        public byte[] serialize(ActiveState state) {
+            return state == null ? null : state.getEncoded();
+        }
+
+        @Override
+        public ActiveState deserialize(byte[] stream) {
+            return stream == null ? null : new ActiveState(stream);
+        }
+    };
 }

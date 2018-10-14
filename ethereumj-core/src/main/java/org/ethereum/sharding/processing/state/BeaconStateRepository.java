@@ -35,10 +35,12 @@ public class BeaconStateRepository implements StateRepository {
     ObjectDataSource<BeaconState.Flattened> stateDS;
     Source<byte[], byte[]> crystallizedSrc;
     ObjectDataSource<CrystallizedState.Flattened> crystallizedDS;
+    ObjectDataSource<ActiveState> activeDS;
     Source<byte[], byte[]> validatorSrc;
     Source<byte[], byte[]> validatorIndexSrc;
 
     public BeaconStateRepository(Source<byte[], byte[]> src, Source<byte[], byte[]> crystallizedSrc,
+                                 Source<byte[], byte[]> activeSrc,
                                  Source<byte[], byte[]> validatorSrc, Source<byte[], byte[]> validatorIndexSrc) {
         this.src = src;
         this.crystallizedSrc = crystallizedSrc;
@@ -48,12 +50,16 @@ public class BeaconStateRepository implements StateRepository {
         this.stateDS = new ObjectDataSource<>(src, BeaconState.Flattened.Serializer, BeaconStore.BLOCKS_IN_MEM);
         this.crystallizedDS = new ObjectDataSource<>(crystallizedSrc,
                 CrystallizedState.Flattened.Serializer, BeaconStore.BLOCKS_IN_MEM);
+        this.activeDS = new ObjectDataSource<>(activeSrc,
+                ActiveState.Serializer, BeaconStore.BLOCKS_IN_MEM);
     }
 
     @Override
     public void insert(BeaconState state) {
         CrystallizedState crystallized = state.getCrystallizedState();
         crystallizedDS.put(crystallized.getHash(), crystallized.flatten());
+        ActiveState activeState = state.getActiveState();
+        activeDS.put(activeState.getHash(), activeState);
         stateDS.put(state.getHash(), state.flatten());
     }
 
@@ -70,15 +76,18 @@ public class BeaconStateRepository implements StateRepository {
     public BeaconState getEmpty() {
         CrystallizedState.Flattened crystallizedFlattened = CrystallizedState.Flattened.empty();
         CrystallizedState crystallizedState = fromFlattened(crystallizedFlattened);
+        ActiveState activeState = ActiveState.createEmpty();
 
-        return new BeaconState(crystallizedState);
+        return new BeaconState(crystallizedState, activeState);
     }
 
     BeaconState fromFlattened(BeaconState.Flattened flattened) {
         CrystallizedState.Flattened crystallizedFlattened = crystallizedDS.get(flattened.getCrystallizedStateHash());
         CrystallizedState crystallizedState = fromFlattened(crystallizedFlattened);
 
-        return new BeaconState(crystallizedState);
+        ActiveState activeState = activeDS.get(flattened.getActiveStateHash());
+
+        return new BeaconState(crystallizedState, activeState);
     }
 
     CrystallizedState fromFlattened(CrystallizedState.Flattened flattened) {

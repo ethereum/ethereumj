@@ -32,6 +32,7 @@ import org.ethereum.sharding.processing.state.StateRepository;
 import org.junit.Test;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
 import java.util.concurrent.Future;
@@ -183,7 +184,7 @@ public class BeaconChainTest {
             Helper inst = new Helper();
             inst.store = new IndexedBeaconStore(new HashMapDB<>(), new HashMapDB<>());
             inst.repository = new BeaconStateRepository(new HashMapDB<>(), new HashMapDB<>(),
-                    new HashMapDB<>(), new HashMapDB<>());
+                    new HashMapDB<>(), new HashMapDB<>(), new HashMapDB<>());
             inst.beaconChain = (BeaconChainImpl) BeaconChainFactory.create(
                     new DummyFlusher(), inst.store, inst.repository, new NoTransition(), new NoTransition());
             inst.beaconChain.scoreFunction = (block, state) -> BigInteger.valueOf(block.getMainChainRef()[0]);
@@ -208,7 +209,7 @@ public class BeaconChainTest {
             BeaconState parentState = repository.get(parent.getStateHash());
 
             Beacon newBlock = new Beacon(parent.getHash(),
-                    randaoReveal, mainChainRef, null, parent.getSlotNumber() + 1);
+                    randaoReveal, mainChainRef, null, parent.getSlotNumber() + 1, new ArrayList<>());
             BeaconState newState = beaconChain.transitionFunction.applyBlock(newBlock, parentState);
             newBlock.setStateHash(newState.getHash());
 

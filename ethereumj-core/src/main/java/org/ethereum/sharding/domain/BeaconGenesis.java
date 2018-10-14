@@ -54,7 +54,7 @@ public class BeaconGenesis extends Beacon {
     private List<String> initialValidators = new ArrayList<>();
 
     BeaconGenesis(Json json) {
-        super(json.parentHash(), json.randaoReveal(), json.mainChainRef(), EMPTY, SLOT, new AttestationRecord[0]);
+        super(json.parentHash(), json.randaoReveal(), json.mainChainRef(), EMPTY, SLOT, new ArrayList<>());
         this.timestamp = json.timestamp();
         this.initialValidators = json.validatorSet();
     }
