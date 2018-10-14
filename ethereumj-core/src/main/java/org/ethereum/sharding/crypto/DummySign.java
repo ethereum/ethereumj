@@ -15,37 +15,41 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.sharding.util;
+package org.ethereum.sharding.crypto;
 
 import java.math.BigInteger;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 
 /**
- * Signature utilities
+ * Dummy signature implementation without real crypto underneath
  */
-public class Sign {
+public class DummySign implements Sign {
 
-    public static byte[] sign(byte[] msg, byte[] privateKey) {
-        // TODO: BLS should be here
-        return sha3(msg, privateKey);
+    public Signature sign(byte[] msg, byte[] privateKey) {
+        byte[] rSource = sha3(privateKey);
+        byte[] sSource = sha3(msg, privateKey);
+        Signature res = new Signature();
+        res.r = new BigInteger(rSource);
+        res.s = new BigInteger(sSource);
+
+        return res;
     }
 
-    public static boolean verify(byte[] signature, byte[] publicKey) {
-        // TODO: real BLS verification should be here
+    public boolean verify(Signature signature, byte[] publicKey) {
         return true;
     }
 
-    public static BigInteger[] aggSigns(byte[][] signatures) {
-        // TODO: real BLS signature aggregation instead of XOR
-        int signatureLen = signatures[0].length;
-        byte[] aggSignature = new byte[signatureLen];
+    public Signature aggSigns(Signature[] signatures) {
+        int signatureLen = signatures.length;
+        Signature aggSignature = new Signature();
         for (int i = 0; i < signatureLen; ++i) {
-            for (byte[] signature : signatures) {
-                aggSignature[i] ^= signature[i];
+            for (Signature signature : signatures) {
+                aggSignature.r = aggSignature.r.xor(signature.r);
+                aggSignature.s = aggSignature.s.xor(signature.s);
             }
         }
 
-        return new BigInteger[] {new BigInteger(1, aggSignature), BigInteger.ONE};
+        return aggSignature;
     }
 }

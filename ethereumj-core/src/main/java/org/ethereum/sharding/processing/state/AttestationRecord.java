@@ -17,11 +17,11 @@
  */
 package org.ethereum.sharding.processing.state;
 
+import org.ethereum.sharding.crypto.Sign;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.BitSet;
 
@@ -52,11 +52,11 @@ public class AttestationRecord {
     private final long justifiedSlot;
     private final byte[] justifiedBlockHash;
     // The actual signature
-    private final BigInteger[] aggregateSig; // Defined by two BigIntegers?
+    private final Sign.Signature aggregateSig;
 
     public AttestationRecord(long slot, int shardId, byte[][] obliqueParentHashes, byte[] shardBlockHash,
                              BitSet attesterBitfield, long justifiedSlot, byte[] justifiedBlockHash,
-                             BigInteger[] aggregateSig) {
+                             Sign.Signature aggregateSig) {
         this.slot = slot;
         this.shardId = shardId;
         this.obliqueParentHashes = obliqueParentHashes;
@@ -84,9 +84,9 @@ public class AttestationRecord {
         this.justifiedBlockHash = list.get(6).getRLPData();
 
         RLPList sigList = RLP.unwrapList(list.get(7).getRLPData());
-        this.aggregateSig = new BigInteger[sigList.size()];
-        for (int i = 0; i < sigList.size(); i++)
-            this.aggregateSig[i] = ByteUtil.bytesToBigInteger(hashesList.get(i).getRLPData());
+        this.aggregateSig = new Sign.Signature();
+        this.aggregateSig.r = ByteUtil.bytesToBigInteger(sigList.get(0).getRLPData());
+        this.aggregateSig.s = ByteUtil.bytesToBigInteger(sigList.get(1).getRLPData());
     }
 
     public long getSlot() {
@@ -117,14 +117,14 @@ public class AttestationRecord {
         return justifiedBlockHash;
     }
 
-    public BigInteger[] getAggregateSig() {
+    public Sign.Signature getAggregateSig() {
         return aggregateSig;
     }
 
     public byte[] getEncoded() {
-        byte[][] encodedAggSig = new byte[aggregateSig.length][];
-        for (int i = 0; i < aggregateSig.length; i++)
-            encodedAggSig[i] = bigIntegerToBytes(aggregateSig[i]);
+        byte[][] encodedAggSig = new byte[2][];
+        encodedAggSig[0] = bigIntegerToBytes(aggregateSig.r);
+        encodedAggSig[1] = bigIntegerToBytes(aggregateSig.s);
 
         return RLP.wrapList(longToBytesNoLeadZeroes(slot),
                 intToBytesNoLeadZeroes(shardId),
@@ -148,7 +148,7 @@ public class AttestationRecord {
                 Arrays.equals(obliqueParentHashes, that.obliqueParentHashes) &&
                 Arrays.equals(shardBlockHash, that.shardBlockHash) &&
                 Arrays.equals(justifiedBlockHash, that.justifiedBlockHash) &&
-                Arrays.equals(aggregateSig, that.aggregateSig);
+                aggregateSig == that.aggregateSig;
     }
 
     @Override
@@ -162,7 +162,7 @@ public class AttestationRecord {
                 .append(", attesterBitfield=").append(attesterBitfield)
                 .append(", justifiedSlot=").append(justifiedSlot)
                 .append(", justifiedBlockHash=").append(toHexString(justifiedBlockHash))
-                .append(", aggregateSig=[").append(aggregateSig.length).append(" item(s)]}");
+                .append(", aggregateSig=[").append(aggregateSig).append("}");
 
         return builder.toString();
     }

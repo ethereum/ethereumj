@@ -22,15 +22,11 @@ import org.ethereum.sharding.config.ValidatorConfig;
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.domain.Validator;
 import org.ethereum.sharding.processing.db.BeaconStore;
-import org.ethereum.sharding.processing.state.AttestationRecord;
 import org.ethereum.sharding.pubsub.BeaconChainSynced;
 import org.ethereum.sharding.processing.consensus.StateTransition;
 import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.StateRepository;
-import org.ethereum.sharding.util.Bitfield;
 import org.ethereum.sharding.util.Randao;
-import org.ethereum.sharding.util.Sign;
-import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

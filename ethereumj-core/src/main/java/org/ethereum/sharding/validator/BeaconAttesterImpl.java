@@ -18,14 +18,11 @@
 package org.ethereum.sharding.validator;
 
 import org.ethereum.sharding.config.ValidatorConfig;
-import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.processing.db.BeaconStore;
 import org.ethereum.sharding.processing.state.AttestationRecord;
-import org.ethereum.sharding.processing.state.BeaconState;
-import org.ethereum.sharding.processing.state.Committee;
 import org.ethereum.sharding.processing.state.StateRepository;
 import org.ethereum.sharding.util.Bitfield;
-import org.ethereum.sharding.util.Sign;
+import org.ethereum.sharding.crypto.Sign;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,11 +36,14 @@ public class BeaconAttesterImpl implements BeaconAttester {
     StateRepository repository;
     BeaconStore store;
     ValidatorConfig config;
+    Sign sign;
 
-    public BeaconAttesterImpl(StateRepository repository, BeaconStore store, ValidatorConfig config) {
+    public BeaconAttesterImpl(StateRepository repository, BeaconStore store, ValidatorConfig config,
+                              Sign sign) {
         this.repository = repository;
         this.store = store;
         this.config = config;
+        this.sign = sign;
     }
 
     @Override
@@ -57,7 +57,7 @@ public class BeaconAttesterImpl implements BeaconAttester {
                 Bitfield.markVote(Bitfield.createEmpty(in.index.getCommitteeSize()), in.index.getValidatorIdx()),
                 lastJustified,
                 store.getCanonicalByNumber(lastJustified) == null ? new byte[32] : store.getCanonicalByNumber(lastJustified).getHash(),
-                Sign.aggSigns(new byte[][] {Sign.sign(in.block.getEncoded(), pubKey)})
+                sign.aggSigns(new Sign.Signature[]{sign.sign(in.block.getEncoded(), pubKey)})
         );
 
         logger.info("Block {} attested by #{} in slot {} ", in.block, in.index.getValidatorIdx(), in.slotNumber);

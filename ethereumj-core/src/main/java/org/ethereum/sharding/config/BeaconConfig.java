@@ -35,6 +35,8 @@ import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.TransactionStore;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.manager.WorldManager;
+import org.ethereum.sharding.crypto.DummySign;
+import org.ethereum.sharding.crypto.Sign;
 import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.manager.ShardingWorldManager;
 import org.ethereum.sharding.processing.BeaconChain;
@@ -224,7 +226,7 @@ public class BeaconConfig {
 
     @Bean
     public BeaconAttester beaconAttester() {
-        return new BeaconAttesterImpl(beaconStateRepository(), beaconStore(), validatorConfig());
+        return new BeaconAttesterImpl(beaconStateRepository(), beaconStore(), validatorConfig(), sign());
     }
 
     @Bean
@@ -249,6 +251,10 @@ public class BeaconConfig {
 
     public DepositAuthority depositAuthority() {
         return new UnsecuredDepositAuthority(validatorConfig());
+    }
+
+    public Sign sign() {
+        return new DummySign();
     }
 
     public static class Enabled implements Condition {
