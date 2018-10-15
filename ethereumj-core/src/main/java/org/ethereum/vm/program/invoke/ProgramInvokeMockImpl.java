@@ -240,7 +240,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
 
     @Override
     public Repository getOrigRepository() {
-        return this.repository;
+        return this.origRepository;
     }
 
     @Override
@@ -250,6 +250,10 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
 
     public void setRepository(Repository repository) {
         this.repository = repository;
+    }
+
+    public void setOrigRepository(Repository repository) {
+        this.origRepository = repository.clone();
     }
 
     @Override
