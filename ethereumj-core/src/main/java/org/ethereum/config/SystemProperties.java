@@ -198,7 +198,7 @@ public class SystemProperties {
             Config testUserConfig = ConfigFactory.parseResources("test-user.conf");
             logger.info("Config (" + (testUserConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): test properties from resource 'test-user.conf'");
             String file = System.getProperty("ethereumj.conf.file");
-            Config cmdLineConfigFile = mergeConfigs(res, s -> ConfigFactory.parseFile(new File(s)));
+            Config cmdLineConfigFile = mergeConfigs(file, s -> ConfigFactory.parseFile(new File(s)));
             logger.info("Config (" + (cmdLineConfigFile.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from -Dethereumj.conf.file file(s) '" + file + "'");
             logger.info("Config (" + (apiConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): config passed via constructor");
             config = apiConfig
