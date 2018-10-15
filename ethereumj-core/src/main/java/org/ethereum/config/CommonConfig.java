@@ -24,6 +24,7 @@ import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.leveldb.LevelDbDataSource;
 import org.ethereum.datasource.rocksdb.RocksDbDataSource;
 import org.ethereum.db.*;
+import io.enkrypt.kafka.config.KafkaSystemProperties;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.handler.Eth63;
@@ -67,7 +68,7 @@ public class CommonConfig {
 
     @Bean
     public SystemProperties systemProperties() {
-        return SystemProperties.getSpringDefault();
+        return KafkaSystemProperties.getKafkaSystemProperties();
     }
 
     @Bean
@@ -126,7 +127,7 @@ public class CommonConfig {
     @Bean
     @Scope("prototype")
     public Source<byte[], byte[]> cachedDbSource(String name) {
-        AbstractCachedSource<byte[], byte[]>  writeCache = new AsyncWriteCache<byte[], byte[]>(blockchainSource(name)) {
+        AbstractCachedSource<byte[], byte[]> writeCache = new AsyncWriteCache<byte[], byte[]>(blockchainSource(name)) {
             @Override
             protected WriteCache<byte[], byte[]> createCache(Source<byte[], byte[]> source) {
                 WriteCache.BytesKey<byte[]> ret = new WriteCache.BytesKey<>(source, WriteCache.CacheType.SIMPLE);
@@ -166,7 +167,7 @@ public class CommonConfig {
             DbSource<byte[]> dbSource;
             if ("inmem".equals(dataSource)) {
                 dbSource = new HashMapDB<>();
-            } else if ("leveldb".equals(dataSource)){
+            } else if ("leveldb".equals(dataSource)) {
                 dbSource = levelDbDataSource();
             } else {
                 dataSource = "rocksdb";
@@ -221,7 +222,7 @@ public class CommonConfig {
         }
     }
 
-    @Bean(name = "EthereumListener")
+    @Bean @Primary
     public CompositeEthereumListener ethereumListener() {
         return new CompositeEthereumListener();
     }
@@ -238,7 +239,7 @@ public class CommonConfig {
         DbSource<byte[]> dataSource = headerSource();
 
         WriteCache.BytesKey<byte[]> cache = new WriteCache.BytesKey<>(
-                new BatchSourceWriter<>(dataSource), WriteCache.CacheType.SIMPLE);
+            new BatchSourceWriter<>(dataSource), WriteCache.CacheType.SIMPLE);
         cache.setFlushSource(true);
         dbFlushManager().addCache(cache);
 
@@ -261,16 +262,17 @@ public class CommonConfig {
                         DataWord addResult = ret.add(DataWord.ONE);
                         return addResult.getLast20Bytes();
                     }
+
                     public byte[] deserialize(byte[] stream) {
                         throw new RuntimeException("Shouldn't be called");
                     }
                 }, new Serializer<ProgramPrecompile, byte[]>() {
-                    public byte[] serialize(ProgramPrecompile object) {
-                        return object == null ? null : object.serialize();
-                    }
-                    public ProgramPrecompile deserialize(byte[] stream) {
-                        return stream == null ? null : ProgramPrecompile.deserialize(stream);
-                    }
+            public byte[] serialize(ProgramPrecompile object) {
+                return object == null ? null : object.serialize();
+            }
+            public ProgramPrecompile deserialize(byte[] stream) {
+                return stream == null ? null : ProgramPrecompile.deserialize(stream);
+            }
         });
     }
 

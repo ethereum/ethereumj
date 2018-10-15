@@ -134,6 +134,11 @@ dependencies {
 
     compile "com.google.guava:guava:24.1-jre"
 
+    compile "org.apache.kafka:kafka-streams:2.0.0"
+
+    compile "com.github.jcustenborder.kafka:kafka-jackson:0.0.1.2"
+    compile "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.5"
+
     compile "com.cedarsoftware:java-util:1.8.0" // for deep equals
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
     compile "ch.qos.logback:logback-classic:1.1.7"

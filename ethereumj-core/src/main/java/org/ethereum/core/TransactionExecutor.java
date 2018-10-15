@@ -17,6 +17,10 @@
  */
 package org.ethereum.core;
 
+import io.enkrypt.kafka.models.Account;
+
+import java.util.*;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
@@ -36,7 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
-import java.util.List;
 
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.ArrayUtils.getLength;
@@ -420,16 +423,26 @@ public class TransactionExecutor {
             ContractDetails contractDetails = track.getContractDetails(addr);
             if (contractDetails != null) {
                 // TODO
-//                summaryBuilder.storageDiff(track.getContractDetails(addr).getStorage());
-//
-//                if (program != null) {
-//                    summaryBuilder.touchedStorage(contractDetails.getStorage(), program.getStorageDiff());
-//                }
+                //summaryBuilder.storageDiff(track.getContractDetails(addr).getStorage());
+                //if (program != null) {
+                //    summaryBuilder.touchedStorage(contractDetails.getStorage(), program.getStorageDiff());
+                //}
             }
 
             if (result.getException() != null) {
                 summaryBuilder.markAsFailed();
             }
+        }
+
+        // Grab what accounts have suffered modifications
+        if (result != null) {
+            Set<byte[]> rawTouchedAccounts = touchedAccounts;
+            Map<byte[], AccountState> touched = new HashMap<>(rawTouchedAccounts.size());
+            for (byte[] address : rawTouchedAccounts) {
+                final AccountState state = track.getAccountState(address);
+                touched.put(address, state);
+            }
+            summaryBuilder.touchedAccounts(touched);
         }
 
         TransactionExecutionSummary summary = summaryBuilder.build();
@@ -459,7 +472,6 @@ public class TransactionExecutor {
                 }
             }
         }
-
 
         listener.onTransactionExecuted(summary);
 

@@ -24,16 +24,20 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.*;
-import org.ethereum.trie.Trie;
-import org.ethereum.trie.TrieImpl;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.sync.SyncManager;
-import org.ethereum.util.*;
+import org.ethereum.trie.Trie;
+import org.ethereum.trie.TrieImpl;
+import org.ethereum.util.AdvancedDeviceUtils;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
+import org.ethereum.util.RLP;
 import org.ethereum.validator.DependentBlockHeaderRule;
 import org.ethereum.validator.ParentBlockHeaderValidator;
 import org.ethereum.vm.hook.VMHook;
+import org.ethereum.vm.program.InternalTransaction;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.slf4j.Logger;
@@ -48,17 +52,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.ConcurrentModificationException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.lang.Math.max;
 import static java.lang.Runtime.getRuntime;
@@ -68,6 +63,7 @@ import static java.util.Collections.emptyList;
 import static org.ethereum.core.Denomination.SZABO;
 import static org.ethereum.core.ImportResult.*;
 import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.bytesToBigInteger;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
@@ -864,7 +860,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             return applyBlock(track, block);
         }
         else {
-            return new BlockSummary(block, new HashMap<byte[], BigInteger>(), new ArrayList<TransactionReceipt>(), new ArrayList<TransactionExecutionSummary>());
+            return new BlockSummary(block, new HashMap<byte[], BigInteger>(), new ArrayList<TransactionReceipt>(), new ArrayList<TransactionExecutionSummary>(), new BlockStatistics());
         }
     }
 
@@ -941,7 +937,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         adminInfo.addBlockExecTime(totalTime);
         logger.debug("block: num: [{}] hash: [{}], executed after: [{}]nano", block.getNumber(), block.getShortHash(), totalTime);
 
-        return new BlockSummary(block, rewards, receipts, summaries);
+      final BlockStatistics statistics = BlockStatistics.forBlock(block, receipts, summaries);
+
+      return new BlockSummary(block, rewards, receipts, summaries, statistics);
     }
 
     /**
