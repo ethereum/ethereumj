@@ -34,17 +34,7 @@ public class Bitfield {
      * @return  empty bitfield with correct length
      */
     public static BitSet createEmpty(int validatorsCount) {
-        return new BitSet(calcLength(validatorsCount));
-    }
-
-    // TODO: Add test
-    /**
-     * Calculates attesters bitfield length
-     * @param num  Number of attesters
-     * @return  Bitfield length in bytes
-     */
-    public static int calcLength(int num) {
-        return (num + 7) / Byte.SIZE;
+        return new BitSet(validatorsCount);
     }
 
     /**
