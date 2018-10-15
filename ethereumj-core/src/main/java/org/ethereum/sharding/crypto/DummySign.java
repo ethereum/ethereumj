@@ -43,6 +43,8 @@ public class DummySign implements Sign {
     public Signature aggSigns(Signature[] signatures) {
         int signatureLen = signatures.length;
         Signature aggSignature = new Signature();
+        aggSignature.r = BigInteger.ZERO;
+        aggSignature.s = BigInteger.ZERO;
         for (int i = 0; i < signatureLen; ++i) {
             for (Signature signature : signatures) {
                 aggSignature.r = aggSignature.r.xor(signature.r);
