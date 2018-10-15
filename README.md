@@ -1,7 +1,7 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/enKryptIO/ethvm/master/.github/assets/logo.png" alt="ethvm-logo">
   <p>:zap::zap::zap: EthVM Project: An open source blockchain explorer for Ethereum network :zap::zap::zap:</p>
-  <p>Powered by <a href="https://www.typescriptlang.org/">TypeScript</a> / <a href="https://github.com/socketio/socket.io">Socket.io</a> / <a href="https://github.com/ethereum/ethereumj">EthereumJ</a> / <a href="https://kafka.apache.org/">Kafka</a> / <a href="https://github.com/mongodb/mongo">MongoDB</a> / <a href="https://redis.io/topics/quickstart">Redis</a></p>
+  <p>Powered by <a href="https://www.typescriptlang.org/">TypeScript</a> / <a href="https://vuejs.org/">VueJS</a> / <a href="https://github.com/socketio/socket.io">Socket.io</a> / <a href="https://github.com/ethereum/ethereumj">EthereumJ</a> / <a href="https://kafka.apache.org/">Kafka</a> / <a href="https://github.com/mongodb/mongo">MongoDB</a> / <a href="https://redis.io/topics/quickstart">Redis</a></p>
 </div>
 
 ## EthVM: EthereumJ
