@@ -19,20 +19,19 @@ package org.ethereum;
 
 import org.ethereum.cli.CLIInterface;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.facade.Ethereum;
-import org.ethereum.facade.EthereumFactory;
-import org.ethereum.manager.BlockLoader;
 import org.ethereum.mine.Ethash;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.Optional;
-import java.util.stream.Stream;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.lang.Long.parseLong;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.math.NumberUtils.toInt;
 import static org.ethereum.facade.EthereumFactory.createEthereum;
 
 /**
@@ -99,12 +98,20 @@ public class Start {
 
         boolean loaded = false;
         try {
-            Stream<Path> paths = Files.isDirectory(path)
-                    ? Files.list(path).sorted()
-                    : Stream.of(path);
+            Pattern pattern = Pattern.compile("(\\D+)?(\\d+)?(.*)?");
 
-            loaded = createEthereum().getBlockLoader().loadBlocks(paths.toArray(Path[]::new));
-        } catch (IOException e) {
+            Path[] paths = Files.isDirectory(path) ?
+                    Files.list(path)
+                            .sorted(Comparator.comparingInt(filePath -> {
+                                String fileName = filePath.getFileName().toString();
+                                Matcher matcher = pattern.matcher(fileName);
+                                return matcher.matches() ? toInt(matcher.group(2)) : 0;
+                            }))
+                            .toArray(Path[]::new)
+                    : new Path[]{path};
+
+            loaded = createEthereum().getBlockLoader().loadBlocks(paths);
+        } catch (Exception e) {
             e.printStackTrace();
         }
 

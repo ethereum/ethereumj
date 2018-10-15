@@ -20,7 +20,6 @@ package org.ethereum.vm;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.vm.hook.BackwardCompatibilityVmHook;
 import org.ethereum.vm.hook.VMHook;
 import org.ethereum.vm.program.Program;
 import org.ethereum.vm.program.Stack;
@@ -34,12 +33,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.ByteUtil.toHexString;
 import static org.ethereum.vm.OpCode.*;
+import static org.ethereum.vm.VMUtils.getSizeInWords;
 
 /**
  * The Ethereum Virtual Machine (EVM) is responsible for initialization
@@ -89,7 +91,6 @@ public class VM {
     // used to reduce expensive BigInt arithmetic
     private static BigInteger MAX_MEM_SIZE = BigInteger.valueOf(Integer.MAX_VALUE);
 
-
     /* Keeps track of the number of steps performed in this VM */
     private int vmCounter = 0;
 
@@ -107,11 +108,15 @@ public class VM {
         put(SHL, BlockchainConfig::eip145);
         put(SHR, BlockchainConfig::eip145);
         put(SAR, BlockchainConfig::eip145);
+        put(CREATE2, BlockchainConfig::eip1014);
     }};
 
     private final SystemProperties config;
-    private final VMHook hook;
 
+    // deprecated field that holds VM hook. Will be removed in the future releases.
+    private static VMHook deprecatedHook = VMHook.EMPTY;
+    private final boolean hasHooks;
+    private final VMHook[] hooks;
 
     public VM() {
         this(SystemProperties.getDefault(), VMHook.EMPTY);
@@ -122,7 +127,16 @@ public class VM {
         this.config = config;
         this.vmTrace = config.vmTrace();
         this.dumpBlock = config.dumpBlock();
-        this.hook = new BackwardCompatibilityVmHook(hook);
+        this.hooks = Stream.of(deprecatedHook, hook)
+                .filter(h -> !h.isEmpty())
+                .toArray(VMHook[]::new);
+        this.hasHooks = this.hooks.length > 0;
+    }
+
+    private void onHookEvent(Consumer<VMHook> consumer) {
+        for (VMHook hook : this.hooks) {
+            consumer.accept(hook);
+        }
     }
 
     private long calcMemGas(GasCost gasCosts, long oldMemSize, BigInteger newMemSize, long copySize) {
@@ -307,7 +321,7 @@ public class VM {
                 case SHA3:
                     gasCost = gasCosts.getSHA3() + calcMemGas(gasCosts, oldMemSize, memNeeded(stack.peek(), stack.get(stack.size() - 2)), 0);
                     DataWord size = stack.get(stack.size() - 2);
-                    long chunkUsed = (size.longValueSafe() + 31) / 32;
+                    long chunkUsed = getSizeInWords(size.longValueSafe());
                     gasCost += chunkUsed * gasCosts.getSHA3_WORD();
                     break;
                 case CALLDATACOPY:
@@ -380,6 +394,12 @@ public class VM {
                     gasCost = gasCosts.getCREATE() + calcMemGas(gasCosts, oldMemSize,
                             memNeeded(stack.get(stack.size() - 2), stack.get(stack.size() - 3)), 0);
                     break;
+                case CREATE2:
+                    DataWord codeSize = stack.get(stack.size() - 3);
+                    gasCost = gasCosts.getCREATE() +
+                            calcMemGas(gasCosts, oldMemSize, memNeeded(stack.get(stack.size() - 2), codeSize), 0) +
+                            getSizeInWords(codeSize.longValueSafe()) * gasCosts.getSHA3_WORD();
+                    break;
                 case LOG0:
                 case LOG1:
                 case LOG2:
@@ -417,7 +437,9 @@ public class VM {
                 this.dumpLine(op, gasBefore, gasCost + callGas, memWords, program);
             }
 
-            hook.step(program, op);
+            if (hasHooks) {
+                onHookEvent(hook -> hook.step(program, op));
+            }
 
             // Execute operation
             switch (op) {
@@ -1272,6 +1294,25 @@ public class VM {
                     program.step();
                 }
                 break;
+                case CREATE2: {
+                    if (program.isStaticCall()) throw new Program.StaticCallModificationException();
+
+                    DataWord value = program.stackPop();
+                    DataWord inOffset = program.stackPop();
+                    DataWord inSize = program.stackPop();
+                    DataWord salt = program.stackPop();
+
+                    if (logger.isInfoEnabled())
+                        logger.info(logString, String.format("%5s", "[" + program.getPC() + "]"),
+                                String.format("%-12s", op.name()),
+                                program.getGas().value(),
+                                program.getCallDeep(), hint);
+
+                    program.createContract2(value, inOffset, inSize, salt);
+
+                    program.step();
+                }
+                break;
                 case CALL:
                 case CALLCODE:
                 case DELEGATECALL:
@@ -1389,7 +1430,9 @@ public class VM {
         if (program.byTestingSuite()) return;
 
         try {
-            hook.startPlay(program);
+            if (hasHooks) {
+                onHookEvent(hook -> hook.startPlay(program));
+            }
 
             while (!program.isStopped()) {
                 this.step(program);
@@ -1401,7 +1444,9 @@ public class VM {
             logger.error("\n !!! StackOverflowError: update your java run command with -Xss2M (-Xss8M for tests) !!!\n", soe);
             System.exit(-1);
         } finally {
-            hook.stopPlay(program);
+            if (hasHooks) {
+                onHookEvent(hook -> hook.stopPlay(program));
+            }
         }
     }
 
@@ -1412,7 +1457,7 @@ public class VM {
     @Deprecated
     public static void setVmHook(VMHook vmHook) {
         logger.warn("VM.setVmHook(VMHook vmHook) is deprecated method. Define your hook component as a Spring bean.");
-        BackwardCompatibilityVmHook.setDeprecatedHook(vmHook);
+        VM.deprecatedHook = vmHook;
     }
 
     /**

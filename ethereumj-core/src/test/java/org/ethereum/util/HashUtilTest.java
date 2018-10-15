@@ -23,6 +23,7 @@ import org.junit.Test;
 
 import org.spongycastle.util.encoders.Hex;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 public class HashUtilTest {
@@ -100,5 +101,43 @@ public class HashUtilTest {
         String expected2 = "80b85ebf641abccdd26e327c5782353137a0a0af";
         String result2 = Hex.toHexString(HashUtil.ripemd160("test2".getBytes()));
         assertEquals(expected2, result2);
+    }
+
+    @Test
+    public void testCalcSaltAddress() {
+        assertArrayEquals(Hex.decode("4D1A2e2bB4F88F0250f26Ffff098B0b30B26BF38"), HashUtil.calcSaltAddr(
+                Hex.decode("0000000000000000000000000000000000000000"),
+                Hex.decode("00"),
+                Hex.decode("0000000000000000000000000000000000000000000000000000000000000000")));
+
+        assertArrayEquals(Hex.decode("B928f69Bb1D91Cd65274e3c79d8986362984fDA3"), HashUtil.calcSaltAddr(
+                Hex.decode("deadbeef00000000000000000000000000000000"),
+                Hex.decode("00"),
+                Hex.decode("0000000000000000000000000000000000000000000000000000000000000000")));
+
+        assertArrayEquals(Hex.decode("D04116cDd17beBE565EB2422F2497E06cC1C9833"), HashUtil.calcSaltAddr(
+                Hex.decode("deadbeef00000000000000000000000000000000"),
+                Hex.decode("00"),
+                Hex.decode("000000000000000000000000feed000000000000000000000000000000000000")));
+
+        assertArrayEquals(Hex.decode("70f2b2914A2a4b783FaEFb75f459A580616Fcb5e"), HashUtil.calcSaltAddr(
+                Hex.decode("0000000000000000000000000000000000000000"),
+                Hex.decode("deadbeef"),
+                Hex.decode("0000000000000000000000000000000000000000000000000000000000000000")));
+
+        assertArrayEquals(Hex.decode("60f3f640a8508fC6a86d45DF051962668E1e8AC7"), HashUtil.calcSaltAddr(
+                Hex.decode("00000000000000000000000000000000deadbeef"),
+                Hex.decode("deadbeef"),
+                Hex.decode("00000000000000000000000000000000000000000000000000000000cafebabe")));
+
+        assertArrayEquals(Hex.decode("1d8bfDC5D46DC4f61D6b6115972536eBE6A8854C"), HashUtil.calcSaltAddr(
+                Hex.decode("00000000000000000000000000000000deadbeef"),
+                Hex.decode("deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"),
+                Hex.decode("00000000000000000000000000000000000000000000000000000000cafebabe")));
+
+        assertArrayEquals(Hex.decode("E33C0C7F7df4809055C3ebA6c09CFe4BaF1BD9e0"), HashUtil.calcSaltAddr(
+                Hex.decode("0000000000000000000000000000000000000000"),
+                Hex.decode(""),
+                Hex.decode("0000000000000000000000000000000000000000000000000000000000000000")));
     }
 }

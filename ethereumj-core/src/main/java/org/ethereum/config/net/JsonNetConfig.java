@@ -104,6 +104,20 @@ public class JsonNetConfig extends BaseNetConfig {
                 }
                 candidates.add(lastCandidate);
             }
+            if (config.constantinopleBlock != null) {
+                if (config.chainId != null) {
+                    final int chainId = config.chainId;
+                    lastCandidate = Pair.of(config.constantinopleBlock, new ConstantinopleConfig(lastCandidate.getRight()) {
+                        @Override
+                        public Integer getChainId() {
+                            return chainId;
+                        }
+                    });
+                } else {
+                    lastCandidate = Pair.of(config.constantinopleBlock, new ConstantinopleConfig(lastCandidate.getRight()));
+                }
+                candidates.add(lastCandidate);
+            }
         }
 
         {

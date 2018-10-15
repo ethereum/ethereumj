@@ -19,6 +19,7 @@ package org.ethereum.config.blockchain;
 
 import org.ethereum.config.Constants;
 import org.ethereum.core.Transaction;
+import org.ethereum.util.blockchain.EtherUtil;
 
 import java.math.BigInteger;
 
@@ -28,7 +29,7 @@ import java.math.BigInteger;
 public class FrontierConfig extends OlympicConfig {
 
     public static class FrontierConstants extends Constants {
-        private static final BigInteger BLOCK_REWARD = new BigInteger("5000000000000000000");
+        private static final BigInteger BLOCK_REWARD = EtherUtil.convert(5, EtherUtil.Unit.ETHER);
 
         @Override
         public int getDURATION_LIMIT() {

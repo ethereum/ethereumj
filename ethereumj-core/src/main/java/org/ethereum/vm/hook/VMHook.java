@@ -34,6 +34,14 @@ public interface VMHook {
     default void stopPlay(Program program) {
     }
 
+    default boolean isEmpty() {
+        return false;
+    }
+
     VMHook EMPTY = new VMHook() {
+        @Override
+        public boolean isEmpty() {
+            return true;
+        }
     };
 }
