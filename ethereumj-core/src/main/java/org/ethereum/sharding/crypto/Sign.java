@@ -9,10 +9,19 @@ import java.util.Objects;
  */
 public interface Sign {
 
+    /**
+     * Sign the message
+     */
     Signature sign(byte[] msg, byte[] privateKey);
 
+    /**
+     * Verifies whether signature is made by signer with publicKey
+     */
     boolean verify(Signature signature, byte[] publicKey);
 
+    /**
+     * Aggregates several signatures in one
+     */
     Signature aggSigns(Signature[] signatures);
 
     class Signature {

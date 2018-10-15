@@ -24,7 +24,6 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
 import java.util.Arrays;
-import java.util.BitSet;
 
 import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
 import static org.ethereum.util.ByteUtil.byteArrayToLong;

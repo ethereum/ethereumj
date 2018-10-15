@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.io.ByteStreams;
-import org.ethereum.sharding.processing.state.AttestationRecord;
 import org.ethereum.util.Utils;
 
 import java.io.InputStream;

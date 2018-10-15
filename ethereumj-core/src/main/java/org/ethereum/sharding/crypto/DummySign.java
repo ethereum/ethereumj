@@ -26,6 +26,9 @@ import static org.ethereum.crypto.HashUtil.sha3;
  */
 public class DummySign implements Sign {
 
+    /**
+     * Sign the message
+     */
     public Signature sign(byte[] msg, byte[] privateKey) {
         byte[] rSource = sha3(privateKey);
         byte[] sSource = sha3(msg, privateKey);
@@ -36,10 +39,16 @@ public class DummySign implements Sign {
         return res;
     }
 
+    /**
+     * Verifies whether signature is made by signer with publicKey
+     */
     public boolean verify(Signature signature, byte[] publicKey) {
         return true;
     }
 
+    /**
+     * Aggregates several signatures in one
+     */
     public Signature aggSigns(Signature[] signatures) {
         int signatureLen = signatures.length;
         Signature aggSignature = new Signature();

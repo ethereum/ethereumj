@@ -22,8 +22,6 @@ import java.util.BitSet;
 import java.util.List;
 
 /**
- * Bitfield utility methods
- *
  * Bitfield is bit array where every bit represents status of
  * attester with corresponding index
  */
