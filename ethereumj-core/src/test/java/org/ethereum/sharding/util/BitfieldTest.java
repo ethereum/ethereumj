@@ -31,16 +31,16 @@ public class BitfieldTest {
 
     @Test
     public void testSize() {
-        BitSet bitfield = Bitfield.createEmpty(13);
-        assertEquals(64, bitfield.size()); // 64 is minimum size for BitSet
+        Bitfield bitfield = Bitfield.createEmpty(13);
+        assertEquals(16, bitfield.size());
 
-        BitSet bitfield2 = Bitfield.createEmpty(113);
-        assertEquals(128, bitfield2.size()); // incremented by long words, which is 64 bits
+        Bitfield bitfield2 = Bitfield.createEmpty(113);
+        assertEquals(120, bitfield2.size());
     }
 
     @Test
     public void testBasics() {
-        BitSet bitfield = Bitfield.createEmpty(35);
+        Bitfield bitfield = Bitfield.createEmpty(35);
         assertEquals(0, Bitfield.calcVotes(bitfield));
 
         bitfield = Bitfield.markVote(bitfield, 32);
@@ -62,12 +62,12 @@ public class BitfieldTest {
 
     @Test
     public void testSerialize() {
-        BitSet bitfield = Bitfield.createEmpty(125);
+        Bitfield bitfield = Bitfield.createEmpty(125);
         bitfield = Bitfield.markVote(bitfield, 124);
         bitfield = Bitfield.markVote(bitfield, 116);
-        byte[] serialized = bitfield.toByteArray();
+        byte[] serialized = bitfield.getData();
 
-        BitSet restored = BitSet.valueOf(serialized);
+        Bitfield restored = new Bitfield(serialized);
         assertTrue(Bitfield.hasVoted(restored, 124));
         assertTrue(Bitfield.hasVoted(restored, 116));
         assertEquals(2, Bitfield.calcVotes(restored));

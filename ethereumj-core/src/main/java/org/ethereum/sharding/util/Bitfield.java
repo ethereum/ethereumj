@@ -17,6 +17,7 @@
  */
 package org.ethereum.sharding.util;
 
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
 
@@ -28,13 +29,35 @@ import java.util.List;
  */
 public class Bitfield {
 
+    private final BitSet payload;
+    private final int size; // in Bits
+
+    private Bitfield(int size) {
+        this.size = calcLength(size) * Byte.SIZE;
+        this.payload = new BitSet(size);
+    }
+
+    public Bitfield(byte[] data) {
+        this.size = data.length * Byte.SIZE;
+        this.payload = BitSet.valueOf(data);
+    }
+
+    /**
+     * Calculates attesters bitfield length
+     * @param num  Number of attesters
+     * @return  Bitfield length in bytes
+     */
+    private static int calcLength(int num) {
+        return (num + 7) / Byte.SIZE;
+    }
+
     /**
      * Creates empty bitfield for estimated number of attesters
      * @param validatorsCount   Number of attesters
      * @return  empty bitfield with correct length
      */
-    public static BitSet createEmpty(int validatorsCount) {
-        return new BitSet(validatorsCount);
+    public static Bitfield createEmpty(int validatorsCount) {
+        return new Bitfield(validatorsCount);
     }
 
     /**
@@ -45,9 +68,9 @@ public class Bitfield {
      * @param index     Index number of attester
      * @return  bitfield with vote in place
      */
-    public static BitSet markVote(final BitSet bitfield, int index) {
-        BitSet newBitfield = (BitSet) bitfield.clone();
-        newBitfield.set(index);
+    public static Bitfield markVote(final Bitfield bitfield, int index) {
+        Bitfield newBitfield = bitfield.clone();
+        newBitfield.payload.set(index);
         return newBitfield;
     }
 
@@ -56,8 +79,8 @@ public class Bitfield {
      * @param bitfield  Bitfield
      * @param index     Index number of attester
      */
-    public static boolean hasVoted(BitSet bitfield, int index) {
-        return bitfield.get(index);
+    public static boolean hasVoted(Bitfield bitfield, int index) {
+        return bitfield.payload.get(index);
     }
 
     /**
@@ -65,7 +88,7 @@ public class Bitfield {
      * @param bitfield  Bitfield
      * @return  number of votes
      */
-    public static int calcVotes(BitSet bitfield) {
+    public static int calcVotes(Bitfield bitfield) {
         int votes = 0;
         for (int i = 0; i < bitfield.size(); ++i) {
             if (hasVoted(bitfield, i)) ++votes;
@@ -80,19 +103,32 @@ public class Bitfield {
      * @param bitfields  Bitfields
      * @return All bitfields aggregated using OR
      */
-    public static BitSet orBitfield(List<BitSet> bitfields) {
+    public static Bitfield orBitfield(List<Bitfield> bitfields) {
         if (bitfields.isEmpty()) return null;
 
         int bitfieldLen = bitfields.get(0).size();
-        BitSet aggBitfield = new BitSet(bitfieldLen);
+        Bitfield aggBitfield = new Bitfield(bitfieldLen);
         for (int i = 0; i < bitfieldLen; ++i) {
-            for (BitSet bitfield : bitfields) {
-                if (aggBitfield.get(i) | bitfield.get(i)) {
-                    aggBitfield.set(i);
+            for (Bitfield bitfield : bitfields) {
+                if (aggBitfield.payload.get(i) | bitfield.payload.get(i)) {
+                    aggBitfield.payload.set(i);
                 }
             }
         }
 
         return aggBitfield;
     }
+
+    public int size() {
+        return size;
+    }
+
+    public byte[] getData() {
+        return Arrays.copyOf(payload.toByteArray(), size * Byte.SIZE);
+    }
+
+    public Bitfield clone() {
+        return new Bitfield(getData());
+    }
+
 }

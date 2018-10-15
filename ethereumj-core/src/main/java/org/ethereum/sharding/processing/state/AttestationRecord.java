@@ -18,6 +18,7 @@
 package org.ethereum.sharding.processing.state;
 
 import org.ethereum.sharding.crypto.Sign;
+import org.ethereum.sharding.util.Bitfield;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
@@ -47,7 +48,7 @@ public class AttestationRecord {
     // Block hash in the shard that we are attesting to
     private final byte[] shardBlockHash;
     // Who is participating
-    private final BitSet attesterBitfield;
+    private final Bitfield attesterBitfield;
     // Last justified block
     private final long justifiedSlot;
     private final byte[] justifiedBlockHash;
@@ -55,7 +56,7 @@ public class AttestationRecord {
     private final Sign.Signature aggregateSig;
 
     public AttestationRecord(long slot, int shardId, byte[][] obliqueParentHashes, byte[] shardBlockHash,
-                             BitSet attesterBitfield, long justifiedSlot, byte[] justifiedBlockHash,
+                             Bitfield attesterBitfield, long justifiedSlot, byte[] justifiedBlockHash,
                              Sign.Signature aggregateSig) {
         this.slot = slot;
         this.shardId = shardId;
@@ -79,7 +80,7 @@ public class AttestationRecord {
             this.obliqueParentHashes[i] = hashesList.get(i).getRLPData();
 
         this.shardBlockHash = list.get(3).getRLPData();
-        this.attesterBitfield = BitSet.valueOf(list.get(4).getRLPData());
+        this.attesterBitfield = new Bitfield(list.get(4).getRLPData());
         this.justifiedSlot = byteArrayToLong(list.get(5).getRLPData());
         this.justifiedBlockHash = list.get(6).getRLPData();
 
@@ -105,7 +106,7 @@ public class AttestationRecord {
         return shardBlockHash;
     }
 
-    public BitSet getAttesterBitfield() {
+    public Bitfield getAttesterBitfield() {
         return attesterBitfield;
     }
 
@@ -130,7 +131,7 @@ public class AttestationRecord {
                 intToBytesNoLeadZeroes(shardId),
                 RLP.wrapList(obliqueParentHashes),
                 shardBlockHash,
-                attesterBitfield.toByteArray(),
+                attesterBitfield.getData(),
                 longToBytesNoLeadZeroes(justifiedSlot),
                 justifiedBlockHash,
                 RLP.wrapList(encodedAggSig));
