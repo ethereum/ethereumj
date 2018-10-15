@@ -87,7 +87,7 @@ import static org.ethereum.util.ByteUtil.toHexString;
  * <li>Check that the proof of work on the block is valid.</li>
  * <li>Let S[0] be the STATE_ROOT of the previous block.</li>
  * <li>Let TX be the block's transaction list, with n transactions.
- * For all in in 0...n-1, set S[i+1] = APPLY(S[i],TX[i]).
+ * For all in 0...n-1, set S[i+1] = APPLY(S[i],TX[i]).
  * If any applications returns an error, or if the total gas consumed in the block
  * up until this point exceeds the GASLIMIT, return an error.</li>
  * <li>Let S_FINAL be S[n], but adding the block reward paid to the miner.</li>
@@ -107,7 +107,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private static final Logger stateLogger = LoggerFactory.getLogger("state");
 
     // to avoid using minGasPrice=0 from Genesis for the wallet
-    private static final long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
+    // private static final long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
     private static final int MAGIC_REWARD_OFFSET = 8;
     public static final byte[] EMPTY_LIST_HASH = sha3(RLP.encodeList(new byte[0]));
 
