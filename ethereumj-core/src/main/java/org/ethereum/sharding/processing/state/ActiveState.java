@@ -37,6 +37,8 @@ import static org.ethereum.util.ByteUtil.toHexString;
 public class ActiveState {
     // Attestations that have not yet been processed
     private final List<AttestationRecord> pendingAttestations;
+    // Special objects that have not yet been processed
+    private final List<SpecialRecord> pendingSpecials;
     // Most recent 2 * CYCLE_LENGTH block hashes, older to newer
     private final List<byte[]> recentBlockHashes;
     // RANDAO state
@@ -45,8 +47,10 @@ public class ActiveState {
     // TODO: Add pending_specials
 
 
-    public ActiveState(List<AttestationRecord> pendingAttestations, List<byte[]> recentBlockHashes, byte[] randaoMix) {
+    public ActiveState(List<AttestationRecord> pendingAttestations, List<SpecialRecord> pendingSpecials,
+                       List<byte[]> recentBlockHashes, byte[] randaoMix) {
         this.pendingAttestations = pendingAttestations;
+        this.pendingSpecials = pendingSpecials;
         this.recentBlockHashes = recentBlockHashes;
         this.randaoMix = randaoMix;
     }
@@ -57,12 +61,13 @@ public class ActiveState {
      */
     public static ActiveState createEmpty() {
         List<AttestationRecord> pendingAttestations = new ArrayList<>();
+        List<SpecialRecord> pendingSpecials = new ArrayList<>();
         List<byte[]> recentBlockHashes = new ArrayList<>();
         for (int i = 0; i < (CYCLE_LENGTH * 2); ++i) {
             recentBlockHashes.add(new byte[32]);
         }
 
-        return new ActiveState(pendingAttestations, recentBlockHashes, new byte[32]);
+        return new ActiveState(pendingAttestations, pendingSpecials, recentBlockHashes, new byte[32]);
     }
 
     public ActiveState(byte[] encoded) {
@@ -75,18 +80,29 @@ public class ActiveState {
                 pendingAttestations.add(new AttestationRecord(attestationRlp.getRLPData()));
         }
 
-        this.recentBlockHashes = new ArrayList<>();
+        this.pendingSpecials = new ArrayList<>();
         if (!isSingleZero(list.get(1).getRLPData())) {
-            RLPList hashesList = RLP.unwrapList(list.get(1).getRLPData());
+            RLPList specialsList = RLP.unwrapList(list.get(1).getRLPData());
+            for (RLPElement specialRlp : specialsList)
+                pendingSpecials.add(new SpecialRecord(specialRlp.getRLPData()));
+        }
+
+        this.recentBlockHashes = new ArrayList<>();
+        if (!isSingleZero(list.get(2).getRLPData())) {
+            RLPList hashesList = RLP.unwrapList(list.get(2).getRLPData());
             for (RLPElement hashRlp : hashesList)
                 recentBlockHashes.add(hashRlp.getRLPData());
         }
 
-        this.randaoMix = list.get(2).getRLPData();
+        this.randaoMix = list.get(3).getRLPData();
     }
 
     public List<AttestationRecord> getPendingAttestations() {
         return pendingAttestations;
+    }
+
+    public List<SpecialRecord> getPendingSpecials() {
+        return pendingSpecials;
     }
 
     public List<byte[]> getRecentBlockHashes() {
@@ -102,12 +118,17 @@ public class ActiveState {
         for (int i = 0; i < pendingAttestations.size(); i++)
             encodedAttestations[i] = pendingAttestations.get(i).getEncoded();
 
+        byte[][] encodedSpecials = new byte[pendingSpecials.size()][];
+        for (int i = 0; i < pendingSpecials.size(); i++)
+            encodedSpecials[i] = pendingSpecials.get(i).getEncoded();
+
         byte[][] encodedHashes = new byte[recentBlockHashes.size()][];
         for (int i = 0; i < recentBlockHashes.size(); i++)
             encodedHashes[i] = RLP.encodeElement(recentBlockHashes.get(i));
 
         return RLP.wrapList(
                 pendingAttestations.size() > 0 ? RLP.wrapList(encodedAttestations) : ByteUtil.ZERO_BYTE_ARRAY,
+                pendingSpecials.size() > 0 ? RLP.wrapList(encodedSpecials) : ByteUtil.ZERO_BYTE_ARRAY,
                 recentBlockHashes.size() > 0 ? RLP.wrapList(encodedHashes) : ByteUtil.ZERO_BYTE_ARRAY,
                 RLP.encodeElement(randaoMix)
         );
@@ -121,6 +142,7 @@ public class ActiveState {
     public String toString() {
         StringBuilder builder = new StringBuilder().append("ActiveState{")
                 .append("pendingAttestations=[").append(pendingAttestations.size()).append(" item(s)]")
+                .append("pendingSpecials=[").append(pendingSpecials.size()).append(" item(s)]")
                 .append(", recentBlockHashes=[...");
 
         for (int i = Math.max(0, recentBlockHashes.size() - 3); i < recentBlockHashes.size(); ++i) {
