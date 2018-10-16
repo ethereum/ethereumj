@@ -30,7 +30,7 @@ import org.ethereum.sharding.util.Randao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * Default implementation of {@link BeaconProposer}.
@@ -79,7 +79,7 @@ public class BeaconProposerImpl implements BeaconProposer {
     @Override
     public Beacon createNewBlock(Input in, byte[] pubKey) {
         Beacon block = new Beacon(in.parent.getHash(), randaoReveal(in.state, pubKey), in.mainChainRef,
-                HashUtil.EMPTY_DATA_HASH, in.slotNumber, new ArrayList<>());
+                HashUtil.EMPTY_DATA_HASH, in.slotNumber, Collections.emptyList());
         BeaconState newState = stateTransition.applyBlock(block, in.state);
         block.setStateHash(newState.getHash());
         logger.info("New block created {}", block);
