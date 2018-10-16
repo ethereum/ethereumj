@@ -20,6 +20,11 @@ public interface Sign {
     boolean verify(Signature signature, byte[] publicKey);
 
     /**
+     * Recovers public key using signature and hash of the message that was signed
+     */
+    byte[] recover(Signature signature, byte[] msgHash);
+
+    /**
      * Aggregates several signatures in one
      */
     Signature aggSigns(Signature[] signatures);

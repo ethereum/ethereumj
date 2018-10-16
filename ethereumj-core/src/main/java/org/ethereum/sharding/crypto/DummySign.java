@@ -29,6 +29,7 @@ public class DummySign implements Sign {
     /**
      * Sign the message
      */
+    @Override
     public Signature sign(byte[] msg, byte[] privateKey) {
         byte[] rSource = sha3(privateKey);
         byte[] sSource = sha3(msg, privateKey);
@@ -42,13 +43,23 @@ public class DummySign implements Sign {
     /**
      * Verifies whether signature is made by signer with publicKey
      */
+    @Override
     public boolean verify(Signature signature, byte[] publicKey) {
         return true;
     }
 
     /**
+     * Recovers public key using signature and hash of the message that was signed
+     */
+    @Override
+    public byte[] recover(Signature signature, byte[] msgHash) {
+        return new byte[32];
+    }
+
+    /**
      * Aggregates several signatures in one
      */
+    @Override
     public Signature aggSigns(Signature[] signatures) {
         int signatureLen = signatures.length;
         Signature aggSignature = new Signature();
