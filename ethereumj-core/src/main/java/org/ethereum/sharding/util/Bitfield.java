@@ -24,6 +24,9 @@ import java.util.List;
 /**
  * Bitfield is bit array where every bit represents status of
  * attester with corresponding index
+ *
+ * All methods that could change payload are cloning source,
+ * keeping instances of Bitfield immutable.
  */
 public class Bitfield {
 
@@ -45,7 +48,7 @@ public class Bitfield {
      * @param num  Number of attesters
      * @return  Bitfield length in bytes
      */
-    private static int calcLength(int num) {
+    private int calcLength(int num) {
         return (num + 7) / Byte.SIZE;
     }
 
@@ -62,34 +65,31 @@ public class Bitfield {
      * Modifies bitfield to represent attester's vote
      * Should place its bit on the right place
      * Doesn't modify original bitfield
-     * @param bitfield  Original bitfield
      * @param index     Index number of attester
      * @return  bitfield with vote in place
      */
-    public static Bitfield markVote(final Bitfield bitfield, int index) {
-        Bitfield newBitfield = bitfield.clone();
+    public Bitfield markVote(int index) {
+        Bitfield newBitfield = this.clone();
         newBitfield.payload.set(index);
         return newBitfield;
     }
 
     /**
      * Checks whether validator with provided index did his vote
-     * @param bitfield  Bitfield
      * @param index     Index number of attester
      */
-    public static boolean hasVoted(Bitfield bitfield, int index) {
-        return bitfield.payload.get(index);
+    public boolean hasVoted(int index) {
+        return payload.get(index);
     }
 
     /**
      * Calculate number of votes in provided bitfield
-     * @param bitfield  Bitfield
      * @return  number of votes
      */
-    public static int calcVotes(Bitfield bitfield) {
+    public int calcVotes() {
         int votes = 0;
-        for (int i = 0; i < bitfield.size(); ++i) {
-            if (hasVoted(bitfield, i)) ++votes;
+        for (int i = 0; i < size(); ++i) {
+            if (hasVoted(i)) ++votes;
         }
 
         return votes;

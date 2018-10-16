@@ -56,7 +56,7 @@ public class BeaconAttesterImpl implements BeaconAttester {
                 in.index.getShardId(),
                 Collections.emptyList(),
                 in.block.getHash(),
-                Bitfield.markVote(Bitfield.createEmpty(in.index.getCommitteeSize()), in.index.getValidatorIdx()),
+                Bitfield.createEmpty(in.index.getCommitteeSize()).markVote(in.index.getValidatorIdx()),
                 lastJustified,
                 store.getCanonicalByNumber(lastJustified) == null ? new byte[32] : store.getCanonicalByNumber(lastJustified).getHash(),
                 sign.aggSigns(new Sign.Signature[]{sign.sign(in.block.getEncoded(), pubKey)})

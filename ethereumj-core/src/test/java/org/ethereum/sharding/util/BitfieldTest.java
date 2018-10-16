@@ -40,35 +40,35 @@ public class BitfieldTest {
     @Test
     public void testBasics() {
         Bitfield bitfield = Bitfield.createEmpty(35);
-        assertEquals(0, Bitfield.calcVotes(bitfield));
+        assertEquals(0, bitfield.calcVotes());
 
-        bitfield = Bitfield.markVote(bitfield, 32);
-        assertEquals(1, Bitfield.calcVotes(bitfield));
+        bitfield = bitfield.markVote(32);
+        assertEquals(1, bitfield.calcVotes());
         for (int i = 0; i < 35; ++i) {
             if (i != 32) {
-                assertFalse(Bitfield.hasVoted(bitfield, i));
+                assertFalse(bitfield.hasVoted(i));
             } else {
-                assertTrue(Bitfield.hasVoted(bitfield, i));
+                assertTrue(bitfield.hasVoted(i));
             }
         }
 
-        bitfield = Bitfield.markVote(bitfield, 0);
-        assertEquals(2, Bitfield.calcVotes(bitfield));
-        assertTrue(Bitfield.hasVoted(bitfield, 0));
-        assertFalse(Bitfield.hasVoted(bitfield, 1));
-        assertTrue(Bitfield.hasVoted(bitfield, 32));
+        bitfield = bitfield.markVote(0);
+        assertEquals(2, bitfield.calcVotes());
+        assertTrue(bitfield.hasVoted(0));
+        assertFalse(bitfield.hasVoted(1));
+        assertTrue(bitfield.hasVoted(32));
     }
 
     @Test
     public void testSerialize() {
         Bitfield bitfield = Bitfield.createEmpty(125);
-        bitfield = Bitfield.markVote(bitfield, 124);
-        bitfield = Bitfield.markVote(bitfield, 116);
+        bitfield = bitfield.markVote(124);
+        bitfield = bitfield.markVote(116);
         byte[] serialized = bitfield.getData();
 
         Bitfield restored = new Bitfield(serialized);
-        assertTrue(Bitfield.hasVoted(restored, 124));
-        assertTrue(Bitfield.hasVoted(restored, 116));
-        assertEquals(2, Bitfield.calcVotes(restored));
+        assertTrue(restored.hasVoted(124));
+        assertTrue(restored.hasVoted(116));
+        assertEquals(2, restored.calcVotes());
     }
 }
