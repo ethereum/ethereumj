@@ -1,7 +1,7 @@
 package io.enkrypt.kafka.listener;
 
 import io.enkrypt.kafka.Kafka;
-import io.enkrypt.kafka.models.Account;
+import io.enkrypt.kafka.db.BlockSummaryStore;
 
 import java.util.List;
 import java.util.Map;
@@ -14,17 +14,18 @@ import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
 
 public class KafkaEthereumListener implements EthereumListener {
 
-  private static final int NO_BLOCK_PARTITIONS = 10;
-
   private final Kafka kafka;
   private final Blockchain blockchain;
+  private final BlockSummaryStore blockSummaryStore;
 
-  public KafkaEthereumListener(Kafka kafka, Blockchain blockchain) {
+  public KafkaEthereumListener(Kafka kafka, Blockchain blockchain, BlockSummaryStore blockSummaryStore) {
     this.kafka = kafka;
     this.blockchain = blockchain;
+    this.blockSummaryStore = blockSummaryStore;
     init();
   }
 
@@ -129,8 +130,29 @@ public class KafkaEthereumListener implements EthereumListener {
 
     final long number = blockSummary.getBlock().getNumber();
     final byte[] key = ByteUtil.longToBytes(number);
+    final byte[] value = blockSummary.setCanonical(true).getEncoded();
 
-    kafka.send(Kafka.Producer.BLOCKS, key, blockSummary.getEncoded());
+    // retrieve previous version before persisting
+    final BlockSummary prevSummary = blockSummaryStore.get(number);
+
+    // locally persist first before sending to kafka. Can be used later for a replay
+    blockSummaryStore.put(key, value);
+
+    if(prevSummary != null) {
+      final Block prevBlock = prevSummary.getBlock();
+      Block currentBlock = blockSummary.getBlock();
+
+      if(!FastByteComparisons.equal(prevBlock.getHash(), currentBlock.getHash())) {
+
+        // we are re-publishing a previously seen block number with a new block
+        // chain re-org is happening
+
+        // re-send the prev version of the summary but mark it as no longer canonical
+        kafka.send(Kafka.Producer.BLOCKS, key, prevSummary.setCanonical(false).getEncoded());
+      }
+    }
+
+    kafka.send(Kafka.Producer.BLOCKS, key, value);
 
     // Send account balances
     for (TransactionExecutionSummary summary : blockSummary.getSummaries()) {

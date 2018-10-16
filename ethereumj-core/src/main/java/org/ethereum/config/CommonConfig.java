@@ -190,6 +190,7 @@ public class CommonConfig {
 
     @Bean
     @Scope("prototype")
+    @Primary
     protected RocksDbDataSource rocksDbDataSource() {
         return new RocksDbDataSource();
     }

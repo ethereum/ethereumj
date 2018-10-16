@@ -34,6 +34,7 @@ import static org.ethereum.util.ByteUtil.toHexString;
 public class BlockSummary {
 
   private final Block block;
+  private boolean canonical;
   private final Map<byte[], BigInteger> rewards;
   private final List<TransactionReceipt> receipts;
   private final List<TransactionExecutionSummary> summaries;
@@ -44,8 +45,9 @@ public class BlockSummary {
     RLPList rlpList = RLP.unwrapList(rlp);
 
     this.block = new Block(rlpList.get(0).getRLPData());
-    this.rewards = decodeRewards(RLP.unwrapList(rlpList.get(1).getRLPData()));
-    this.summaries = decodeSummaries(RLP.unwrapList(rlpList.get(2).getRLPData()));
+    this.canonical = RLP.decodeInt(rlpList.get(1).getRLPData(), 0) == 1;
+    this.rewards = decodeRewards(RLP.unwrapList(rlpList.get(2).getRLPData()));
+    this.summaries = decodeSummaries(RLP.unwrapList(rlpList.get(3).getRLPData()));
     this.receipts = new ArrayList<>();
 
     Map<String, TransactionReceipt> receiptByTxHash = decodeReceipts(RLP.unwrapList(rlpList.get(3).getRLPData()));
@@ -69,6 +71,15 @@ public class BlockSummary {
 
   public Block getBlock() {
     return block;
+  }
+
+  public BlockSummary setCanonical(boolean canonical) {
+    this.canonical = canonical;
+    return this;
+  }
+
+  public boolean isCanonical() {
+    return canonical;
   }
 
   public List<TransactionReceipt> getReceipts() {

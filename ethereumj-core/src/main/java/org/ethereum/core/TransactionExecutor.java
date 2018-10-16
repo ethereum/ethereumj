@@ -17,8 +17,6 @@
  */
 package org.ethereum.core;
 
-import io.enkrypt.kafka.models.Account;
-
 import java.util.*;
 
 import org.apache.commons.lang3.tuple.Pair;

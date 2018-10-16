@@ -11,7 +11,8 @@ public interface Kafka {
     BLOCKS("blocks"),
     TRANSACTIONS("transactions"),
     PENDING_TRANSACTIONS("pending-transactions"),
-    ACCOUNT_STATE("account-state");
+    ACCOUNT_STATE("account-state"),
+    TEST("test");
 
     public String topic;
 

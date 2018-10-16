@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 @Configuration
-@Import(KafkaConfig.class)
+@Import(KafkaEthereumConfig.class)
 public class PrivateNetKafkaConfig {
 
   @Bean
