@@ -26,6 +26,8 @@ import org.ethereum.sharding.crypto.Sign;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
+
 /**
  * Default implementation of {@link BeaconAttester}.
  */
@@ -52,7 +54,7 @@ public class BeaconAttesterImpl implements BeaconAttester {
         AttestationRecord attestationRecord = new AttestationRecord(
                 in.slotNumber,
                 in.index.getShardId(),
-                new byte[0][0],
+                Collections.emptyList(),
                 in.block.getHash(),
                 Bitfield.markVote(Bitfield.createEmpty(in.index.getCommitteeSize()), in.index.getValidatorIdx()),
                 lastJustified,

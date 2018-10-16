@@ -21,9 +21,12 @@ import org.ethereum.sharding.crypto.Sign;
 import org.ethereum.sharding.util.Bitfield;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
 import static org.ethereum.util.ByteUtil.byteArrayToLong;
@@ -43,7 +46,7 @@ public class AttestationRecord {
     private final int shardId;
     // List of block hashes that this signature is signing over that
     // are NOT part of the current chain, in order of oldest to newest
-    private final byte[][] obliqueParentHashes;
+    private final List<byte[]> obliqueParentHashes;
     // Block hash in the shard that we are attesting to
     private final byte[] shardBlockHash;
     // Who is participating
@@ -54,7 +57,7 @@ public class AttestationRecord {
     // The actual signature
     private final Sign.Signature aggregateSig;
 
-    public AttestationRecord(long slot, int shardId, byte[][] obliqueParentHashes, byte[] shardBlockHash,
+    public AttestationRecord(long slot, int shardId, List<byte[]> obliqueParentHashes, byte[] shardBlockHash,
                              Bitfield attesterBitfield, long justifiedSlot, byte[] justifiedBlockHash,
                              Sign.Signature aggregateSig) {
         this.slot = slot;
@@ -74,9 +77,9 @@ public class AttestationRecord {
         this.shardId = bytesToBigInteger(list.get(1).getRLPData()).shortValue();
 
         RLPList hashesList = RLP.unwrapList(list.get(2).getRLPData());
-        this.obliqueParentHashes = new byte[hashesList.size()][];
-        for (int i = 0; i < hashesList.size(); i++)
-            this.obliqueParentHashes[i] = hashesList.get(i).getRLPData();
+        this.obliqueParentHashes = new ArrayList<>(hashesList.size());
+        for (RLPElement hashRlp : hashesList)
+            this.obliqueParentHashes.add(hashRlp.getRLPData());
 
         this.shardBlockHash = list.get(3).getRLPData();
         this.attesterBitfield = new Bitfield(list.get(4).getRLPData());
@@ -97,7 +100,7 @@ public class AttestationRecord {
         return shardId;
     }
 
-    public byte[][] getObliqueParentHashes() {
+    public List<byte[]> getObliqueParentHashes() {
         return obliqueParentHashes;
     }
 
@@ -126,9 +129,13 @@ public class AttestationRecord {
         encodedAggSig[0] = bigIntegerToBytes(aggregateSig.r);
         encodedAggSig[1] = bigIntegerToBytes(aggregateSig.s);
 
+        byte[][] encodedHashes = new byte[obliqueParentHashes.size()][];
+        for (int i = 0; i < obliqueParentHashes.size(); i++)
+            encodedHashes[i] = RLP.encodeElement(obliqueParentHashes.get(i));
+
         return RLP.wrapList(longToBytesNoLeadZeroes(slot),
                 intToBytesNoLeadZeroes(shardId),
-                RLP.wrapList(obliqueParentHashes),
+                obliqueParentHashes.size() > 0 ? RLP.wrapList(encodedHashes) : ByteUtil.ZERO_BYTE_ARRAY,
                 shardBlockHash,
                 attesterBitfield.getData(),
                 longToBytesNoLeadZeroes(justifiedSlot),
@@ -141,14 +148,7 @@ public class AttestationRecord {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AttestationRecord that = (AttestationRecord) o;
-        return slot == that.slot &&
-                shardId == that.shardId &&
-                attesterBitfield == that.attesterBitfield &&
-                justifiedSlot == that.justifiedSlot &&
-                Arrays.equals(obliqueParentHashes, that.obliqueParentHashes) &&
-                Arrays.equals(shardBlockHash, that.shardBlockHash) &&
-                Arrays.equals(justifiedBlockHash, that.justifiedBlockHash) &&
-                aggregateSig == that.aggregateSig;
+        return Arrays.equals(this.getEncoded(), that.getEncoded());
     }
 
     @Override
@@ -157,7 +157,7 @@ public class AttestationRecord {
                 .append("AttestationRecord{")
                 .append("slot=").append(slot)
                 .append(", shardId=").append(shardId)
-                .append(", obliqueParentHashes=[").append(obliqueParentHashes.length).append(" item(s)]")
+                .append(", obliqueParentHashes=[").append(obliqueParentHashes.size()).append(" item(s)]")
                 .append(", shardBlockHash=").append(toHexString(shardBlockHash))
                 .append(", attesterBitfield=").append(attesterBitfield)
                 .append(", justifiedSlot=").append(justifiedSlot)
