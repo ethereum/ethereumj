@@ -1023,6 +1023,7 @@ public class VMMemoryOpTest extends VMBaseOpTest {
         while (!program.isStopped())
             vm.step(program);
         invoke.getRepository().commit();
+        invoke.setOrigRepository(invoke.getRepository());
     }
 
     @Test // SSTORE EIP1283

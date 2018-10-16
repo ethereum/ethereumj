@@ -57,10 +57,20 @@ public class BaseNetConfig implements BlockchainNetConfig {
 
     @Override
     public String toString() {
-        return "BaseNetConfig{" +
-                "blockNumbers=" + Arrays.toString(Arrays.copyOfRange(blockNumbers, 0, count)) +
-                ", configs=" + Arrays.toString(Arrays.copyOfRange(configs, 0, count)) +
-                ", count=" + count +
-                '}';
+        StringBuilder res = new StringBuilder()
+                .append("BaseNetConfig{")
+                .append("blockNumbers= ");
+
+        for (int i = 0; i < count; ++i) {
+            res.append("#").append(blockNumbers[i]).append(" => ");
+            res.append(configs[i]);
+            if (i != count - 1) {
+                res.append(", ");
+            }
+        }
+
+        res.append(" (total: ").append(count).append(")}");
+
+        return res.toString();
     }
 }
