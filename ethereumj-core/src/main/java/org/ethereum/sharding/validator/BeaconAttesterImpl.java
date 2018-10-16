@@ -26,7 +26,10 @@ import org.ethereum.sharding.crypto.Sign;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * Default implementation of {@link BeaconAttester}.
@@ -51,6 +54,10 @@ public class BeaconAttesterImpl implements BeaconAttester {
     @Override
     public AttestationRecord attestBlock(Input in, byte[] pubKey) {
         long lastJustified = in.state.getCrystallizedState().getFinality().getLastJustifiedSlot();
+        byte[] msgHash = in.block.getHash();
+        List<Sign.Signature> aggSigns = new ArrayList<>();
+        aggSigns.add(sign.sign(msgHash, new BigInteger(pubKey)));
+        Sign.Signature aggSignature = sign.aggSigns(aggSigns);
         AttestationRecord attestationRecord = new AttestationRecord(
                 in.slotNumber,
                 in.index.getShardId(),
@@ -59,7 +66,7 @@ public class BeaconAttesterImpl implements BeaconAttester {
                 Bitfield.createEmpty(in.index.getCommitteeSize()).markVote(in.index.getValidatorIdx()),
                 lastJustified,
                 store.getCanonicalByNumber(lastJustified) == null ? new byte[32] : store.getCanonicalByNumber(lastJustified).getHash(),
-                sign.aggSigns(new Sign.Signature[]{sign.sign(in.block.getEncoded(), pubKey)})
+                aggSignature
         );
 
         logger.info("Block {} attested by #{} in slot {} ", in.block, in.index.getValidatorIdx(), in.slotNumber);

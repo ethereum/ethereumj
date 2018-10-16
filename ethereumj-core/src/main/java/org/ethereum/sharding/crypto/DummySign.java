@@ -18,7 +18,9 @@
 package org.ethereum.sharding.crypto;
 
 import java.math.BigInteger;
+import java.util.List;
 
+import static org.ethereum.crypto.HashUtil.blake2b;
 import static org.ethereum.crypto.HashUtil.sha3;
 
 /**
@@ -30,9 +32,9 @@ public class DummySign implements Sign {
      * Sign the message
      */
     @Override
-    public Signature sign(byte[] msg, byte[] privateKey) {
-        byte[] rSource = sha3(privateKey);
-        byte[] sSource = sha3(msg, privateKey);
+    public Signature sign(byte[] msg, BigInteger privateKey) {
+        byte[] rSource = sha3(privateKey.toByteArray());
+        byte[] sSource = sha3(msg, privateKey.toByteArray());
         Signature res = new Signature();
         res.r = new BigInteger(rSource);
         res.s = new BigInteger(sSource);
@@ -41,37 +43,42 @@ public class DummySign implements Sign {
     }
 
     /**
-     * Verifies whether signature is made by signer with publicKey
+     * Verifies whether signature is made by signer with pubKey
      */
     @Override
-    public boolean verify(Signature signature, byte[] publicKey) {
-        return true;
+    public boolean verify(Signature signature, byte[] msg, BigInteger pubKey) {
+        byte[] rSource = sha3(pubKey.toByteArray());
+        byte[] sSource = sha3(msg, pubKey.toByteArray());
+        Signature res = new Signature();
+        res.r = new BigInteger(rSource);
+        res.s = new BigInteger(sSource);
+        return res.equals(signature);
     }
 
-    /**
-     * Recovers public key using signature and hash of the message that was signed
-     */
     @Override
-    public byte[] recover(Signature signature, byte[] msgHash) {
-        return new byte[32];
+    public BigInteger privToPub(BigInteger privKey) {
+        return privKey;
     }
 
     /**
      * Aggregates several signatures in one
      */
     @Override
-    public Signature aggSigns(Signature[] signatures) {
-        int signatureLen = signatures.length;
-        Signature aggSignature = new Signature();
-        aggSignature.r = BigInteger.ZERO;
-        aggSignature.s = BigInteger.ZERO;
-        for (int i = 0; i < signatureLen; ++i) {
-            for (Signature signature : signatures) {
-                aggSignature.r = aggSignature.r.xor(signature.r);
-                aggSignature.s = aggSignature.s.xor(signature.s);
-            }
-        }
+    public Signature aggSigns(List<Signature> signatures) {
+        if (signatures.isEmpty())
+            throw new RuntimeException("Couldn't aggregate empty list");
 
-        return aggSignature;
+        return signatures.get(0);
+    }
+
+    /**
+     * Aggregates public keys
+     */
+    @Override
+    public BigInteger aggPubs(List<BigInteger> pubKeys) {
+        if (pubKeys.isEmpty())
+            throw new RuntimeException("Couldn't aggregate empty list");
+
+        return pubKeys.get(0);
     }
 }

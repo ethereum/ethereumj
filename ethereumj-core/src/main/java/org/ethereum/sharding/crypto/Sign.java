@@ -1,6 +1,7 @@
 package org.ethereum.sharding.crypto;
 
 import java.math.BigInteger;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -12,22 +13,27 @@ public interface Sign {
     /**
      * Sign the message
      */
-    Signature sign(byte[] msg, byte[] privateKey);
+    Signature sign(byte[] msg, BigInteger privateKey);
 
     /**
      * Verifies whether signature is made by signer with publicKey
      */
-    boolean verify(Signature signature, byte[] publicKey);
+    boolean verify(Signature signature, byte[] msg, BigInteger publicKey);
 
     /**
-     * Recovers public key using signature and hash of the message that was signed
+     * Calculates public key from private
      */
-    byte[] recover(Signature signature, byte[] msgHash);
+    BigInteger privToPub(BigInteger privKey);
 
     /**
      * Aggregates several signatures in one
      */
-    Signature aggSigns(Signature[] signatures);
+    Signature aggSigns(List<Signature> signatures);
+
+    /**
+     * Aggregates public keys
+     */
+    BigInteger aggPubs(List<BigInteger> pubKeys);
 
     class Signature {
         public BigInteger r;
