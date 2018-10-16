@@ -6,7 +6,9 @@ import io.enkrypt.kafka.models.Account;
 import java.util.List;
 import java.util.Map;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
+import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
@@ -21,10 +23,12 @@ public class KafkaEthereumListener implements EthereumListener {
 
   private final Kafka kafka;
   private final Blockchain blockchain;
+  private final SystemProperties config;
 
-  public KafkaEthereumListener(Kafka kafka, Blockchain blockchain) {
+  public KafkaEthereumListener(Kafka kafka, Blockchain blockchain, SystemProperties config) {
     this.kafka = kafka;
     this.blockchain = blockchain;
+    this.config = config;
     init();
   }
 
@@ -127,18 +131,30 @@ public class KafkaEthereumListener implements EthereumListener {
 
     // Send blocks
 
-    final long number = blockSummary.getBlock().getNumber();
+    final Block block = blockSummary.getBlock();
+    final long number = block.getNumber();
     final byte[] key = ByteUtil.longToBytes(number);
 
     kafka.send(Kafka.Producer.BLOCKS, key, blockSummary.getEncoded());
 
     // Send account balances
-    for (TransactionExecutionSummary summary : blockSummary.getSummaries()) {
-      final Map<byte[], AccountState> touchedAccounts = summary.getTouchedAccounts();
-      for (Map.Entry<byte[], AccountState> entry : touchedAccounts.entrySet()) {
-        kafka.send(Kafka.Producer.ACCOUNT_STATE, entry.getKey(), entry.getValue().getEncoded());
+
+    if (!block.isGenesis()) {
+      for (TransactionExecutionSummary summary : blockSummary.getSummaries()) {
+        final Map<byte[], AccountState> touchedAccounts = summary.getTouchedAccounts();
+        for (Map.Entry<byte[], AccountState> entry : touchedAccounts.entrySet()) {
+          kafka.send(Kafka.Producer.ACCOUNT_STATE, entry.getKey(), entry.getValue().getEncoded());
+        }
+      }
+    } else {
+      final Genesis genesis = Genesis.getInstance(config);
+      for (ByteArrayWrapper k : genesis.getPremine().keySet()) {
+        final Genesis.PremineAccount premineAccount = genesis.getPremine().get(k);
+        final AccountState accountState = premineAccount.accountState;
+        kafka.send(Kafka.Producer.ACCOUNT_STATE, k.getData(), accountState.getEncoded());
       }
     }
+
   }
 
   @Override

@@ -9,14 +9,18 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.ethereum.config.CommonConfig;
+import org.ethereum.config.DefaultConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Blockchain;
+import org.ethereum.listener.CompositeEthereumListener;
+import org.ethereum.listener.EthereumListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 @Configuration
 public class KafkaConfig {
@@ -40,11 +44,11 @@ public class KafkaConfig {
     Thread.setDefaultUncaughtExceptionHandler((t, e) -> logger.error("Uncaught exception", e));
   }
 
-  @Bean()
-  public KafkaEthereumListener kafkaEthereumListener() {
-    final KafkaEthereumListener result = new KafkaEthereumListener(kafka(), blockchain);
-    commonConfig.ethereumListener().addListener(result);
-    return result;
+  @Bean @Primary
+  public CompositeEthereumListener ethereumListener() {
+    CompositeEthereumListener listener = new CompositeEthereumListener();
+    listener.addListener(new KafkaEthereumListener(kafka(), blockchain, config));
+    return listener;
   }
 
   @Bean
