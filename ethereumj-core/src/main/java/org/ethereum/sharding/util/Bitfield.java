@@ -49,7 +49,7 @@ public class Bitfield {
      * @return  Bitfield length in bytes
      */
     private int calcLength(int num) {
-        return (num + 7) / Byte.SIZE;
+        return num == 0 ? 0 : (num - 1) / Byte.SIZE + 1;
     }
 
     /**
