@@ -164,7 +164,7 @@ public class ValidatorServiceImpl implements ValidatorService {
             // proposer = committee[X % len(committee)], X = slotNumber
             // taken from the spec
             if (slotNumber % index.getCommitteeSize() == index.getArrayIdx()) {
-                this.propose(slotNumber, index.getValidatorIdx());
+                this.propose(slotNumber, index);
             } else {
                 this.attest(slotNumber, index);
             }
@@ -172,7 +172,8 @@ public class ValidatorServiceImpl implements ValidatorService {
     }
 
     @Override
-    public void propose(long slotNumber, int validatorIdx) {
+    public void propose(long slotNumber, Committee.Index index) {
+        int validatorIdx = index.getValidatorIdx();
         long delay = submit(0L, slotNumber, validatorIdx, () -> {
             BeaconProposer.Input input = new BeaconProposer.Input(slotNumber, head, mainChainRef);
             Beacon newBlock = proposer.createNewBlock(input, pubKeysMap.get(validatorIdx));

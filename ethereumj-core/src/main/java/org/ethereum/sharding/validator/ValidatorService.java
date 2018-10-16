@@ -46,7 +46,7 @@ public interface ValidatorService {
      * Submits a task to propose block with given slot number.
      * Thread safe.
      */
-    default void propose(long slotNumber, int validatorIdx) {}
+    default void propose(long slotNumber, Committee.Index index) {}
 
     /**
      * Submits a task to make an attestation in a given slot number.
