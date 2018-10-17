@@ -21,14 +21,12 @@ public class KafkaEthereumListener implements EthereumListener {
 
   private final Kafka kafka;
   private final Blockchain blockchain;
-  private final BlockSummaryStore blockSummaryStore;
   private final SystemProperties config;
 
-  public KafkaEthereumListener(Kafka kafka, Blockchain blockchain, SystemProperties config, BlockSummaryStore blockSummaryStore) {
+  public KafkaEthereumListener(Kafka kafka, Blockchain blockchain, SystemProperties config) {
     this.kafka = kafka;
     this.blockchain = blockchain;
     this.config = config;
-    this.blockSummaryStore = blockSummaryStore;
     init();
   }
 
@@ -133,9 +131,12 @@ public class KafkaEthereumListener implements EthereumListener {
 
     final Block block = blockSummary.getBlock();
     final long number = block.getNumber();
-    final byte[] key = ByteUtil.longToBytes(number);
 
-    kafka.send(Kafka.Producer.BLOCKS, key, blockSummary.getEncoded());
+    final byte[] key = ByteUtil.longToBytes(number);
+    final byte[] value = blockSummary.getEncoded();
+
+    //
+    kafka.send(Kafka.Producer.BLOCKS, key, value);
 
     // Send account balances
 

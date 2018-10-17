@@ -1,8 +1,6 @@
 package org.ethereum.core;
 
-import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
-import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
 import org.ethereum.vm.program.InternalTransaction;
 
@@ -24,6 +22,7 @@ public class BlockStatistics {
   private BigInteger avgGasPrice = BigInteger.ZERO;
   private BigInteger totalTxsFees = BigInteger.ZERO;
   private BigInteger avgTxsFees = BigInteger.ZERO;
+  private BigInteger totalDifficulty = BigInteger.ZERO;
 
   public BlockStatistics() {
   }
@@ -40,6 +39,7 @@ public class BlockStatistics {
     this.avgGasPrice = decodeBigInteger(list.get(5).getRLPData(), 0);
     this.totalTxsFees = decodeBigInteger(list.get(6).getRLPData(), 0);
     this.avgTxsFees = decodeBigInteger(list.get(7).getRLPData(), 0);
+    this.totalDifficulty = decodeBigInteger(list.get(8).getRLPData(), 0);
   }
 
   public int getTotalTxs() {
@@ -114,6 +114,15 @@ public class BlockStatistics {
     return this;
   }
 
+  public BigInteger getTotalDifficulty() {
+    return totalDifficulty;
+  }
+
+  public BlockStatistics setTotalDifficulty(BigInteger totalDifficulty) {
+    this.totalDifficulty = totalDifficulty;
+    return this;
+  }
+
   public byte[] getEncoded() {
     return encodeList(
       encodeElement(encodeInt(totalTxs)),
@@ -123,7 +132,8 @@ public class BlockStatistics {
       encodeElement(encodeBigInteger(totalGasPrice)),
       encodeElement(encodeBigInteger(avgGasPrice)),
       encodeElement(encodeBigInteger(totalTxsFees)),
-      encodeElement(encodeBigInteger(avgTxsFees))
+      encodeElement(encodeBigInteger(avgTxsFees)),
+      encodeElement(encodeBigInteger(totalDifficulty))
     );
   }
 

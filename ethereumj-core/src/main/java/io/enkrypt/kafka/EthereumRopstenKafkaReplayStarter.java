@@ -1,15 +1,15 @@
 package io.enkrypt.kafka;
 
-import io.enkrypt.kafka.config.KafkaStateReplayConfig;
+import io.enkrypt.kafka.config.RopstenKafkaStateReplayConfig;
 import io.enkrypt.kafka.replay.StateReplayer;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
 
-public class EthereumKafkaReplayStarter {
+public class EthereumRopstenKafkaReplayStarter {
 
   public static void main(String[] args) {
 
-    final AbstractApplicationContext context = new AnnotationConfigApplicationContext(KafkaStateReplayConfig.class);
+    final AbstractApplicationContext context = new AnnotationConfigApplicationContext(RopstenKafkaStateReplayConfig.class);
     context.registerShutdownHook();
 
     final StateReplayer replayer = context.getBean(StateReplayer.class);
