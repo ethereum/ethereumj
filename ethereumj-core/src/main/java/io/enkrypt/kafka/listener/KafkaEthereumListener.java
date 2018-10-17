@@ -6,7 +6,9 @@ import io.enkrypt.kafka.db.BlockSummaryStore;
 import java.util.List;
 import java.util.Map;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
+import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
@@ -14,17 +16,18 @@ import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.util.FastByteComparisons;
 
 public class KafkaEthereumListener implements EthereumListener {
 
   private final Kafka kafka;
   private final Blockchain blockchain;
   private final BlockSummaryStore blockSummaryStore;
+  private final SystemProperties config;
 
-  public KafkaEthereumListener(Kafka kafka, Blockchain blockchain, BlockSummaryStore blockSummaryStore) {
+  public KafkaEthereumListener(Kafka kafka, Blockchain blockchain, SystemProperties config, BlockSummaryStore blockSummaryStore) {
     this.kafka = kafka;
     this.blockchain = blockchain;
+    this.config = config;
     this.blockSummaryStore = blockSummaryStore;
     init();
   }
@@ -128,39 +131,30 @@ public class KafkaEthereumListener implements EthereumListener {
 
     // Send blocks
 
-    final long number = blockSummary.getBlock().getNumber();
+    final Block block = blockSummary.getBlock();
+    final long number = block.getNumber();
     final byte[] key = ByteUtil.longToBytes(number);
-    final byte[] value = blockSummary.setCanonical(true).getEncoded();
 
-    // retrieve previous version before persisting
-    final BlockSummary prevSummary = blockSummaryStore.get(number);
-
-    // locally persist first before sending to kafka. Can be used later for a replay
-    blockSummaryStore.put(key, value);
-
-    if(prevSummary != null) {
-      final Block prevBlock = prevSummary.getBlock();
-      Block currentBlock = blockSummary.getBlock();
-
-      if(!FastByteComparisons.equal(prevBlock.getHash(), currentBlock.getHash())) {
-
-        // we are re-publishing a previously seen block number with a new block
-        // chain re-org is happening
-
-        // re-send the prev version of the summary but mark it as no longer canonical
-        kafka.send(Kafka.Producer.BLOCKS, key, prevSummary.setCanonical(false).getEncoded());
-      }
-    }
-
-    kafka.send(Kafka.Producer.BLOCKS, key, value);
+    kafka.send(Kafka.Producer.BLOCKS, key, blockSummary.getEncoded());
 
     // Send account balances
-    for (TransactionExecutionSummary summary : blockSummary.getSummaries()) {
-      final Map<byte[], AccountState> touchedAccounts = summary.getTouchedAccounts();
-      for (Map.Entry<byte[], AccountState> entry : touchedAccounts.entrySet()) {
-        kafka.send(Kafka.Producer.ACCOUNT_STATE, entry.getKey(), entry.getValue().getEncoded());
+
+    if (!block.isGenesis()) {
+      for (TransactionExecutionSummary summary : blockSummary.getSummaries()) {
+        final Map<byte[], AccountState> touchedAccounts = summary.getTouchedAccounts();
+        for (Map.Entry<byte[], AccountState> entry : touchedAccounts.entrySet()) {
+          kafka.send(Kafka.Producer.ACCOUNT_STATE, entry.getKey(), entry.getValue().getEncoded());
+        }
+      }
+    } else {
+      final Genesis genesis = Genesis.getInstance(config);
+      for (ByteArrayWrapper k : genesis.getPremine().keySet()) {
+        final Genesis.PremineAccount premineAccount = genesis.getPremine().get(k);
+        final AccountState accountState = premineAccount.accountState;
+        kafka.send(Kafka.Producer.ACCOUNT_STATE, k.getData(), accountState.getEncoded());
       }
     }
+
   }
 
   @Override
