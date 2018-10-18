@@ -7,7 +7,8 @@
 
     "headerValidators": [
       {"number": 10,     "hash": "0xb3074f936815a0425e674890d7db7b5e94f3a06dca5b22d291b55dcd02dde93e"},
-      {"number": 585503, "hash": "0xe8d61ae10fd62e639c2e3c9da75f8b0bdb3fa5961dbd3aed1223f92e147595b9"}
+      {"number": 585503, "hash": "0xe8d61ae10fd62e639c2e3c9da75f8b0bdb3fa5961dbd3aed1223f92e147595b9"},
+      {"number": 4230000, "hash": "0xbd9e8b9e8d8c00f8e0119cd996d2b665eec3dcd711a86b0681538fd9904c3f25"}
     ]
   },
 
