@@ -250,7 +250,7 @@ bintray {
     dryRun = false //Whether to run this as dry-run, without deploying
     publish = true //If version should be auto published after an upload
     pkg {
-        userOrg = 'ethereum' //An optional organization name when the repo belongs to one of the user's orgs
+        userOrg = 'enkryptio' //An optional organization name when the repo belongs to one of the user's orgs
         repo = 'maven'
         name = 'org.ethereum'
     }
@@ -298,8 +298,8 @@ def customizePom(pom, gradleProject) {
         // add all items necessary for maven central publication
         generatedPom.project {
             name = "ethereumj"
-            description = "Java implementation of the Ethereum protocol"
-            url = "https://github.com/ethereum/ethereumj"
+            description = "Java implementation of the Ethereum protocol (EthVM fork)"
+            url = "https://github.com/enkryptio/ethereumj"
             organization {
                 name = "Ethereum"
                 url = "https://ethereum.org"
@@ -312,9 +312,9 @@ def customizePom(pom, gradleProject) {
                 }
             }
             scm {
-                url = "https://github.com/ethereum/ethereumj"
+                url = "https://github.com/enkryptio/ethereumj"
                 connection = "scm:git:git://github.com/ethereum/ethereumj"
-                developerConnection = "scm:git:git://github.com/ethereum/ethereumj"
+                developerConnection = "scm:git:git://github.com/enkryptio/ethereumj"
             }
             developers {
                 developer {
