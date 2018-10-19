@@ -159,9 +159,13 @@ public class TestRunner {
 
         byte[] bestHash = Hex.decode(testCase.getLastblockhash().startsWith("0x") ?
                 testCase.getLastblockhash().substring(2) : testCase.getLastblockhash());
-        String finalRoot = Hex.toHexString(blockStore.getBlockByHash(bestHash).getStateRoot());
 
-        if (!finalRoot.equals(currRoot)){
+        String finalRoot = null;
+        if (blockStore.getBlockByHash(bestHash) != null) {
+            finalRoot = Hex.toHexString(blockStore.getBlockByHash(bestHash).getStateRoot());
+        }
+
+        if (!currRoot.equals(finalRoot)){
             String formattedString = String.format("Root hash doesn't match best: expected: %s current: %s",
                     finalRoot, currRoot);
             results.add(formattedString);
@@ -335,7 +339,7 @@ public class TestRunner {
                             }
 
                             Map<DataWord, DataWord> testStorage = contractDetails.getStorage();
-                            DataWord actualValue = testStorage.get(new DataWord(storageKey.getData()));
+                            DataWord actualValue = testStorage.get(DataWord.of(storageKey.getData()));
 
                             if (actualValue == null ||
                                     !Arrays.equals(expectedStValue, actualValue.getData())) {

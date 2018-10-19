@@ -49,7 +49,11 @@ public class MessageHandler extends SimpleChannelInboundHandler<DiscoveryEvent>
 
     @Override
     public void channelRead0(ChannelHandlerContext ctx, DiscoveryEvent event) throws Exception {
-        nodeManager.handleInbound(event);
+        try {
+            nodeManager.handleInbound(event);
+        } catch (Throwable t) {
+            logger.info("Failed to process incoming message: {}, caused by: {}", event.getMessage(), t.toString());
+        }
     }
 
     @Override

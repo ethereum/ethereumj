@@ -17,13 +17,15 @@
  */
 package org.ethereum.config;
 
-import org.ethereum.core.*;
+import org.ethereum.core.Repository;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.*;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.datasource.leveldb.LevelDbDataSource;
 import org.ethereum.datasource.rocksdb.RocksDbDataSource;
 import org.ethereum.db.*;
+import io.enkrypt.kafka.config.KafkaSystemProperties;
+import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.handler.Eth63;
 import org.ethereum.sync.FastSyncManager;
@@ -34,7 +36,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.*;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -44,7 +45,6 @@ import java.util.Set;
 import static java.util.Arrays.asList;
 
 @Configuration
-@EnableTransactionManagement
 @ComponentScan(
         basePackages = "org.ethereum",
         excludeFilters = @ComponentScan.Filter(NoAutoscan.class))
@@ -68,7 +68,7 @@ public class CommonConfig {
 
     @Bean
     public SystemProperties systemProperties() {
-        return SystemProperties.getSpringDefault();
+        return KafkaSystemProperties.getKafkaSystemProperties();
     }
 
     @Bean
@@ -127,7 +127,7 @@ public class CommonConfig {
     @Bean
     @Scope("prototype")
     public Source<byte[], byte[]> cachedDbSource(String name) {
-        AbstractCachedSource<byte[], byte[]>  writeCache = new AsyncWriteCache<byte[], byte[]>(blockchainSource(name)) {
+        AbstractCachedSource<byte[], byte[]> writeCache = new AsyncWriteCache<byte[], byte[]>(blockchainSource(name)) {
             @Override
             protected WriteCache<byte[], byte[]> createCache(Source<byte[], byte[]> source) {
                 WriteCache.BytesKey<byte[]> ret = new WriteCache.BytesKey<>(source, WriteCache.CacheType.SIMPLE);
@@ -167,7 +167,7 @@ public class CommonConfig {
             DbSource<byte[]> dbSource;
             if ("inmem".equals(dataSource)) {
                 dbSource = new HashMapDB<>();
-            } else if ("leveldb".equals(dataSource)){
+            } else if ("leveldb".equals(dataSource)) {
                 dbSource = levelDbDataSource();
             } else {
                 dataSource = "rocksdb";
@@ -195,6 +195,7 @@ public class CommonConfig {
     }
 
     public void fastSyncCleanUp() {
+        if (!systemProperties().isSyncEnabled()) return;
         byte[] fastsyncStageBytes = blockchainDB().get(FastSyncManager.FASTSYNC_DB_KEY_SYNC_STAGE);
         if (fastsyncStageBytes == null) return; // no uncompleted fast sync
         if (!systemProperties().blocksLoader().isEmpty()) return; // blocks loader enabled
@@ -221,6 +222,11 @@ public class CommonConfig {
         }
     }
 
+    @Bean @Primary
+    public CompositeEthereumListener ethereumListener() {
+        return new CompositeEthereumListener();
+    }
+
     @Bean
     @Lazy
     public DbSource<byte[]> headerSource() {
@@ -233,7 +239,7 @@ public class CommonConfig {
         DbSource<byte[]> dataSource = headerSource();
 
         WriteCache.BytesKey<byte[]> cache = new WriteCache.BytesKey<>(
-                new BatchSourceWriter<>(dataSource), WriteCache.CacheType.SIMPLE);
+            new BatchSourceWriter<>(dataSource), WriteCache.CacheType.SIMPLE);
         cache.setFlushSource(true);
         dbFlushManager().addCache(cache);
 
@@ -252,20 +258,21 @@ public class CommonConfig {
         return new SourceCodec<byte[], ProgramPrecompile, byte[], byte[]>(source,
                 new Serializer<byte[], byte[]>() {
                     public byte[] serialize(byte[] object) {
-                        DataWord ret = new DataWord(object);
-                        ret.add(new DataWord(1));
-                        return ret.getLast20Bytes();
+                        DataWord ret = DataWord.of(object);
+                        DataWord addResult = ret.add(DataWord.ONE);
+                        return addResult.getLast20Bytes();
                     }
+
                     public byte[] deserialize(byte[] stream) {
                         throw new RuntimeException("Shouldn't be called");
                     }
                 }, new Serializer<ProgramPrecompile, byte[]>() {
-                    public byte[] serialize(ProgramPrecompile object) {
-                        return object == null ? null : object.serialize();
-                    }
-                    public ProgramPrecompile deserialize(byte[] stream) {
-                        return stream == null ? null : ProgramPrecompile.deserialize(stream);
-                    }
+            public byte[] serialize(ProgramPrecompile object) {
+                return object == null ? null : object.serialize();
+            }
+            public ProgramPrecompile deserialize(byte[] stream) {
+                return stream == null ? null : ProgramPrecompile.deserialize(stream);
+            }
         });
     }
 
@@ -289,7 +296,7 @@ public class CommonConfig {
         List<BlockHeaderRule> rules = new ArrayList<>(asList(
                 new GasValueRule(),
                 new ExtraDataRule(systemProperties()),
-                new ProofOfWorkRule(),
+                EthashRule.createRegular(systemProperties(), ethereumListener()),
                 new GasLimitRule(systemProperties()),
                 new BlockHashRule(systemProperties())
         ));

@@ -21,7 +21,6 @@ import org.ethereum.datasource.MemSizeEstimator;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
-import org.ethereum.util.RLPList;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -153,8 +152,7 @@ public class BlockWrapper {
     }
 
     private void parse(byte[] bytes) {
-        List<RLPElement> params = RLP.decode2(bytes);
-        List<RLPElement> wrapper = (RLPList) params.get(0);
+        List<RLPElement> wrapper = RLP.unwrapList(bytes);
 
         byte[] blockBytes = wrapper.get(0).getRLPData();
         byte[] importFailedBytes = wrapper.get(1).getRLPData();

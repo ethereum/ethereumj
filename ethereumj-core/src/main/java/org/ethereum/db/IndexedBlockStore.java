@@ -45,9 +45,9 @@ public class IndexedBlockStore extends AbstractBlockstore{
     private static final Logger logger = LoggerFactory.getLogger("general");
 
     Source<byte[], byte[]> indexDS;
-    DataSourceArray<List<BlockInfo>> index;
+    protected DataSourceArray<List<BlockInfo>> index;
     Source<byte[], byte[]> blocksDS;
-    ObjectDataSource<Block> blocks;
+    protected ObjectDataSource<Block> blocks;
 
     public IndexedBlockStore(){
     }
@@ -69,6 +69,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
             }
         }, 256);
     }
+
 
     public synchronized Block getBestBlock(){
 
@@ -110,7 +111,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
         addInternalBlock(block, totalDifficulty, mainChain);
     }
 
-    private void addInternalBlock(Block block, BigInteger totalDifficulty, boolean mainChain){
+    protected void addInternalBlock(Block block, BigInteger totalDifficulty, boolean mainChain){
 
         List<BlockInfo> blockInfos = block.getNumber() >= index.size() ?  null : index.get((int) block.getNumber());
         blockInfos = blockInfos == null ? new ArrayList<BlockInfo>() : blockInfos;
@@ -121,12 +122,13 @@ public class IndexedBlockStore extends AbstractBlockstore{
         blockInfo.setMainChain(mainChain); // FIXME:maybe here I should force reset main chain for all uncles on that level
 
         putBlockInfo(blockInfos, blockInfo);
-        index.set((int) block.getNumber(), blockInfos);
 
+        index.set((int) block.getNumber(), blockInfos);
         blocks.put(block.getHash(), block);
+
     }
 
-    private void putBlockInfo(List<BlockInfo> blockInfos, BlockInfo blockInfo) {
+    protected void putBlockInfo(List<BlockInfo> blockInfos, BlockInfo blockInfo) {
         for (int i = 0; i < blockInfos.size(); i++) {
             BlockInfo curBlockInfo = blockInfos.get(i);
             if (FastByteComparisons.equal(curBlockInfo.getHash(), blockInfo.getHash())) {
@@ -496,7 +498,7 @@ public class IndexedBlockStore extends AbstractBlockstore{
         return index.get((int) level);
     }
 
-    private synchronized void setBlockInfoForLevel(long level, List<BlockInfo> infos){
+    protected synchronized void setBlockInfoForLevel(long level, List<BlockInfo> infos){
         index.set((int) level, infos);
     }
 

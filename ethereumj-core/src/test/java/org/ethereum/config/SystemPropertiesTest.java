@@ -51,6 +51,8 @@ import java.util.Map;
 import static com.google.common.collect.Lists.newArrayList;
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 /**
  * Not thread safe - testUseOnlySprintConfig temporarily sets a static flag that may influence other tests.
@@ -432,6 +434,21 @@ public class SystemPropertiesTest {
     }
 
     @Test
+    public void testGeneratedNodePrivateKeyDelegatesToStrategy() {
+        File outputFile = new File("database-test/nodeId.properties");
+        //noinspection ResultOfMethodCallIgnored
+        outputFile.delete();
+
+        GenerateNodeIdStrategy generateNodeIdStrategyMock = mock(GenerateNodeIdStrategy.class);
+
+        SystemProperties props = new SystemProperties();
+        props.setGenerateNodeIdStrategy(generateNodeIdStrategyMock);
+        props.privateKey();
+
+        verify(generateNodeIdStrategyMock).getNodePrivateKey();
+    }
+
+    @Test
     public void testFastSyncPivotBlockHash() {
         SystemProperties props = new SystemProperties();
         assertNull(props.getFastSyncPivotBlockHash());
@@ -499,6 +516,39 @@ public class SystemPropertiesTest {
         assertTrue(dump.length() > 5 * 1024);
         assertTrue(StringUtils.countOccurrencesOf(dump, "{") > 50);
         assertTrue(StringUtils.countOccurrencesOf(dump, "{") > 50);
+    }
+
+    @Test
+    public void testMergeConfigs1() {
+        String firstConfig = "";
+        SystemProperties props = new SystemProperties();
+        Config config = props.mergeConfigs(firstConfig, ConfigFactory::parseString);
+        assertFalse(config.hasPath("peer.listen.port"));
+    }
+
+    @Test
+    public void testMergeConfigs2() {
+        String firstConfig = "peer.listen.port=30123";
+        SystemProperties props = new SystemProperties();
+        Config config = props.mergeConfigs(firstConfig, ConfigFactory::parseString);
+        assertEquals(30123, config.getInt("peer.listen.port"));
+    }
+
+    @Test
+    public void testMergeConfigs3() {
+        String firstConfig = "peer.listen.port=30123,peer.listen.port=30145";
+        SystemProperties props = new SystemProperties();
+        Config config = props.mergeConfigs(firstConfig, ConfigFactory::parseString);
+        assertEquals(30145, config.getInt("peer.listen.port"));
+    }
+
+    @Test
+    public void testMergeConfigs4() {
+        String firstConfig = "peer.listen.port=30123,sync.enabled=true";
+        SystemProperties props = new SystemProperties();
+        Config config = props.mergeConfigs(firstConfig, ConfigFactory::parseString);
+        assertEquals(30123, config.getInt("peer.listen.port"));
+        assertEquals(Boolean.TRUE, config.getBoolean("sync.enabled"));
     }
 
     @SuppressWarnings("SameParameterValue")

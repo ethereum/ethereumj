@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.ethereum.sync.BlockDownloader.MAX_IN_REQUEST;
@@ -119,7 +120,8 @@ public class BlockReplay extends EthereumListenerAdapter {
             receipt.setTransaction(tx);
             receipts.add(receipt);
         }
-        BlockSummary blockSummary = new BlockSummary(block, null, receipts, null);
+        BlockStatistics.forBlock(block, receipts, null);
+        BlockSummary blockSummary = new BlockSummary(block, null, receipts, null, new BlockStatistics());
         blockSummary.setTotalDifficulty(BigInteger.valueOf(num));
         listener.onBlock(blockSummary);
     }

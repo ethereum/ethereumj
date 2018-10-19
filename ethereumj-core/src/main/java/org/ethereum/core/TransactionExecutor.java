@@ -17,6 +17,8 @@
  */
 package org.ethereum.core;
 
+import java.util.*;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
@@ -27,6 +29,7 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.util.ByteArraySet;
 import org.ethereum.vm.*;
+import org.ethereum.vm.hook.VMHook;
 import org.ethereum.vm.program.Program;
 import org.ethereum.vm.program.ProgramResult;
 import org.ethereum.vm.program.invoke.ProgramInvoke;
@@ -35,8 +38,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
-import java.util.List;
 
+import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.ArrayUtils.getLength;
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 import static org.ethereum.util.BIUtil.*;
@@ -87,16 +90,23 @@ public class TransactionExecutor {
     private ByteArraySet touchedAccounts = new ByteArraySet();
 
     boolean localCall = false;
+    private final VMHook vmHook;
 
     public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
                                ProgramInvokeFactory programInvokeFactory, Block currentBlock) {
 
-        this(tx, coinbase, track, blockStore, programInvokeFactory, currentBlock, new EthereumListenerAdapter(), 0);
+        this(tx, coinbase, track, blockStore, programInvokeFactory, currentBlock, new EthereumListenerAdapter(), 0, VMHook.EMPTY);
     }
 
     public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
                                ProgramInvokeFactory programInvokeFactory, Block currentBlock,
                                EthereumListener listener, long gasUsedInTheBlock) {
+        this(tx, coinbase,track, blockStore, programInvokeFactory, currentBlock, listener, gasUsedInTheBlock, VMHook.EMPTY);
+    }
+
+    public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
+                               ProgramInvokeFactory programInvokeFactory, Block currentBlock,
+                               EthereumListener listener, long gasUsedInTheBlock, VMHook vmHook) {
 
         this.tx = tx;
         this.coinbase = coinbase;
@@ -108,6 +118,8 @@ public class TransactionExecutor {
         this.listener = listener;
         this.gasUsedInTheBlock = gasUsedInTheBlock;
         this.m_endGas = toBI(tx.getGasLimit());
+        this.vmHook = isNull(vmHook) ? VMHook.EMPTY : vmHook;
+
         withCommonConfig(CommonConfig.getDefault());
     }
 
@@ -207,7 +219,7 @@ public class TransactionExecutor {
         if (!readyToExecute) return;
 
         byte[] targetAddress = tx.getReceiveAddress();
-        precompiledContract = PrecompiledContracts.getContractForAddress(new DataWord(targetAddress), blockchainConfig);
+        precompiledContract = PrecompiledContracts.getContractForAddress(DataWord.of(targetAddress), blockchainConfig);
 
         if (precompiledContract != null) {
             long requiredGas = precompiledContract.getGasForData(tx.getData());
@@ -245,8 +257,8 @@ public class TransactionExecutor {
                 ProgramInvoke programInvoke =
                         programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
 
-                this.vm = new VM(config);
-                this.program = new Program(track.getCodeHash(targetAddress), code, programInvoke, tx, config).withCommonConfig(commonConfig);
+                this.vm = new VM(config, vmHook);
+                this.program = new Program(track.getCodeHash(targetAddress), code, programInvoke, tx, config, vmHook).withCommonConfig(commonConfig);
             }
         }
 
@@ -280,8 +292,8 @@ public class TransactionExecutor {
         } else {
             ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
 
-            this.vm = new VM(config);
-            this.program = new Program(tx.getData(), programInvoke, tx, config).withCommonConfig(commonConfig);
+            this.vm = new VM(config, vmHook);
+            this.program = new Program(tx.getData(), programInvoke, tx, config, vmHook).withCommonConfig(commonConfig);
 
             // reset storage if the contract with the same address already exists
             // TCK test case only - normally this is near-impossible situation in the real network
@@ -396,7 +408,7 @@ public class TransactionExecutor {
             // Accumulate refunds for suicides
             result.addFutureRefund(result.getDeleteAccounts().size() * config.getBlockchainConfig().
                     getConfigForBlock(currentBlock.getNumber()).getGasCost().getSUICIDE_REFUND());
-            long gasRefund = Math.min(result.getFutureRefund(), getGasUsed() / 2);
+            long gasRefund = Math.min(Math.max(0, result.getFutureRefund()), getGasUsed() / 2);
             byte[] addr = tx.isContractCreation() ? tx.getContractAddress() : tx.getReceiveAddress();
             m_endGas = m_endGas.add(BigInteger.valueOf(gasRefund));
 
@@ -409,16 +421,26 @@ public class TransactionExecutor {
             ContractDetails contractDetails = track.getContractDetails(addr);
             if (contractDetails != null) {
                 // TODO
-//                summaryBuilder.storageDiff(track.getContractDetails(addr).getStorage());
-//
-//                if (program != null) {
-//                    summaryBuilder.touchedStorage(contractDetails.getStorage(), program.getStorageDiff());
-//                }
+                //summaryBuilder.storageDiff(track.getContractDetails(addr).getStorage());
+                //if (program != null) {
+                //    summaryBuilder.touchedStorage(contractDetails.getStorage(), program.getStorageDiff());
+                //}
             }
 
             if (result.getException() != null) {
                 summaryBuilder.markAsFailed();
             }
+        }
+
+        // Grab what accounts have suffered modifications
+        if (result != null) {
+            Set<byte[]> rawTouchedAccounts = touchedAccounts;
+            Map<byte[], AccountState> touched = new HashMap<>(rawTouchedAccounts.size());
+            for (byte[] address : rawTouchedAccounts) {
+                final AccountState state = track.getAccountState(address);
+                touched.put(address, state);
+            }
+            summaryBuilder.touchedAccounts(touched);
         }
 
         TransactionExecutionSummary summary = summaryBuilder.build();
@@ -448,7 +470,6 @@ public class TransactionExecutor {
                 }
             }
         }
-
 
         listener.onTransactionExecuted(summary);
 

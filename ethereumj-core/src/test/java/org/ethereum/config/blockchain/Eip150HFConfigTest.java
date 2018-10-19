@@ -81,7 +81,7 @@ public class Eip150HFConfigTest {
     public void testGetCreateGas() {
         Eip150HFConfig eip150 = new Eip150HFConfig(null);
 
-        DataWord createGas = eip150.getCreateGas(new DataWord(64_000));
+        DataWord createGas = eip150.getCreateGas(DataWord.of(64_000));
         assertEquals(BigInteger.valueOf(63_000), createGas.value());
     }
 
@@ -98,7 +98,7 @@ public class Eip150HFConfigTest {
     }
 
     private void assertCallGas(Eip150HFConfig eip150, long requestedGas, long availableGas, long expectedCallGas) {
-        DataWord callGas = eip150.getCallGas(OpCode.CALL, new DataWord(requestedGas), new DataWord(availableGas));
+        DataWord callGas = eip150.getCallGas(OpCode.CALL, DataWord.of(requestedGas), DataWord.of(availableGas));
         assertEquals(BigInteger.valueOf(expectedCallGas), callGas.value());
     }
 

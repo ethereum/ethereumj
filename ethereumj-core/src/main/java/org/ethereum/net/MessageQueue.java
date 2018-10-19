@@ -74,6 +74,7 @@ public class MessageQueue {
 
     @Autowired
     EthereumListener ethereumListener;
+
     boolean hasPing = false;
     private ScheduledFuture<?> timerTask;
     private Channel channel;
@@ -97,6 +98,11 @@ public class MessageQueue {
     }
 
     public void sendMessage(Message msg) {
+        if (channel.isDisconnected()) {
+            logger.warn("{}: attempt to send [{}] message after disconnect", channel, msg.getCommand().name());
+            return;
+        }
+
         if (msg instanceof PingMessage) {
             if (hasPing) return;
             hasPing = true;

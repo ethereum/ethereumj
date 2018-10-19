@@ -41,7 +41,7 @@ public final class TestUtils {
     }
 
     public static DataWord randomDataWord() {
-        return new DataWord(randomBytes(32));
+        return DataWord.of(randomBytes(32));
     }
 
     public static byte[] randomAddress() {

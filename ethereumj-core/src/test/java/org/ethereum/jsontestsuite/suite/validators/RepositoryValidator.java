@@ -86,7 +86,7 @@ public class RepositoryValidator {
         List<String> results = new ArrayList<>();
         if (!postRoot.equals(currRoot)){
 
-            String formattedString = String.format("Root hash don't much: expected: %s current: %s",
+            String formattedString = String.format("Root hash doesn't match: expected: %s current: %s",
                     postRoot, currRoot);
             results.add(formattedString);
         }

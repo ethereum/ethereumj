@@ -38,5 +38,6 @@ subprojects {
     repositories {
         jcenter()
         maven { url "https://dl.bintray.com/ethereum/maven/" }
+        maven { url "http://packages.confluent.io/maven/" }
     }
 }

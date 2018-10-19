@@ -125,12 +125,12 @@ public class RepositoryTest {
         byte[] horseKey = Hex.decode("B1B2B3");
         byte[] horseValue = Hex.decode("B4B5B6");
 
-        track.addStorageRow(cow, new DataWord(cowKey), new DataWord(cowValue));
-        track.addStorageRow(horse, new DataWord(horseKey), new DataWord(horseValue));
+        track.addStorageRow(cow, DataWord.of(cowKey), DataWord.of(cowValue));
+        track.addStorageRow(horse, DataWord.of(horseKey), DataWord.of(horseValue));
         track.commit();
 
-        assertEquals(new DataWord(cowValue), repository.getStorageValue(cow, new DataWord(cowKey)));
-        assertEquals(new DataWord(horseValue), repository.getStorageValue(horse, new DataWord(horseKey)));
+        assertEquals(DataWord.of(cowValue), repository.getStorageValue(cow, DataWord.of(cowKey)));
+        assertEquals(DataWord.of(horseValue), repository.getStorageValue(horse, DataWord.of(horseKey)));
 
         repository.close();
     }
@@ -325,11 +325,11 @@ public class RepositoryTest {
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
 
-        DataWord cowKey = new DataWord(Hex.decode("A1A2A3"));
-        DataWord cowValue = new DataWord(Hex.decode("A4A5A6"));
+        DataWord cowKey = DataWord.of(Hex.decode("A1A2A3"));
+        DataWord cowValue = DataWord.of(Hex.decode("A4A5A6"));
 
-        DataWord horseKey = new DataWord(Hex.decode("B1B2B3"));
-        DataWord horseValue = new DataWord(Hex.decode("B4B5B6"));
+        DataWord horseKey = DataWord.of(Hex.decode("B1B2B3"));
+        DataWord horseValue = DataWord.of(Hex.decode("B4B5B6"));
 
         track.addStorageRow(cow, cowKey, cowValue);
         track.addStorageRow(horse, horseKey, horseValue);
@@ -354,11 +354,11 @@ public class RepositoryTest {
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
 
-        DataWord cowKey = new DataWord(Hex.decode("A1A2A3"));
-        DataWord cowValue = new DataWord(Hex.decode("A4A5A6"));
+        DataWord cowKey = DataWord.of(Hex.decode("A1A2A3"));
+        DataWord cowValue = DataWord.of(Hex.decode("A4A5A6"));
 
-        DataWord horseKey = new DataWord(Hex.decode("B1B2B3"));
-        DataWord horseValue = new DataWord(Hex.decode("B4B5B6"));
+        DataWord horseKey = DataWord.of(Hex.decode("B1B2B3"));
+        DataWord horseValue = DataWord.of(Hex.decode("B4B5B6"));
 
         track.addStorageRow(cow, cowKey, cowValue);
         track.addStorageRow(horse, horseKey, horseValue);
@@ -539,40 +539,40 @@ public class RepositoryTest {
 
         // changes level_1
         Repository track1 = repository.startTracking();
-        track1.addStorageRow(cow, new DataWord(cowKey1), new DataWord(cowValue1));
-        track1.addStorageRow(horse, new DataWord(horseKey1), new DataWord(horseValue1));
+        track1.addStorageRow(cow, DataWord.of(cowKey1), DataWord.of(cowValue1));
+        track1.addStorageRow(horse, DataWord.of(horseKey1), DataWord.of(horseValue1));
 
-        assertEquals(new DataWord(cowValue1), track1.getStorageValue(cow, new DataWord(cowKey1)));
-        assertEquals(new DataWord(horseValue1), track1.getStorageValue(horse, new DataWord(horseKey1)));
+        assertEquals(DataWord.of(cowValue1), track1.getStorageValue(cow, DataWord.of(cowKey1)));
+        assertEquals(DataWord.of(horseValue1), track1.getStorageValue(horse, DataWord.of(horseKey1)));
 
         // changes level_2
         Repository track2 = track1.startTracking();
-        track2.addStorageRow(cow, new DataWord(cowKey2), new DataWord(cowValue2));
-        track2.addStorageRow(horse, new DataWord(horseKey2), new DataWord(horseValue2));
+        track2.addStorageRow(cow, DataWord.of(cowKey2), DataWord.of(cowValue2));
+        track2.addStorageRow(horse, DataWord.of(horseKey2), DataWord.of(horseValue2));
 
-        assertEquals(new DataWord(cowValue1), track2.getStorageValue(cow, new DataWord(cowKey1)));
-        assertEquals(new DataWord(horseValue1), track2.getStorageValue(horse, new DataWord(horseKey1)));
+        assertEquals(DataWord.of(cowValue1), track2.getStorageValue(cow, DataWord.of(cowKey1)));
+        assertEquals(DataWord.of(horseValue1), track2.getStorageValue(horse, DataWord.of(horseKey1)));
 
-        assertEquals(new DataWord(cowValue2), track2.getStorageValue(cow, new DataWord(cowKey2)));
-        assertEquals(new DataWord(horseValue2), track2.getStorageValue(horse, new DataWord(horseKey2)));
+        assertEquals(DataWord.of(cowValue2), track2.getStorageValue(cow, DataWord.of(cowKey2)));
+        assertEquals(DataWord.of(horseValue2), track2.getStorageValue(horse, DataWord.of(horseKey2)));
 
         track2.commit();
         // leaving level_2
 
-        assertEquals(new DataWord(cowValue1), track1.getStorageValue(cow, new DataWord(cowKey1)));
-        assertEquals(new DataWord(horseValue1), track1.getStorageValue(horse, new DataWord(horseKey1)));
+        assertEquals(DataWord.of(cowValue1), track1.getStorageValue(cow, DataWord.of(cowKey1)));
+        assertEquals(DataWord.of(horseValue1), track1.getStorageValue(horse, DataWord.of(horseKey1)));
 
-        assertEquals(new DataWord(cowValue2), track1.getStorageValue(cow, new DataWord(cowKey2)));
-        assertEquals(new DataWord(horseValue2), track1.getStorageValue(horse, new DataWord(horseKey2)));
+        assertEquals(DataWord.of(cowValue2), track1.getStorageValue(cow, DataWord.of(cowKey2)));
+        assertEquals(DataWord.of(horseValue2), track1.getStorageValue(horse, DataWord.of(horseKey2)));
 
         track1.commit();
         // leaving level_1
 
-        assertEquals(new DataWord(cowValue1), repository.getStorageValue(cow, new DataWord(cowKey1)));
-        assertEquals(new DataWord(horseValue1), repository.getStorageValue(horse, new DataWord(horseKey1)));
+        assertEquals(DataWord.of(cowValue1), repository.getStorageValue(cow, DataWord.of(cowKey1)));
+        assertEquals(DataWord.of(horseValue1), repository.getStorageValue(horse, DataWord.of(horseKey1)));
 
-        assertEquals(new DataWord(cowValue2), repository.getStorageValue(cow, new DataWord(cowKey2)));
-        assertEquals(new DataWord(horseValue2), repository.getStorageValue(horse, new DataWord(horseKey2)));
+        assertEquals(DataWord.of(cowValue2), repository.getStorageValue(cow, DataWord.of(cowKey2)));
+        assertEquals(DataWord.of(horseValue2), repository.getStorageValue(horse, DataWord.of(horseKey2)));
 
         repository.close();
     }
@@ -602,32 +602,32 @@ public class RepositoryTest {
 
         // changes level_2
         Repository track2 = track1.startTracking();
-        track2.addStorageRow(cow, new DataWord(cowKey2), new DataWord(cowValue2));
-        track2.addStorageRow(horse, new DataWord(horseKey2), new DataWord(horseValue2));
+        track2.addStorageRow(cow, DataWord.of(cowKey2), DataWord.of(cowValue2));
+        track2.addStorageRow(horse, DataWord.of(horseKey2), DataWord.of(horseValue2));
 
-        assertNull(track2.getStorageValue(cow, new DataWord(cowKey1)));
-        assertNull(track2.getStorageValue(horse, new DataWord(horseKey1)));
+        assertNull(track2.getStorageValue(cow, DataWord.of(cowKey1)));
+        assertNull(track2.getStorageValue(horse, DataWord.of(horseKey1)));
 
-        assertEquals(new DataWord(cowValue2), track2.getStorageValue(cow, new DataWord(cowKey2)));
-        assertEquals(new DataWord(horseValue2), track2.getStorageValue(horse, new DataWord(horseKey2)));
+        assertEquals(DataWord.of(cowValue2), track2.getStorageValue(cow, DataWord.of(cowKey2)));
+        assertEquals(DataWord.of(horseValue2), track2.getStorageValue(horse, DataWord.of(horseKey2)));
 
         track2.commit();
         // leaving level_2
 
-        assertNull(track1.getStorageValue(cow, new DataWord(cowKey1)));
-        assertNull(track1.getStorageValue(horse, new DataWord(horseKey1)));
+        assertNull(track1.getStorageValue(cow, DataWord.of(cowKey1)));
+        assertNull(track1.getStorageValue(horse, DataWord.of(horseKey1)));
 
-        assertEquals(new DataWord(cowValue2), track1.getStorageValue(cow, new DataWord(cowKey2)));
-        assertEquals(new DataWord(horseValue2), track1.getStorageValue(horse, new DataWord(horseKey2)));
+        assertEquals(DataWord.of(cowValue2), track1.getStorageValue(cow, DataWord.of(cowKey2)));
+        assertEquals(DataWord.of(horseValue2), track1.getStorageValue(horse, DataWord.of(horseKey2)));
 
         track1.commit();
         // leaving level_1
 
-        assertEquals(null, repository.getStorageValue(cow, new DataWord(cowKey1)));
-        assertEquals(null, repository.getStorageValue(horse, new DataWord(horseKey1)));
+        assertEquals(null, repository.getStorageValue(cow, DataWord.of(cowKey1)));
+        assertEquals(null, repository.getStorageValue(horse, DataWord.of(horseKey1)));
 
-        assertEquals(new DataWord(cowValue2), repository.getStorageValue(cow, new DataWord(cowKey2)));
-        assertEquals(new DataWord(horseValue2), repository.getStorageValue(horse, new DataWord(horseKey2)));
+        assertEquals(DataWord.of(cowValue2), repository.getStorageValue(cow, DataWord.of(cowKey2)));
+        assertEquals(DataWord.of(horseValue2), repository.getStorageValue(horse, DataWord.of(horseKey2)));
 
         repository.close();
     }
@@ -657,32 +657,32 @@ public class RepositoryTest {
 
         // changes level_2
         Repository track2 = track1.startTracking();
-        track2.addStorageRow(cow, new DataWord(cowKey2), new DataWord(cowValue2));
-        track2.addStorageRow(horse, new DataWord(horseKey2), new DataWord(horseValue2));
+        track2.addStorageRow(cow, DataWord.of(cowKey2), DataWord.of(cowValue2));
+        track2.addStorageRow(horse, DataWord.of(horseKey2), DataWord.of(horseValue2));
 
-        assertNull(track2.getStorageValue(cow, new DataWord(cowKey1)));
-        assertNull(track2.getStorageValue(horse, new DataWord(horseKey1)));
+        assertNull(track2.getStorageValue(cow, DataWord.of(cowKey1)));
+        assertNull(track2.getStorageValue(horse, DataWord.of(horseKey1)));
 
-        assertEquals(new DataWord(cowValue2), track2.getStorageValue(cow, new DataWord(cowKey2)));
-        assertEquals(new DataWord(horseValue2), track2.getStorageValue(horse, new DataWord(horseKey2)));
+        assertEquals(DataWord.of(cowValue2), track2.getStorageValue(cow, DataWord.of(cowKey2)));
+        assertEquals(DataWord.of(horseValue2), track2.getStorageValue(horse, DataWord.of(horseKey2)));
 
         track2.commit();
         // leaving level_2
 
-        assertNull(track1.getStorageValue(cow, new DataWord(cowKey1)));
-        assertNull(track1.getStorageValue(horse, new DataWord(horseKey1)));
+        assertNull(track1.getStorageValue(cow, DataWord.of(cowKey1)));
+        assertNull(track1.getStorageValue(horse, DataWord.of(horseKey1)));
 
-        assertEquals(new DataWord(cowValue2), track1.getStorageValue(cow, new DataWord(cowKey2)));
-        assertEquals(new DataWord(horseValue2), track1.getStorageValue(horse, new DataWord(horseKey2)));
+        assertEquals(DataWord.of(cowValue2), track1.getStorageValue(cow, DataWord.of(cowKey2)));
+        assertEquals(DataWord.of(horseValue2), track1.getStorageValue(horse, DataWord.of(horseKey2)));
 
         track1.rollback();
         // leaving level_1
 
-        assertNull(repository.getStorageValue(cow, new DataWord(cowKey1)));
-        assertNull(repository.getStorageValue(horse, new DataWord(horseKey1)));
+        assertNull(repository.getStorageValue(cow, DataWord.of(cowKey1)));
+        assertNull(repository.getStorageValue(horse, DataWord.of(horseKey1)));
 
-        assertNull(repository.getStorageValue(cow, new DataWord(cowKey2)));
-        assertNull(repository.getStorageValue(horse, new DataWord(horseKey2)));
+        assertNull(repository.getStorageValue(cow, DataWord.of(cowKey2)));
+        assertNull(repository.getStorageValue(horse, DataWord.of(horseKey2)));
 
         repository.close();
     }
@@ -708,7 +708,7 @@ public class RepositoryTest {
         byte[] horseValue2 = "val-h-2".getBytes();
 
         Repository track = repository.startTracking();
-        track.addStorageRow(cow, new DataWord(cowKey1), new DataWord(cowValue1));
+        track.addStorageRow(cow, DataWord.of(cowKey1), DataWord.of(cowValue1));
         track.commit();
 
         // changes level_1
@@ -716,7 +716,7 @@ public class RepositoryTest {
 
         // changes level_2
         Repository track2 = track1.startTracking();
-        track2.addStorageRow(cow, new DataWord(cowKey2), new DataWord(cowValue2));
+        track2.addStorageRow(cow, DataWord.of(cowKey2), DataWord.of(cowValue2));
 
         track2.commit();
         // leaving level_2
@@ -724,8 +724,8 @@ public class RepositoryTest {
         track1.commit();
         // leaving level_1
 
-        assertEquals(new DataWord(cowValue1), track1.getStorageValue(cow, new DataWord(cowKey1)));
-        assertEquals(new DataWord(cowValue2), track1.getStorageValue(cow, new DataWord(cowKey2)));
+        assertEquals(DataWord.of(cowValue1), track1.getStorageValue(cow, DataWord.of(cowKey1)));
+        assertEquals(DataWord.of(cowValue2), track1.getStorageValue(cow, DataWord.of(cowKey2)));
 
 
         repository.close();
@@ -754,12 +754,12 @@ public class RepositoryTest {
 
         // changes level_1
         Repository track1 = repository.startTracking();
-        track1.addStorageRow(cow, new DataWord(cowKey2), new DataWord(cowValue2));
+        track1.addStorageRow(cow, DataWord.of(cowKey2), DataWord.of(cowValue2));
 
         // changes level_2
         Repository track2 = track1.startTracking();
-        assertEquals(new DataWord(cowValue2), track1.getStorageValue(cow, new DataWord(cowKey2)));
-        assertNull(track1.getStorageValue(cow, new DataWord(cowKey1)));
+        assertEquals(DataWord.of(cowValue2), track1.getStorageValue(cow, DataWord.of(cowKey2)));
+        assertNull(track1.getStorageValue(cow, DataWord.of(cowKey1)));
 
         track2.commit();
         // leaving level_2
@@ -767,8 +767,8 @@ public class RepositoryTest {
         track1.commit();
         // leaving level_1
 
-        assertEquals(new DataWord(cowValue2), track1.getStorageValue(cow, new DataWord(cowKey2)));
-        assertNull(track1.getStorageValue(cow, new DataWord(cowKey1)));
+        assertEquals(DataWord.of(cowValue2), track1.getStorageValue(cow, DataWord.of(cowKey2)));
+        assertNull(track1.getStorageValue(cow, DataWord.of(cowKey1)));
 
         repository.close();
     }
@@ -791,8 +791,8 @@ public class RepositoryTest {
 
         // changes level_2
         Repository track2 = track1.startTracking();
-        track2.addStorageRow(cow, new DataWord(cowKey1), new DataWord(cowValue1));
-        assertEquals(new DataWord(cowValue1), track2.getStorageValue(cow, new DataWord(cowKey1)));
+        track2.addStorageRow(cow, DataWord.of(cowKey1), DataWord.of(cowValue1));
+        assertEquals(DataWord.of(cowValue1), track2.getStorageValue(cow, DataWord.of(cowKey1)));
         track2.rollback();
         // leaving level_2
 
@@ -837,13 +837,13 @@ public class RepositoryTest {
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
 
-        DataWord cowKey1 = new DataWord("c1");
-        DataWord cowVal1 = new DataWord("c0a1");
-        DataWord cowVal0 = new DataWord("c0a0");
+        DataWord cowKey1 = DataWord.of("c1");
+        DataWord cowVal1 = DataWord.of("c0a1");
+        DataWord cowVal0 = DataWord.of("c0a0");
 
-        DataWord horseKey1 = new DataWord("e1");
-        DataWord horseVal1 = new DataWord("c0a1");
-        DataWord horseVal0 = new DataWord("c0a0");
+        DataWord horseKey1 = DataWord.of("e1");
+        DataWord horseVal1 = DataWord.of("c0a1");
+        DataWord horseVal0 = DataWord.of("c0a0");
 
         track.addStorageRow(cow, cowKey1, cowVal0);
         track.addStorageRow(horse, horseKey1, horseVal0);
@@ -885,15 +885,15 @@ public class RepositoryTest {
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
 
-        DataWord cowKey1 = new DataWord("c1");
-        DataWord cowKey2 = new DataWord("c2");
-        DataWord cowVal1 = new DataWord("c0a1");
-        DataWord cowVal0 = new DataWord("c0a0");
+        DataWord cowKey1 = DataWord.of("c1");
+        DataWord cowKey2 = DataWord.of("c2");
+        DataWord cowVal1 = DataWord.of("c0a1");
+        DataWord cowVal0 = DataWord.of("c0a0");
 
-        DataWord horseKey1 = new DataWord("e1");
-        DataWord horseKey2 = new DataWord("e2");
-        DataWord horseVal1 = new DataWord("c0a1");
-        DataWord horseVal0 = new DataWord("c0a0");
+        DataWord horseKey1 = DataWord.of("e1");
+        DataWord horseKey2 = DataWord.of("e2");
+        DataWord horseVal1 = DataWord.of("c0a1");
+        DataWord horseVal0 = DataWord.of("c0a0");
 
         Repository track2 = repository.startTracking(); //track
         track2.addStorageRow(cow, cowKey1, cowVal1);
@@ -948,9 +948,9 @@ public class RepositoryTest {
 
         final byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
 
-        final DataWord cowKey1 = new DataWord("c1");
-        final DataWord cowKey2 = new DataWord("c2");
-        final DataWord cowVal0 = new DataWord("c0a0");
+        final DataWord cowKey1 = DataWord.of("c1");
+        final DataWord cowKey2 = DataWord.of("c2");
+        final DataWord cowVal0 = DataWord.of("c0a0");
 
         Repository track2 = repository.startTracking(); //track
         track2.addStorageRow(cow, cowKey2, cowVal0);
@@ -969,7 +969,7 @@ public class RepositoryTest {
                     while (running) {
                         Repository snap = repository.getSnapshotTo(repository.getRoot()).startTracking();
                         snap.addBalance(cow, BigInteger.TEN);
-                        snap.addStorageRow(cow, cowKey1, new DataWord(cnt));
+                        snap.addStorageRow(cow, cowKey1, DataWord.of(cnt));
                         snap.rollback();
                         cnt++;
                     }
@@ -985,7 +985,7 @@ public class RepositoryTest {
             try {
                 while(running) {
                     Repository track21 = repository.startTracking(); //track
-                    DataWord cVal = new DataWord(cnt);
+                    DataWord cVal = DataWord.of(cnt);
                     track21.addStorageRow(cow, cowKey1, cVal);
                     track21.addBalance(cow, BigInteger.ONE);
                     track21.commit();
@@ -1000,7 +1000,7 @@ public class RepositoryTest {
             } catch (Throwable e) {
                 e.printStackTrace();
                 try {
-                    repository.addStorageRow(cow, cowKey1, new DataWord(123));
+                    repository.addStorageRow(cow, cowKey1, DataWord.of(123));
                 } catch (Exception e1) {
                     e1.printStackTrace();
                 }

@@ -48,10 +48,10 @@ import java.util.List;
 public class TransactionStore extends ObjectDataSource<List<TransactionInfo>> {
     private static final Logger logger = LoggerFactory.getLogger("db");
 
-    private final LRUMap<ByteArrayWrapper, Object> lastSavedTxHash = new LRUMap<>(5000);
-    private final Object object = new Object();
+    protected final LRUMap<ByteArrayWrapper, Object> lastSavedTxHash = new LRUMap<>(5000);
+    protected final Object object = new Object();
 
-    private final static Serializer<List<TransactionInfo>, byte[]> serializer =
+    protected final static Serializer<List<TransactionInfo>, byte[]> serializer =
             new Serializer<List<TransactionInfo>, byte[]>() {
         @Override
         public byte[] serialize(List<TransactionInfo> object) {
@@ -66,8 +66,7 @@ public class TransactionStore extends ObjectDataSource<List<TransactionInfo>> {
         public List<TransactionInfo> deserialize(byte[] stream) {
             try {
                 if (stream == null) return null;
-                RLPList params = RLP.decode2(stream);
-                RLPList infoList = (RLPList) params.get(0);
+                RLPList infoList = RLP.unwrapList(stream);
                 List<TransactionInfo> ret = new ArrayList<>();
                 for (int i = 0; i < infoList.size(); i++) {
                     ret.add(new TransactionInfo(infoList.get(i).getRLPData()));
@@ -108,6 +107,7 @@ public class TransactionStore extends ObjectDataSource<List<TransactionInfo>> {
             }
         }
         existingInfos.add(tx);
+
         put(txHash, existingInfos);
 
         return true;

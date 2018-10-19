@@ -154,44 +154,49 @@ public class ChannelManager {
     }
 
     private void processNewPeers() {
-        if (newPeers.isEmpty()) return;
+        List<Runnable> noLockTasks = new ArrayList<>();
 
-        List<Channel> processed = new ArrayList<>();
+        synchronized (this) {
+            if (newPeers.isEmpty()) return;
 
-        int addCnt = 0;
-        for(Channel peer : newPeers) {
+            List<Channel> processed = new ArrayList<>();
+            int addCnt = 0;
+            for (Channel peer : newPeers) {
 
-            logger.debug("Processing new peer: " + peer);
+                logger.debug("Processing new peer: " + peer);
 
-            if(peer.isProtocolsInitialized()) {
+                if (peer.isProtocolsInitialized()) {
 
-                logger.debug("Protocols initialized");
+                    logger.debug("Protocols initialized");
 
-                if (!activePeers.containsKey(peer.getNodeIdWrapper())) {
-                    if (!peer.isActive() &&
-                        activePeers.size() >= maxActivePeers &&
-                        !trustedPeers.accept(peer.getNode())) {
+                    if (!activePeers.containsKey(peer.getNodeIdWrapper())) {
+                        if (!peer.isActive() &&
+                                activePeers.size() >= maxActivePeers &&
+                                !trustedPeers.accept(peer.getNode())) {
 
-                        // restricting inbound connections unless this is a trusted peer
+                            // restricting inbound connections unless this is a trusted peer
 
-                        disconnect(peer, TOO_MANY_PEERS);
+                            noLockTasks.add(() -> disconnect(peer, TOO_MANY_PEERS));
+                        } else {
+                            addCnt++;
+                            process(peer);
+                        }
                     } else {
-                        process(peer);
-                        addCnt++;
+                        noLockTasks.add(() -> disconnect(peer, DUPLICATE_PEER));
                     }
-                } else {
-                    disconnect(peer, DUPLICATE_PEER);
+
+                    processed.add(peer);
                 }
-
-                processed.add(peer);
             }
+
+            if (addCnt > 0) {
+                logger.info("New peers processed: " + processed + ", active peers added: " + addCnt + ", total active peers: " + activePeers.size());
+            }
+
+            newPeers.removeAll(processed);
         }
 
-        if (addCnt > 0) {
-            logger.info("New peers processed: " + processed + ", active peers added: " + addCnt + ", total active peers: " + activePeers.size());
-        }
-
-        newPeers.removeAll(processed);
+        noLockTasks.forEach(Runnable::run);
     }
 
     public void disconnect(Channel peer, ReasonCode reason) {
@@ -339,7 +344,7 @@ public class ChannelManager {
         }
     }
 
-    public void add(Channel peer) {
+    public synchronized void add(Channel peer) {
         logger.debug("New peer in ChannelManager {}", peer);
         newPeers.add(peer);
     }
@@ -348,8 +353,10 @@ public class ChannelManager {
         logger.debug("Peer {}: notifies about disconnect", channel);
         channel.onDisconnect();
         syncPool.onDisconnect(channel);
-        activePeers.values().remove(channel);
-        newPeers.remove(channel);
+        synchronized(this) {
+            activePeers.values().remove(channel);
+            newPeers.remove(channel);
+        }
     }
 
     public void onSyncDone(boolean done) {

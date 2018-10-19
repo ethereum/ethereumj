@@ -128,7 +128,8 @@ public class RocksDbDataSource implements DbSource<byte[]> {
                 tableCfg.setFilter(new BloomFilter(10, false));
 
                 // read options
-                readOpts = new ReadOptions().setPrefixSameAsStart(true)
+                readOpts = new ReadOptions();
+                readOpts = readOpts.setPrefixSameAsStart(true)
                         .setVerifyChecksums(false);
 
                 try {
@@ -211,6 +212,7 @@ public class RocksDbDataSource implements DbSource<byte[]> {
 
             logger.debug("Close db: {}", name);
             db.close();
+            readOpts.close();
 
             alive = false;
 

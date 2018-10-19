@@ -43,6 +43,7 @@ public class TransactionExecutionSummary {
     private BigInteger gasLeftover = BigInteger.ZERO;
     private BigInteger gasRefund = BigInteger.ZERO;
 
+    private Map<byte[], AccountState> touchedAccounts = emptyMap();
     private List<DataWord> deletedAccounts = emptyList();
     private List<InternalTransaction> internalTransactions = emptyList();
     private Map<DataWord, DataWord> storageDiff = emptyMap();
@@ -90,6 +91,7 @@ public class TransactionExecutionSummary {
         this.logs = decodeLogs((RLPList) summary.get(11));
         byte[] failed = summary.get(12).getRLPData();
         this.failed = isNotEmpty(failed) && RLP.decodeInt(failed, 0) == 1;
+        this.touchedAccounts = decodeTouchedAccounts((RLPList) summary.get(13));
     }
 
     private static BigInteger decodeBigInteger(byte[] encoded) {
@@ -113,7 +115,8 @@ public class TransactionExecutionSummary {
                 encodeTouchedStorage(this.touchedStorage),
                 RLP.encodeElement(this.result),
                 encodeLogs(this.logs),
-                RLP.encodeInt(this.failed ? 1 : 0)
+                RLP.encodeInt(this.failed ? 1 : 0),
+                encodeTouchedAccounts(this.touchedAccounts)
         );
 
         return rlpEncoded;
@@ -141,8 +144,8 @@ public class TransactionExecutionSummary {
         for (RLPElement entry : (RLPList) encoded) {
             RLPList asList = (RLPList) entry;
 
-            DataWord key = new DataWord(asList.get(0).getRLPData());
-            DataWord value = new DataWord(asList.get(1).getRLPData());
+            DataWord key = DataWord.of(asList.get(0).getRLPData());
+            DataWord value = DataWord.of(asList.get(1).getRLPData());
             byte[] changedBytes = asList.get(2).getRLPData();
             boolean changed = isNotEmpty(changedBytes) && RLP.decodeInt(changedBytes, 0) == 1;
 
@@ -184,8 +187,8 @@ public class TransactionExecutionSummary {
     private static Map<DataWord, DataWord> decodeStorageDiff(RLPList storageDiff) {
         Map<DataWord, DataWord> result = new HashMap<>();
         for (RLPElement entry : storageDiff) {
-            DataWord key = new DataWord(((RLPList) entry).get(0).getRLPData());
-            DataWord value = new DataWord(((RLPList) entry).get(1).getRLPData());
+            DataWord key = DataWord.of(((RLPList) entry).get(0).getRLPData());
+            DataWord value = DataWord.of(((RLPList) entry).get(1).getRLPData());
             result.put(key, value);
         }
         return result;
@@ -209,6 +212,28 @@ public class TransactionExecutionSummary {
         return result;
     }
 
+    private static byte[] encodeTouchedAccounts(Map<byte[], AccountState> touchedAccounts) {
+        byte[][] result = new byte[touchedAccounts.size()][];
+        int idx = 0;
+
+        for (Map.Entry<byte[], AccountState> entry : touchedAccounts.entrySet()) {
+          result[idx++] = RLP.encodeList(RLP.encodeElement(entry.getKey()), entry.getValue().getEncoded());
+        }
+
+        return RLP.encodeList(result);
+    }
+
+    private static Map<byte[], AccountState> decodeTouchedAccounts(RLPList touchedAccounts) {
+        Map<byte[], AccountState> result = new HashMap<>();
+        for (RLPElement element : touchedAccounts) {
+          RLPList entry = RLP.unwrapList(element.getRLPData());
+          byte[] address = entry.get(0).getRLPData();
+          AccountState state = new AccountState(entry.get(1).getRLPData());
+          result.put(address, state);
+        }
+        return result;
+    }
+
     private static byte[] encodeDeletedAccounts(List<DataWord> deletedAccounts) {
         byte[][] result = new byte[deletedAccounts.size()][];
         for (int i = 0; i < deletedAccounts.size(); i++) {
@@ -222,7 +247,7 @@ public class TransactionExecutionSummary {
     private static List<DataWord> decodeDeletedAccounts(RLPList deletedAccounts) {
         List<DataWord> result = new ArrayList<>();
         for (RLPElement deletedAccount : deletedAccounts) {
-            result.add(new DataWord(deletedAccount.getRLPData()));
+            result.add(DataWord.of(deletedAccount.getRLPData()));
         }
         return result;
     }
@@ -278,6 +303,11 @@ public class TransactionExecutionSummary {
     public BigInteger getValue() {
         if (!parsed) rlpParse();
         return value;
+    }
+
+    public Map<byte[], AccountState> getTouchedAccounts() {
+        if (!parsed) rlpParse();
+        return touchedAccounts;
     }
 
     public List<DataWord> getDeletedAccounts() {
@@ -351,6 +381,12 @@ public class TransactionExecutionSummary {
 
         public Builder internalTransactions(List<InternalTransaction> internalTransactions) {
             summary.internalTransactions = unmodifiableList(internalTransactions);
+            return this;
+        }
+
+        public Builder touchedAccounts(Map<byte[], AccountState> touchedAccounts) {
+            summary.touchedAccounts = new HashMap<>();
+            summary.touchedAccounts.putAll(touchedAccounts);
             return this;
         }
 

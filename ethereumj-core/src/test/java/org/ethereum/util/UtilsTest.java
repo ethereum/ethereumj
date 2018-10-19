@@ -17,11 +17,14 @@
  */
 package org.ethereum.util;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.util.Locale;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -32,6 +35,18 @@ import static org.junit.Assert.assertTrue;
  * @since 17.05.14
  */
 public class UtilsTest {
+    private Locale defaultLocale;
+
+    @Before
+    public void setUp() throws Exception {
+        defaultLocale = Locale.getDefault();
+        Locale.setDefault(Locale.US);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        Locale.setDefault(defaultLocale);
+    }
 
     @Test
     public void testGetValueShortString1() {

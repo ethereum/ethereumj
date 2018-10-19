@@ -114,7 +114,7 @@ ext {
     slf4jVersion = '1.7.7'
     leveldbVersion = '0.7'
     scastleVersion = '1.58.0.0'
-    springVersion = '4.2.0.RELEASE'
+    springVersion = '4.3.19.RELEASE'
     hibernateVersion = '4.3.7.Final'
     junitVersion = '4.11'
 }
@@ -130,23 +130,23 @@ dependencies {
 
     compile "org.ethereum:rocksdbjni:5.9.2"                   // RocksDB Java API
 
-    compile "org.ethereum:solcJ-all:0.4.19"                  // Solidity Compiler win/mac/linux binaries
+    compile "org.ethereum:solcJ-all:0.4.25"                  // Solidity Compiler win/mac/linux binaries
 
     compile "com.google.guava:guava:24.1-jre"
 
+    compile "org.apache.kafka:kafka-streams:2.0.0"
+
+    compile "com.github.jcustenborder.kafka:kafka-jackson:0.0.1.2"
+    compile "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.5"
+
     compile "com.cedarsoftware:java-util:1.8.0" // for deep equals
-    compile "org.javassist:javassist:3.15.0-GA"
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
     compile "ch.qos.logback:logback-classic:1.1.7"
-    compile "org.codehaus.jackson:jackson-mapper-asl:1.9.13"
-    compile "com.google.code.findbugs:jsr305:3.0.0"
     compile "com.fasterxml.jackson.core:jackson-databind:2.5.1"
     compile "org.apache.commons:commons-collections4:4.0"
     compile "org.apache.commons:commons-lang3:3.4"
     compile "commons-codec:commons-codec:1.10"
     compile "org.springframework:spring-context:${springVersion}"
-    compile "org.springframework:spring-tx:${springVersion}"
-    compile "org.springframework:spring-orm:${springVersion}"
     compile "com.typesafe:config:1.2.1"
     compile "com.googlecode.concurrent-locks:concurrent-locks:1.0.0"
 
@@ -250,7 +250,7 @@ bintray {
     dryRun = false //Whether to run this as dry-run, without deploying
     publish = true //If version should be auto published after an upload
     pkg {
-        userOrg = 'ethereum' //An optional organization name when the repo belongs to one of the user's orgs
+        userOrg = 'enkryptio' //An optional organization name when the repo belongs to one of the user's orgs
         repo = 'maven'
         name = 'org.ethereum'
     }
@@ -298,8 +298,8 @@ def customizePom(pom, gradleProject) {
         // add all items necessary for maven central publication
         generatedPom.project {
             name = "ethereumj"
-            description = "Java implementation of the Ethereum protocol"
-            url = "https://github.com/ethereum/ethereumj"
+            description = "Java implementation of the Ethereum protocol (EthVM fork)"
+            url = "https://github.com/enkryptio/ethereumj"
             organization {
                 name = "Ethereum"
                 url = "https://ethereum.org"
@@ -312,9 +312,9 @@ def customizePom(pom, gradleProject) {
                 }
             }
             scm {
-                url = "https://github.com/ethereum/ethereumj"
+                url = "https://github.com/enkryptio/ethereumj"
                 connection = "scm:git:git://github.com/ethereum/ethereumj"
-                developerConnection = "scm:git:git://github.com/ethereum/ethereumj"
+                developerConnection = "scm:git:git://github.com/enkryptio/ethereumj"
             }
             developers {
                 developer {

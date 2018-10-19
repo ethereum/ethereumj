@@ -411,7 +411,7 @@ public class PendingStateImpl implements PendingState {
 
         TransactionExecutor executor = new TransactionExecutor(
                 tx, best.getCoinbase(), getRepository(),
-                blockStore, programInvokeFactory, createFakePendingBlock(), new EthereumListenerAdapter(), 0)
+                blockStore, programInvokeFactory, createFakePendingBlock())
                 .withCommonConfig(commonConfig);
 
         executor.init();
