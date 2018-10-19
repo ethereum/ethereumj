@@ -2,6 +2,8 @@ package io.enkrypt.kafka.listener;
 
 import io.enkrypt.kafka.Kafka;
 
+import java.net.InetSocketAddress;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +17,7 @@ import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
 
 public class KafkaEthereumListener implements EthereumListener {
 
@@ -25,28 +28,34 @@ public class KafkaEthereumListener implements EthereumListener {
   private int numPendingTxs;
   private long lastBlockTimestampMs;
 
+  private byte[] bestHash;
+
+  private Map<String, Channel> peersMap;
+
   public KafkaEthereumListener(Kafka kafka, Blockchain blockchain, SystemProperties config) {
     this.kafka = kafka;
     this.blockchain = blockchain;
     this.config = config;
+
     init();
   }
 
-  private void init(){
-    // TODO clear sync number pre-emptively on shut down
-    publishSyncNumber(-1L);
+  private void init() {
+
     numPendingTxs = 0;
     lastBlockTimestampMs = 0L;
+
+    peersMap = new HashMap<>();
+    bestHash = new byte[0];
 
     // find latest block timestamp remembering that the block timestamp is unix time, seconds since epoch
 
     final Block bestBlock = blockchain.getBestBlock();
     lastBlockTimestampMs = bestBlock == null ? 0L : bestBlock.getTimestamp() * 1000;
-
   }
 
-  private void publishSyncNumber(long number) {
-    byte[] key = "sync_number".getBytes();
+  private void publishBestNumber(long number) {
+    byte[] key = "best_number".getBytes();
     byte[] value = Long.toHexString(number).getBytes();
     kafka.send(Kafka.Producer.METADATA, key, value);
   }
@@ -63,11 +72,31 @@ public class KafkaEthereumListener implements EthereumListener {
 
   @Override
   public void onEthStatusUpdated(Channel channel, StatusMessage status) {
+
+    // when a new latest block is detected we publish the best known block number to the metadata topic
+
+    if (!FastByteComparisons.equal(bestHash, status.getBestHash())) {
+
+      long bestNumber = 0L;
+
+      for (Channel entry : peersMap.values()) {
+        final BlockIdentifier bestKnown = entry.getEthHandler().getBestKnownBlock();
+        if (bestKnown != null) {
+          bestNumber = Math.max(bestNumber, bestKnown.getNumber());
+        }
+      }
+
+      if(bestNumber > 0) {
+        this.publishBestNumber(bestNumber);
+      }
+
+      this.bestHash = status.getBestHash();
+    }
+
   }
 
   @Override
   public void onRecvMessage(Channel channel, Message message) {
-
   }
 
   @Override
@@ -77,15 +106,6 @@ public class KafkaEthereumListener implements EthereumListener {
 
   @Override
   public void onSyncDone(SyncState state) {
-    switch (state) {
-
-      case COMPLETE:
-        publishSyncNumber(blockchain.getBestBlock().getNumber());
-        break;
-
-      default:
-        throw new IllegalStateException("Unexpected state: " + state);
-    }
   }
 
   @Override
@@ -95,13 +115,16 @@ public class KafkaEthereumListener implements EthereumListener {
 
   @Override
   public void onPeerAddedToSyncPool(Channel peer) {
-
+    final InetSocketAddress inet = peer.getInetSocketAddress();
+    peersMap.put(inet.toString(), peer);
   }
 
   @Override
   public void onPeerDisconnect(String host, long port) {
-
+    final String key = String.format("%s:%d", host, port);
+    peersMap.remove(key);
   }
+
 
   @Override
   public void onPendingTransactionsReceived(List<Transaction> transactions) {

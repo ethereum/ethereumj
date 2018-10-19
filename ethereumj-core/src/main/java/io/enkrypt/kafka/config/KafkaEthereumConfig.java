@@ -6,7 +6,6 @@ import io.enkrypt.kafka.listener.BlockSummaryEthereumListener;
 import io.enkrypt.kafka.listener.KafkaEthereumListener;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Blockchain;
-import org.ethereum.core.EventDispatchThread;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
