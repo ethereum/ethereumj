@@ -83,7 +83,6 @@ public class BlockSummary {
     return statistics;
   }
 
-
   /**
    * All the mining rewards paid out for this block, including the main block rewards, uncle rewards, and transaction fees.
    */

@@ -6,11 +6,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 @Configuration
-@Import(KafkaEthereumConfig.class)
-public class PrivateNetKafkaConfig {
+@Import(KafkaStateReplayConfig.class)
+public class RopstenKafkaStateReplayConfig {
 
   @Bean
   public SystemProperties systemProperties() {
-    return KafkaSystemProperties.getKafkaPrivateNetSystemProperties();
+    return KafkaSystemProperties.getKafkaRopstenSystemProperties();
   }
 }

@@ -2,7 +2,6 @@ package org.ethereum.core;
 
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
-import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
 import org.ethereum.vm.program.InternalTransaction;
 
@@ -11,7 +10,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.ethereum.util.ByteUtil.byteArrayToLong;
 import static org.ethereum.util.ByteUtil.bytesToBigInteger;
+import static org.ethereum.util.ByteUtil.longToBytes;
 import static org.ethereum.util.RLP.*;
 
 public class BlockStatistics {
@@ -20,10 +21,13 @@ public class BlockStatistics {
   private int numSuccessfulTxs = 0;
   private int numFailedTxs = 0;
   private int totalInternalTxs = 0;
+  private int numPendingTxs = 0;
+  private long processingTimeMs = 0L;
   private BigInteger totalGasPrice = BigInteger.ZERO;
   private BigInteger avgGasPrice = BigInteger.ZERO;
   private BigInteger totalTxsFees = BigInteger.ZERO;
   private BigInteger avgTxsFees = BigInteger.ZERO;
+  private BigInteger totalDifficulty = BigInteger.ZERO;
 
   public BlockStatistics() {
   }
@@ -36,10 +40,13 @@ public class BlockStatistics {
     this.numSuccessfulTxs = decodeInt(list.get(1).getRLPData(), 0);
     this.numFailedTxs = decodeInt(list.get(2).getRLPData(), 0);
     this.totalInternalTxs = decodeInt(list.get(3).getRLPData(), 0);
-    this.totalGasPrice = decodeBigInteger(list.get(4).getRLPData(), 0);
-    this.avgGasPrice = decodeBigInteger(list.get(5).getRLPData(), 0);
-    this.totalTxsFees = decodeBigInteger(list.get(6).getRLPData(), 0);
-    this.avgTxsFees = decodeBigInteger(list.get(7).getRLPData(), 0);
+    this.numPendingTxs = decodeInt(list.get(4).getRLPData(), 0);
+    this.processingTimeMs = byteArrayToLong(list.get(5).getRLPData());
+    this.totalGasPrice = decodeBigInteger(list.get(6).getRLPData(), 0);
+    this.avgGasPrice = decodeBigInteger(list.get(7).getRLPData(), 0);
+    this.totalTxsFees = decodeBigInteger(list.get(8).getRLPData(), 0);
+    this.avgTxsFees = decodeBigInteger(list.get(9).getRLPData(), 0);
+    this.totalDifficulty = decodeBigInteger(list.get(10).getRLPData(), 0);
   }
 
   public int getTotalTxs() {
@@ -75,6 +82,24 @@ public class BlockStatistics {
 
   public BlockStatistics setTotalInternalTxs(int totalInternalTxs) {
     this.totalInternalTxs = totalInternalTxs;
+    return this;
+  }
+
+  public int getNumPendingTxs() {
+    return numPendingTxs;
+  }
+
+  public BlockStatistics setNumPendingTxs(int numPendingTxs) {
+    this.numPendingTxs = numPendingTxs;
+    return this;
+  }
+
+  public long getProcessingTimeMs() {
+    return processingTimeMs;
+  }
+
+  public BlockStatistics setProcessingTimeMs(long processingTimeMs) {
+    this.processingTimeMs = processingTimeMs;
     return this;
   }
 
@@ -114,16 +139,28 @@ public class BlockStatistics {
     return this;
   }
 
+  public BigInteger getTotalDifficulty() {
+    return totalDifficulty;
+  }
+
+  public BlockStatistics setTotalDifficulty(BigInteger totalDifficulty) {
+    this.totalDifficulty = totalDifficulty;
+    return this;
+  }
+
   public byte[] getEncoded() {
     return encodeList(
       encodeElement(encodeInt(totalTxs)),
       encodeElement(encodeInt(numSuccessfulTxs)),
       encodeElement(encodeInt(numFailedTxs)),
       encodeElement(encodeInt(totalInternalTxs)),
+      encodeElement(encodeInt(numPendingTxs)),
+      encodeElement(longToBytes(processingTimeMs)),
       encodeElement(encodeBigInteger(totalGasPrice)),
       encodeElement(encodeBigInteger(avgGasPrice)),
       encodeElement(encodeBigInteger(totalTxsFees)),
-      encodeElement(encodeBigInteger(avgTxsFees))
+      encodeElement(encodeBigInteger(avgTxsFees)),
+      encodeElement(encodeBigInteger(totalDifficulty))
     );
   }
 

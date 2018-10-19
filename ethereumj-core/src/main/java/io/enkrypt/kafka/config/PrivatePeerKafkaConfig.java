@@ -4,7 +4,6 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.samples.BasicSample;
-import org.ethereum.samples.PrivateMinerSample;
 import org.ethereum.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.context.annotation.Bean;
@@ -12,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 @Configuration
-@Import(KafkaConfig.class)
+@Import(KafkaEthereumConfig.class)
 public class PrivatePeerKafkaConfig {
 
   @Bean
