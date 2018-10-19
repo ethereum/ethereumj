@@ -18,6 +18,7 @@ public class BlockStatistics {
   private int numSuccessfulTxs = 0;
   private int numFailedTxs = 0;
   private int totalInternalTxs = 0;
+  private int numPendingTxs = 0;
   private BigInteger totalGasPrice = BigInteger.ZERO;
   private BigInteger avgGasPrice = BigInteger.ZERO;
   private BigInteger totalTxsFees = BigInteger.ZERO;
@@ -35,11 +36,12 @@ public class BlockStatistics {
     this.numSuccessfulTxs = decodeInt(list.get(1).getRLPData(), 0);
     this.numFailedTxs = decodeInt(list.get(2).getRLPData(), 0);
     this.totalInternalTxs = decodeInt(list.get(3).getRLPData(), 0);
-    this.totalGasPrice = decodeBigInteger(list.get(4).getRLPData(), 0);
-    this.avgGasPrice = decodeBigInteger(list.get(5).getRLPData(), 0);
-    this.totalTxsFees = decodeBigInteger(list.get(6).getRLPData(), 0);
-    this.avgTxsFees = decodeBigInteger(list.get(7).getRLPData(), 0);
-    this.totalDifficulty = decodeBigInteger(list.get(8).getRLPData(), 0);
+    this.numPendingTxs = decodeInt(list.get(4).getRLPData(), 0);
+    this.totalGasPrice = decodeBigInteger(list.get(5).getRLPData(), 0);
+    this.avgGasPrice = decodeBigInteger(list.get(6).getRLPData(), 0);
+    this.totalTxsFees = decodeBigInteger(list.get(7).getRLPData(), 0);
+    this.avgTxsFees = decodeBigInteger(list.get(8).getRLPData(), 0);
+    this.totalDifficulty = decodeBigInteger(list.get(9).getRLPData(), 0);
   }
 
   public int getTotalTxs() {
@@ -75,6 +77,15 @@ public class BlockStatistics {
 
   public BlockStatistics setTotalInternalTxs(int totalInternalTxs) {
     this.totalInternalTxs = totalInternalTxs;
+    return this;
+  }
+
+  public int getNumPendingTxs() {
+    return numPendingTxs;
+  }
+
+  public BlockStatistics setNumPendingTxs(int numPendingTxs) {
+    this.numPendingTxs = numPendingTxs;
     return this;
   }
 
@@ -129,6 +140,7 @@ public class BlockStatistics {
       encodeElement(encodeInt(numSuccessfulTxs)),
       encodeElement(encodeInt(numFailedTxs)),
       encodeElement(encodeInt(totalInternalTxs)),
+      encodeElement(encodeInt(numPendingTxs)),
       encodeElement(encodeBigInteger(totalGasPrice)),
       encodeElement(encodeBigInteger(avgGasPrice)),
       encodeElement(encodeBigInteger(totalTxsFees)),

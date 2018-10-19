@@ -1,7 +1,6 @@
 package io.enkrypt.kafka.listener;
 
 import io.enkrypt.kafka.Kafka;
-import io.enkrypt.kafka.db.BlockSummaryStore;
 
 import java.util.List;
 import java.util.Map;
@@ -23,6 +22,8 @@ public class KafkaEthereumListener implements EthereumListener {
   private final Blockchain blockchain;
   private final SystemProperties config;
 
+  private int numPendingTxs;
+
   public KafkaEthereumListener(Kafka kafka, Blockchain blockchain, SystemProperties config) {
     this.kafka = kafka;
     this.blockchain = blockchain;
@@ -33,6 +34,7 @@ public class KafkaEthereumListener implements EthereumListener {
   private void init(){
     // TODO clear sync number pre-emptively on shut down
     publishSyncNumber(-1L);
+    numPendingTxs = 0;
   }
 
   private void publishSyncNumber(long number) {
@@ -113,10 +115,12 @@ public class KafkaEthereumListener implements EthereumListener {
         // send a tombstone to 'remove' as any included transactions will be sent in the onBlock and
         // we no longer care about dropped transactions
         kafka.send(Kafka.Producer.PENDING_TRANSACTIONS, txHash, null);
+        numPendingTxs--;
         break;
 
       case NEW_PENDING:
         kafka.send(Kafka.Producer.PENDING_TRANSACTIONS, txHash, txReceipt.getTransaction().getEncoded());
+        numPendingTxs++;
         break;
 
       default:
@@ -126,6 +130,9 @@ public class KafkaEthereumListener implements EthereumListener {
 
   @Override
   public void onBlock(BlockSummary blockSummary) {
+
+    // set no pending transactions
+    blockSummary.getStatistics().setNumPendingTxs(numPendingTxs);
 
     // Send blocks
 
