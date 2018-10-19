@@ -23,6 +23,7 @@ public class KafkaEthereumListener implements EthereumListener {
   private final SystemProperties config;
 
   private int numPendingTxs;
+  private long lastBlockTimestampMs;
 
   public KafkaEthereumListener(Kafka kafka, Blockchain blockchain, SystemProperties config) {
     this.kafka = kafka;
@@ -35,6 +36,13 @@ public class KafkaEthereumListener implements EthereumListener {
     // TODO clear sync number pre-emptively on shut down
     publishSyncNumber(-1L);
     numPendingTxs = 0;
+    lastBlockTimestampMs = 0L;
+
+    // find latest block timestamp remembering that the block timestamp is unix time, seconds since epoch
+
+    final Block bestBlock = blockchain.getBestBlock();
+    lastBlockTimestampMs = bestBlock == null ? 0L : bestBlock.getTimestamp() * 1000;
+
   }
 
   private void publishSyncNumber(long number) {
@@ -131,10 +139,19 @@ public class KafkaEthereumListener implements EthereumListener {
   @Override
   public void onBlock(BlockSummary blockSummary) {
 
-    // set no pending transactions
-    blockSummary.getStatistics().setNumPendingTxs(numPendingTxs);
+    // calculate processing time for the block, remembering that block timestamp is unix time, seconds since epoch
+    final long timestampMs = blockSummary.getBlock().getTimestamp() * 1000;
 
-    // Send blocks
+    final long processingTimeMs = lastBlockTimestampMs == 0 ? 0 : timestampMs - lastBlockTimestampMs;
+    lastBlockTimestampMs = timestampMs;
+
+    // set num pending transactions and processing time
+
+    blockSummary.getStatistics()
+      .setNumPendingTxs(numPendingTxs)
+      .setProcessingTimeMs(processingTimeMs);
+
+    // Send block to kafka
 
     final Block block = blockSummary.getBlock();
     final long number = block.getNumber();
@@ -142,7 +159,6 @@ public class KafkaEthereumListener implements EthereumListener {
     final byte[] key = ByteUtil.longToBytes(number);
     final byte[] value = blockSummary.getEncoded();
 
-    //
     kafka.send(Kafka.Producer.BLOCKS, key, value);
 
     // Send account balances
