@@ -32,7 +32,7 @@ import static org.ethereum.util.ByteUtil.isSingleZero;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
- * Active beacon chain state
+ * Active beacon chain stated
  */
 public class ActiveState {
     // Attestations that have not yet been processed
@@ -65,6 +65,10 @@ public class ActiveState {
         }
 
         return new ActiveState(pendingAttestations, pendingSpecials, recentBlockHashes, new byte[32]);
+    }
+
+    public ActiveState withPendingAttestations(List<AttestationRecord> pendingAttestations) {
+        return new ActiveState(pendingAttestations, this.pendingSpecials, this.recentBlockHashes, this.randaoMix);
     }
 
     public ActiveState(byte[] encoded) {

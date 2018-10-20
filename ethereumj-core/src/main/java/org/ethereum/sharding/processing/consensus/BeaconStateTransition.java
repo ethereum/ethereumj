@@ -18,6 +18,8 @@
 package org.ethereum.sharding.processing.consensus;
 
 import org.ethereum.sharding.domain.Beacon;
+import org.ethereum.sharding.processing.state.ActiveState;
+import org.ethereum.sharding.processing.state.AttestationRecord;
 import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.CrystallizedState;
 import org.ethereum.sharding.processing.state.Dynasty;
@@ -25,6 +27,9 @@ import org.ethereum.sharding.processing.state.Finality;
 import org.ethereum.sharding.registration.ValidatorRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.ethereum.sharding.processing.consensus.BeaconConstants.CYCLE_LENGTH;
 import static org.ethereum.sharding.util.BeaconUtils.cycleStartSlot;
@@ -55,6 +60,14 @@ public class BeaconStateTransition implements StateTransition<BeaconState> {
     public BeaconState applyBlock(Beacon block, BeaconState to) {
 
         CrystallizedState crystallized = to.getCrystallizedState();
+        ActiveState activeState = to.getActiveState();
+
+        List<AttestationRecord> mergedAttestations = new ArrayList<>();
+        mergedAttestations.addAll(activeState.getPendingAttestations());
+        mergedAttestations.addAll(block.getAttestations());
+
+        activeState = activeState
+                .withPendingAttestations(mergedAttestations);
 
         if (block.getSlotNumber() - crystallized.getLastStateRecalc() >= CYCLE_LENGTH) {
             logger.info("Calculate new crystallized state, slot: {}, prev slot: {}",
@@ -67,8 +80,18 @@ public class BeaconStateTransition implements StateTransition<BeaconState> {
                     .withDynasty(dynasty)
                     .withLastStateRecalc(cycleStartSlot(block))
                     .withFinality(finality);
+
+            // remove attestations older than last_state_recalc
+            List<AttestationRecord> uptodateAttestations = new ArrayList<>();
+            for (AttestationRecord record : activeState.getPendingAttestations()) {
+                if (record.getSlot() >= crystallized.getLastStateRecalc()) {
+                    uptodateAttestations.add(record);
+                }
+            }
+            activeState = activeState.
+                    withPendingAttestations(uptodateAttestations);
         }
 
-        return new BeaconState(crystallized, to.getActiveState());
+        return new BeaconState(crystallized, activeState);
     }
 }
