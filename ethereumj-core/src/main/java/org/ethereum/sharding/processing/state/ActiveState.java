@@ -44,9 +44,6 @@ public class ActiveState {
     // RANDAO state
     private final byte[] randaoMix;
 
-    // TODO: Add pending_specials
-
-
     public ActiveState(List<AttestationRecord> pendingAttestations, List<SpecialRecord> pendingSpecials,
                        List<byte[]> recentBlockHashes, byte[] randaoMix) {
         this.pendingAttestations = pendingAttestations;
