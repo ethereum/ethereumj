@@ -24,6 +24,8 @@ import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.domain.BeaconGenesis;
 import org.ethereum.sharding.processing.consensus.NoTransition;
 import org.ethereum.sharding.processing.consensus.StateTransition;
+import org.ethereum.sharding.processing.db.BeaconStore;
+import org.ethereum.sharding.processing.db.IndexedBeaconStore;
 import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.BeaconStateRepository;
 import org.ethereum.sharding.processing.state.StateRepository;
@@ -105,11 +107,12 @@ public class BeaconProposerTest {
             randao.generate(1000);
 
             StateRepository repository = new BeaconStateRepository(new HashMapDB<>(), new HashMapDB<>(),
-                    new HashMapDB<>(), new HashMapDB<>());
+                    new HashMapDB<>(), new HashMapDB<>(), new HashMapDB<>());
+            BeaconStore store = new IndexedBeaconStore(new HashMapDB<>(), new HashMapDB<>());
             StateTransition<BeaconState> stateTransition = new NoTransition();
 
             Helper helper = new Helper();
-            helper.proposer = new BeaconProposerImpl(randao, repository, stateTransition,
+            helper.proposer = new BeaconProposerImpl(randao, repository, store, stateTransition,
                     ValidatorConfig.DISABLED) {
 
                 @Override

@@ -29,6 +29,7 @@ import org.ethereum.util.Utils;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.ethereum.util.Utils.parseHex;
@@ -50,10 +51,10 @@ public class BeaconGenesis extends Beacon {
     /* Genesis timestamp, a source of slot's time frames */
     private long timestamp = 0L;
     /* A list of public keys that identifies participants of initial active validator set */
-    private List<String> initialValidators = new ArrayList<>();
+    private List<String> initialValidators;
 
     BeaconGenesis(Json json) {
-        super(json.parentHash(), json.randaoReveal(), json.mainChainRef(), EMPTY, SLOT);
+        super(json.parentHash(), json.randaoReveal(), json.mainChainRef(), EMPTY, SLOT, Collections.emptyList());
         this.timestamp = json.timestamp();
         this.initialValidators = json.validatorSet();
     }

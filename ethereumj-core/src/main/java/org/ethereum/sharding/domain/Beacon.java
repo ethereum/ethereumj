@@ -18,15 +18,21 @@
 package org.ethereum.sharding.domain;
 
 import org.ethereum.datasource.Serializer;
+import org.ethereum.sharding.processing.state.AttestationRecord;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.ethereum.crypto.HashUtil.blake2b;
+import static org.ethereum.util.ByteUtil.ZERO_BYTE_ARRAY;
+import static org.ethereum.util.ByteUtil.isSingleZero;
 
 /**
  * Beacon chain block structure.
@@ -46,13 +52,17 @@ public class Beacon {
     private byte[] stateHash;
     /* Slot number */
     private long slotNumber;
+    /* Attestations */
+    private List<AttestationRecord> attestations;
 
-    public Beacon(byte[] parentHash, byte[] randaoReveal, byte[] mainChainRef, byte[] stateHash, long slotNumber) {
+    public Beacon(byte[] parentHash, byte[] randaoReveal, byte[] mainChainRef, byte[] stateHash,
+                  long slotNumber,List<AttestationRecord> attestations) {
         this.parentHash = parentHash;
         this.randaoReveal = randaoReveal;
         this.mainChainRef = mainChainRef;
         this.stateHash = stateHash;
         this.slotNumber = slotNumber;
+        this.attestations = attestations;
     }
 
     public Beacon(byte[] rlp) {
@@ -62,11 +72,24 @@ public class Beacon {
         this.mainChainRef = items.get(2).getRLPData();
         this.stateHash = items.get(3).getRLPData();
         this.slotNumber = ByteUtil.bytesToBigInteger(items.get(4).getRLPData()).longValue();
+
+        this.attestations = new ArrayList<>();
+        if (!isSingleZero(items.get(5).getRLPData())) {
+            RLPList attestationsRlp = RLP.unwrapList(items.get(5).getRLPData());
+            for (RLPElement anAttestationsRlp : attestationsRlp) {
+                attestations.add(new AttestationRecord(anAttestationsRlp.getRLPData()));
+            }
+        }
     }
 
     public byte[] getEncoded() {
+        byte[][] encodedAttestations = new byte[attestations.size()][];
+        for (int i = 0; i < attestations.size(); i++)
+            encodedAttestations[i] = attestations.get(i).getEncoded();
+
         return RLP.wrapList(parentHash, randaoReveal, mainChainRef, stateHash,
-                BigInteger.valueOf(slotNumber).toByteArray());
+                BigInteger.valueOf(slotNumber).toByteArray(),
+                encodedAttestations.length == 0 ? ZERO_BYTE_ARRAY : RLP.wrapList(encodedAttestations));
     }
 
     public byte[] getHash() {
@@ -93,6 +116,10 @@ public class Beacon {
         return slotNumber;
     }
 
+    public List<AttestationRecord> getAttestations() {
+        return attestations;
+    }
+
     public boolean isParentOf(Beacon other) {
         return FastByteComparisons.equal(this.getHash(), other.getParentHash());
     }
@@ -101,10 +128,14 @@ public class Beacon {
         this.stateHash = stateHash;
     }
 
+    public void setAttestations(List<AttestationRecord> attestations) {
+        this.attestations = attestations;
+    }
+
     @Override
     public boolean equals(Object other) {
         if (this == other) return true;
-        if (other == null || !(other instanceof Beacon)) return false;
+        if (!(other instanceof Beacon)) return false;
 
         return FastByteComparisons.equal(this.getHash(), ((Beacon) other).getHash());
     }

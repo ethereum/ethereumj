@@ -22,6 +22,7 @@ import org.ethereum.sharding.domain.Beacon;
 import org.junit.Test;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Random;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -227,8 +228,8 @@ public class IndexedBeaconStoreTest {
         rnd.nextBytes(mainChainRef);
         rnd.nextBytes(stateHash);
 
-        return new Beacon(parent == null ? new byte[32] : parent.getHash(),
-                randaoReveal, mainChainRef, stateHash, parent == null ? 0 : parent.getSlotNumber() + 1);
+        return new Beacon(parent == null ? new byte[32] : parent.getHash(), randaoReveal,
+                mainChainRef, stateHash, parent == null ? 0 : parent.getSlotNumber() + 1, new ArrayList<>());
     }
 
     static class StoreHelper {

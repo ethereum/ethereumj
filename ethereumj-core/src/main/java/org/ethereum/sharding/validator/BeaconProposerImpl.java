@@ -21,6 +21,7 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.sharding.config.ValidatorConfig;
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.domain.Validator;
+import org.ethereum.sharding.processing.db.BeaconStore;
 import org.ethereum.sharding.pubsub.BeaconChainSynced;
 import org.ethereum.sharding.processing.consensus.StateTransition;
 import org.ethereum.sharding.processing.state.BeaconState;
@@ -28,6 +29,8 @@ import org.ethereum.sharding.processing.state.StateRepository;
 import org.ethereum.sharding.util.Randao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Collections;
 
 /**
  * Default implementation of {@link BeaconProposer}.
@@ -47,11 +50,13 @@ public class BeaconProposerImpl implements BeaconProposer {
     StateTransition<BeaconState> stateTransition;
     StateRepository repository;
     ValidatorConfig config;
+    BeaconStore store;
 
-    public BeaconProposerImpl(Randao randao, StateRepository repository,
+    public BeaconProposerImpl(Randao randao, StateRepository repository, BeaconStore store,
                               StateTransition<BeaconState> stateTransition, ValidatorConfig config) {
         this.randao = randao;
         this.repository = repository;
+        this.store = store;
         this.stateTransition = stateTransition;
         this.config = config;
     }
@@ -74,10 +79,9 @@ public class BeaconProposerImpl implements BeaconProposer {
     @Override
     public Beacon createNewBlock(Input in, byte[] pubKey) {
         Beacon block = new Beacon(in.parent.getHash(), randaoReveal(in.state, pubKey), in.mainChainRef,
-                HashUtil.EMPTY_DATA_HASH, in.slotNumber);
+                HashUtil.EMPTY_DATA_HASH, in.slotNumber, Collections.emptyList());
         BeaconState newState = stateTransition.applyBlock(block, in.state);
         block.setStateHash(newState.getHash());
-
         logger.info("New block created {}", block);
         return block;
     }

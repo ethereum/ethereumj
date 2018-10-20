@@ -35,6 +35,8 @@ import org.ethereum.db.DbFlushManager;
 import org.ethereum.db.TransactionStore;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.manager.WorldManager;
+import org.ethereum.sharding.crypto.DummySign;
+import org.ethereum.sharding.crypto.Sign;
 import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.manager.ShardingWorldManager;
 import org.ethereum.sharding.processing.BeaconChain;
@@ -43,6 +45,8 @@ import org.ethereum.sharding.processing.db.BeaconStore;
 import org.ethereum.sharding.processing.db.IndexedBeaconStore;
 import org.ethereum.sharding.processing.state.BeaconStateRepository;
 import org.ethereum.sharding.processing.state.StateRepository;
+import org.ethereum.sharding.validator.BeaconAttester;
+import org.ethereum.sharding.validator.BeaconAttesterImpl;
 import org.ethereum.sharding.validator.BeaconProposer;
 import org.ethereum.sharding.validator.BeaconProposerImpl;
 import org.ethereum.sharding.validator.ValidatorService;
@@ -127,8 +131,8 @@ public class BeaconConfig {
     @Bean
     public ValidatorService validatorService() {
         if (validatorConfig().isEnabled()) {
-            ValidatorService validatorService = new ValidatorServiceImpl(beaconProposer(), beaconChain(),
-                    publisher(), validatorConfig(), ethereum, blockStore);
+            ValidatorService validatorService = new ValidatorServiceImpl(beaconProposer(), beaconAttester(),
+                    beaconChain(), publisher(), validatorConfig(), ethereum, blockStore);
             shardingWorldManager.setProposerService(validatorService);
             return validatorService;
         } else {
@@ -160,7 +164,8 @@ public class BeaconConfig {
         Source<byte[], byte[]> validatorSrc = cachedBeaconChainSource("validator_set");
         Source<byte[], byte[]> validatorIndexSrc = cachedBeaconChainSource("validator_index");
         Source<byte[], byte[]> crystallizedSrc = cachedBeaconChainSource("crystallized_state");
-        return new BeaconStateRepository(src, crystallizedSrc, validatorSrc, validatorIndexSrc);
+        Source<byte[], byte[]> activeSrc = cachedBeaconChainSource("active_state");
+        return new BeaconStateRepository(src, crystallizedSrc, activeSrc, validatorSrc, validatorIndexSrc);
     }
 
     @Bean
@@ -216,8 +221,13 @@ public class BeaconConfig {
 
     @Bean
     public BeaconProposer beaconProposer() {
-        return new BeaconProposerImpl(randao(), beaconStateRepository(),
+        return new BeaconProposerImpl(randao(), beaconStateRepository(), beaconStore(),
                 BeaconChainFactory.stateTransition(validatorRepository()), validatorConfig());
+    }
+
+    @Bean
+    public BeaconAttester beaconAttester() {
+        return new BeaconAttesterImpl(beaconStateRepository(), beaconStore(), validatorConfig(), sign());
     }
 
     @Bean
@@ -242,6 +252,10 @@ public class BeaconConfig {
 
     public DepositAuthority depositAuthority() {
         return new UnsecuredDepositAuthority(validatorConfig());
+    }
+
+    public Sign sign() {
+        return new DummySign();
     }
 
     public static class Enabled implements Condition {

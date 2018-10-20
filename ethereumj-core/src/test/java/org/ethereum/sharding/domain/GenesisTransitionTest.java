@@ -56,7 +56,7 @@ public class GenesisTransitionTest {
         BeaconGenesis genesis = new BeaconGenesis(getJson(v1, v3, v4));
 
         StateRepository stateRepository = new BeaconStateRepository(new HashMapDB<>(), new HashMapDB<>(),
-                new HashMapDB<>(), new HashMapDB<>());
+                new HashMapDB<>(), new HashMapDB<>(), new HashMapDB<>());
         ValidatorRepository validatorRepository = new PredefinedValidatorRepository(v1, v2, v3, v4);
 
         GenesisTransition transition = new GenesisTransition(validatorRepository);

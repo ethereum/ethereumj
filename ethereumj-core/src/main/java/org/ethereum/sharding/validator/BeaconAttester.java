@@ -18,52 +18,43 @@
 package org.ethereum.sharding.validator;
 
 import org.ethereum.sharding.domain.Beacon;
+import org.ethereum.sharding.processing.state.AttestationRecord;
 import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.Committee;
 
 /**
- * Service that is responsible for scheduling attestation and proposal tasks for the beacon chain validator.
- *
- * @author Mikhail Kalinin
- * @since 28.08.2018
- *
- * @see BeaconProposer
+ * Beacon chain block attester
  */
-public interface ValidatorService {
+public interface BeaconAttester {
 
     /**
-     * It is assumed that blocks which are distant from canonical chain head by this number or further
-     * can't be affected by reorg in the future. Thus, proved mainChainRef should start from that distance.
+     * Attests block
+     *
+     * @param in           Input data
+     * @param pubKey       Public key of the attestation validator
+     * @return Attestation record
      */
-    long REORG_SAFE_DISTANCE = 32;
+    AttestationRecord attestBlock(Input in, byte[] pubKey);
 
-    /**
-     * Initializes service.
-     */
-    default void init(ChainHead head, byte[]... pubKeys) {}
 
-    /**
-     * Submits a task to propose block with given slot number.
-     * Thread safe.
-     */
-    default void propose(long slotNumber, Committee.Index index) {}
-
-    /**
-     * Submits a task to make an attestation in a given slot number.
-     * Thread safe.
-     */
-    default void attest(long slotNumber, Committee.Index index) {}
-
-    /**
-     * Handy aggregator
-     */
-    class ChainHead {
+    class Input {
+        long slotNumber;
+        Committee.Index index;
         Beacon block;
         BeaconState state;
 
-        public ChainHead(Beacon block, BeaconState state) {
+        public Input(long slotNumber, Committee.Index index, Beacon block, BeaconState state) {
+            this.slotNumber = slotNumber;
+            this.index = index;
             this.block = block;
             this.state = state;
+        }
+
+        public Input(long slotNumber, Committee.Index index, ValidatorService.ChainHead head) {
+            this.slotNumber = slotNumber;
+            this.index = index;
+            this.block = head.block;
+            this.state = head.state;
         }
     }
 }
