@@ -27,6 +27,7 @@ import org.ethereum.db.DbFlushManager;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.sharding.manager.ShardingWorldManager;
+import org.ethereum.sharding.validator.BeaconAttester;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -56,6 +57,9 @@ public class ShardingConfig {
     BlockStore blockStore;
 
     @Autowired
+    BeaconAttester beaconAttester;
+
+    @Autowired
     SystemProperties systemProperties;
 
     @Autowired
@@ -69,8 +73,8 @@ public class ShardingConfig {
 
     @Bean
     public ShardingWorldManager worldManager() {
-        return new ShardingWorldManager(systemProperties, repository,
-                ethereumListener, blockchain, blockStore, depositContractConfig(), dbFlushManager);
+        return new ShardingWorldManager(systemProperties, repository, ethereumListener, blockchain, blockStore,
+                depositContractConfig(), dbFlushManager, beaconAttester);
     }
 
     @Bean

@@ -25,6 +25,7 @@ import org.ethereum.sharding.processing.state.CrystallizedState;
 import org.ethereum.sharding.processing.state.Dynasty;
 import org.ethereum.sharding.processing.state.Finality;
 import org.ethereum.sharding.registration.ValidatorRepository;
+import org.ethereum.sharding.validator.BeaconAttester;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,10 +45,12 @@ public class BeaconStateTransition implements StateTransition<BeaconState> {
 
     StateTransition<Dynasty> dynastyTransition;
     StateTransition<Finality> finalityTransition;
+    BeaconAttester beaconAttester;
 
-    public BeaconStateTransition(ValidatorRepository validatorRepository) {
+    public BeaconStateTransition(ValidatorRepository validatorRepository, BeaconAttester beaconAttester) {
         this.dynastyTransition = new DynastyTransition(new ValidatorSetTransition(validatorRepository));
         this.finalityTransition = new FinalityTransition();
+        this.beaconAttester = beaconAttester;
     }
 
     public BeaconStateTransition(StateTransition<Dynasty> dynastyTransition,
@@ -65,6 +68,7 @@ public class BeaconStateTransition implements StateTransition<BeaconState> {
         List<AttestationRecord> mergedAttestations = new ArrayList<>();
         mergedAttestations.addAll(activeState.getPendingAttestations());
         mergedAttestations.addAll(block.getAttestations());
+        block.getAttestations().forEach(at -> beaconAttester.purgeAttestations(at));
 
         activeState = activeState
                 .withPendingAttestations(mergedAttestations);
@@ -88,6 +92,7 @@ public class BeaconStateTransition implements StateTransition<BeaconState> {
                     uptodateAttestations.add(record);
                 }
             }
+            beaconAttester.removeOldSlots(crystallized.getLastStateRecalc());
             activeState = activeState.
                     withPendingAttestations(uptodateAttestations);
         }

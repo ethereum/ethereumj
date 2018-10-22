@@ -31,6 +31,7 @@ import org.ethereum.sharding.processing.state.BeaconStateRepository;
 import org.ethereum.sharding.processing.state.StateRepository;
 import org.ethereum.sharding.util.Randao;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.math.BigInteger;
 
@@ -113,7 +114,7 @@ public class BeaconProposerTest {
 
             Helper helper = new Helper();
             helper.proposer = new BeaconProposerImpl(randao, repository, store, stateTransition,
-                    ValidatorConfig.DISABLED) {
+                    ValidatorConfig.DISABLED, Mockito.mock(BeaconAttester.class)) {
 
                 @Override
                 byte[] randaoReveal(BeaconState state, byte[] pubKey) {

@@ -20,6 +20,8 @@ package org.ethereum.sharding.processing;
 import org.ethereum.core.Block;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.sharding.processing.consensus.GenesisTransition;
+import org.ethereum.sharding.processing.validation.AttestationsValidator;
+import org.ethereum.sharding.processing.validation.ProposerValidator;
 import org.ethereum.sharding.pubsub.Event;
 import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.processing.consensus.ScoreFunction;
@@ -58,6 +60,8 @@ public class BeaconChainImpl implements BeaconChain {
     StateTransition<BeaconState> transitionFunction;
     StateTransition<BeaconState> genesisStateTransition;
     BeaconValidator beaconValidator;
+    ProposerValidator proposerValidator;
+    AttestationsValidator attestationsValidator;
     StateValidator stateValidator;
     StateRepository repository;
     ScoreFunction scoreFunction;
@@ -120,9 +124,14 @@ public class BeaconChainImpl implements BeaconChain {
         if ((vRes = beaconValidator.validateAndLog(block)) != ValidationResult.Success)
             return ProcessingResult.fromValidation(vRes);
 
-        // apply state transition
         Beacon parent = pullParent(block);
         BeaconState currentState = pullState(parent);
+        if ((vRes = proposerValidator.validateAndLog(block, parent, currentState)) != ValidationResult.Success)
+            return ProcessingResult.fromValidation(vRes);
+        if ((vRes = attestationsValidator.validateAndLog(block, parent, currentState)) != ValidationResult.Success)
+            return ProcessingResult.fromValidation(vRes);
+
+        // apply state transition
         BeaconState newState = transitionFunction.applyBlock(block, currentState);
 
         if ((vRes = stateValidator.validateAndLog(block, newState)) != ValidationResult.Success)

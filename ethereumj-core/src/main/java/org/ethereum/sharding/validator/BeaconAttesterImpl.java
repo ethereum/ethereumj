@@ -18,6 +18,8 @@
 package org.ethereum.sharding.validator;
 
 import org.ethereum.sharding.config.ValidatorConfig;
+import org.ethereum.sharding.crypto.DummySign;
+import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.processing.db.BeaconStore;
 import org.ethereum.sharding.processing.state.AttestationRecord;
 import org.ethereum.sharding.processing.state.StateRepository;
@@ -29,7 +31,12 @@ import org.slf4j.LoggerFactory;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Default implementation of {@link BeaconAttester}.
@@ -37,6 +44,9 @@ import java.util.List;
 public class BeaconAttesterImpl implements BeaconAttester {
 
     private static final Logger logger = LoggerFactory.getLogger("attester");
+
+    // Single attestations
+    private final Map<Long, Set<AttestationRecord>> attestations = new HashMap<>();
 
     StateRepository repository;
     BeaconStore store;
@@ -71,5 +81,62 @@ public class BeaconAttesterImpl implements BeaconAttester {
 
         logger.info("Block {} attested by #{} in slot {} ", in.block, in.index.getValidatorIdx(), in.slotNumber);
         return attestationRecord;
+    }
+
+    @Override
+    public List<AttestationRecord> getAttestations(Beacon lastJustified) {
+        List<AttestationRecord> res = new ArrayList<>();
+        for (Set<AttestationRecord> slotAttestations : attestations.values()) {
+            AttestationRecord first = slotAttestations.iterator().next();
+
+            AttestationRecord mergedAttestation = new AttestationRecord(
+                first.getSlot(),
+                first.getShardId(),
+                Collections.emptyList(),
+                store.getCanonicalHead() == null ? new byte[32] : store.getCanonicalHead().getHash(),
+                Bitfield.orBitfield(slotAttestations.stream().map(AttestationRecord::getAttesterBitfield).collect(Collectors.toList())),
+                lastJustified.getSlotNumber(),
+                lastJustified.getHash(),
+                sign.aggSigns(slotAttestations.stream().map(AttestationRecord::getAggregateSig).collect(Collectors.toList()))
+            );
+            res.add(mergedAttestation);
+        }
+
+        return res;
+    }
+
+    @Override
+    public void addSingleAttestation(AttestationRecord attestationRecord) {
+        if (attestationRecord.getAttesterBitfield().calcVotes() != 1) {
+            throw new RuntimeException("Accepts only unmerged attestations");
+        }
+
+        if (attestations.containsKey(attestationRecord.getSlot())) {
+            attestations.get(attestationRecord.getSlot()).add(attestationRecord);
+        } else {
+            attestations.put(attestationRecord.getSlot(), new HashSet<AttestationRecord>() {{
+                add(attestationRecord);
+            }});
+        }
+    }
+
+    @Override
+    public void purgeAttestations(AttestationRecord attestationRecord) {
+        Set<AttestationRecord> slotAttestations = attestations.get(attestationRecord.getSlot());
+        for (AttestationRecord record : slotAttestations) {
+            if (Bitfield.orBitfield(attestationRecord.getAttesterBitfield(), record.getAttesterBitfield()) ==
+                    attestationRecord.getAttesterBitfield()) {
+                slotAttestations.remove(record);
+                if (slotAttestations.isEmpty()) {
+                    attestations.remove(record.getSlot());
+                }
+            }
+        }
+    }
+
+    @Override
+    public void removeOldSlots(long startSlot) {
+        List<Long> toRemove = attestations.keySet().stream().filter((x) -> x < startSlot).collect(Collectors.toList());
+        toRemove.forEach(attestations::remove);
     }
 }

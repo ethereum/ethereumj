@@ -21,11 +21,17 @@ import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.domain.BeaconGenesis;
 import org.ethereum.sharding.processing.consensus.BeaconConstants;
 import org.ethereum.sharding.processing.state.Committee;
+import org.ethereum.util.ByteUtil;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import static org.ethereum.crypto.HashUtil.blake2b;
 import static org.ethereum.sharding.processing.consensus.BeaconConstants.SLOT_DURATION;
 
 
@@ -95,6 +101,22 @@ public class BeaconUtils {
         return ret;
     }
 
+    public static List<Committee.Index> scanCommittees(Committee[][] committees, int slotOffset, int shardId) {
+        List<Committee.Index> ret = new ArrayList<>();
+            for (int committeeIdx = 0; committeeIdx < committees[slotOffset].length; committeeIdx++) {
+                Committee committee = committees[slotOffset][committeeIdx];
+                int[] validators = committee.getValidators();
+                for (int idx = 0; idx < validators.length; idx++) {
+                    if (committee.getShardId() == shardId) {
+                        ret.add(new Committee.Index(validators[idx], committee.getShardId(), slotOffset,
+                                committeeIdx, validators.length, idx));
+                    }
+                }
+            }
+
+        return ret;
+    }
+
     /**
      * Calculates the next slot that validator is assigned to
      *
@@ -138,5 +160,23 @@ public class BeaconUtils {
      */
     public static long getCurrentSlotNumber() {
         return getSlotNumber(System.currentTimeMillis());
+    }
+
+    public static byte[] calcMessageHash(long slot, List<byte[]> parentHashes,
+                                         int shardId, byte[] shardBlockHash, long justifiedSlot) {
+        ByteArrayOutputStream message = new ByteArrayOutputStream();
+        try {
+            message.write(ByteUtil.longToBytes(slot));
+            for (byte[] parentHash : parentHashes) {
+                message.write(parentHash);
+            }
+            message.write(ByteUtil.shortToBytes((short) shardId));
+            message.write(shardBlockHash);
+            message.write(ByteUtil.longToBytes(justifiedSlot));
+        } catch (IOException ex) {
+            throw new RuntimeException("Something goes wrong while creating message", ex);
+        }
+
+        return blake2b(message.toByteArray());
     }
 }

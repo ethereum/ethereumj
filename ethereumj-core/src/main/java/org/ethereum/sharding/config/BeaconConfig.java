@@ -171,7 +171,7 @@ public class BeaconConfig {
     @Bean
     public BeaconChain beaconChain() {
         BeaconChain beaconChain = BeaconChainFactory.create(beaconDbFlusher(), beaconStore(),
-                beaconStateRepository(), validatorRepository(), blockStore.getBestBlock());
+                beaconStateRepository(), validatorRepository(), blockStore.getBestBlock(), beaconAttester());
         shardingWorldManager.setBeaconChain(beaconChain);
         return beaconChain;
     }
@@ -222,7 +222,8 @@ public class BeaconConfig {
     @Bean
     public BeaconProposer beaconProposer() {
         return new BeaconProposerImpl(randao(), beaconStateRepository(), beaconStore(),
-                BeaconChainFactory.stateTransition(validatorRepository()), validatorConfig());
+                BeaconChainFactory.stateTransition(validatorRepository(), beaconAttester()), validatorConfig(),
+                beaconAttester());
     }
 
     @Bean

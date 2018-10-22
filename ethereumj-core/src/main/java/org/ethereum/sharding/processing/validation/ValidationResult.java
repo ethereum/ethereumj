@@ -27,6 +27,7 @@ public enum ValidationResult {
     Exist,
     NoParent,
     StateMismatch,
+    Invalid,
     Success;
 
     public boolean isSuccess() {

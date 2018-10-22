@@ -51,14 +51,17 @@ public class BeaconProposerImpl implements BeaconProposer {
     StateRepository repository;
     ValidatorConfig config;
     BeaconStore store;
+    BeaconAttester beaconAttester;
 
     public BeaconProposerImpl(Randao randao, StateRepository repository, BeaconStore store,
-                              StateTransition<BeaconState> stateTransition, ValidatorConfig config) {
+                              StateTransition<BeaconState> stateTransition, ValidatorConfig config,
+                              BeaconAttester beaconAttester) {
         this.randao = randao;
         this.repository = repository;
         this.store = store;
         this.stateTransition = stateTransition;
         this.config = config;
+        this.beaconAttester = beaconAttester;
     }
 
     byte[] randaoReveal(BeaconState state, byte[] pubKey) {
@@ -78,8 +81,9 @@ public class BeaconProposerImpl implements BeaconProposer {
 
     @Override
     public Beacon createNewBlock(Input in, byte[] pubKey) {
+        Beacon lastJustified = store.getCanonicalByNumber(in.state.getCrystallizedState().getFinality().getLastJustifiedSlot());
         Beacon block = new Beacon(in.parent.getHash(), randaoReveal(in.state, pubKey), in.mainChainRef,
-                HashUtil.EMPTY_DATA_HASH, in.slotNumber, Collections.emptyList());
+                HashUtil.EMPTY_DATA_HASH, in.slotNumber, beaconAttester.getAttestations(lastJustified));
         BeaconState newState = stateTransition.applyBlock(block, in.state);
         block.setStateHash(newState.getHash());
         logger.info("New block created {}", block);
