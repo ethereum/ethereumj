@@ -83,7 +83,7 @@ public class BeaconProposerImpl implements BeaconProposer {
     public Beacon createNewBlock(Input in, byte[] pubKey) {
         Beacon lastJustified = store.getCanonicalByNumber(in.state.getCrystallizedState().getFinality().getLastJustifiedSlot());
         Beacon block = new Beacon(in.parent.getHash(), randaoReveal(in.state, pubKey), in.mainChainRef,
-                HashUtil.EMPTY_DATA_HASH, in.slotNumber, beaconAttester.getAttestations(lastJustified));
+                HashUtil.EMPTY_DATA_HASH, in.slotNumber, beaconAttester.getAttestations(in.slotNumber, lastJustified));
         BeaconState newState = stateTransition.applyBlock(block, in.state);
         block.setStateHash(newState.getHash());
         logger.info("New block created {}", block);

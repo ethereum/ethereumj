@@ -38,7 +38,7 @@ public interface BeaconAttester {
      */
     AttestationRecord attestBlock(Input in, byte[] pubKey);
 
-    List<AttestationRecord> getAttestations(Beacon lastJustified);
+    List<AttestationRecord> getAttestations(Long currentSlot, Beacon lastJustified);
 
     void addSingleAttestation(AttestationRecord attestationRecord);
 

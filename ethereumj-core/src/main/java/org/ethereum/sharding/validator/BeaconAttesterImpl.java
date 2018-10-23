@@ -38,6 +38,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static org.ethereum.sharding.processing.consensus.BeaconConstants.CYCLE_LENGTH;
+
 /**
  * Default implementation of {@link BeaconAttester}.
  */
@@ -84,14 +86,23 @@ public class BeaconAttesterImpl implements BeaconAttester {
     }
 
     @Override
-    public List<AttestationRecord> getAttestations(Beacon lastJustified) {
+    public List<AttestationRecord> getAttestations(Long currentSlot, Beacon lastJustified) {
         List<AttestationRecord> res = new ArrayList<>();
-        for (Set<AttestationRecord> slotAttestations : attestations.values()) {
-            AttestationRecord first = slotAttestations.iterator().next();
+        // we should always have attestation for ourselves, so not a big deal
+        int shardId = 0;
+        // publish a (signed) attestation, [current_slot, h1, h2, ...h64] where h1, h2, ...h64 are the hashes
+        // of the ancestors of the head up to 64 slots (if a chain has missing slots between heights a and b,
+        // then use the hash of the block at height a for heights a + 1 ... b - 1 and the current_slot is
+        // the current slot number
+        for (long i = currentSlot; i > Math.max(0, currentSlot - CYCLE_LENGTH - 1); --i) {
+            Set<AttestationRecord> slotAttestations = attestations.get(i) == null ? new HashSet<>() : attestations.get(i);
+            if (!slotAttestations.isEmpty()) {
+                shardId = slotAttestations.iterator().next().getShardId();
+            }
 
             AttestationRecord mergedAttestation = new AttestationRecord(
-                first.getSlot(),
-                first.getShardId(),
+                i,
+                shardId,
                 Collections.emptyList(),
                 store.getCanonicalHead() == null ? new byte[32] : store.getCanonicalHead().getHash(),
                 Bitfield.orBitfield(slotAttestations.stream().map(AttestationRecord::getAttesterBitfield).collect(Collectors.toList())),
