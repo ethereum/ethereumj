@@ -432,17 +432,6 @@ public class TransactionExecutor {
             }
         }
 
-        // Grab what accounts have suffered modifications
-        if (result != null) {
-            Set<byte[]> rawTouchedAccounts = touchedAccounts;
-            Map<byte[], AccountState> touched = new HashMap<>(rawTouchedAccounts.size());
-            for (byte[] address : rawTouchedAccounts) {
-                final AccountState state = track.getAccountState(address);
-                touched.put(address, state);
-            }
-            summaryBuilder.touchedAccounts(touched);
-        }
-
         TransactionExecutionSummary summary = summaryBuilder.build();
 
         // Refund for gas leftover
@@ -463,12 +452,18 @@ public class TransactionExecutor {
         }
 
         if (blockchainConfig.eip161()) {
+
+            Map<byte[], AccountState> accountStateMap = new HashMap<>(touchedAccounts.size());
+
             for (byte[] acctAddr : touchedAccounts) {
                 AccountState state = track.getAccountState(acctAddr);
+                accountStateMap.put(acctAddr, state);
                 if (state != null && state.isEmpty()) {
                     track.delete(acctAddr);
                 }
             }
+
+            summaryBuilder.touchedAccounts(accountStateMap);
         }
 
         listener.onTransactionExecuted(summary);
