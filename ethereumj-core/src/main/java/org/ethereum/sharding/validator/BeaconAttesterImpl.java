@@ -90,6 +90,7 @@ public class BeaconAttesterImpl implements BeaconAttester {
         List<AttestationRecord> res = new ArrayList<>();
         // we should always have attestation for ourselves, so not a big deal
         int shardId = 0;
+        byte[] canonicalHash = store.getCanonicalHead().getHash();
         // publish a (signed) attestation, [current_slot, h1, h2, ...h64] where h1, h2, ...h64 are the hashes
         // of the ancestors of the head up to 64 slots (if a chain has missing slots between heights a and b,
         // then use the hash of the block at height a for heights a + 1 ... b - 1 and the current_slot is
@@ -99,12 +100,15 @@ public class BeaconAttesterImpl implements BeaconAttester {
             if (!slotAttestations.isEmpty()) {
                 shardId = slotAttestations.iterator().next().getShardId();
             }
+            if (store.getCanonicalByNumber(i) != null) {
+                canonicalHash = store.getCanonicalByNumber(i).getHash();
+            }
 
             AttestationRecord mergedAttestation = new AttestationRecord(
                 i,
                 shardId,
                 Collections.emptyList(),
-                store.getCanonicalHead() == null ? new byte[32] : store.getCanonicalHead().getHash(),
+                canonicalHash,
                 Bitfield.orBitfield(slotAttestations.stream().map(AttestationRecord::getAttesterBitfield).collect(Collectors.toList())),
                 lastJustified.getSlotNumber(),
                 lastJustified.getHash(),
