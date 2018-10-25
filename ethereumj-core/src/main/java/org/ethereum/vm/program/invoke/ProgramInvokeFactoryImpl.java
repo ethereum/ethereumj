@@ -46,7 +46,7 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
     // Invocation by the wire tx
     @Override
     public ProgramInvoke createProgramInvoke(Transaction tx, Block block, Repository repository,
-                                             BlockStore blockStore) {
+                                             Repository origRepository, BlockStore blockStore) {
 
         /***         ADDRESS op       ***/
         // YP: Get address of currently executing account.
@@ -132,7 +132,7 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
 
         return new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue, data,
                 lastHash, coinbase, timestamp, number, difficulty, gaslimit,
-                repository, blockStore);
+                repository, origRepository, blockStore);
     }
 
     /**
@@ -142,7 +142,7 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
     public ProgramInvoke createProgramInvoke(Program program, DataWord toAddress, DataWord callerAddress,
                                              DataWord inValue, DataWord inGas,
                                              BigInteger balanceInt, byte[] dataIn,
-                                             Repository repository, BlockStore blockStore,
+                                             Repository repository, Repository origRepository, BlockStore blockStore,
                                              boolean isStaticCall, boolean byTestingSuite) {
 
         DataWord address = toAddress;
@@ -196,6 +196,6 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
 
         return new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue,
                 data, lastHash, coinbase, timestamp, number, difficulty, gasLimit,
-                repository, program.getCallDeep() + 1, blockStore, isStaticCall, byTestingSuite);
+                repository, origRepository, program.getCallDeep() + 1, blockStore, isStaticCall, byTestingSuite);
     }
 }

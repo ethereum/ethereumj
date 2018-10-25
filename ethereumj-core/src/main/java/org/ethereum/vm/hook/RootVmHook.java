@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -46,6 +47,8 @@ public class RootVmHook implements VMHook {
 
     private void proxySafeToAll(Consumer<VMHook> action) {
         for (VMHook hook : hooks) {
+            if (hook.isEmpty()) continue;
+
             try {
                 action.accept(hook);
             } catch (Throwable t) {
@@ -71,6 +74,10 @@ public class RootVmHook implements VMHook {
 
     @Override
     public boolean isEmpty() {
-        return hooks.length == 0;
+        return hooks.length == 0 || emptyHooksCount() == hooks.length;
+    }
+
+    private long emptyHooksCount() {
+        return Arrays.stream(hooks).filter(VMHook::isEmpty).count();
     }
 }

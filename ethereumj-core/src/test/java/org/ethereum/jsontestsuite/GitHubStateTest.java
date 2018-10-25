@@ -339,9 +339,30 @@ public class GitHubStateTest {
                 "create2collisionStorage" // (nonce, balance 0, code empty, but some storage)
         )));
 // TODO: Update all, this one passes with following settings:
-//        String commitSHA = "3f5febc901913ef698f1b09dda8705babd729e4a";
-//        String treeSHA = "222ea3812849ed982ef0268ec41b609e5b13c412";
+//        String commitSHA = "95a309203890e6244c6d4353ca411671973c13b5";
+//        String treeSHA = "700fdc4aa7d74957a12fbda38785ecc7b846bcc0";
 //           targetNets += GitHubJSONTestSuite.Network.Constantinople
+    }
+
+    @Test
+    @Ignore("Update after all tests could pass latest develop")
+    public void stSstoreRefundBug() throws IOException {
+        final String commit = "9ff64743f0347952903287b9074803607e5855e8";
+
+        GeneralStateTestSuite.runSingle("stSStoreTest/SstoreCallToSelfSubRefundBelowZero.json", commit,
+                GitHubJSONTestSuite.Network.Constantinople);
+
+        GeneralStateTestSuite.runSingle("stSStoreTest/sstore_0to0.json", commit,
+                GitHubJSONTestSuite.Network.Constantinople);
+
+        GeneralStateTestSuite.runSingle("stSStoreTest/sstore_Xto0.json", commit,
+                GitHubJSONTestSuite.Network.Constantinople);
+
+        GeneralStateTestSuite.runSingle("stSStoreTest/sstore_XtoX.json", commit,
+                GitHubJSONTestSuite.Network.Constantinople);
+
+        GeneralStateTestSuite.runSingle("stSStoreTest/sstore_XtoY.json", commit,
+                GitHubJSONTestSuite.Network.Constantinople);
     }
 }
 

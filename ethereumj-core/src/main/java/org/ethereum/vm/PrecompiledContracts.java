@@ -30,6 +30,7 @@ import static org.ethereum.util.BIUtil.addSafely;
 import static org.ethereum.util.BIUtil.isLessThan;
 import static org.ethereum.util.BIUtil.isZero;
 import static org.ethereum.util.ByteUtil.*;
+import static org.ethereum.vm.VMUtils.getSizeInWords;
 
 /**
  * @author Roman Mandeleil
@@ -102,7 +103,7 @@ public class PrecompiledContracts {
             // gas charge for the execution:
             // minimum 1 and additional 1 for each 32 bytes word (round  up)
             if (data == null) return 15;
-            return 15 + (data.length + 31) / 32 * 3;
+            return 15 + getSizeInWords(data.length) * 3;
         }
 
         @Override
@@ -120,7 +121,7 @@ public class PrecompiledContracts {
             // gas charge for the execution:
             // minimum 50 and additional 50 for each 32 bytes word (round  up)
             if (data == null) return 60;
-            return 60 + (data.length + 31) / 32 * 12;
+            return 60 + getSizeInWords(data.length) * 12;
         }
 
         @Override
@@ -142,7 +143,7 @@ public class PrecompiledContracts {
             // gas charge for the execution:
             // minimum 50 and additional 50 for each 32 bytes word (round  up)
             if (data == null) return 600;
-            return 600 + (data.length + 31) / 32 * 120;
+            return 600 + getSizeInWords(data.length) * 120;
         }
 
         @Override
