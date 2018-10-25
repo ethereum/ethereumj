@@ -156,7 +156,13 @@ public abstract class SolidityType {
 
         @Override
         public String getCanonicalName() {
-            return elementType.getCanonicalName() + "[" + size + "]";
+            if(elementType instanceof ArrayType) {
+                String elementTypeName = elementType.getCanonicalName();
+                int idx1 = elementTypeName.indexOf("[");
+                return elementTypeName.substring(0, idx1) + "[" + size + "]" + elementTypeName.substring(idx1);
+            }else {
+                return elementType.getCanonicalName() + "[" + size + "]";
+            }
         }
 
         @Override
@@ -193,7 +199,13 @@ public abstract class SolidityType {
 
         @Override
         public String getCanonicalName() {
-            return elementType.getCanonicalName() + "[]";
+            if(elementType instanceof ArrayType) {
+                String elementTypeName = elementType.getCanonicalName();
+                int idx1 = elementTypeName.indexOf("[");
+                return elementTypeName.substring(0, idx1) + "[]" + elementTypeName.substring(idx1);
+            }else {
+                return elementType.getCanonicalName() + "[]";
+            }
         }
 
         @Override
