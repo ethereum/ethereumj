@@ -44,21 +44,23 @@ public class TestProgramInvokeFactory implements ProgramInvokeFactory {
 
 
     @Override
-    public ProgramInvoke createProgramInvoke(Transaction tx, Block block, Repository repository, BlockStore blockStore) {
-        return generalInvoke(tx, repository, blockStore);
+    public ProgramInvoke createProgramInvoke(Transaction tx, Block block,
+                                             Repository repository, Repository origRepository, BlockStore blockStore) {
+        return generalInvoke(tx, repository, origRepository, blockStore);
     }
 
     @Override
     public ProgramInvoke createProgramInvoke(Program program, DataWord toAddress, DataWord callerAddress,
                                              DataWord inValue, DataWord inGas,
                                              BigInteger balanceInt, byte[] dataIn,
-                                             Repository repository, BlockStore blockStore,
+                                             Repository repository, Repository origRepository, BlockStore blockStore,
                                              boolean isStaticCall, boolean byTestingSuite) {
         return null;
     }
 
 
-    private ProgramInvoke generalInvoke(Transaction tx, Repository repository, BlockStore blockStore) {
+    private ProgramInvoke generalInvoke(Transaction tx, Repository repository, Repository origRepository,
+                                        BlockStore blockStore) {
 
         /***         ADDRESS op       ***/
         // YP: Get address of currently executing account.
@@ -110,7 +112,7 @@ public class TestProgramInvokeFactory implements ProgramInvokeFactory {
 
         return new ProgramInvokeImpl(address, origin, caller, balance,
                 gasPrice, gas, callValue, data, lastHash, coinbase,
-                timestamp, number, difficulty, gaslimit, repository, blockStore);
+                timestamp, number, difficulty, gaslimit, repository, origRepository, blockStore);
     }
 
 }

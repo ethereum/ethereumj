@@ -64,16 +64,13 @@ class Initializer implements BeanPostProcessor {
 
         // forcing loading blockchain config
         config.getBlockchainConfig();
+        logger.info("Blockchain config {}", config.getBlockchainConfig().toString());
 
         // forcing loading genesis to fail fast in case of error
         config.getGenesis();
 
         // forcing reading private key or generating it in database directory
         config.nodeId();
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("Blockchain config {}", config.getBlockchainConfig().toString());
-        }
     }
 
     @Override

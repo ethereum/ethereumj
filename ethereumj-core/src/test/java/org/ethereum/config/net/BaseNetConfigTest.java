@@ -41,7 +41,7 @@ public class BaseNetConfigTest {
     @Test
     public void toStringShouldCaterForNulls() throws Exception {
         BaseNetConfig config = new BaseNetConfig();
-        assertEquals("BaseNetConfig{blockNumbers=[], configs=[], count=0}", config.toString());
+        assertEquals("BaseNetConfig{blockNumbers=  (total: 0)}", config.toString());
 
         BlockchainConfig blockchainConfig = new TestBlockchainConfig() {
             @Override
@@ -50,10 +50,10 @@ public class BaseNetConfigTest {
             }
         };
         config.add(0, blockchainConfig);
-        assertEquals("BaseNetConfig{blockNumbers=[0], configs=[TestBlockchainConfig], count=1}", config.toString());
+        assertEquals("BaseNetConfig{blockNumbers= #0 => TestBlockchainConfig (total: 1)}", config.toString());
 
         config.add(1, blockchainConfig);
-        assertEquals("BaseNetConfig{blockNumbers=[0, 1], configs=[TestBlockchainConfig, TestBlockchainConfig], count=2}", config.toString());
+        assertEquals("BaseNetConfig{blockNumbers= #0 => TestBlockchainConfig, #1 => TestBlockchainConfig (total: 2)}", config.toString());
     }
 
     private static class TestBlockchainConfig extends AbstractConfig {
