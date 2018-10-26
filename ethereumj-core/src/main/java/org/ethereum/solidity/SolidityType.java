@@ -135,6 +135,23 @@ public abstract class SolidityType {
                 throw new RuntimeException("List value expected for type " + getName());
             }
         }
+        
+        @Override
+        public String getCanonicalName() {
+            return getArrayCanonicalName("");
+        }
+
+        String getArrayCanonicalName(String parentDimStr) {
+            String myDimStr = parentDimStr + getCanonicalDimension();
+            if (getElementType() instanceof ArrayType) {
+                return ((ArrayType) getElementType()).
+                        getArrayCanonicalName(myDimStr);
+            } else {
+                return getElementType().getCanonicalName() + myDimStr;
+            }
+        }
+
+        protected abstract String getCanonicalDimension();
 
         public SolidityType getElementType() {
             return elementType;
@@ -156,7 +173,18 @@ public abstract class SolidityType {
 
         @Override
         public String getCanonicalName() {
-            return elementType.getCanonicalName() + "[" + size + "]";
+            if (elementType instanceof ArrayType) {
+                String elementTypeName = elementType.getCanonicalName();
+                int idx1 = elementTypeName.indexOf("[");
+                return elementTypeName.substring(0, idx1) + "[" + size + "]" + elementTypeName.substring(idx1);
+            } else {
+                return elementType.getCanonicalName() + "[" + size + "]";
+            }
+        }
+        
+        @Override
+        protected String getCanonicalDimension() {
+            return "[" + size + "]";
         }
 
         @Override
@@ -193,7 +221,18 @@ public abstract class SolidityType {
 
         @Override
         public String getCanonicalName() {
-            return elementType.getCanonicalName() + "[]";
+            if (elementType instanceof ArrayType) {
+                String elementTypeName = elementType.getCanonicalName();
+                int idx1 = elementTypeName.indexOf("[");
+                return elementTypeName.substring(0, idx1) + "[]" + elementTypeName.substring(idx1);
+            } else {
+                return elementType.getCanonicalName() + "[]";
+            }
+        }
+        
+        @Override
+        protected String getCanonicalDimension() {
+            return "[]";
         }
 
         @Override
