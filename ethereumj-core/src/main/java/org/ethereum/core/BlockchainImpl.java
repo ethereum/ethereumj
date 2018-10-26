@@ -726,7 +726,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         boolean isValid = true;
 
         if (!block.isGenesis()) {
-            isValid = isValid(block.getHeader());
 
             // Sanity checks
             String trieHash = toHexString(block.getTxTrieRoot());

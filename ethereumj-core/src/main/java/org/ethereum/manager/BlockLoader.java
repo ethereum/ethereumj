@@ -27,6 +27,8 @@ import org.ethereum.core.Transaction;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.util.ExecutorPipeline;
 import org.ethereum.validator.BlockHeaderValidator;
+import org.ethereum.validator.DependentBlockHeaderRule;
+import org.ethereum.validator.ParentBlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -57,6 +59,7 @@ public class BlockLoader {
     private final static DateTimeFormatter df = DateTimeFormatter.ofPattern("HH:mm:ss.SSSS");
 
     private final BlockHeaderValidator headerValidator;
+    private final ParentBlockHeaderValidator parentHeaderValidator;
     private final Blockchain blockchain;
     private final DbFlushManager dbFlushManager;
 
@@ -64,8 +67,10 @@ public class BlockLoader {
     private ExecutorPipeline<Block, ?> exec2;
 
     @Autowired
-    public BlockLoader(BlockHeaderValidator headerValidator, Blockchain blockchain, DbFlushManager dbFlushManager) {
+    public BlockLoader(BlockHeaderValidator headerValidator, Blockchain blockchain, DbFlushManager dbFlushManager,
+                       ParentBlockHeaderValidator parentHeaderValidator) {
         this.headerValidator = headerValidator;
+        this.parentHeaderValidator = parentHeaderValidator;
         this.blockchain = blockchain;
         this.dbFlushManager = dbFlushManager;
     }
@@ -177,7 +182,21 @@ public class BlockLoader {
     }
 
     private boolean isValid(BlockHeader header) {
-        return headerValidator.validateAndLog(header, logger);
+        return isParentValid(header) && headerValidator.validateAndLog(header, logger);
+    }
+
+    private boolean isParentValid(BlockHeader header) {
+        Block parent = blockchain.getBlockByHash(header.getParentHash());
+        if (parent == null) {
+            return true;
+        }
+        boolean valid = parentHeaderValidator.validate(header, parent.getHeader());
+
+        if (!valid) {
+            parentHeaderValidator.logErrors(logger);
+        }
+
+        return valid;
     }
 
     private class HexLineDumpWalker implements DumpWalker {

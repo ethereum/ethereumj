@@ -9,6 +9,9 @@ import org.ethereum.db.DbFlushManager;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.validator.BlockHeaderRule;
 import org.ethereum.validator.BlockHeaderValidator;
+import org.ethereum.validator.DependentBlockHeaderRule;
+import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
+import org.ethereum.validator.ParentBlockHeaderValidator;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -76,6 +79,11 @@ public class BlockLoaderTest {
         }
 
         @Bean
+        public ParentBlockHeaderValidator parentHeaderValidator() {
+            return new ParentBlockHeaderValidator(Collections.emptyList());
+        }
+
+        @Bean
         public Blockchain blockchain(Holder<Block> lastBlockHolder) {
             Blockchain blockchain = Mockito.mock(Blockchain.class);
             when(blockchain.getBestBlock()).thenAnswer(invocation -> lastBlockHolder.get());
@@ -107,8 +115,9 @@ public class BlockLoaderTest {
         }
 
         @Bean
-        public BlockLoader blockLoader(BlockHeaderValidator headerValidator, Blockchain blockchain, DbFlushManager dbFlushManager) {
-            return new BlockLoader(headerValidator, blockchain, dbFlushManager);
+        public BlockLoader blockLoader(BlockHeaderValidator headerValidator, Blockchain blockchain, DbFlushManager dbFlushManager,
+                                       ParentBlockHeaderValidator parentHeaderValidator) {
+            return new BlockLoader(headerValidator, blockchain, dbFlushManager, parentHeaderValidator);
         }
     }
 
