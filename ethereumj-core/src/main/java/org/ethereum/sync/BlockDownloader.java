@@ -23,10 +23,12 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.ethereum.core.*;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.net.server.Channel;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -411,6 +413,11 @@ public abstract class BlockDownloader {
      */
     protected void dropIfValidationFailed(SyncQueueIfc.ValidatedHeaders res) {
         if (!res.isValid() && res.getNodeId() != null) {
+            if (logger.isWarnEnabled()) logger.warn("Invalid header received: {}, reason: {}, peer: {}",
+                    res.getHeader() == null ? "" : res.getHeader().getShortDescr(),
+                    res.getReason(),
+                    Hex.toHexString(res.getNodeId()).substring(0, 8));
+
             Channel peer = pool.getByNodeId(res.getNodeId());
             if (peer != null) {
                 peer.dropConnection();

@@ -396,7 +396,8 @@ public class SyncQueueImpl implements SyncQueueIfc {
             BlockHeaderWrapper parent = chain.get(i - 1).header;
             BlockHeaderWrapper header = chain.get(i).header;
             if (!parentHeaderValidator.validate(header.getHeader(), parent.getHeader())) {
-                return new ValidatedHeaders(Collections.singletonList(header), false);
+                return new ValidatedHeaders(Collections.singletonList(header), false,
+                        parentHeaderValidator.getErrors().isEmpty() ? "" : parentHeaderValidator.getErrors().get(0));
             }
         }
 

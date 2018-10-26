@@ -18,6 +18,7 @@
 package org.ethereum.sync;
 
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockHeaderWrapper;
 
 import javax.annotation.Nullable;
@@ -70,10 +71,16 @@ public interface SyncQueueIfc {
 
         private final List<BlockHeaderWrapper> headers;
         private final boolean valid;
+        private final String reason;
 
-        public ValidatedHeaders(List<BlockHeaderWrapper> headers, boolean valid) {
+        public ValidatedHeaders(List<BlockHeaderWrapper> headers, boolean valid, String reason) {
             this.headers = headers;
             this.valid = valid;
+            this.reason = reason;
+        }
+
+        public ValidatedHeaders(List<BlockHeaderWrapper> headers, boolean valid) {
+            this(headers, valid, "");
         }
 
         public boolean isValid() {
@@ -84,10 +91,20 @@ public interface SyncQueueIfc {
             return headers;
         }
 
+        public String getReason() {
+            return reason;
+        }
+
         @Nullable
         public byte[] getNodeId() {
             if (headers == null || headers.isEmpty()) return null;
             return headers.get(0).getNodeId();
+        }
+
+        @Nullable
+        public BlockHeader getHeader() {
+            if (headers == null || headers.isEmpty()) return null;
+            return headers.get(0).getHeader();
         }
     }
 
