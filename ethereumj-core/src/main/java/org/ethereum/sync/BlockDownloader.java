@@ -388,18 +388,34 @@ public abstract class BlockDownloader {
             wrappers.add(new BlockHeaderWrapper(header, nodeId));
         }
 
+        SyncQueueIfc.ValidatedHeaders res;
         synchronized (this) {
-            List<BlockHeaderWrapper> headersReady = syncQueue.addHeaders(wrappers);
-            if (headersReady != null && !headersReady.isEmpty()) {
-                pushHeaders(headersReady);
+            res = syncQueue.addHeadersAndValidate(wrappers);
+            if (res.isValid() && res.getHeaders() != null && !res.getHeaders().isEmpty()) {
+                pushHeaders(res.getHeaders());
             }
         }
+
+        dropIfValidationFailed(res);
 
         receivedHeadersLatch.countDown();
 
         logger.debug("{}: {} headers added", name, headers.size());
 
         return true;
+    }
+
+    /**
+     * Checks whether validation has been passed correctly or not
+     * and drops misleading peer if it hasn't
+     */
+    protected void dropIfValidationFailed(SyncQueueIfc.ValidatedHeaders res) {
+        if (!res.isValid() && res.getNodeId() != null) {
+            Channel peer = pool.getByNodeId(res.getNodeId());
+            if (peer != null) {
+                peer.dropConnection();
+            }
+        }
     }
 
     /**

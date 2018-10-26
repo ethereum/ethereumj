@@ -20,7 +20,9 @@ package org.ethereum.sync;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeaderWrapper;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -56,6 +58,40 @@ public interface SyncQueueIfc {
     }
 
     /**
+     * Handles result of {@link #addHeadersAndValidate(Collection)} invocation.
+     *
+     * <p>
+     *     If {@code valid} is true then validation passed successfully
+     *     and {@code headers} list contains the same result as if {@link #addHeaders(Collection)} was called.
+     *     Otherwise, the list contains invalid headers.
+     */
+    class ValidatedHeaders {
+        public static final ValidatedHeaders Empty = new ValidatedHeaders(null, true);
+
+        private final List<BlockHeaderWrapper> headers;
+        private final boolean valid;
+
+        public ValidatedHeaders(List<BlockHeaderWrapper> headers, boolean valid) {
+            this.headers = headers;
+            this.valid = valid;
+        }
+
+        public boolean isValid() {
+            return valid;
+        }
+
+        public List<BlockHeaderWrapper> getHeaders() {
+            return headers;
+        }
+
+        @Nullable
+        public byte[] getNodeId() {
+            if (headers == null || headers.isEmpty()) return null;
+            return headers.get(0).getNodeId();
+        }
+    }
+
+    /**
      * Returns wanted headers requests
      * @param maxSize Maximum number of headers in a singles request
      * @param maxRequests Maximum number of requests
@@ -75,6 +111,18 @@ public interface SyncQueueIfc {
      * If this instance is for headers+blocks downloading then null returned
      */
     List<BlockHeaderWrapper> addHeaders(Collection<BlockHeaderWrapper> headers);
+
+    /**
+     * In general, does the same work as {@link #addHeaders(Collection)} does.
+     * But before trimming, the longest chain is checked with parent header validator.
+     * If validation is failed, the chain is erased from the queue.
+     *
+     * <p>
+     *     <b>Note:</b> in reverse queue falls to {@link #addHeaders(Collection)} invocation
+     *
+     * @return check {@link ValidatedHeaders} for details
+     */
+    ValidatedHeaders addHeadersAndValidate(Collection<BlockHeaderWrapper> headers);
 
     /**
      * Returns wanted blocks hashes
