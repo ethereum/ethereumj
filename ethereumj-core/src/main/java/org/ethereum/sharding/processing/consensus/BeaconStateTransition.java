@@ -65,13 +65,8 @@ public class BeaconStateTransition implements StateTransition<BeaconState> {
         CrystallizedState crystallized = to.getCrystallizedState();
         ActiveState activeState = to.getActiveState();
 
-        List<AttestationRecord> mergedAttestations = new ArrayList<>();
-        mergedAttestations.addAll(activeState.getPendingAttestations());
-        mergedAttestations.addAll(block.getAttestations());
         block.getAttestations().forEach(at -> beaconAttester.purgeAttestations(at));
-
-        activeState = activeState
-                .withPendingAttestations(mergedAttestations);
+        activeState = activeState.addPendingAttestations(block.getAttestations());
 
         if (block.getSlotNumber() - crystallized.getLastStateRecalc() >= CYCLE_LENGTH) {
             logger.info("Calculate new crystallized state, slot: {}, prev slot: {}",

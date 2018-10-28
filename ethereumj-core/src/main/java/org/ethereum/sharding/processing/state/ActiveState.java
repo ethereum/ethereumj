@@ -67,6 +67,20 @@ public class ActiveState {
         return new ActiveState(pendingAttestations, pendingSpecials, recentBlockHashes, new byte[32]);
     }
 
+    /**
+     * Adds new attestations to the end of the list
+     * Produces new instance keeping immutability
+     * @param pendingAttestations   Attestations to add
+     * @return updated ActiveState
+     */
+    public ActiveState addPendingAttestations(List<AttestationRecord> pendingAttestations) {
+        List<AttestationRecord> mergedAttestations = new ArrayList<>();
+        mergedAttestations.addAll(this.getPendingAttestations());
+        mergedAttestations.addAll(pendingAttestations);
+
+        return this.withPendingAttestations(mergedAttestations);
+    }
+
     public ActiveState withPendingAttestations(List<AttestationRecord> pendingAttestations) {
         return new ActiveState(pendingAttestations, this.pendingSpecials, this.recentBlockHashes, this.randaoMix);
     }
