@@ -27,6 +27,7 @@ import org.ethereum.sharding.processing.state.CrystallizedState;
 import org.ethereum.sharding.util.BeaconUtils;
 import org.ethereum.sharding.util.Bitfield;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.ethereum.sharding.processing.consensus.BeaconConstants.CYCLE_LENGTH;
-import static org.ethereum.sharding.processing.validation.ValidationResult.Invalid;
+import static org.ethereum.sharding.processing.validation.ValidationResult.InvalidAttestations;
 import static org.ethereum.sharding.processing.validation.ValidationResult.Success;
 import static org.ethereum.sharding.util.BeaconUtils.scanCommittees;
 
@@ -55,7 +56,51 @@ public class AttestationsValidator {
         this.sign = sign;
 
         rules = new ArrayList<>();
-        rules.add((block, data) -> {
+        rules.add(validateProposerAttestation());
+        rules.add(validateAttestations());
+    }
+
+    /**
+     * Basic proposer attestation validation:
+     *
+     * Attestation from the proposer of the block should be included
+     * along with the block in the network message object
+     */
+    private ValidationRule<Data> validateProposerAttestation() {
+        return (block, data) -> {
+            if (block.getSlotNumber() == 0) {
+                return Success;
+            }
+
+            CrystallizedState crystallized = data.state.getCrystallizedState();
+
+            Committee[][] committees = crystallized.getDynasty().getCommittees();
+
+            int index = (int) data.parent.getSlotNumber() % committees.length;
+
+            if (block.getAttestations().isEmpty()) {
+                return InvalidAttestations;
+            }
+
+            AttestationRecord proposerAttestation = block.getAttestations().get(0);
+
+            if (proposerAttestation.getSlot() != data.parent.getSlotNumber()) {
+                return InvalidAttestations;
+            }
+            if (!FastByteComparisons.equal(data.parent.getHash(), proposerAttestation.getShardBlockHash())) {
+                return InvalidAttestations;
+            }
+
+            if (!proposerAttestation.getAttesterBitfield().hasVoted(index)) {
+                return InvalidAttestations;
+            }
+
+            return Success;
+        };
+    }
+
+    private ValidationRule<Data> validateAttestations() {
+        return (block, data) -> {
             CrystallizedState crystallized = data.state.getCrystallizedState();
             List<AttestationRecord> attestationRecords = block.getAttestations();
             List<byte[]> recentBlockHashes = data.state.getActiveState().getRecentBlockHashes();
@@ -63,27 +108,27 @@ public class AttestationsValidator {
             for (AttestationRecord attestation : attestationRecords) {
                 // Too early
                 if (attestation.getSlot() > data.parent.getSlotNumber()) {
-                    return Invalid;
+                    return InvalidAttestations;
                 }
 
                 // Too old
                 if (attestation.getSlot() < Math.max(data.parent.getSlotNumber() - CYCLE_LENGTH + 1, 0)) {
-                    return Invalid;
+                    return InvalidAttestations;
                 }
 
                 // Incorrect justified
                 if (attestation.getJustifiedSlot() > crystallized.getFinality().getLastJustifiedSlot()) {
-                    return Invalid;
+                    return InvalidAttestations;
                 }
 
                 Beacon justified = store.getByHash(attestation.getJustifiedBlockHash());
                 if (justified == null ||
                         store.getCanonicalByNumber(justified.getSlotNumber()) != justified) {
-                    return Invalid;
+                    return InvalidAttestations;
                 }
 
                 if (justified.getSlotNumber() != attestation.getJustifiedSlot()) {
-                    return Invalid;
+                    return InvalidAttestations;
                 }
 
                 // Given an attestation and the block they were included in,
@@ -93,7 +138,7 @@ public class AttestationsValidator {
                 long sBack = block.getSlotNumber() - CYCLE_LENGTH * 2;
                 List<byte[]> parentHashes = new ArrayList<>();
                 for (int i = (int) (fromSlot - sBack); i <= toSlot - sBack; ++i) {
-                    if (i < 0 || i >= CYCLE_LENGTH * 2) return Invalid;
+                    if (i < 0 || i >= CYCLE_LENGTH * 2) return InvalidAttestations;
                     parentHashes.add(recentBlockHashes.get(i));
                 }
                 parentHashes.addAll(attestation.getObliqueParentHashes());
@@ -104,14 +149,14 @@ public class AttestationsValidator {
 
                 // Validate bitfield
                 if (attestation.getAttesterBitfield().size() != Bitfield.calcLength(attestationIndices.size())) {
-                    return Invalid;
+                    return InvalidAttestations;
                 }
 
                 // Confirm that there were no votes of nonexistent attesters
                 int lastBit = attestationIndices.size();
                 for (int i = lastBit - 1; i < Bitfield.calcLength(attestationIndices.size()) * Byte.SIZE; ++i) {
                     if (attestation.getAttesterBitfield().hasVoted(i)) {
-                        return Invalid;
+                        return InvalidAttestations;
                     }
                 }
 
@@ -128,12 +173,12 @@ public class AttestationsValidator {
                         attestation.getShardId(), attestation.getShardBlockHash(), attestation.getJustifiedSlot());
 
                 if (!sign.verify(attestation.getAggregateSig(), msgHash, sign.aggPubs(pubKeys))) {
-                    return Invalid;
+                    return InvalidAttestations;
                 }
             }
 
             return Success;
-        });
+        };
     }
 
     public ValidationResult validateAndLog(Beacon block, Beacon parent, BeaconState state) {

@@ -24,6 +24,9 @@ import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.CrystallizedState;
 import org.ethereum.sharding.processing.state.Dynasty;
 import org.ethereum.sharding.processing.state.Finality;
+import org.ethereum.sharding.pubsub.BeaconAttestationIncluded;
+import org.ethereum.sharding.pubsub.Publisher;
+import org.ethereum.sharding.pubsub.StateRecalc;
 import org.ethereum.sharding.registration.ValidatorRepository;
 import org.ethereum.sharding.validator.BeaconAttester;
 import org.slf4j.Logger;
@@ -46,11 +49,14 @@ public class BeaconStateTransition implements StateTransition<BeaconState> {
     StateTransition<Dynasty> dynastyTransition;
     StateTransition<Finality> finalityTransition;
     BeaconAttester beaconAttester;
+    Publisher publisher;
 
-    public BeaconStateTransition(ValidatorRepository validatorRepository, BeaconAttester beaconAttester) {
+    public BeaconStateTransition(ValidatorRepository validatorRepository, BeaconAttester beaconAttester,
+                                 Publisher publisher) {
         this.dynastyTransition = new DynastyTransition(new ValidatorSetTransition(validatorRepository));
         this.finalityTransition = new FinalityTransition();
         this.beaconAttester = beaconAttester;
+        this.publisher = publisher;
     }
 
     public BeaconStateTransition(StateTransition<Dynasty> dynastyTransition,
@@ -65,7 +71,7 @@ public class BeaconStateTransition implements StateTransition<BeaconState> {
         CrystallizedState crystallized = to.getCrystallizedState();
         ActiveState activeState = to.getActiveState();
 
-        block.getAttestations().forEach(at -> beaconAttester.purgeAttestations(at));
+        block.getAttestations().forEach(at -> publisher.publish(new BeaconAttestationIncluded(at)));
         activeState = activeState.addPendingAttestations(block.getAttestations());
 
         if (block.getSlotNumber() - crystallized.getLastStateRecalc() >= CYCLE_LENGTH) {
@@ -79,6 +85,7 @@ public class BeaconStateTransition implements StateTransition<BeaconState> {
                     .withDynasty(dynasty)
                     .withLastStateRecalc(cycleStartSlot(block))
                     .withFinality(finality);
+            publisher.publish(new StateRecalc(crystallized.getLastStateRecalc()));
 
             // remove attestations older than last_state_recalc
             List<AttestationRecord> uptodateAttestations = new ArrayList<>();
@@ -87,9 +94,7 @@ public class BeaconStateTransition implements StateTransition<BeaconState> {
                     uptodateAttestations.add(record);
                 }
             }
-            beaconAttester.removeOldSlots(crystallized.getLastStateRecalc());
-            activeState = activeState.
-                    withPendingAttestations(uptodateAttestations);
+            activeState = activeState.withPendingAttestations(uptodateAttestations);
         }
 
         return new BeaconState(crystallized, activeState);

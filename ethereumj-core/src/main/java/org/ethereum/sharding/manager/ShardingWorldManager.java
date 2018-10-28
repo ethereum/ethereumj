@@ -32,8 +32,6 @@ import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.sharding.config.DepositContractConfig;
 import org.ethereum.sharding.processing.BeaconChain;
-import org.ethereum.sharding.pubsub.BeaconBlockAttested;
-import org.ethereum.sharding.validator.BeaconAttester;
 import org.ethereum.sharding.validator.ValidatorService;
 import org.ethereum.sharding.pubsub.BeaconChainSynced;
 import org.ethereum.sharding.pubsub.Publisher;
@@ -72,25 +70,22 @@ public class ShardingWorldManager extends WorldManager {
     DbFlushManager beaconDbFlusher;
     Publisher publisher;
     ValidatorRegistrationService validatorRegistrationService;
-    BeaconAttester beaconAttester;
 
     private CompletableFuture<Void> contractInit = new CompletableFuture<>();
     private CompletableFuture<ValidatorRegistrationService.State> validatorServiceInit = new CompletableFuture<>();
 
     public ShardingWorldManager(SystemProperties config, Repository repository, EthereumListener listener,
                                 Blockchain blockchain, BlockStore blockStore, DepositContractConfig contractConfig,
-                                DbFlushManager dbFlushManager, BeaconAttester beaconAttester) {
+                                DbFlushManager dbFlushManager) {
         super(config, repository, listener, blockchain, blockStore);
         this.contractConfig = contractConfig;
         this.dbFlushManager = dbFlushManager;
-        this.beaconAttester = beaconAttester;
     }
 
     @Override
     protected void init() {
         initDepositContract();
         syncManager.init(getChannelManager(), pool);
-        initSubscriptions();
     }
 
     private void initDepositContract() {
@@ -132,12 +127,6 @@ public class ShardingWorldManager extends WorldManager {
             logger.info("Set Validator Registration: contract.address: {}", Hex.toHexString(contractConfig.getAddress()));
         }
         contractInit.complete(null);
-    }
-
-    public void initSubscriptions() {
-        publisher.subscribe(BeaconBlockAttested.class, (data) -> {
-            beaconAttester.addSingleAttestation(data.getAttestationRecord());
-        });
     }
 
     public void setValidatorRegistrationService(final ValidatorRegistrationService validatorRegistrationService) {

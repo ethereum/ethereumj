@@ -18,11 +18,14 @@
 package org.ethereum.sharding.validator;
 
 import org.ethereum.sharding.config.ValidatorConfig;
-import org.ethereum.sharding.crypto.DummySign;
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.processing.db.BeaconStore;
 import org.ethereum.sharding.processing.state.AttestationRecord;
 import org.ethereum.sharding.processing.state.StateRepository;
+import org.ethereum.sharding.pubsub.BeaconAttestationIncluded;
+import org.ethereum.sharding.pubsub.BeaconBlockAttested;
+import org.ethereum.sharding.pubsub.Publisher;
+import org.ethereum.sharding.pubsub.StateRecalc;
 import org.ethereum.sharding.util.Bitfield;
 import org.ethereum.sharding.crypto.Sign;
 import org.slf4j.Logger;
@@ -54,13 +57,30 @@ public class BeaconAttesterImpl implements BeaconAttester {
     BeaconStore store;
     ValidatorConfig config;
     Sign sign;
+    Publisher publisher;
 
     public BeaconAttesterImpl(StateRepository repository, BeaconStore store, ValidatorConfig config,
-                              Sign sign) {
+                              Sign sign, Publisher publisher) {
         this.repository = repository;
         this.store = store;
         this.config = config;
         this.sign = sign;
+        this.publisher = publisher;
+        init();
+    }
+
+    private void init() {
+        publisher.subscribe(BeaconBlockAttested.class, (data) -> {
+            addSingleAttestation(data.getAttestationRecord());
+        });
+
+        publisher.subscribe(BeaconAttestationIncluded.class, event -> {
+            purgeAttestations(event.getAttestationRecord());
+        });
+
+        publisher.subscribe(StateRecalc.class, event -> {
+            removeOldSlots(event.getSlot());
+        });
     }
 
     @Override

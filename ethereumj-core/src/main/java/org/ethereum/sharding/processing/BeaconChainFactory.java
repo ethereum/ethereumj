@@ -29,6 +29,7 @@ import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.StateRepository;
 import org.ethereum.sharding.processing.validation.BeaconValidator;
 import org.ethereum.sharding.processing.validation.StateValidator;
+import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.registration.ValidatorRepository;
 import org.ethereum.sharding.validator.BeaconAttester;
 
@@ -60,19 +61,20 @@ public class BeaconChainFactory {
 
     public static BeaconChain create(DbFlushManager beaconDbFlusher, BeaconStore store, StateRepository repository,
                                      ValidatorRepository validatorRepository, Block bestBlock,
-                                     BeaconAttester beaconAttester) {
+                                     BeaconAttester beaconAttester, Publisher publisher) {
 
         StateTransition<BeaconState> genesisStateTransition = new GenesisTransition(validatorRepository)
                 .withMainChainRef(bestBlock.getHash());
 
         return create(beaconDbFlusher, store, repository, genesisStateTransition,
-                stateTransition(validatorRepository, beaconAttester));
+                stateTransition(validatorRepository, beaconAttester, publisher));
     }
 
     public static StateTransition<BeaconState> stateTransition(ValidatorRepository validatorRepository,
-                                                               BeaconAttester beaconAttester) {
+                                                               BeaconAttester beaconAttester,
+                                                               Publisher publisher) {
         if (stateTransition == null)
-            stateTransition = new BeaconStateTransition(validatorRepository, beaconAttester);
+            stateTransition = new BeaconStateTransition(validatorRepository, beaconAttester, publisher);
         return stateTransition;
     }
 }
