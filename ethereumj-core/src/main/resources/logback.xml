@@ -50,6 +50,7 @@
 
     <logger name="org.springframework" level="ERROR"/>
     <logger name="io.enkrypt" level="INFO"/>
+    <logger name="kafka" level="INFO"/>
     <logger name="state" level="WARN"/>
     <logger name="trie" level="ERROR"/>
     <logger name="net" level="DEBUG"/>

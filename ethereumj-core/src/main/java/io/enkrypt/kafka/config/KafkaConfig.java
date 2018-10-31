@@ -31,12 +31,6 @@ public class KafkaConfig {
     Thread.setDefaultUncaughtExceptionHandler((t, e) -> logger.error("Uncaught exception", e));
   }
 
-
-  @Bean
-  public BlockSummaryStore blockSummaryStore() {
-    return new BlockSummaryStore(commonConfig.keyValueDataSource("block-summaries"));
-  }
-
   @Bean
   public Kafka kafka(SystemProperties config) {
     final boolean enabled = ((KafkaSystemProperties) config).isKafkaEnabled();

@@ -17,8 +17,6 @@
  */
 package org.ethereum.core;
 
-import java.util.*;
-
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
@@ -38,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
+import java.util.List;
 
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.ArrayUtils.getLength;
@@ -421,16 +420,19 @@ public class TransactionExecutor {
             ContractDetails contractDetails = track.getContractDetails(addr);
             if (contractDetails != null) {
                 // TODO
-                //summaryBuilder.storageDiff(track.getContractDetails(addr).getStorage());
-                //if (program != null) {
-                //    summaryBuilder.touchedStorage(contractDetails.getStorage(), program.getStorageDiff());
-                //}
+//                summaryBuilder.storageDiff(track.getContractDetails(addr).getStorage());
+//
+//                if (program != null) {
+//                    summaryBuilder.touchedStorage(contractDetails.getStorage(), program.getStorageDiff());
+//                }
             }
 
             if (result.getException() != null) {
                 summaryBuilder.markAsFailed();
             }
         }
+
+        summaryBuilder.touchedAccounts(touchedAccounts);
 
         TransactionExecutionSummary summary = summaryBuilder.build();
 
@@ -452,19 +454,14 @@ public class TransactionExecutor {
         }
 
         if (blockchainConfig.eip161()) {
-
-            Map<byte[], AccountState> accountStateMap = new HashMap<>(touchedAccounts.size());
-
             for (byte[] acctAddr : touchedAccounts) {
                 AccountState state = track.getAccountState(acctAddr);
-                accountStateMap.put(acctAddr, state);
                 if (state != null && state.isEmpty()) {
                     track.delete(acctAddr);
                 }
             }
-
-            summaryBuilder.touchedAccounts(accountStateMap);
         }
+
 
         listener.onTransactionExecuted(summary);
 

@@ -39,6 +39,8 @@ public class StateReplayer {
 
   public void replay() {
 
+    // TODO fixme
+
     BlockSummary blockSummary;
     long number = parseLong(config.getProperty("replay.from", "0"));
 
@@ -53,12 +55,12 @@ public class StateReplayer {
 
         kafka.send(Kafka.Producer.BLOCKS, numberAsBytes, blockSummary.getEncoded());
 
-        for (TransactionExecutionSummary summary : blockSummary.getSummaries()) {
-          final Map<byte[], AccountState> touchedAccounts = summary.getTouchedAccounts();
-          for (Map.Entry<byte[], AccountState> entry : touchedAccounts.entrySet()) {
-            kafka.send(Kafka.Producer.ACCOUNT_STATE, entry.getKey(), entry.getValue().getEncoded());
-          }
-        }
+//        for (TransactionExecutionSummary summary : blockSummary.getSummaries()) {
+//          final Map<byte[], AccountState> touchedAccounts = summary.getTouchedAccounts();
+//          for (Map.Entry<byte[], AccountState> entry : touchedAccounts.entrySet()) {
+//            kafka.send(Kafka.Producer.ACCOUNT_STATE, entry.getKey(), entry.getValue().getEncoded());
+//          }
+//        }
 
         if(number % 10000 == 0) {
           logger.info("Replayed until number = {}", number);

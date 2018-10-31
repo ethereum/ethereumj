@@ -12,6 +12,7 @@ public interface Kafka {
     TRANSACTIONS("transactions"),
     PENDING_TRANSACTIONS("pending-transactions"),
     ACCOUNT_STATE("account-state"),
+    TOKEN_TRANSFERS("token-transfers"),
     TEST("test");
 
     public String topic;
@@ -20,6 +21,12 @@ public interface Kafka {
       this.topic = topic;
     }
   }
+
+  void beginTransaction();
+
+  void commitTransaction();
+
+  void abortTransaction();
 
   <K, V> Future<RecordMetadata> send(Kafka.Producer producer, K key, V value);
 

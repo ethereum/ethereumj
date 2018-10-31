@@ -20,4 +20,19 @@ public class NullKafka implements Kafka {
 
   @Override public <K, V> void sendSync(Kafka.Producer producer, K key, V value) {
   }
+
+  @Override
+  public void beginTransaction() {
+
+  }
+
+  @Override
+  public void commitTransaction() {
+
+  }
+
+  @Override
+  public void abortTransaction() {
+
+  }
 }

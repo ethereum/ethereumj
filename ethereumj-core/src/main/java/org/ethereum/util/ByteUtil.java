@@ -19,6 +19,7 @@ package org.ethereum.util;
 
 import org.ethereum.db.ByteArrayWrapper;
 
+import org.ethereum.vm.DataWord;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.ByteArrayOutputStream;
@@ -32,6 +33,7 @@ import java.nio.ByteBuffer;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class ByteUtil {
@@ -726,5 +728,18 @@ public class ByteUtil {
      */
     public static byte[] parseWord(byte[] input, int offset, int idx) {
         return parseBytes(input, offset + 32 * idx, 32);
+    }
+
+    public static byte[][] wordListToArray(List<DataWord> words) {
+      if(words == null) return null;
+
+      int idx = 0;
+      final byte[][] result = new byte[words.size()][];
+
+      for (DataWord word : words) {
+        result[idx++] = word.getData();
+      }
+
+      return result;
     }
 }

@@ -48,7 +48,7 @@ public abstract class BlockDownloader {
 
     // Max number of Blocks / Headers in one request
     public static int MAX_IN_REQUEST = 512;
-    private static int REQUESTS = 64;
+    private static int REQUESTS = 128;
 
     private BlockHeaderValidator headerValidator;
 
