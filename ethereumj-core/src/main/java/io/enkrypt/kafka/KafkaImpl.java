@@ -14,6 +14,22 @@ public class KafkaImpl implements Kafka {
     this.kafkaProducer = kafkaProducer;
   }
 
+  @Override
+  public void beginTransaction() {
+    kafkaProducer.beginTransaction();
+  }
+
+  @Override
+  public void commitTransaction(){
+    kafkaProducer.commitTransaction();
+  }
+
+  @Override
+  public void abortTransaction(){
+    kafkaProducer.abortTransaction();
+  }
+
+  @Override
   public <K, V> Future<RecordMetadata> send(Producer producer, K key, V value) {
     final ProducerRecord<K, V> record = new ProducerRecord<>(producer.topic, key, value);
 
