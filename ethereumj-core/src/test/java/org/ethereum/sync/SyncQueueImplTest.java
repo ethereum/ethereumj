@@ -310,10 +310,6 @@ public class SyncQueueImplTest {
         // no validator is set
         assertEquals(SyncQueueIfc.ValidatedHeaders.Empty, queue.validateChain(longestChain));
 
-        // the chain is too short
-        queue.withParentHeaderValidator(RedRule);
-        assertEquals(SyncQueueIfc.ValidatedHeaders.Empty, queue.validateChain(longestChain));
-
         chain = TestUtils.getRandomChain(chain.get(chain.size() - 1).getHash(),
                 SyncQueueImpl.MAX_CHAIN_LEN - 1, SyncQueueImpl.MAX_CHAIN_LEN);
         queue.addHeaders(createHeadersFromBlocks(chain, nodeId));

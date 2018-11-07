@@ -374,22 +374,28 @@ public class SyncQueueImpl implements SyncQueueIfc {
         }
 
         List<HeaderElement> longestChain = getLongestChain();
-        ValidatedHeaders result = validateChain(longestChain);
-        if (result.isValid()) {
-            trimChainImpl(longestChain);
-        } else {
-            // erase chain starting from first invalid header
-            eraseChain(longestChain, result.getHeaders().get(0).getNumber());
+
+        // do not run the payload if chain is too short
+        if (longestChain.size() > MAX_CHAIN_LEN) {
+            ValidatedHeaders result = validateChain(longestChain);
+            if (result.isValid()) {
+                trimChainImpl(longestChain);
+            } else {
+                // erase chain starting from first invalid header
+                eraseChain(longestChain, result.getHeaders().get(0).getNumber());
+            }
+
+            return result;
         }
 
-        return result;
+        return ValidatedHeaders.Empty;
     }
 
     /**
      * Runs parent header validation and returns after first occurrence of invalid header
      */
     ValidatedHeaders validateChain(List<HeaderElement> chain) {
-        if (chain.size() <= MAX_CHAIN_LEN || parentHeaderValidator == null)
+        if (parentHeaderValidator == null)
             return ValidatedHeaders.Empty;
 
         for (int i = 1; i < chain.size(); i++) {
