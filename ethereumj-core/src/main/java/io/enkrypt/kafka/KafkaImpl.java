@@ -1,67 +1,42 @@
 package io.enkrypt.kafka;
 
-import java.util.concurrent.Future;
 import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
-import org.apache.kafka.common.KafkaException;
+import org.apache.kafka.clients.producer.ProducerConfig;
+
+import java.util.Properties;
 
 public class KafkaImpl implements Kafka {
 
-  private final KafkaProducer kafkaProducer;
+  private KafkaProducer<byte[], byte[]> producer;
+  private KafkaProducer<byte[], byte[]> transactionalProducer;
 
-  public KafkaImpl(KafkaProducer kafkaProducer) {
-    this.kafkaProducer = kafkaProducer;
+  public KafkaImpl(Properties baseConfig) {
+    init(baseConfig);
+  }
+
+  private void init(Properties config){
+
+    this.producer = new KafkaProducer<>(config);
+
+    config.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
+    config.put(ProducerConfig.CLIENT_ID_CONFIG, "ethereumj-transactional");
+    config.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, "ethereumj");
+
+    this.transactionalProducer = new KafkaProducer<>(config);
+    transactionalProducer.initTransactions();
+
   }
 
   @Override
-  public void beginTransaction() {
-    kafkaProducer.beginTransaction();
+  @SuppressWarnings("unchecked")
+  public <K, V> KafkaProducer<K, V> getProducer() {
+    return (KafkaProducer<K, V>) this.producer;
   }
 
   @Override
-  public void commitTransaction(){
-    kafkaProducer.commitTransaction();
+  @SuppressWarnings("unchecked")
+  public <K, V> KafkaProducer<K, V> getTransactionalProducer() {
+    return (KafkaProducer<K, V>) this.transactionalProducer;
   }
 
-  @Override
-  public void abortTransaction(){
-    kafkaProducer.abortTransaction();
-  }
-
-  @Override
-  public <K, V> Future<RecordMetadata> send(Producer producer, K key, V value) {
-    final ProducerRecord<K, V> record = new ProducerRecord<>(producer.topic, key, value);
-
-    try {
-      return kafkaProducer.send(record);
-    } catch (Exception e) {
-      throw new KafkaProducerException(e);
-    }
-  }
-
-  @Override
-  public <K, V> Future<RecordMetadata> send(Producer producer, int partition, K key, V value) {
-    final ProducerRecord<K, V> record = new ProducerRecord<>(producer.topic, partition, key, value);
-
-    try {
-      return kafkaProducer.send(record);
-    } catch (Exception e) {
-      throw new KafkaProducerException(e);
-    }
-  }
-
-  public <K, V> void sendSync(Producer producer, K key, V value) {
-    try {
-      send(producer, key, value).get();
-    } catch (Exception e) {
-      throw new KafkaProducerException(e);
-    }
-  }
-
-  public static class KafkaProducerException extends KafkaException {
-    KafkaProducerException(Throwable cause) {
-      super(cause);
-    }
-  }
 }

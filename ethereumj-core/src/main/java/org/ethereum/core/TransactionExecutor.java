@@ -17,15 +17,21 @@
  */
 package org.ethereum.core;
 
+import io.enkrypt.kafka.contract.ERC20Abi;
+import io.enkrypt.kafka.contract.ERC721Abi;
+import io.enkrypt.kafka.models.TokenTransfer;
+import io.enkrypt.kafka.models.TokenTransferKey;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.BlockStore;
+import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.util.ByteArraySet;
+import org.ethereum.util.FastByteComparisons;
 import org.ethereum.vm.*;
 import org.ethereum.vm.hook.VMHook;
 import org.ethereum.vm.program.Program;
@@ -36,7 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
-import java.util.List;
+import java.util.*;
 
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.ArrayUtils.getLength;
@@ -55,6 +61,7 @@ public class TransactionExecutor {
 
     private static final Logger logger = LoggerFactory.getLogger("execute");
     private static final Logger stateLogger = LoggerFactory.getLogger("state");
+    private static final Logger tokensLogger = LoggerFactory.getLogger("tokens");
 
     SystemProperties config;
     CommonConfig commonConfig;
@@ -434,6 +441,14 @@ public class TransactionExecutor {
 
         summaryBuilder.touchedAccounts(touchedAccounts);
 
+
+        // determine latest account state and detect token transfers
+        // FYI touched accounts includes coinbase and any new contract addresses
+
+        determineAccountState(summaryBuilder);
+        detectTokenTransfers(summaryBuilder);
+
+        //
         TransactionExecutionSummary summary = summaryBuilder.build();
 
         // Refund for gas leftover
@@ -481,6 +496,102 @@ public class TransactionExecutor {
             listener.onVMTraceCreated(txHash, trace);
         }
         return summary;
+    }
+
+    private TransactionExecutionSummary.Builder determineAccountState(TransactionExecutionSummary.Builder summaryBuilder) {
+
+      final Map<ByteArrayWrapper, io.enkrypt.kafka.models.AccountState> states = new HashMap<>(touchedAccounts.size());
+
+      for (byte[] account : touchedAccounts) {
+
+        final io.enkrypt.kafka.models.AccountState.Builder builder = io.enkrypt.kafka.models.AccountState
+          .newBuilder(cacheTrack.getAccountState(account));
+
+        if(FastByteComparisons.equal(account, coinbase)) {
+          builder.setMiner(FastByteComparisons.equal(account, coinbase));
+        }
+
+        if(tx.isContractCreation() && FastByteComparisons.equal(account, tx.getContractAddress())) {
+
+          final ContractDetails contractDetails = cacheTrack.getContractDetails(account);
+
+          builder
+            .setCreator(tx.getSender())
+            .setCode(contractDetails.getCode());
+
+        }
+
+        states.put(new ByteArrayWrapper(account), builder.build());
+      }
+
+      return summaryBuilder.accountStates(states);
+    }
+
+    private TransactionExecutionSummary.Builder detectTokenTransfers(TransactionExecutionSummary.Builder summaryBuilder) {
+
+      final ERC20Abi erc20 = ERC20Abi.getInstance();
+      final ERC721Abi erc721 = ERC721Abi.getInstance();
+
+      final Map<TokenTransferKey, TokenTransfer> transfersMap = new HashMap<>();
+
+      int logIdx = 0;
+
+      for (LogInfo logInfo : result.getLogInfoList()) {
+
+        final byte[] data = logInfo.getData();
+        final List<DataWord> topics = logInfo.getTopics();
+
+        final int currentLogIdx = logIdx++;
+
+        erc20.matchEvent(topics)
+          .filter(e -> ERC20Abi.EVENT_TRANSFER.equals(e.name))
+          .ifPresent(e -> {
+
+            byte[] contractAddress = tx.getReceiveAddress();
+
+            final Optional<TokenTransfer.Builder> erc20Transfer = erc20.decodeTransferEvent(data, topics);
+
+            final Optional<TokenTransfer.Builder> erc721Transfer = erc20Transfer.isPresent() ?
+              Optional.empty() :
+              erc721.decodeTransferEvent(data, topics);
+
+
+            erc20Transfer
+              .filter(builder -> !builder.getValue().equals(BigInteger.ZERO))   // filter out 0 transfers
+              .ifPresent(builder -> {
+
+
+                final BigInteger fromBalance = erc20.balanceOf(blockStore, cacheTrack, programInvokeFactory, currentBlock, contractAddress, builder.getFrom());
+                final BigInteger toBalance = erc20.balanceOf(blockStore, cacheTrack, programInvokeFactory, currentBlock, contractAddress, builder.getTo());
+
+                final TokenTransfer transfer = builder
+                  .setAddress(contractAddress)
+                  .setFromBalance(fromBalance)
+                  .setToBalance(toBalance)
+                  .build();
+
+                // kafka key is the tx hash with the tx idx
+
+                final TokenTransferKey key = new TokenTransferKey(tx.getHash(), currentLogIdx);
+                transfersMap.put(key, transfer);
+
+              });
+
+            erc721Transfer
+              .ifPresent(builder -> {
+
+                final TokenTransfer transfer = builder.build();
+                final TokenTransferKey key = new TokenTransferKey(tx.getHash(), currentLogIdx);
+
+                transfersMap.put(key, transfer);
+
+              });
+
+          });
+
+      }
+
+      return summaryBuilder.tokenTransfers(transfersMap);
     }
 
     public TransactionExecutor setLocalCall(boolean localCall) {

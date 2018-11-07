@@ -50,14 +50,16 @@
 
     <logger name="org.springframework" level="ERROR"/>
     <logger name="io.enkrypt" level="INFO"/>
-    <logger name="kafka" level="INFO"/>
+    <logger name="kafka-listener" level="DEBUG"/>
     <logger name="state" level="WARN"/>
+    <logger name="state-replay" level="INFO"/>
+    <logger name="tokens" level="INFO"/>
     <logger name="trie" level="ERROR"/>
     <logger name="net" level="DEBUG"/>
     <logger name="execute" level="ERROR"/>
     <logger name="VM" level="ERROR"/>
     <logger name="pending" level="DEBUG"/>
-    <logger name="sync" level="TRACE"/>
+    <logger name="sync" level="ERROR"/>
     <logger name="wire" level="ERROR"/>
     <logger name="db" level="DEBUG"/>
     <logger name="general" level="DEBUG"/>

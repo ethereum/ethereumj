@@ -4,12 +4,11 @@ import io.enkrypt.kafka.Kafka;
 import io.enkrypt.kafka.KafkaImpl;
 import io.enkrypt.kafka.NullKafka;
 import io.enkrypt.kafka.db.BlockSummaryStore;
-import org.apache.kafka.clients.producer.KafkaProducer;
+import io.enkrypt.kafka.serialization.EthereumKeySerializer;
+import io.enkrypt.kafka.serialization.EthereumValueSerializer;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.datasource.rocksdb.RocksDbDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +30,12 @@ public class KafkaConfig {
     Thread.setDefaultUncaughtExceptionHandler((t, e) -> logger.error("Uncaught exception", e));
   }
 
+
+  @Bean
+  public BlockSummaryStore blockSummaryStore() {
+    return new BlockSummaryStore(commonConfig.keyValueDataSource("block-summaries"));
+  }
+
   @Bean
   public Kafka kafka(SystemProperties config) {
     final boolean enabled = ((KafkaSystemProperties) config).isKafkaEnabled();
@@ -44,12 +49,12 @@ public class KafkaConfig {
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
     props.put(ProducerConfig.CLIENT_ID_CONFIG, "ethereumj");
 
-    // we use byte array serialization as we are using rlp where required
-    props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
-    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
+    props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, EthereumKeySerializer.class.getName());
+    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, EthereumValueSerializer.class.getName());
 
+    // we use byte array serialization as we are using rlp where required
     props.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, 2000000000);
 
-    return new KafkaImpl(new KafkaProducer<>(props));
+    return new KafkaImpl(props);
   }
 }

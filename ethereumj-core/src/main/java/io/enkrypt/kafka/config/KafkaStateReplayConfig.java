@@ -4,7 +4,11 @@ import io.enkrypt.kafka.Kafka;
 import io.enkrypt.kafka.KafkaImpl;
 import io.enkrypt.kafka.NullKafka;
 import io.enkrypt.kafka.db.BlockSummaryStore;
+import io.enkrypt.kafka.listener.KafkaBlockListener;
+import io.enkrypt.kafka.listener.KafkaPendingTxsListener;
 import io.enkrypt.kafka.replay.StateReplayer;
+import io.enkrypt.kafka.serialization.EthereumKeySerializer;
+import io.enkrypt.kafka.serialization.EthereumValueSerializer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
@@ -23,6 +27,7 @@ import org.springframework.context.annotation.Import;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class KafkaStateReplayConfig {
@@ -58,7 +63,20 @@ public class KafkaStateReplayConfig {
 
   @Bean
   public ExecutorService executorService() {
-    return Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      executor.shutdown();
+
+      try {
+        executor.awaitTermination(60, TimeUnit.SECONDS);
+      } catch (InterruptedException e) {
+        logger.warn("shutdown: executor interrupted: {}", e.getMessage());
+      }
+
+    }));
+
+    return executor;
   }
 
   @Bean
@@ -75,11 +93,33 @@ public class KafkaStateReplayConfig {
     props.put(ProducerConfig.CLIENT_ID_CONFIG, "ethereumj-state-replayer");
 
     // we use byte array serialization as we are using rlp where required
-    props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
-    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
+    props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, EthereumKeySerializer.class.getName());
+    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, EthereumValueSerializer.class.getName());
 
     props.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, 2000000000);
 
-    return new KafkaImpl(new KafkaProducer<>(props));
+    return new KafkaImpl(props);
+  }
+
+  @Bean
+  public KafkaPendingTxsListener kafkaPendingTxsListener(Kafka kafka) {
+    return new KafkaPendingTxsListener(kafka);
+  }
+
+  @Bean
+  public KafkaBlockListener kafkaBlockListener(Kafka kafka,
+                                               SystemProperties config,
+                                               KafkaPendingTxsListener pendingTxnsListener,
+                                               ExecutorService executor) {
+
+    final KafkaBlockListener blockListener = new KafkaBlockListener(kafka, config, pendingTxnsListener);
+
+    // run the block listener with it's own thread and handle shutdown
+
+    executor.submit(blockListener);
+
+    Runtime.getRuntime().addShutdownHook(new Thread(blockListener::stop));
+
+    return blockListener;
   }
 }

@@ -3,9 +3,12 @@ package io.enkrypt.kafka.contract;
 import io.enkrypt.kafka.models.TokenTransfer;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockchainImpl;
+import org.ethereum.core.Repository;
+import org.ethereum.db.BlockStore;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.ethereum.vm.DataWord;
+import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 
 import java.math.BigInteger;
 import java.net.URISyntaxException;
@@ -73,6 +76,14 @@ public class ERC20Abi extends AbstractAbi {
         .setTo((byte[]) values.get(1))
         .setValue((BigInteger) values.get(2))
       );
+  }
+
+  public BigInteger balanceOf(BlockStore blockStore, Repository repository, ProgramInvokeFactory programInvokeFactory, Block block, byte[] contractAddress, byte[] address) {
+
+    final List<?> results = this.invokeStatic(blockStore, repository, programInvokeFactory, block, contractAddress, FUNCTION_BALANCE_OF, new Object[]{address});
+    checkState(results.size() == 1, "Expected 1 result, received: " + results.size());
+
+    return (BigInteger) results.get(0);
   }
 
   public BigInteger balanceOf(BlockchainImpl blockchain, Block block, byte[] contractAddress, byte[] address) {
