@@ -114,7 +114,7 @@ public class BeaconProposerTest {
 
             Helper helper = new Helper();
             helper.proposer = new BeaconProposerImpl(randao, repository, store, stateTransition,
-                    ValidatorConfig.DISABLED, Mockito.mock(BeaconAttester.class)) {
+                    ValidatorConfig.DISABLED, Mockito.mock(AttestationPool.class)) {
 
                 @Override
                 byte[] randaoReveal(BeaconState state, byte[] pubKey) {

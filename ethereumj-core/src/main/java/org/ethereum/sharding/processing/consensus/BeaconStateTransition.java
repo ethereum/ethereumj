@@ -85,7 +85,9 @@ public class BeaconStateTransition implements StateTransition<BeaconState> {
                     .withDynasty(dynasty)
                     .withLastStateRecalc(cycleStartSlot(block))
                     .withFinality(finality);
-            publisher.publish(new StateRecalc(crystallized.getLastStateRecalc()));
+            if (publisher != null) {
+                publisher.publish(new StateRecalc(crystallized.getLastStateRecalc()));
+            }
 
             // remove attestations older than last_state_recalc
             List<AttestationRecord> uptodateAttestations = new ArrayList<>();

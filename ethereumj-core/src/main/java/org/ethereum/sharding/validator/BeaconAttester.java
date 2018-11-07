@@ -22,8 +22,6 @@ import org.ethereum.sharding.processing.state.AttestationRecord;
 import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.Committee;
 
-import java.util.List;
-
 /**
  * Beacon chain block attester
  */
@@ -37,17 +35,6 @@ public interface BeaconAttester {
      * @return Attestation record
      */
     AttestationRecord attestBlock(Input in, byte[] pubKey);
-
-    List<AttestationRecord> getAttestations(Long currentSlot, Beacon lastJustified);
-
-    void addSingleAttestation(AttestationRecord attestationRecord);
-
-    void purgeAttestations(AttestationRecord attestationRecord);
-
-    /**
-     * @param startSlot minimum slot number to preserve.
-     */
-    void removeOldSlots(long startSlot);
 
     class Input {
         long slotNumber;

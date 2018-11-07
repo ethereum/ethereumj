@@ -21,6 +21,7 @@ import com.google.common.util.concurrent.Futures;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.DbFlushManager;
+import org.ethereum.sharding.crypto.DummySign;
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.domain.BeaconGenesis;
 import org.ethereum.sharding.processing.consensus.NoTransition;
@@ -186,7 +187,8 @@ public class BeaconChainTest {
             inst.repository = new BeaconStateRepository(new HashMapDB<>(), new HashMapDB<>(),
                     new HashMapDB<>(), new HashMapDB<>(), new HashMapDB<>());
             inst.beaconChain = (BeaconChainImpl) BeaconChainFactory.create(
-                    new DummyFlusher(), inst.store, inst.repository, new NoTransition(), new NoTransition());
+                    new DummyFlusher(), inst.store, inst.repository, new NoTransition(), new NoTransition(),
+                    new DummySign());
             inst.beaconChain.scoreFunction = (block, state) -> BigInteger.valueOf(block.getMainChainRef()[0]);
             return inst;
         }

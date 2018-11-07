@@ -45,6 +45,8 @@ import org.ethereum.sharding.processing.db.BeaconStore;
 import org.ethereum.sharding.processing.db.IndexedBeaconStore;
 import org.ethereum.sharding.processing.state.BeaconStateRepository;
 import org.ethereum.sharding.processing.state.StateRepository;
+import org.ethereum.sharding.validator.AttestationPool;
+import org.ethereum.sharding.validator.AttestationPoolImpl;
 import org.ethereum.sharding.validator.BeaconAttester;
 import org.ethereum.sharding.validator.BeaconAttesterImpl;
 import org.ethereum.sharding.validator.BeaconProposer;
@@ -171,7 +173,7 @@ public class BeaconConfig {
     @Bean
     public BeaconChain beaconChain() {
         BeaconChain beaconChain = BeaconChainFactory.create(beaconDbFlusher(), beaconStore(), beaconStateRepository(),
-                validatorRepository(), blockStore.getBestBlock(), beaconAttester(), publisher());
+                validatorRepository(), blockStore.getBestBlock(), beaconAttester(), publisher(), sign());
         shardingWorldManager.setBeaconChain(beaconChain);
         return beaconChain;
     }
@@ -223,12 +225,17 @@ public class BeaconConfig {
     public BeaconProposer beaconProposer() {
         return new BeaconProposerImpl(randao(), beaconStateRepository(), beaconStore(),
                 BeaconChainFactory.stateTransition(validatorRepository(), beaconAttester(), publisher()),
-                validatorConfig(), beaconAttester());
+                validatorConfig(), attestationPool());
     }
 
     @Bean
     public BeaconAttester beaconAttester() {
-        return new BeaconAttesterImpl(beaconStateRepository(), beaconStore(), validatorConfig(), sign(), publisher());
+        return new BeaconAttesterImpl(beaconStateRepository(), beaconStore(), validatorConfig(), sign());
+    }
+
+    @Bean
+    public AttestationPool attestationPool() {
+        return new AttestationPoolImpl(beaconStore(), sign(), publisher());
     }
 
     @Bean
