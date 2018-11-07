@@ -17,6 +17,10 @@
  */
 package org.ethereum.core;
 
+import io.enkrypt.kafka.models.AccountState;
+import io.enkrypt.kafka.models.TokenTransfer;
+import io.enkrypt.kafka.models.TokenTransferKey;
+import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.*;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
@@ -28,6 +32,7 @@ import java.util.*;
 
 import static java.util.Collections.*;
 import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
+import static org.ethereum.util.BIUtil.sum;
 import static org.ethereum.util.BIUtil.toBI;
 
 public class TransactionExecutionSummary {
@@ -55,6 +60,13 @@ public class TransactionExecutionSummary {
   private byte[] rlpEncoded;
   private boolean parsed;
 
+  // not serialised
+
+  private Map<ByteArrayWrapper, io.enkrypt.kafka.models.AccountState> accountStates;
+  private Map<TokenTransferKey, TokenTransfer> tokenTransfers;
+
+  public TransactionExecutionSummary(){
+  }
 
   public TransactionExecutionSummary(Transaction transaction) {
     this.tx = transaction;
@@ -85,10 +97,14 @@ public class TransactionExecutionSummary {
     this.touchedAccounts = decodeTouchedAccounts((RLPList) summary.get(8));
     this.internalTransactions = decodeInternalTransactions((RLPList) summary.get(9));
     this.touchedStorage = decodeTouchedStorage(summary.get(10));
-    this.result = summary.get(11).getRLPData();
-    this.logs = decodeLogs((RLPList) summary.get(12));
-    byte[] failed = summary.get(13).getRLPData();
+    this.accountStates = decodeAccountStates((RLPList) summary.get(11));
+    this.tokenTransfers = decodeTokenTransfers((RLPList) summary.get(12));
+    this.result = summary.get(13).getRLPData();
+    this.logs = decodeLogs((RLPList) summary.get(14));
+
+    byte[] failed = summary.get(15).getRLPData();
     this.failed = isNotEmpty(failed) && RLP.decodeInt(failed, 0) == 1;
+
   }
 
   private static BigInteger decodeBigInteger(byte[] encoded) {
@@ -111,6 +127,8 @@ public class TransactionExecutionSummary {
       encodeTouchedAccounts(this.touchedAccounts),
       encodeInternalTransactions(this.internalTransactions),
       encodeTouchedStorage(this.touchedStorage),
+      encodeAccountStates(this.accountStates),
+      encodeTokenTransfers(this.tokenTransfers),
       RLP.encodeElement(this.result),
       encodeLogs(this.logs),
       RLP.encodeInt(this.failed ? 1 : 0)
@@ -190,6 +208,56 @@ public class TransactionExecutionSummary {
     }
     return result;
   }
+
+  private static byte[] encodeAccountStates(Map<ByteArrayWrapper, AccountState> accountStates) {
+
+    if(accountStates == null) return RLP.encodeList();  // empty list
+
+    byte[][] result = new byte[accountStates.size()][];
+    int i = 0;
+    for (Map.Entry<ByteArrayWrapper, AccountState> entry : accountStates.entrySet()) {
+      byte[] key = RLP.encodeElement(entry.getKey().getData());
+      byte[] value = RLP.encodeElement(entry.getValue().getEncoded());
+      result[i++] = RLP.encodeList(key, value);
+    }
+    return RLP.encodeList(result);
+  }
+
+  private Map<ByteArrayWrapper, AccountState> decodeAccountStates(RLPList list) {
+    Map<ByteArrayWrapper, AccountState> result = new HashMap<>();
+    for (RLPElement entry : list) {
+      final ByteArrayWrapper key = new ByteArrayWrapper(((RLPList) entry).get(0).getRLPData());
+      final AccountState value = AccountState.newBuilder(((RLPList) entry).get(1).getRLPData()).build();
+      result.put(key, value);
+    }
+    return result;
+  }
+
+  private static byte[] encodeTokenTransfers(Map<TokenTransferKey, TokenTransfer> tokenTransfers) {
+
+    if(tokenTransfers == null) return RLP.encodeList();  // empty list
+
+    byte[][] result = new byte[tokenTransfers.size()][];
+    int i = 0;
+    for (Map.Entry<TokenTransferKey, TokenTransfer> entry : tokenTransfers.entrySet()) {
+      byte[] key = RLP.encodeElement(entry.getKey().getEncoded());
+      byte[] value = RLP.encodeElement(entry.getValue().getEncoded());
+      result[i++] = RLP.encodeList(key, value);
+    }
+    return RLP.encodeList(result);
+  }
+
+  private Map<TokenTransferKey, TokenTransfer> decodeTokenTransfers(RLPList list) {
+    Map<TokenTransferKey, TokenTransfer> result = new HashMap<>();
+    for (RLPElement entry : list) {
+      final TokenTransferKey key = new TokenTransferKey(((RLPList) entry).get(0).getRLPData());
+      final TokenTransfer value = TokenTransfer.newBuilder(((RLPList) entry).get(1).getRLPData()).build();
+      result.put(key, value);
+    }
+    return result;
+  }
+
+
 
   private static byte[] encodeInternalTransactions(List<InternalTransaction> internalTransactions) {
     byte[][] result = new byte[internalTransactions.size()][];
@@ -338,6 +406,14 @@ public class TransactionExecutionSummary {
     return logs;
   }
 
+  public Map<ByteArrayWrapper, AccountState> getAccountStates() {
+    return accountStates;
+  }
+
+  public Map<TokenTransferKey, TokenTransfer> getTokenTransfers() {
+    return tokenTransfers;
+  }
+
   public TransactionTouchedStorage getTouchedStorage() {
     return touchedStorage;
   }
@@ -345,6 +421,8 @@ public class TransactionExecutionSummary {
   public static Builder builderFor(Transaction transaction) {
     return new Builder(transaction);
   }
+
+  public static Builder builderFor(TransactionExecutionSummary summary){ return new Builder(summary); }
 
   public static class Builder {
 
@@ -354,6 +432,29 @@ public class TransactionExecutionSummary {
       Assert.notNull(transaction, "Cannot build TransactionExecutionSummary for null transaction.");
       summary = new TransactionExecutionSummary(transaction);
     }
+
+    Builder(TransactionExecutionSummary proto) {
+      summary = new TransactionExecutionSummary();
+
+      // shallow copy
+
+      gasUsed(proto.gasUsed)
+        .gasLeftover(proto.gasLeftover)
+        .gasRefund(proto.gasRefund)
+        .internalTransactions(proto.internalTransactions)
+        .touchedAccounts(proto.touchedAccounts)
+        .deletedAccounts(proto.deletedAccounts)
+        .storageDiff(proto.storageDiff)
+        .logs(proto.logs)
+        .result(proto.result)
+        .accountStates(proto.accountStates)
+        .tokenTransfers(proto.tokenTransfers);
+
+      summary.touchedStorage = proto.touchedStorage;
+      summary.failed = proto.failed;
+
+    }
+
 
     public Builder gasUsed(BigInteger gasUsed) {
       summary.gasUsed = gasUsed;
@@ -410,6 +511,16 @@ public class TransactionExecutionSummary {
 
     public Builder result(byte[] result) {
       summary.result = result;
+      return this;
+    }
+
+    public Builder accountStates(Map<ByteArrayWrapper, io.enkrypt.kafka.models.AccountState> accountStates) {
+      summary.accountStates = accountStates;
+      return this;
+    }
+
+    public Builder tokenTransfers(Map<TokenTransferKey, TokenTransfer> transfersMap) {
+      summary.tokenTransfers = transfersMap;
       return this;
     }
 

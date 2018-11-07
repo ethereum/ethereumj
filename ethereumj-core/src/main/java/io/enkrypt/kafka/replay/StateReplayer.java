@@ -2,6 +2,7 @@ package io.enkrypt.kafka.replay;
 
 import io.enkrypt.kafka.Kafka;
 import io.enkrypt.kafka.db.BlockSummaryStore;
+import io.enkrypt.kafka.listener.KafkaBlockListener;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.BlockSummary;
@@ -19,6 +20,9 @@ import static java.lang.Long.parseLong;
 import static org.ethereum.util.ByteUtil.longToBytes;
 
 public class StateReplayer {
+
+  @Autowired
+  KafkaBlockListener blockListener;
 
   @Autowired
   BlockSummaryStore store;
@@ -51,16 +55,7 @@ public class StateReplayer {
 
       if(blockSummary != null) {
 
-        byte[] numberAsBytes = longToBytes(number);
-
-        kafka.send(Kafka.Producer.BLOCKS, numberAsBytes, blockSummary.getEncoded());
-
-//        for (TransactionExecutionSummary summary : blockSummary.getSummaries()) {
-//          final Map<byte[], AccountState> touchedAccounts = summary.getTouchedAccounts();
-//          for (Map.Entry<byte[], AccountState> entry : touchedAccounts.entrySet()) {
-//            kafka.send(Kafka.Producer.ACCOUNT_STATE, entry.getKey(), entry.getValue().getEncoded());
-//          }
-//        }
+        blockListener.onBlock(blockSummary);
 
         if(number % 10000 == 0) {
           logger.info("Replayed until number = {}", number);
@@ -73,6 +68,7 @@ public class StateReplayer {
 
     logger.info("Replay complete, last number = {}", number - 1);
 
+    System.exit(0);
   }
 
 }

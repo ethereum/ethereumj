@@ -80,10 +80,14 @@ public abstract class AbstractAbi {
     return Optional.ofNullable(eventMap.get(key));
   }
 
-  public List<?> invokeStatic(BlockchainImpl blockchain, Block block, byte[] address, String methodName, Object... args) {
+  public List<?> invokeStatic(BlockchainImpl blockchain,
+                              Block block,
+                              byte[] address,
+                              String methodName,
+                              Object... args) {
     return invokeStatic(
       blockchain.getBlockStore(),
-      blockchain.getRepository(),
+      blockchain.getRepository().getSnapshotTo(block.getStateRoot()),
       blockchain.getProgramInvokeFactory(),
       block,
       address,
@@ -92,7 +96,13 @@ public abstract class AbstractAbi {
     );
   }
 
-  public List<?> invokeStatic(BlockStore blockStore, Repository repository, ProgramInvokeFactory programInvokeFactory, Block block, byte[] address, String methodName, Object... args) {
+  public List<?> invokeStatic(BlockStore blockStore,
+                              Repository repository,
+                              ProgramInvokeFactory programInvokeFactory,
+                              Block block,
+                              byte[] address,
+                              String methodName,
+                              Object... args) {
 
     checkNotNull(blockStore, "blockStore cannot be null");
     checkNotNull(repository, "repository cannot be null");
@@ -118,27 +128,22 @@ public abstract class AbstractAbi {
 
     tx.sign(ECKey.DUMMY);
 
-    Repository snapshotRepository = repository.getSnapshotTo(block.getStateRoot()).startTracking();
+    TransactionExecutor executor = new org.ethereum.core.TransactionExecutor(
+      tx,
+      block.getCoinbase(),
+      repository,
+      blockStore,
+      programInvokeFactory,
+      block
+    ).setLocalCall(true);
 
-    try {
-      TransactionExecutor executor = new org.ethereum.core.TransactionExecutor(
-        tx,
-        block.getCoinbase(),
-        snapshotRepository,
-        blockStore,
-        programInvokeFactory,
-        block
-      ).setLocalCall(true);
+    executor.init();
+    executor.execute();
+    executor.go();
+    executor.finalization();
 
-      executor.init();
-      executor.execute();
-      executor.go();
-      executor.finalization();
+    return function.decodeResult(executor.getResult().getHReturn());
 
-      return function.decodeResult(executor.getResult().getHReturn());
-    } finally {
-      snapshotRepository.rollback();
-    }
   }
 
 }
