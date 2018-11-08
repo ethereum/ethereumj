@@ -7,6 +7,7 @@ credentials.properties
 # Gradle
 .gradle
 build
+gradle/wrapper/gradle-wrapper.properties
 
 # IDEA
 .idea

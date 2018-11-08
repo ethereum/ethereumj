@@ -39,6 +39,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Math.max;
@@ -52,7 +53,7 @@ import static java.lang.Math.min;
 public class ReceiptsDownloader {
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
-    private static final long REQUEST_TIMEOUT = 5 * 1000;
+    private static CountDownLatch receivedBlocksLatch = new CountDownLatch(0);
     private static final int MAX_IN_REQUEST = 100;
     private static final int MIN_IN_REQUEST = 10;
     private int requestLimit = 2000;
@@ -163,14 +164,15 @@ public class ReceiptsDownloader {
 
     private void retrieveLoop() {
         List<List<byte[]>> toDownload = Collections.emptyList();
-        long t = 0;
         while (!Thread.currentThread().isInterrupted()) {
             try {
 
                 if (toDownload.isEmpty()) {
-                    if (fillBlockQueue() > 0 || System.currentTimeMillis() - t > REQUEST_TIMEOUT) {
+                    if (fillBlockQueue() > 0) {
                         toDownload = getToDownload();
-                        t = System.currentTimeMillis();
+                        receivedBlocksLatch = new CountDownLatch(max(toDownload.size() - 2, 1));
+                        receivedBlocksLatch.await(1000, TimeUnit.MILLISECONDS);
+                        receivedBlocksLatch.countDown();
                     }
                 }
 
@@ -240,7 +242,7 @@ public class ReceiptsDownloader {
             return optimalReqSz;
         }
     }
-    
+
     private int fillBlockQueue() {
         int blocksToAdd = getTargetBlocksInMem() - blocksInMem.get();
         if (blocksToAdd < MAX_IN_REQUEST)
