@@ -167,9 +167,10 @@ public class ReceiptsDownloader {
             try {
 
                 if (toDownload.isEmpty()) {
-                    if (fillBlockQueue() > 0) {
+                    int fillBlockQueueSize = fillBlockQueue();
+                    if (fillBlockQueueSize > 0) {
                         toDownload = getToDownload();
-                        CountDownLatch receivedBlocksLatch = new CountDownLatch(max(toDownload.size() - 2, 1));
+                        CountDownLatch receivedBlocksLatch = new CountDownLatch(max(fillBlockQueueSize - 2, 1));
                         receivedBlocksLatch.await(1000, TimeUnit.MILLISECONDS);
                         receivedBlocksLatch.countDown();
                     }
