@@ -189,7 +189,6 @@ public class BeaconChainTest {
             inst.beaconChain = (BeaconChainImpl) BeaconChainFactory.create(
                     new DummyFlusher(), inst.store, inst.repository, new NoTransition(), new NoTransition(),
                     new DummySign());
-            inst.beaconChain.scoreFunction = (block, state) -> BigInteger.valueOf(block.getMainChainRef()[0]);
             return inst;
         }
 
@@ -222,7 +221,6 @@ public class BeaconChainTest {
             BigInteger expectedScore = BigInteger.ZERO;
             for (Beacon b : chain) {
                 assertTrue(store.exist(b.getHash()));
-                expectedScore = expectedScore.add(beaconChain.scoreFunction.apply(b, null));
             }
 
             Beacon expectedHead = chain[chain.length - 1];

@@ -49,7 +49,7 @@ public class IndexedBeaconStoreTest {
         assertNull(store.getCanonicalHead());
         assertNull(store.getByHash(g.getHash()));
         assertEquals(BigInteger.ZERO, store.getCanonicalHeadScore());
-        assertEquals(BigInteger.ZERO, store.getBlockBitfield(g.getHash()));
+        assertEquals(null, store.getBlockBitfield(g.getHash()));
 
         helper.saveCanonical(g);
 
