@@ -21,6 +21,7 @@ import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockHeaderWrapper;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
@@ -67,7 +68,7 @@ public interface SyncQueueIfc {
      *     Otherwise, the list contains invalid headers.
      */
     class ValidatedHeaders {
-        public static final ValidatedHeaders Empty = new ValidatedHeaders(null, true);
+        public static final ValidatedHeaders Empty = new ValidatedHeaders(Collections.emptyList(), true);
 
         private final List<BlockHeaderWrapper> headers;
         private final boolean valid;
@@ -87,6 +88,7 @@ public interface SyncQueueIfc {
             return valid;
         }
 
+        @Nonnull
         public List<BlockHeaderWrapper> getHeaders() {
             return headers;
         }
@@ -97,13 +99,13 @@ public interface SyncQueueIfc {
 
         @Nullable
         public byte[] getNodeId() {
-            if (headers == null || headers.isEmpty()) return null;
+            if (headers.isEmpty()) return null;
             return headers.get(0).getNodeId();
         }
 
         @Nullable
         public BlockHeader getHeader() {
-            if (headers == null || headers.isEmpty()) return null;
+            if (headers.isEmpty()) return null;
             return headers.get(0).getHeader();
         }
     }

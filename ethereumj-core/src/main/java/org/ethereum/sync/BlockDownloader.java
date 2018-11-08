@@ -393,7 +393,7 @@ public abstract class BlockDownloader {
         SyncQueueIfc.ValidatedHeaders res;
         synchronized (this) {
             res = syncQueue.addHeadersAndValidate(wrappers);
-            if (res.isValid() && res.getHeaders() != null && !res.getHeaders().isEmpty()) {
+            if (res.isValid() && !res.getHeaders().isEmpty()) {
                 pushHeaders(res.getHeaders());
             }
         }
