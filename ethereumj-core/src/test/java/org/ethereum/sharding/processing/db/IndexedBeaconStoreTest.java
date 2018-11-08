@@ -49,7 +49,7 @@ public class IndexedBeaconStoreTest {
         assertNull(store.getCanonicalHead());
         assertNull(store.getByHash(g.getHash()));
         assertEquals(BigInteger.ZERO, store.getCanonicalHeadScore());
-        assertEquals(BigInteger.ZERO, store.getChainScore(g.getHash()));
+        assertEquals(BigInteger.ZERO, store.getBlockBitfield(g.getHash()));
 
         helper.saveCanonical(g);
 
@@ -58,7 +58,7 @@ public class IndexedBeaconStoreTest {
         assertEquals(g, store.getCanonicalHead());
         assertEquals(g, store.getByHash(g.getHash()));
         assertEquals(expectedScore(g), store.getCanonicalHeadScore());
-        assertEquals(expectedScore(g), store.getChainScore(g.getHash()));
+        assertEquals(expectedScore(g), store.getBlockBitfield(g.getHash()));
 
         Beacon b1 = createBlock(g);
         Beacon b2 = createBlock(b1);
@@ -81,7 +81,7 @@ public class IndexedBeaconStoreTest {
         assertEquals(b2, store.getByHash(b2.getHash()));
         assertEquals(b2_, store.getByHash(b2_.getHash()));
         assertEquals(expectedScore(g, b1, b2), store.getCanonicalHeadScore());
-        assertEquals(expectedScore(g, b1, b2_, b3_), store.getChainScore(b3_.getHash()));
+        assertEquals(expectedScore(g, b1, b2_, b3_), store.getBlockBitfield(b3_.getHash()));
 
         assertEquals(b2, store.getCanonicalByNumber(2L));
     }
@@ -252,9 +252,7 @@ public class IndexedBeaconStoreTest {
         }
 
         private void saveBlock(Beacon block, boolean canonical) {
-            BigInteger chainScore = store.getChainScore(block.getParentHash()) == null ? BigInteger.ZERO :
-                    store.getChainScore(block.getParentHash());
-            store.save(block, chainScore.add(BigInteger.valueOf(block.getSlotNumber())), canonical);
+            store.save(block, block.getAttestations().get(0).getAttesterBitfield(), canonical);
         }
 
         void checkCanonicalHead(Beacon head, BigInteger expectedScore) {

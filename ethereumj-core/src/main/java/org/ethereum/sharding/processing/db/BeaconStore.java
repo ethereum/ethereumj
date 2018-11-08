@@ -18,6 +18,7 @@
 package org.ethereum.sharding.processing.db;
 
 import org.ethereum.sharding.domain.Beacon;
+import org.ethereum.sharding.util.Bitfield;
 
 import javax.annotation.Nullable;
 import java.math.BigInteger;
@@ -68,10 +69,17 @@ public interface BeaconStore {
     boolean exist(byte[] hash);
 
     /**
-     * Returns total score of the chain up to given block inclusively.
+     * Returns bitfield of exact beacon.
      *
-     * @param hash block hash
-     * @return total chain score up to block or 0 if there is no such block
+     * @param hash beacon hash
+     * @return block bitfield representing votes signed for this block
+     */
+    Bitfield getBlockBitfield(byte[] hash);
+
+    /**
+     * Chain score for the chain up to beacon with provided hash
+     * @param hash  Hash of the beacon, part of some chain
+     * @return Chain score, BigInteger.ZERO, if block not found
      */
     BigInteger getChainScore(byte[] hash);
 
@@ -85,12 +93,12 @@ public interface BeaconStore {
      * Saves block to the storage.
      *
      * @param block the block
-     * @param chainScore total score of the chain that is calculated after given block has been imported
+     * @param bitfield bitfield of validators signed for this Beacon
      * @param canonical whether consider the block as a part of canonical chain or not
      *
      * @throws RuntimeException if an attempt of storing canonical block in fork chain occurs
      */
-    void save(Beacon block, BigInteger chainScore, boolean canonical);
+    void save(Beacon block, Bitfield bitfield, boolean canonical);
 
     /**
      * Reorgs to the chain that given block does belong to.
