@@ -53,7 +53,6 @@ import static java.lang.Math.min;
 public class ReceiptsDownloader {
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
-    private static CountDownLatch receivedBlocksLatch = new CountDownLatch(0);
     private static final int MAX_IN_REQUEST = 100;
     private static final int MIN_IN_REQUEST = 10;
     private int requestLimit = 2000;
@@ -170,7 +169,7 @@ public class ReceiptsDownloader {
                 if (toDownload.isEmpty()) {
                     if (fillBlockQueue() > 0) {
                         toDownload = getToDownload();
-                        receivedBlocksLatch = new CountDownLatch(max(toDownload.size() - 2, 1));
+                        CountDownLatch receivedBlocksLatch = new CountDownLatch(max(toDownload.size() - 2, 1));
                         receivedBlocksLatch.await(1000, TimeUnit.MILLISECONDS);
                         receivedBlocksLatch.countDown();
                     }
