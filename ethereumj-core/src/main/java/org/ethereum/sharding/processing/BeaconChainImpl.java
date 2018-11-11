@@ -23,6 +23,7 @@ import org.ethereum.sharding.processing.consensus.GenesisTransition;
 import org.ethereum.sharding.processing.validation.AttestationsValidator;
 import org.ethereum.sharding.pubsub.Event;
 import org.ethereum.sharding.pubsub.Publisher;
+import org.ethereum.sharding.processing.consensus.ScoreFunction;
 import org.ethereum.sharding.processing.consensus.StateTransition;
 import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.StateRepository;
@@ -32,7 +33,6 @@ import org.ethereum.sharding.processing.db.BeaconStore;
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.domain.BeaconGenesis;
 import org.ethereum.sharding.processing.validation.ValidationResult;
-import org.ethereum.sharding.util.Bitfield;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +62,7 @@ public class BeaconChainImpl implements BeaconChain {
     AttestationsValidator attestationsValidator;
     StateValidator stateValidator;
     StateRepository repository;
+    ScoreFunction scoreFunction;
 
     Publisher publisher;
 
@@ -70,7 +71,7 @@ public class BeaconChainImpl implements BeaconChain {
     public BeaconChainImpl(DbFlushManager beaconDbFlusher, BeaconStore store,
                            StateTransition<BeaconState> transitionFunction, StateRepository repository,
                            BeaconValidator beaconValidator, StateValidator stateValidator,
-                           AttestationsValidator attestationsValidator,
+                           AttestationsValidator attestationsValidator, ScoreFunction scoreFunction,
                            StateTransition<BeaconState> genesisStateTransition) {
         this.beaconDbFlusher = beaconDbFlusher;
         this.store = store;
@@ -79,6 +80,7 @@ public class BeaconChainImpl implements BeaconChain {
         this.beaconValidator = beaconValidator;
         this.stateValidator = stateValidator;
         this.attestationsValidator =attestationsValidator;
+        this.scoreFunction = scoreFunction;
         this.genesisStateTransition = genesisStateTransition;
     }
 
@@ -105,7 +107,7 @@ public class BeaconChainImpl implements BeaconChain {
         repository.insert(genesisState);
 
         genesis.setStateHash(genesisState.getHash());
-        store.save(genesis, Bitfield.createEmpty(0), true);
+        store.save(genesis, genesis.getScore(), true);
 
         repository.commit();
         beaconDbFlusher.flushSync();
@@ -133,24 +135,10 @@ public class BeaconChainImpl implements BeaconChain {
         if ((vRes = stateValidator.validateAndLog(block, newState)) != ValidationResult.Success)
             return ProcessingResult.fromValidation(vRes);
 
-        // Save attestations to corresponded blocks
-        block.getAttestations().forEach(at -> {
-            Bitfield curBitfield = store.getBlockBitfield(at.getShardBlockHash());
-            Bitfield updatedBitfield = Bitfield.orBitfield(curBitfield, at.getAttesterBitfield());
-            if (!updatedBitfield.equals(curBitfield)) {
-                Beacon toUpdate = store.getByHash(at.getShardBlockHash());
-                if (toUpdate != null) {
-                    boolean isCanonical = false;
-                    Beacon canonical = store.getCanonicalByNumber(toUpdate.getSlotNumber());
-                    if (canonical != null && canonical.equals(toUpdate)) {
-                        isCanonical = true;
-                    }
-                    store.save(toUpdate, updatedBitfield, isCanonical);
-                }
-            }
-        });
+        // calculate block and chain score
+        BigInteger blockScore = scoreFunction.apply(block, newState);
+        BigInteger chainScore = store.getChainScore(parent.getHash()).add(blockScore);
 
-        BigInteger chainScore = store.getChainScore(parent.getHash());
         ScoredChainHead newHead = new ScoredChainHead(block, chainScore, newState);
 
         beaconDbFlusher.commit(() -> {
@@ -160,8 +148,7 @@ public class BeaconChainImpl implements BeaconChain {
             repository.commit();
 
             // store block
-            store.save(newHead.block, block.getAttestations().get(0).getAttesterBitfield(),
-                    canonicalHead.isParentOf(newHead));
+            store.save(newHead.block, newHead.score, canonicalHead.isParentOf(newHead));
 
             // do reorg if canonical chain is beaten
             if (canonicalHead.shouldReorgTo(newHead)) {

@@ -19,6 +19,7 @@ package org.ethereum.sharding.processing;
 
 import org.ethereum.core.Block;
 import org.ethereum.sharding.domain.Beacon;
+import org.ethereum.sharding.processing.consensus.ScoreFunction;
 import org.ethereum.sharding.processing.consensus.StateTransition;
 import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.validator.ValidationRule;
@@ -51,6 +52,7 @@ public interface BeaconChain {
      * @return result of block import, check {@link ProcessingResult} for details.
      *
      * @see ValidationRule
+     * @see ScoreFunction
      * @see StateTransition
      */
     ProcessingResult insert(Beacon block);

@@ -22,7 +22,6 @@ import org.ethereum.datasource.ObjectDataSource;
 import org.ethereum.datasource.Serializer;
 import org.ethereum.datasource.Source;
 import org.ethereum.sharding.domain.Beacon;
-import org.ethereum.sharding.util.Bitfield;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
@@ -33,7 +32,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.lang.Math.max;
-import static org.ethereum.sharding.processing.consensus.BeaconConstants.CYCLE_LENGTH;
 import static org.ethereum.util.FastByteComparisons.equal;
 
 /**
@@ -89,7 +87,7 @@ public class IndexedBeaconStore implements BeaconStore {
     public synchronized BigInteger getCanonicalHeadScore() {
         ChainItem head = getCanonicalHeadItem();
         if (head != null) {
-            return getChainScore(head.getHash());
+            return head.getChainScore();
         }
 
         return BigInteger.ZERO;
@@ -106,30 +104,12 @@ public class IndexedBeaconStore implements BeaconStore {
     }
 
     @Override
-    public synchronized Bitfield getBlockBitfield(byte[] hash) {
+    public synchronized BigInteger getChainScore(byte[] hash) {
         ChainItem item = getChainItemByHash(hash);
         if (item == null)
-            return null;
+            return BigInteger.ZERO;
 
-        return item.getBitfield();
-    }
-
-    @Override
-    public BigInteger getChainScore(byte[] hash) {
-        Beacon lastJustified = getCanonicalByNumber(Math.max(0, getCanonicalHead().getSlotNumber() - CYCLE_LENGTH * 2));
-        int maxVoted = 0;
-        Beacon to = getByHash(hash);
-        if (lastJustified == null || to == null) return BigInteger.ZERO;
-        Beacon current = to;
-        while (current.getSlotNumber() > lastJustified.getSlotNumber()) {
-            int currentVotes = getBlockBitfield(current.getHash()).calcVotes();
-            if (currentVotes > maxVoted) {
-                maxVoted = currentVotes;
-            }
-            current = getByHash(current.getParentHash());
-        }
-
-        return BigInteger.valueOf(maxVoted);
+        return item.getChainScore();
     }
 
     @Override
@@ -138,12 +118,12 @@ public class IndexedBeaconStore implements BeaconStore {
     }
 
     @Override
-    public synchronized void save(Beacon block, Bitfield bitfield, boolean canonical) {
+    public synchronized void save(Beacon block, BigInteger chainScore, boolean canonical) {
         ChainItem parent = getChainItemByHash(block.getParentHash());
         if (parent != null && canonical && !parent.isCanonical())
             throw new RuntimeException("Consistency breaking save: parent item is not from canonical chain");
 
-        ChainItem item = new ChainItem(bitfield, block.getHash(), block.getParentHash(), canonical);
+        ChainItem item = new ChainItem(chainScore, block.getHash(), block.getParentHash(), canonical);
         putIndexItem(block.getSlotNumber(), item);
         blocks.put(block.getHash(), block);
     }
@@ -277,13 +257,13 @@ public class IndexedBeaconStore implements BeaconStore {
     static class ChainItem {
         private byte[] hash;
         private byte[] parentHash;
-        private Bitfield bitfield;
+        private BigInteger score;
         private boolean canonical;
 
-        public ChainItem(Bitfield bitfield, byte[] hash, byte[] parentHash, boolean canonical) {
+        public ChainItem(BigInteger score, byte[] hash, byte[] parentHash, boolean canonical) {
             this.hash = hash;
             this.parentHash = parentHash;
-            this.bitfield = bitfield;
+            this.score = score;
             this.canonical = canonical;
         }
 
@@ -292,12 +272,12 @@ public class IndexedBeaconStore implements BeaconStore {
 
             this.hash = list.get(0).getRLPData();
             this.parentHash = list.get(1).getRLPData();
-            this.bitfield = new Bitfield(list.get(2).getRLPData());
+            this.score = ByteUtil.bytesToBigInteger(list.get(2).getRLPData());
             this.canonical = ByteUtil.byteArrayToInt(list.get(3).getRLPData()) > 0;
         }
 
-        public Bitfield getBitfield() {
-            return bitfield;
+        public BigInteger getChainScore() {
+            return score;
         }
 
         public byte[] getHash() {
@@ -313,8 +293,7 @@ public class IndexedBeaconStore implements BeaconStore {
         }
 
         public byte[] getEncoded() {
-            return RLP.wrapList(hash, parentHash,
-                    bitfield.getData(),
+            return RLP.wrapList(hash, parentHash, ByteUtil.bigIntegerToBytes(score),
                     ByteUtil.intToBytes(canonical ? 1 : 0));
         }
 
