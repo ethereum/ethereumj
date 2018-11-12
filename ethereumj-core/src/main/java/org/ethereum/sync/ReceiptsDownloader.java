@@ -39,7 +39,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Math.max;
@@ -52,7 +51,9 @@ import static java.lang.Math.min;
 @Scope("prototype")
 public class ReceiptsDownloader {
     private final static Logger logger = LoggerFactory.getLogger("sync");
-
+    private static final long REQUEST_TIMEOUT = 5 * 1000;
+    private static int requestedBlocksCounter = 0;
+    private static int receivedBlocksCounter = 0;
     private static final int MAX_IN_REQUEST = 100;
     private static final int MIN_IN_REQUEST = 10;
     private int requestLimit = 2000;
@@ -163,18 +164,16 @@ public class ReceiptsDownloader {
 
     private void retrieveLoop() {
         List<List<byte[]>> toDownload = Collections.emptyList();
+        long t = 0;
         while (!Thread.currentThread().isInterrupted()) {
             try {
 
-                if (toDownload.isEmpty()) {
-                    int fillBlockQueueSize = fillBlockQueue();
-                    if (fillBlockQueueSize > 0) {
-                        toDownload = getToDownload();
-                        CountDownLatch receivedBlocksLatch = new CountDownLatch(max(fillBlockQueueSize - 2, 1));
-                        receivedBlocksLatch.await(1000, TimeUnit.MILLISECONDS);
-                        receivedBlocksLatch.countDown();
-                    }
+              if (toDownload.isEmpty()) {
+                if (fillBlockQueue() > 0 || System.currentTimeMillis() - t > REQUEST_TIMEOUT || (requestedBlocksCounter > 0  && requestedBlocksCounter == receivedBlocksCounter)) {
+                  toDownload = getToDownload();
+                  t = System.currentTimeMillis();
                 }
+              }
 
                 Channel idle = getAnyPeer();
                 if (idle != null && !toDownload.isEmpty()) {
@@ -189,10 +188,12 @@ public class ReceiptsDownloader {
                                     processDownloaded(list.get(i), result.get(i));
                                 }
                                 processQueue();
+                                receivedBlocksCounter++;
                             }
                             @Override
                             public void onFailure(Throwable t) {}
                         });
+                      requestedBlocksCounter++;
                     }
                 } else {
                     try {
