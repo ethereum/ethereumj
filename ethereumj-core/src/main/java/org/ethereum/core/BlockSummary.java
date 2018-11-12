@@ -33,6 +33,8 @@ import static org.ethereum.util.ByteUtil.toHexString;
 
 public class BlockSummary {
 
+  private final boolean reverse;
+
   private final Block block;
   private final Map<byte[], BigInteger> rewards;
   private final List<TransactionReceipt> receipts;
@@ -43,12 +45,14 @@ public class BlockSummary {
   public BlockSummary(byte[] rlp) {
     RLPList rlpList = RLP.unwrapList(rlp);
 
-    this.block = new Block(rlpList.get(0).getRLPData());
-    this.rewards = decodeRewards(RLP.unwrapList(rlpList.get(1).getRLPData()));
-    this.summaries = decodeSummaries(RLP.unwrapList(rlpList.get(2).getRLPData()));
+    this.reverse = RLP.decodeInt(rlpList.get(0).getRLPData(), 0) == 1;
+
+    this.block = new Block(rlpList.get(1).getRLPData());
+    this.rewards = decodeRewards(RLP.unwrapList(rlpList.get(2).getRLPData()));
+    this.summaries = decodeSummaries(RLP.unwrapList(rlpList.get(3).getRLPData()));
     this.receipts = new ArrayList<>();
 
-    Map<String, TransactionReceipt> receiptByTxHash = decodeReceipts(RLP.unwrapList(rlpList.get(3).getRLPData()));
+    Map<String, TransactionReceipt> receiptByTxHash = decodeReceipts(RLP.unwrapList(rlpList.get(4).getRLPData()));
     for (Transaction tx : this.block.getTransactionsList()) {
       TransactionReceipt receipt = receiptByTxHash.get(toHexString(tx.getHash()));
       receipt.setTransaction(tx);
@@ -56,15 +60,21 @@ public class BlockSummary {
       this.receipts.add(receipt);
     }
 
-    this.statistics = new BlockStatistics(rlpList.get(4).getRLPData());
+    this.statistics = new BlockStatistics(rlpList.get(5).getRLPData());
   }
 
-  public BlockSummary(Block block, Map<byte[], BigInteger> rewards, List<TransactionReceipt> receipts, List<TransactionExecutionSummary> summaries, BlockStatistics statistics) {
+  public BlockSummary(Block block,
+                      Map<byte[], BigInteger> rewards,
+                      List<TransactionReceipt> receipts,
+                      List<TransactionExecutionSummary> summaries,
+                      BlockStatistics statistics,
+                      boolean reverse) {
     this.block = block;
     this.rewards = rewards;
     this.receipts = receipts;
     this.summaries = summaries;
     this.statistics = statistics;
+    this.reverse = reverse;
   }
 
   public Block getBlock() {
@@ -81,6 +91,10 @@ public class BlockSummary {
 
   public BlockStatistics getStatistics() {
     return statistics;
+  }
+
+  public boolean isReverse() {
+    return reverse;
   }
 
   /**
@@ -100,6 +114,7 @@ public class BlockSummary {
 
   public byte[] getEncoded() {
     return RLP.encodeList(
+      RLP.encodeElement(RLP.encodeInt(reverse ? 1 : 0)),
       block.getEncoded(),
       encodeRewards(rewards),
       encodeSummaries(summaries),
@@ -184,8 +199,7 @@ public class BlockSummary {
   }
 
   private static Map<byte[], BigInteger> decodeRewards(RLPList rewards) {
-    return decodeMap(rewards, bytes -> bytes, bytes ->
-      ByteUtil.bytesToBigInteger(bytes)
-    );
+    return decodeMap(rewards, bytes -> bytes, ByteUtil::bytesToBigInteger);
   }
+
 }

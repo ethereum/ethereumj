@@ -1,16 +1,14 @@
 package io.enkrypt.kafka.db;
 
-import org.ethereum.core.BlockSummary;
+import io.enkrypt.avro.capture.BlockSummaryRecord;
 import org.ethereum.datasource.DbSource;
-import org.ethereum.datasource.rocksdb.RocksDbDataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import static org.ethereum.util.ByteUtil.longToBytes;
 
 public class BlockSummaryStore {
-
-  private static final Logger logger = LoggerFactory.getLogger("db");
 
   private final DbSource<byte[]> ds;
 
@@ -18,21 +16,21 @@ public class BlockSummaryStore {
     this.ds = ds;
   }
 
-  public void put(long number, BlockSummary summary) {
-    this.put(longToBytes(number), summary.getEncoded());
+  public void put(long number, BlockSummaryRecord summary) throws IOException {
+    this.put(longToBytes(number), summary.toByteBuffer().array());
   }
 
   public void put(byte[] number, byte[] summary) {
     ds.put(number, summary);
   }
 
-  public BlockSummary get(long key) {
+  public BlockSummaryRecord get(long key) throws IOException {
     return this.get(longToBytes(key));
   }
 
-  public BlockSummary get(byte[] key) {
+  public BlockSummaryRecord get(byte[] key) throws IOException {
     byte[] bytes = ds.get(key);
-    return bytes == null ? null : new BlockSummary(bytes);
+    return bytes == null ? null : BlockSummaryRecord.fromByteBuffer(ByteBuffer.wrap(bytes));
   }
 
 }

@@ -1,28 +1,25 @@
 package io.enkrypt.kafka.config;
 
+import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
 import io.enkrypt.kafka.Kafka;
 import io.enkrypt.kafka.KafkaImpl;
 import io.enkrypt.kafka.NullKafka;
 import io.enkrypt.kafka.db.BlockSummaryStore;
 import io.enkrypt.kafka.listener.KafkaBlockListener;
 import io.enkrypt.kafka.listener.KafkaPendingTxsListener;
+import io.enkrypt.kafka.mapping.ObjectMapper;
 import io.enkrypt.kafka.replay.StateReplayer;
 import io.enkrypt.kafka.serialization.EthereumKeySerializer;
 import io.enkrypt.kafka.serialization.EthereumValueSerializer;
-import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.ByteArraySerializer;
-import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.DbSettings;
 import org.ethereum.datasource.DbSource;
 import org.ethereum.datasource.rocksdb.RocksDbDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
@@ -80,9 +77,17 @@ public class KafkaStateReplayConfig {
   }
 
   @Bean
+  public ObjectMapper objectMapper() {
+    return new ObjectMapper();
+  }
+
+  @Bean
   public Kafka kafka(SystemProperties config) {
-    final boolean enabled = ((KafkaSystemProperties) config).isKafkaEnabled();
-    final String bootstrapServers = ((KafkaSystemProperties) config).getKafkaBootstrapServers();
+
+    final KafkaSystemProperties kafkaConfig = (KafkaSystemProperties) config;
+
+    final boolean enabled = kafkaConfig.isKafkaEnabled();
+    final String bootstrapServers = kafkaConfig.getKafkaBootstrapServers();
 
     if (!enabled) {
       return new NullKafka();
@@ -95,6 +100,7 @@ public class KafkaStateReplayConfig {
     // we use byte array serialization as we are using rlp where required
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, EthereumKeySerializer.class.getName());
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, EthereumValueSerializer.class.getName());
+    props.put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, kafkaConfig.getKafkaSchemaRegistryUrl());
 
     props.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, 2000000000);
 
@@ -102,17 +108,15 @@ public class KafkaStateReplayConfig {
   }
 
   @Bean
-  public KafkaPendingTxsListener kafkaPendingTxsListener(Kafka kafka) {
-    return new KafkaPendingTxsListener(kafka);
+  public KafkaPendingTxsListener kafkaPendingTxsListener(Kafka kafka, ObjectMapper objectMapper) {
+    return new KafkaPendingTxsListener(kafka, objectMapper);
   }
 
   @Bean
   public KafkaBlockListener kafkaBlockListener(Kafka kafka,
-                                               SystemProperties config,
-                                               KafkaPendingTxsListener pendingTxnsListener,
                                                ExecutorService executor) {
 
-    final KafkaBlockListener blockListener = new KafkaBlockListener(kafka, config, pendingTxnsListener);
+    final KafkaBlockListener blockListener = new KafkaBlockListener(kafka);
 
     // run the block listener with it's own thread and handle shutdown
 

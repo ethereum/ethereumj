@@ -1,6 +1,9 @@
 package io.enkrypt.kafka.listener;
 
+import io.enkrypt.avro.capture.*;
+import io.enkrypt.avro.common.Address;
 import io.enkrypt.kafka.db.BlockSummaryStore;
+import io.enkrypt.kafka.mapping.ObjectMapper;
 import org.ethereum.core.*;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.message.StatusMessage;
@@ -8,15 +11,31 @@ import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
+import org.ethereum.vm.LogInfo;
+import org.ethereum.vm.program.InternalTransaction;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkState;
+import static java.nio.ByteBuffer.wrap;
+import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
 
 public class BlockSummaryEthereumListener implements EthereumListener {
 
   private final BlockSummaryStore blockSummaryStore;
+  private final KafkaBlockListener kafkaBlockListener;
+  private final KafkaPendingTxsListener pendingTxsListener;
+  private final ObjectMapper objectMapper;
 
-  public BlockSummaryEthereumListener(BlockSummaryStore blockSummaryStore) {
+  public BlockSummaryEthereumListener(BlockSummaryStore blockSummaryStore, KafkaBlockListener kafkaBlockListener, KafkaPendingTxsListener pendingTxsListener, ObjectMapper objectMapper) {
     this.blockSummaryStore = blockSummaryStore;
+    this.kafkaBlockListener = kafkaBlockListener;
+    this.pendingTxsListener = pendingTxsListener;
+    this.objectMapper = objectMapper;
   }
 
   @Override
@@ -83,8 +102,18 @@ public class BlockSummaryEthereumListener implements EthereumListener {
     final Block block = blockSummary.getBlock();
     final long number = block.getNumber();
 
+    final BlockSummaryRecord record = toRecord(blockSummary);
+
     // persist to store for replay later
-    blockSummaryStore.put(number, blockSummary);
+    try {
+      blockSummaryStore.put(number, record);
+      kafkaBlockListener.onBlock(record);
+    } catch (IOException e) {
+
+      // TODO ensure we stop all processing
+
+      throw new RuntimeException(e);
+    }
 
   }
 
@@ -98,5 +127,88 @@ public class BlockSummaryEthereumListener implements EthereumListener {
 
   @Override
   public void trace(String output) {
+  }
+
+  private BlockSummaryRecord toRecord(BlockSummary blockSummary) {
+
+    final Block block = blockSummary.getBlock();
+
+    final BlockRecord.Builder blockBuilder = BlockRecord.newBuilder()
+      .setHeader(objectMapper.convert(null, BlockHeader.class, BlockHeaderRecord.class, block.getHeader()))
+      .setUncles(
+        block.getUncleList().stream()
+          .map(u -> objectMapper.convert(null, BlockHeader.class, BlockHeaderRecord.class, u))
+          .collect(Collectors.toList())
+      );
+
+    final Map<ByteBuffer, Transaction> txnsByHash = block.getTransactionsList()
+      .stream()
+      .collect(Collectors.toMap(t -> wrap(t.getHash()), t -> t));
+
+    final Map<ByteBuffer, TransactionExecutionSummary> execSummariesByHash = blockSummary.getSummaries()
+      .stream()
+      .collect(Collectors.toMap(s -> wrap(s.getTransactionHash()), s -> s));
+
+    final Map<ByteBuffer, TransactionReceipt> receiptsByHash = blockSummary.getReceipts()
+      .stream()
+      .collect(Collectors.toMap(r -> wrap(r.getTransaction().getHash()), r -> r));
+
+
+    blockBuilder.setTransactions(
+      txnsByHash.entrySet().stream()
+        .map(entry -> {
+
+          final ByteBuffer key = entry.getKey();
+          final Transaction tx = entry.getValue();
+
+          final TransactionExecutionSummary execSummary = execSummariesByHash.get(key);
+          final TransactionReceipt receipt = receiptsByHash.get(key);
+
+          checkState(execSummary != null, "execSummary cannot be null");
+          checkState(receipt != null, "receipt cannot be null");
+
+          return TransactionReceiptRecord.newBuilder()
+            .setTx(objectMapper.convert(null, Transaction.class, TransactionRecord.class, tx))
+            .setPostTxState(wrap(receipt.getPostTxState()))
+            .setCumulativeGas(wrap(receipt.getCumulativeGas()))
+            .setBloomFilter(wrap(receipt.getBloomFilter().getData()))
+            .setGasPrice(wrap(bigIntegerToBytes(execSummary.getGasPrice())))
+            .setGasLimit(wrap(bigIntegerToBytes(execSummary.getGasLimit())))
+            .setGasUsed(wrap(bigIntegerToBytes(execSummary.getGasUsed())))
+            .setGasLeftover(wrap(bigIntegerToBytes(execSummary.getGasLeftover())))
+            .setGasRefund(wrap(bigIntegerToBytes(execSummary.getGasRefund())))
+            .setResult(wrap(execSummary.getResult()))
+            .setLogInfos(
+              execSummary.getLogs().stream()
+                .map(l -> objectMapper.convert(null, LogInfo.class, LogInfoRecord.class, l))
+                .collect(Collectors.toList())
+            ).setInternalTxs(
+              execSummary.getInternalTransactions().stream()
+                .map(t -> objectMapper.convert(null, InternalTransaction.class, InternalTransactionRecord.class, t))
+                .collect(Collectors.toList())
+            ).setDeletedAccounts(
+              execSummary.getDeletedAccounts().stream()
+                .map(a -> wrap(a.getData()))
+                .collect(Collectors.toList())
+            ).build();
+
+
+        }).collect(Collectors.toList())
+    );
+
+    return BlockSummaryRecord.newBuilder()
+      .setReverse(false)
+      .setTotalDifficulty(wrap(bigIntegerToBytes(blockSummary.getTotalDifficulty())))
+      .setBlockBuilder(blockBuilder)
+      .setNumPendingTxs(pendingTxsListener.getNumPendingTxs())
+      .setRewards(
+        blockSummary.getRewards().entrySet().stream()
+          .map(e -> BlockRewardRecord.newBuilder()
+            .setAddress(wrap(e.getKey()))
+            .setReward(wrap(bigIntegerToBytes(e.getValue())))
+            .build()
+          ).collect(Collectors.toList())
+      ).build();
+
   }
 }

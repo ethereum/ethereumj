@@ -240,7 +240,7 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
         if (parent == null) {
             logger.info("Failed to replay block #{}, its ancestor is not presented in the db", block.getNumber());
 
-          return new BlockSummary(block, new HashMap<byte[], BigInteger>(), receipts, summaries, new BlockStatistics());
+          return null;
         }
 
         Repository track = ((Repository) worldManager.getRepository())
@@ -273,7 +273,9 @@ public class EthereumImpl implements Ethereum, SmartLifecycle {
         }
 
       final BlockStatistics stats = BlockStatistics.forBlock(block, receipts, summaries);
-      return new BlockSummary(block, new HashMap<byte[], BigInteger>(), receipts, summaries, stats);
+        // TODO handle rewards
+
+      return new BlockSummary(block, new HashMap<byte[], BigInteger>(), receipts, summaries, stats, false);
     }
 
     private org.ethereum.core.TransactionExecutor callConstantImpl(Transaction tx, Block block) {

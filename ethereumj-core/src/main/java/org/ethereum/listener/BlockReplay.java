@@ -121,7 +121,7 @@ public class BlockReplay extends EthereumListenerAdapter {
             receipts.add(receipt);
         }
         BlockStatistics.forBlock(block, receipts, null);
-        BlockSummary blockSummary = new BlockSummary(block, null, receipts, null, new BlockStatistics());
+        BlockSummary blockSummary = new BlockSummary(block, null, receipts, null, new BlockStatistics(), false);
         blockSummary.setTotalDifficulty(BigInteger.valueOf(num));
         listener.onBlock(blockSummary);
     }

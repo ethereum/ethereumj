@@ -85,6 +85,8 @@ public class EventDispatchThread {
                 }
             } catch (Exception e) {
                 logger.error("EDT task exception", e);
+                System.exit(1);
+                e.printStackTrace();
             }
         });
     }
