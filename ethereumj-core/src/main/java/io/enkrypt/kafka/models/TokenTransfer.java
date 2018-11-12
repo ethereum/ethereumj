@@ -17,10 +17,6 @@ public class TokenTransfer {
 
   private byte[] to;
 
-  private BigInteger fromBalance;
-
-  private BigInteger toBalance;
-
   private BigInteger value;
 
   private BigInteger tokenId;
@@ -32,8 +28,6 @@ public class TokenTransfer {
     this.address = proto.address;
     this.from = proto.from;
     this.to = proto.to;
-    this.fromBalance = proto.fromBalance;
-    this.toBalance = proto.toBalance;
     this.value = proto.value;
     this.tokenId = proto.tokenId;
   }
@@ -46,14 +40,6 @@ public class TokenTransfer {
 
   public byte[] getTo() {
     return to;
-  }
-
-  public BigInteger getFromBalance() {
-    return fromBalance;
-  }
-
-  public BigInteger getToBalance() {
-    return toBalance;
   }
 
   public BigInteger getValue() {
@@ -70,8 +56,6 @@ public class TokenTransfer {
       encodeElement(address),
       encodeElement(from),
       encodeElement(to),
-      encodeElement(bigIntegerToBytes(fromBalance)),
-      encodeElement(bigIntegerToBytes(toBalance)),
       encodeElement(bigIntegerToBytes(value)),
       encodeElement(bigIntegerToBytes(tokenId))
     );
@@ -81,11 +65,9 @@ public class TokenTransfer {
   @Override
   public String toString() {
     final StringBuilder sb = new StringBuilder("TokenTransfer{");
-    sb.append("address=").append(toHexString(address));
-    sb.append(", from=").append(toHexString(from));
-    sb.append(", to=").append(toHexString(to));
-    sb.append(", fromBalance=").append(fromBalance);
-    sb.append(", toBalance=").append(toBalance);
+    sb.append("address=").append(Arrays.toString(address));
+    sb.append(", from=").append(Arrays.toString(from));
+    sb.append(", to=").append(Arrays.toString(to));
     sb.append(", value=").append(value);
     sb.append(", tokenId=").append(tokenId);
     sb.append('}');
@@ -99,16 +81,14 @@ public class TokenTransfer {
     TokenTransfer that = (TokenTransfer) o;
     return Arrays.equals(address, that.address) &&
       Arrays.equals(from, that.from) &&
-      Objects.equals(fromBalance, that.fromBalance) &&
       Arrays.equals(to, that.to) &&
-      Objects.equals(toBalance, that.toBalance) &&
       Objects.equals(value, that.value) &&
       Objects.equals(tokenId, that.tokenId);
   }
 
   @Override
   public int hashCode() {
-    int result = Objects.hash(fromBalance, toBalance, value, tokenId);
+    int result = Objects.hash(value, tokenId);
     result = 31 * result + Arrays.hashCode(address);
     result = 31 * result + Arrays.hashCode(from);
     result = 31 * result + Arrays.hashCode(to);
@@ -129,16 +109,10 @@ public class TokenTransfer {
       .setFrom(list.get(1).getRLPData())
       .setTo(list.get(2).getRLPData());
 
-    final byte[] fromBalance = list.get(3).getRLPData();
-    if(fromBalance != null) builder.setFromBalance(bytesToBigInteger(fromBalance));
-
-    final byte[] toBalance = list.get(4).getRLPData();
-    if(toBalance != null) builder.setToBalance(bytesToBigInteger(toBalance));
-
-    final byte[] value = list.get(5).getRLPData();
+    final byte[] value = list.get(3).getRLPData();
     if(value != null) builder.setValue(bytesToBigInteger(value));
 
-    final byte[] tokenId = list.get(6).getRLPData();
+    final byte[] tokenId = list.get(4).getRLPData();
     if(tokenId != null) builder.setTokenId(bytesToBigInteger(tokenId));
 
     return builder;
@@ -176,24 +150,6 @@ public class TokenTransfer {
 
     public Builder setTo(byte[] to) {
       proto.to = to;
-      return this;
-    }
-
-    public BigInteger getFromBalance() {
-      return proto.getFromBalance();
-    }
-
-    public Builder setFromBalance(BigInteger balance){
-      proto.fromBalance = balance;
-      return this;
-    }
-
-    public BigInteger getToBalance() {
-      return proto.getToBalance();
-    }
-
-    public Builder setToBalance(BigInteger balance) {
-      proto.toBalance = balance;
       return this;
     }
 

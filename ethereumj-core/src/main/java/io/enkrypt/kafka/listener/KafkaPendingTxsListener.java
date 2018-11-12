@@ -1,22 +1,31 @@
 package io.enkrypt.kafka.listener;
 
+import io.enkrypt.avro.capture.TransactionRecord;
 import io.enkrypt.kafka.Kafka;
+import io.enkrypt.kafka.mapping.ObjectMapper;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.ethereum.core.Block;
-import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionReceipt;
+import org.ethereum.core.*;
+import org.ethereum.listener.EthereumListener;
+import org.ethereum.net.eth.message.StatusMessage;
+import org.ethereum.net.message.Message;
+import org.ethereum.net.p2p.HelloMessage;
+import org.ethereum.net.rlpx.Node;
+import org.ethereum.net.server.Channel;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class KafkaPendingTxsListener extends AbstractKafkaEthereumListener {
+public class KafkaPendingTxsListener implements EthereumListener {
 
-  private final Producer<byte[], Transaction> producer;
+  private final Producer<byte[], TransactionRecord> producer;
+  private final ObjectMapper objectMapper;
 
   private final AtomicInteger numPendingTxs = new AtomicInteger(0);
 
-  public KafkaPendingTxsListener(Kafka kafka) {
-    this.producer = kafka.getProducer();
+  public KafkaPendingTxsListener(Kafka kafka, ObjectMapper objectMapper) {
+    this.producer = kafka.getPendingTransactionsProducer();
+    this.objectMapper = objectMapper;
   }
 
   public int getNumPendingTxs() {
@@ -41,7 +50,8 @@ public class KafkaPendingTxsListener extends AbstractKafkaEthereumListener {
           break;
 
         case NEW_PENDING:
-          producer.send(new ProducerRecord<>(Kafka.TOPIC_PENDING_TRANSACTIONS, txHash, txReceipt.getTransaction())).get();
+          final TransactionRecord record = objectMapper.convert(null, Transaction.class, TransactionRecord.class, txReceipt.getTransaction());
+          producer.send(new ProducerRecord<>(Kafka.TOPIC_PENDING_TRANSACTIONS, txHash, record)).get();
           numPendingTxs.incrementAndGet();
           break;
 
@@ -53,7 +63,80 @@ public class KafkaPendingTxsListener extends AbstractKafkaEthereumListener {
       throw new RuntimeException(ex);
     }
 
+  }
+
+  @Override
+  public void trace(String output) {
 
   }
 
+  @Override
+  public void onNodeDiscovered(Node node) {
+
+  }
+
+  @Override
+  public void onHandShakePeer(Channel channel, HelloMessage helloMessage) {
+
+  }
+
+  @Override
+  public void onEthStatusUpdated(Channel channel, StatusMessage status) {
+
+  }
+
+  @Override
+  public void onRecvMessage(Channel channel, Message message) {
+
+  }
+
+  @Override
+  public void onSendMessage(Channel channel, Message message) {
+
+  }
+
+  @Override
+  public void onBlock(BlockSummary blockSummary) {
+
+  }
+
+  @Override
+  public void onPeerDisconnect(String host, long port) {
+
+  }
+
+  @Override
+  public void onPendingTransactionsReceived(List<Transaction> transactions) {
+
+  }
+
+  @Override
+  public void onPendingStateChanged(PendingState pendingState) {
+
+  }
+
+  @Override
+  public void onSyncDone(SyncState state) {
+
+  }
+
+  @Override
+  public void onNoConnections() {
+
+  }
+
+  @Override
+  public void onVMTraceCreated(String transactionHash, String trace) {
+
+  }
+
+  @Override
+  public void onTransactionExecuted(TransactionExecutionSummary summary) {
+
+  }
+
+  @Override
+  public void onPeerAddedToSyncPool(Channel peer) {
+
+  }
 }

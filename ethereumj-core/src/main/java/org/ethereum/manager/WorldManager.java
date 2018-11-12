@@ -17,6 +17,7 @@
  */
 package org.ethereum.manager;
 
+import io.enkrypt.kafka.models.AccountState;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
@@ -45,6 +46,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.util.ByteUtil.toHexString;
@@ -181,12 +183,27 @@ public class WorldManager {
 //            repository.commitBlock(genesis.getHeader());
             repository.commit();
 
-            blockStore.saveBlock(Genesis.getInstance(config), Genesis.getInstance(config).getDifficultyBI(), true);
+            blockStore.saveBlock(genesis, genesis.getDifficultyBI(), true);
 
-            blockchain.setBestBlock(Genesis.getInstance(config));
-            blockchain.setTotalDifficulty(Genesis.getInstance(config).getDifficultyBI());
+            blockchain.setBestBlock(genesis);
+            blockchain.setTotalDifficulty(genesis.getDifficultyBI());
 
-            listener.onBlock(new BlockSummary(Genesis.getInstance(config), new HashMap<byte[], BigInteger>(), new ArrayList<TransactionReceipt>(), new ArrayList<TransactionExecutionSummary>(), new BlockStatistics()), true);
+            final byte[] coinbase = genesis.getCoinbase();
+            final BigInteger blockReward = config.getBlockchainConfig().getConfigForBlock(0).getConstants().getBLOCK_REWARD();
+
+            final Map<byte[], BigInteger> rewardsMap = new HashMap<>();
+            rewardsMap.put(coinbase, blockReward);
+
+            listener.onBlock(
+              new BlockSummary(
+                genesis,
+                rewardsMap,
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new BlockStatistics(),
+                false
+              ), true);
+
 //            repository.dumpState(Genesis.getInstance(config), 0, 0, null);
 
             logger.info("Genesis block loaded");

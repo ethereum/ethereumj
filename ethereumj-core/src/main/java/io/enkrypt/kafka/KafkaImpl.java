@@ -1,42 +1,58 @@
 package io.enkrypt.kafka;
 
+import io.confluent.kafka.serializers.KafkaAvroSerializer;
+import io.enkrypt.avro.capture.BlockSummaryRecord;
+import io.enkrypt.avro.capture.TransactionRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.ByteArraySerializer;
+import org.apache.kafka.common.serialization.LongSerializer;
 
+import java.util.Map;
 import java.util.Properties;
 
 public class KafkaImpl implements Kafka {
 
-  private KafkaProducer<byte[], byte[]> producer;
-  private KafkaProducer<byte[], byte[]> transactionalProducer;
+  private KafkaProducer<Long, BlockSummaryRecord> blockSummaryProducer;
+  private KafkaProducer<byte[], TransactionRecord> txProducer;
 
-  public KafkaImpl(Properties baseConfig) {
-    init(baseConfig);
-  }
+  public KafkaImpl(Properties config) {
 
-  private void init(Properties config){
+    final Properties txConfig = copy(config);
+    txConfig.put(ProducerConfig.CLIENT_ID_CONFIG, "ethereumj-pending-transactions");
+    txConfig.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
+    txConfig.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class.getName());
 
-    this.producer = new KafkaProducer<>(config);
+    this.txProducer = new KafkaProducer<>(txConfig);
 
-    config.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
-    config.put(ProducerConfig.CLIENT_ID_CONFIG, "ethereumj-transactional");
-    config.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, "ethereumj");
+    final Properties blockSummaryConfig = copy(config);
+    blockSummaryConfig.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, LongSerializer.class.getName());
+    blockSummaryConfig.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class.getName());
 
-    this.transactionalProducer = new KafkaProducer<>(config);
-    transactionalProducer.initTransactions();
+    // transactional settings
+    blockSummaryConfig.put(ProducerConfig.CLIENT_ID_CONFIG, "ethereumj-block-summaries");
+    blockSummaryConfig.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
+    blockSummaryConfig.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, "ethereumj");
 
+    this.blockSummaryProducer = new KafkaProducer<>(blockSummaryConfig);
+    this.blockSummaryProducer.initTransactions();
   }
 
   @Override
-  @SuppressWarnings("unchecked")
-  public <K, V> KafkaProducer<K, V> getProducer() {
-    return (KafkaProducer<K, V>) this.producer;
+  public KafkaProducer<byte[], TransactionRecord> getPendingTransactionsProducer() {
+    return txProducer;
   }
 
   @Override
-  @SuppressWarnings("unchecked")
-  public <K, V> KafkaProducer<K, V> getTransactionalProducer() {
-    return (KafkaProducer<K, V>) this.transactionalProducer;
+  public KafkaProducer<Long, BlockSummaryRecord> getBlockSummaryProducer() {
+    return blockSummaryProducer;
   }
 
+  private Properties copy(Properties config) {
+    final Properties result = new Properties();
+    for (Map.Entry<Object, Object> entry : config.entrySet()) {
+      result.put(entry.getKey(), entry.getValue());
+    }
+    return result;
+  }
 }

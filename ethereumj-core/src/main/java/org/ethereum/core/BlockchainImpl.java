@@ -860,7 +860,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             return applyBlock(track, block);
         }
         else {
-            return new BlockSummary(block, new HashMap<>(), new ArrayList<>(), new ArrayList<>(), new BlockStatistics());
+            return new BlockSummary(block, new HashMap<>(), new ArrayList<>(), new ArrayList<>(), new BlockStatistics(), false);
         }
     }
 
@@ -939,7 +939,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
       final BlockStatistics statistics = BlockStatistics.forBlock(block, receipts, summaries);
 
-      return new BlockSummary(block, rewards, receipts, summaries, statistics);
+      return new BlockSummary(block, rewards, receipts, summaries, statistics, false);
     }
 
     /**

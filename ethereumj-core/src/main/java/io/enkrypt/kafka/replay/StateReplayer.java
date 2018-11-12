@@ -1,5 +1,6 @@
 package io.enkrypt.kafka.replay;
 
+import io.enkrypt.avro.capture.BlockSummaryRecord;
 import io.enkrypt.kafka.Kafka;
 import io.enkrypt.kafka.db.BlockSummaryStore;
 import io.enkrypt.kafka.listener.KafkaBlockListener;
@@ -11,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -43,32 +45,41 @@ public class StateReplayer {
 
   public void replay() {
 
-    // TODO fixme
-
-    BlockSummary blockSummary;
+    BlockSummaryRecord blockSummary;
     long number = parseLong(config.getProperty("replay.from", "0"));
 
     logger.info("Attempting to replay from number = {}", number);
 
-    do {
-      blockSummary = store.get(number);
+    try {
+      do {
 
-      if(blockSummary != null) {
+        blockSummary = store.get(number);
 
-        blockListener.onBlock(blockSummary);
 
-        if(number % 10000 == 0) {
-          logger.info("Replayed until number = {}", number);
+        if (blockSummary != null) {
+
+          blockListener.onBlock(blockSummary);
+
+          if (number % 10000 == 0) {
+            logger.info("Replayed until number = {}", number);
+          }
+
+          number++;
         }
 
-        number++;
-      }
+      } while (blockSummary != null);
 
-    } while(blockSummary != null);
+      logger.info("Replay complete, last number = {}", number - 1);
 
-    logger.info("Replay complete, last number = {}", number - 1);
+      System.exit(0);
 
-    System.exit(0);
+    } catch (IOException e) {
+      logger.error("Failure", e);
+      System.exit(1);
+    }
+
+
+
   }
 
 }

@@ -17,10 +17,8 @@
  */
 package org.ethereum.core;
 
-import io.enkrypt.kafka.models.AccountState;
 import io.enkrypt.kafka.models.TokenTransfer;
 import io.enkrypt.kafka.models.TokenTransferKey;
-import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.*;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
@@ -32,7 +30,6 @@ import java.util.*;
 
 import static java.util.Collections.*;
 import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
-import static org.ethereum.util.BIUtil.sum;
 import static org.ethereum.util.BIUtil.toBI;
 
 public class TransactionExecutionSummary {
@@ -52,6 +49,8 @@ public class TransactionExecutionSummary {
   private Map<DataWord, DataWord> storageDiff = emptyMap();
   private TransactionTouchedStorage touchedStorage = new TransactionTouchedStorage();
 
+  private Map<TokenTransferKey, TokenTransfer> tokenTransfers;
+
   private byte[] result;
   private List<LogInfo> logs;
 
@@ -59,11 +58,6 @@ public class TransactionExecutionSummary {
 
   private byte[] rlpEncoded;
   private boolean parsed;
-
-  // not serialised
-
-  private Map<ByteArrayWrapper, io.enkrypt.kafka.models.AccountState> accountStates;
-  private Map<TokenTransferKey, TokenTransfer> tokenTransfers;
 
   public TransactionExecutionSummary(){
   }
@@ -97,12 +91,11 @@ public class TransactionExecutionSummary {
     this.touchedAccounts = decodeTouchedAccounts((RLPList) summary.get(8));
     this.internalTransactions = decodeInternalTransactions((RLPList) summary.get(9));
     this.touchedStorage = decodeTouchedStorage(summary.get(10));
-    this.accountStates = decodeAccountStates((RLPList) summary.get(11));
-    this.tokenTransfers = decodeTokenTransfers((RLPList) summary.get(12));
-    this.result = summary.get(13).getRLPData();
-    this.logs = decodeLogs((RLPList) summary.get(14));
+    this.tokenTransfers = decodeTokenTransfers((RLPList) summary.get(11));
+    this.result = summary.get(12).getRLPData();
+    this.logs = decodeLogs((RLPList) summary.get(13));
 
-    byte[] failed = summary.get(15).getRLPData();
+    byte[] failed = summary.get(14).getRLPData();
     this.failed = isNotEmpty(failed) && RLP.decodeInt(failed, 0) == 1;
 
   }
@@ -127,7 +120,6 @@ public class TransactionExecutionSummary {
       encodeTouchedAccounts(this.touchedAccounts),
       encodeInternalTransactions(this.internalTransactions),
       encodeTouchedStorage(this.touchedStorage),
-      encodeAccountStates(this.accountStates),
       encodeTokenTransfers(this.tokenTransfers),
       RLP.encodeElement(this.result),
       encodeLogs(this.logs),
@@ -204,30 +196,6 @@ public class TransactionExecutionSummary {
     for (RLPElement entry : storageDiff) {
       DataWord key = DataWord.of(((RLPList) entry).get(0).getRLPData());
       DataWord value = DataWord.of(((RLPList) entry).get(1).getRLPData());
-      result.put(key, value);
-    }
-    return result;
-  }
-
-  private static byte[] encodeAccountStates(Map<ByteArrayWrapper, AccountState> accountStates) {
-
-    if(accountStates == null) return RLP.encodeList();  // empty list
-
-    byte[][] result = new byte[accountStates.size()][];
-    int i = 0;
-    for (Map.Entry<ByteArrayWrapper, AccountState> entry : accountStates.entrySet()) {
-      byte[] key = RLP.encodeElement(entry.getKey().getData());
-      byte[] value = RLP.encodeElement(entry.getValue().getEncoded());
-      result[i++] = RLP.encodeList(key, value);
-    }
-    return RLP.encodeList(result);
-  }
-
-  private Map<ByteArrayWrapper, AccountState> decodeAccountStates(RLPList list) {
-    Map<ByteArrayWrapper, AccountState> result = new HashMap<>();
-    for (RLPElement entry : list) {
-      final ByteArrayWrapper key = new ByteArrayWrapper(((RLPList) entry).get(0).getRLPData());
-      final AccountState value = AccountState.newBuilder(((RLPList) entry).get(1).getRLPData()).build();
       result.put(key, value);
     }
     return result;
@@ -406,10 +374,6 @@ public class TransactionExecutionSummary {
     return logs;
   }
 
-  public Map<ByteArrayWrapper, AccountState> getAccountStates() {
-    return accountStates;
-  }
-
   public Map<TokenTransferKey, TokenTransfer> getTokenTransfers() {
     return tokenTransfers;
   }
@@ -447,7 +411,6 @@ public class TransactionExecutionSummary {
         .storageDiff(proto.storageDiff)
         .logs(proto.logs)
         .result(proto.result)
-        .accountStates(proto.accountStates)
         .tokenTransfers(proto.tokenTransfers);
 
       summary.touchedStorage = proto.touchedStorage;
@@ -511,11 +474,6 @@ public class TransactionExecutionSummary {
 
     public Builder result(byte[] result) {
       summary.result = result;
-      return this;
-    }
-
-    public Builder accountStates(Map<ByteArrayWrapper, io.enkrypt.kafka.models.AccountState> accountStates) {
-      summary.accountStates = accountStates;
       return this;
     }
 
