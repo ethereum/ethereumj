@@ -777,8 +777,14 @@ public class Program {
     }
 
     public byte[] getCodeHashAt(DataWord address) {
-        byte[] code = invoke.getRepository().getCodeHash(address.getLast20Bytes());
-        return nullToEmpty(code);
+        AccountState state = invoke.getRepository().getAccountState(address.getLast20Bytes());
+        // return 0 as a code hash of empty account (an account that would be removed by state clearing)
+        if (state != null && state.isEmpty()) {
+            return EMPTY_BYTE_ARRAY;
+        } else {
+            byte[] code = invoke.getRepository().getCodeHash(address.getLast20Bytes());
+            return nullToEmpty(code);
+        }
     }
 
     public DataWord getOwnerAddress() {
