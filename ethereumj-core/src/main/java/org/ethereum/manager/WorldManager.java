@@ -17,7 +17,6 @@
  */
 package org.ethereum.manager;
 
-import io.enkrypt.kafka.models.AccountState;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
@@ -46,7 +45,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.util.ByteUtil.toHexString;
@@ -60,204 +58,189 @@ import static org.ethereum.util.ByteUtil.toHexString;
 @Component
 public class WorldManager {
 
-    private static final Logger logger = LoggerFactory.getLogger("general");
+  private static final Logger logger = LoggerFactory.getLogger("general");
 
-    @Autowired
-    private PeerClient activePeer;
+  @Autowired
+  private PeerClient activePeer;
 
-    @Autowired
-    private ChannelManager channelManager;
+  @Autowired
+  private ChannelManager channelManager;
 
-    @Autowired
-    private AdminInfo adminInfo;
+  @Autowired
+  private AdminInfo adminInfo;
 
-    @Autowired
-    private NodeManager nodeManager;
+  @Autowired
+  private NodeManager nodeManager;
 
-    @Autowired
-    private SyncManager syncManager;
+  @Autowired
+  private SyncManager syncManager;
 
-    @Autowired
-    private SyncPool pool;
+  @Autowired
+  private SyncPool pool;
 
-    @Autowired
-    private PendingState pendingState;
+  @Autowired
+  private PendingState pendingState;
 
-    @Autowired
-    private UDPListener discoveryUdpListener;
+  @Autowired
+  private UDPListener discoveryUdpListener;
 
-    @Autowired
-    private EventDispatchThread eventDispatchThread;
+  @Autowired
+  private EventDispatchThread eventDispatchThread;
 
-    @Autowired
-    private DbFlushManager dbFlushManager;
+  @Autowired
+  private DbFlushManager dbFlushManager;
 
-    @Autowired
-    private ApplicationContext ctx;
+  @Autowired
+  private ApplicationContext ctx;
 
-    private SystemProperties config;
+  private SystemProperties config;
 
-    private EthereumListener listener;
+  private EthereumListener listener;
 
-    private Blockchain blockchain;
+  private Blockchain blockchain;
 
-    private Repository repository;
+  private Repository repository;
 
-    private BlockStore blockStore;
+  private BlockStore blockStore;
 
-    @Autowired
-    public WorldManager(final SystemProperties config, final Repository repository,
-                        final EthereumListener listener, final Blockchain blockchain,
-                        final BlockStore blockStore) {
-        this.listener = listener;
-        this.blockchain = blockchain;
-        this.repository = repository;
-        this.blockStore = blockStore;
-        this.config = config;
-        loadBlockchain();
-    }
+  @Autowired
+  public WorldManager(final SystemProperties config, final Repository repository,
+                      final EthereumListener listener, final Blockchain blockchain,
+                      final BlockStore blockStore) {
+    this.listener = listener;
+    this.blockchain = blockchain;
+    this.repository = repository;
+    this.blockStore = blockStore;
+    this.config = config;
+    loadBlockchain();
+  }
 
-    @PostConstruct
-    private void init() {
-        fastSyncDbJobs();
-        syncManager.init(channelManager, pool);
-    }
+  @PostConstruct
+  private void init() {
+    fastSyncDbJobs();
+    syncManager.init(channelManager, pool);
+  }
 
-    public void addListener(EthereumListener listener) {
-        logger.info("Ethereum listener added");
-        ((CompositeEthereumListener) this.listener).addListener(listener);
-    }
+  public void addListener(EthereumListener listener) {
+    logger.info("Ethereum listener added");
+    ((CompositeEthereumListener) this.listener).addListener(listener);
+  }
 
-    public void startPeerDiscovery() {
-    }
+  public void startPeerDiscovery() {
+  }
 
-    public void stopPeerDiscovery() {
-        discoveryUdpListener.close();
-        nodeManager.close();
-    }
+  public void stopPeerDiscovery() {
+    discoveryUdpListener.close();
+    nodeManager.close();
+  }
 
-    public void initSyncing() {
-        config.setSyncEnabled(true);
-        syncManager.init(channelManager, pool);
-    }
+  public void initSyncing() {
+    config.setSyncEnabled(true);
+    syncManager.init(channelManager, pool);
+  }
 
-    public ChannelManager getChannelManager() {
-        return channelManager;
-    }
+  public ChannelManager getChannelManager() {
+    return channelManager;
+  }
 
-    public EthereumListener getListener() {
-        return listener;
-    }
+  public EthereumListener getListener() {
+    return listener;
+  }
 
-    public org.ethereum.facade.Repository getRepository() {
-        return (org.ethereum.facade.Repository)repository;
-    }
+  public org.ethereum.facade.Repository getRepository() {
+    return (org.ethereum.facade.Repository)repository;
+  }
 
-    public Blockchain getBlockchain() {
-        return blockchain;
-    }
+  public Blockchain getBlockchain() {
+    return blockchain;
+  }
 
-    public PeerClient getActivePeer() {
-        return activePeer;
-    }
+  public PeerClient getActivePeer() {
+    return activePeer;
+  }
 
-    public BlockStore getBlockStore() {
-        return blockStore;
-    }
+  public BlockStore getBlockStore() {
+    return blockStore;
+  }
 
-    public PendingState getPendingState() {
-        return pendingState;
-    }
+  public PendingState getPendingState() {
+    return pendingState;
+  }
 
-    public void loadBlockchain() {
+  public void loadBlockchain() {
 
-        if (!config.databaseReset() || config.databaseResetBlock() != 0)
-            blockStore.load();
+    if (!config.databaseReset() || config.databaseResetBlock() != 0)
+      blockStore.load();
 
-        if (blockStore.getBestBlock() == null) {
-            logger.info("DB is empty - adding Genesis");
+    if (blockStore.getBestBlock() == null) {
+      logger.info("DB is empty - adding Genesis");
 
-            Genesis genesis = Genesis.getInstance(config);
-            Genesis.populateRepository(repository, genesis);
+      Genesis genesis = Genesis.getInstance(config);
+      Genesis.populateRepository(repository, genesis);
 
 //            repository.commitBlock(genesis.getHeader());
-            repository.commit();
+      repository.commit();
 
-            blockStore.saveBlock(genesis, genesis.getDifficultyBI(), true);
+      blockStore.saveBlock(Genesis.getInstance(config), Genesis.getInstance(config).getDifficultyBI(), true);
 
-            blockchain.setBestBlock(genesis);
-            blockchain.setTotalDifficulty(genesis.getDifficultyBI());
+      blockchain.setBestBlock(Genesis.getInstance(config));
+      blockchain.setTotalDifficulty(Genesis.getInstance(config).getDifficultyBI());
 
-            final byte[] coinbase = genesis.getCoinbase();
-            final BigInteger blockReward = config.getBlockchainConfig().getConfigForBlock(0).getConstants().getBLOCK_REWARD();
-
-            final Map<byte[], BigInteger> rewardsMap = new HashMap<>();
-            rewardsMap.put(coinbase, blockReward);
-
-            listener.onBlock(
-              new BlockSummary(
-                genesis,
-                rewardsMap,
-                new ArrayList<>(),
-                new ArrayList<>(),
-                new BlockStatistics(),
-                false
-              ), true);
-
+      listener.onBlock(new BlockSummary(Genesis.getInstance(config), new HashMap<byte[], BigInteger>(), new ArrayList<TransactionReceipt>(), new ArrayList<TransactionExecutionSummary>()), true);
 //            repository.dumpState(Genesis.getInstance(config), 0, 0, null);
 
-            logger.info("Genesis block loaded");
-        } else {
+      logger.info("Genesis block loaded");
+    } else {
 
-            if (!config.databaseReset() &&
-                    !Arrays.equals(blockchain.getBlockByNumber(0).getHash(), config.getGenesis().getHash())) {
-                // fatal exit
-                Utils.showErrorAndExit("*** DB is incorrect, 0 block in DB doesn't match genesis");
-            }
+      if (!config.databaseReset() &&
+        !Arrays.equals(blockchain.getBlockByNumber(0).getHash(), config.getGenesis().getHash())) {
+        // fatal exit
+        Utils.showErrorAndExit("*** DB is incorrect, 0 block in DB doesn't match genesis");
+      }
 
-            Block bestBlock = blockStore.getBestBlock();
-            if (config.databaseReset() && config.databaseResetBlock() > 0) {
-                if (config.databaseResetBlock() > bestBlock.getNumber()) {
-                    logger.error("*** Can't reset to block [{}] since block store is at block [{}].", config.databaseResetBlock(), bestBlock);
-                    throw new RuntimeException("Reset block ahead of block store.");
-                }
-                bestBlock = blockStore.getChainBlockByNumber(config.databaseResetBlock());
-
-                Repository snapshot = repository.getSnapshotTo(bestBlock.getStateRoot());
-                if (false) { // TODO: some way to tell if the snapshot hasn't been pruned
-                    logger.error("*** Could not reset database to block [{}] with stateRoot [{}], since state information is " +
-                            "unavailable.  It might have been pruned from the database.");
-                    throw new RuntimeException("State unavailable for reset block.");
-                }
-            }
-
-            blockchain.setBestBlock(bestBlock);
-
-            BigInteger totalDifficulty = blockStore.getTotalDifficultyForHash(bestBlock.getHash());
-            blockchain.setTotalDifficulty(totalDifficulty);
-
-            logger.info("*** Loaded up to block [{}] totalDifficulty [{}] with stateRoot [{}]",
-                    blockchain.getBestBlock().getNumber(),
-                    blockchain.getTotalDifficulty().toString(),
-                    toHexString(blockchain.getBestBlock().getStateRoot()));
+      Block bestBlock = blockStore.getBestBlock();
+      if (config.databaseReset() && config.databaseResetBlock() > 0) {
+        if (config.databaseResetBlock() > bestBlock.getNumber()) {
+          logger.error("*** Can't reset to block [{}] since block store is at block [{}].", config.databaseResetBlock(), bestBlock);
+          throw new RuntimeException("Reset block ahead of block store.");
         }
+        bestBlock = blockStore.getChainBlockByNumber(config.databaseResetBlock());
 
-        if (config.rootHashStart() != null) {
-
-            // update world state by dummy hash
-            byte[] rootHash = Hex.decode(config.rootHashStart());
-            logger.info("Loading root hash from property file: [{}]", config.rootHashStart());
-            this.repository.syncToRoot(rootHash);
-
-        } else {
-
-            // Update world state to latest loaded block from db
-            // if state is not generated from empty premine list
-            // todo this is just a workaround, move EMPTY_TRIE_HASH logic to Trie implementation
-            if (!Arrays.equals(blockchain.getBestBlock().getStateRoot(), EMPTY_TRIE_HASH)) {
-                this.repository.syncToRoot(blockchain.getBestBlock().getStateRoot());
-            }
+        Repository snapshot = repository.getSnapshotTo(bestBlock.getStateRoot());
+        if (false) { // TODO: some way to tell if the snapshot hasn't been pruned
+          logger.error("*** Could not reset database to block [{}] with stateRoot [{}], since state information is " +
+            "unavailable.  It might have been pruned from the database.");
+          throw new RuntimeException("State unavailable for reset block.");
         }
+      }
+
+      blockchain.setBestBlock(bestBlock);
+
+      BigInteger totalDifficulty = blockStore.getTotalDifficultyForHash(bestBlock.getHash());
+      blockchain.setTotalDifficulty(totalDifficulty);
+
+      logger.info("*** Loaded up to block [{}] totalDifficulty [{}] with stateRoot [{}]",
+        blockchain.getBestBlock().getNumber(),
+        blockchain.getTotalDifficulty().toString(),
+        toHexString(blockchain.getBestBlock().getStateRoot()));
+    }
+
+    if (config.rootHashStart() != null) {
+
+      // update world state by dummy hash
+      byte[] rootHash = Hex.decode(config.rootHashStart());
+      logger.info("Loading root hash from property file: [{}]", config.rootHashStart());
+      this.repository.syncToRoot(rootHash);
+
+    } else {
+
+      // Update world state to latest loaded block from db
+      // if state is not generated from empty premine list
+      // todo this is just a workaround, move EMPTY_TRIE_HASH logic to Trie implementation
+      if (!Arrays.equals(blockchain.getBestBlock().getStateRoot(), EMPTY_TRIE_HASH)) {
+        this.repository.syncToRoot(blockchain.getBestBlock().getStateRoot());
+      }
+    }
 
 /* todo: return it when there is no state conflicts on the chain
         boolean dbValid = this.repository.getWorldState().validate() || bestBlock.isGenesis();
@@ -266,45 +249,45 @@ public class WorldManager {
             System.exit(-1); //  todo: reset the repository and blockchain
         }
 */
-    }
+  }
 
-    /**
-     * After introducing skipHistory in FastSync this method
-     * adds additional header storage to Blockchain
-     * as Blockstore is incomplete in this mode
-     */
-    private void fastSyncDbJobs() {
-        // checking if fast sync ran sometime ago with "skipHistory flag"
-        if (blockStore.getBestBlock().getNumber() > 0 &&
-                blockStore.getChainBlockByNumber(1) == null) {
-            FastSyncManager fastSyncManager = ctx.getBean(FastSyncManager.class);
-            if (fastSyncManager.isInProgress()) {
-                return;
-            }
-            logger.info("DB is filled using Fast Sync with skipHistory, adopting headerStore");
-            ((BlockchainImpl) blockchain).setHeaderStore(ctx.getBean(HeaderStore.class));
-        }
-        MigrateHeaderSourceTotalDiff tempMigration = new MigrateHeaderSourceTotalDiff(ctx, blockStore, blockchain, config);
-        tempMigration.run();
+  /**
+   * After introducing skipHistory in FastSync this method
+   * adds additional header storage to Blockchain
+   * as Blockstore is incomplete in this mode
+   */
+  private void fastSyncDbJobs() {
+    // checking if fast sync ran sometime ago with "skipHistory flag"
+    if (blockStore.getBestBlock().getNumber() > 0 &&
+      blockStore.getChainBlockByNumber(1) == null) {
+      FastSyncManager fastSyncManager = ctx.getBean(FastSyncManager.class);
+      if (fastSyncManager.isInProgress()) {
+        return;
+      }
+      logger.info("DB is filled using Fast Sync with skipHistory, adopting headerStore");
+      ((BlockchainImpl) blockchain).setHeaderStore(ctx.getBean(HeaderStore.class));
     }
+    MigrateHeaderSourceTotalDiff tempMigration = new MigrateHeaderSourceTotalDiff(ctx, blockStore, blockchain, config);
+    tempMigration.run();
+  }
 
-    public void close() {
-        logger.info("close: stopping peer discovery ...");
-        stopPeerDiscovery();
-        logger.info("close: stopping ChannelManager ...");
-        channelManager.close();
-        logger.info("close: stopping SyncManager ...");
-        syncManager.close();
-        logger.info("close: stopping PeerClient ...");
-        activePeer.close();
-        logger.info("close: shutting down event dispatch thread used by EventBus ...");
-        eventDispatchThread.shutdown();
-        logger.info("close: closing Blockchain instance ...");
-        blockchain.close();
-        logger.info("close: closing main repository ...");
-        repository.close();
-        logger.info("close: database flush manager ...");
-        dbFlushManager.close();
-    }
+  public void close() {
+    logger.info("close: stopping peer discovery ...");
+    stopPeerDiscovery();
+    logger.info("close: stopping ChannelManager ...");
+    channelManager.close();
+    logger.info("close: stopping SyncManager ...");
+    syncManager.close();
+    logger.info("close: stopping PeerClient ...");
+    activePeer.close();
+    logger.info("close: shutting down event dispatch thread used by EventBus ...");
+    eventDispatchThread.shutdown();
+    logger.info("close: closing Blockchain instance ...");
+    blockchain.close();
+    logger.info("close: closing main repository ...");
+    repository.close();
+    logger.info("close: database flush manager ...");
+    dbFlushManager.close();
+  }
 
 }

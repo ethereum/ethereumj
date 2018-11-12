@@ -5,12 +5,10 @@ import io.enkrypt.kafka.Kafka;
 import io.enkrypt.kafka.KafkaImpl;
 import io.enkrypt.kafka.NullKafka;
 import io.enkrypt.kafka.db.BlockSummaryStore;
-import io.enkrypt.kafka.listener.KafkaBlockListener;
+import io.enkrypt.kafka.listener.KafkaBlockSummaryPublisher;
 import io.enkrypt.kafka.listener.KafkaPendingTxsListener;
 import io.enkrypt.kafka.mapping.ObjectMapper;
 import io.enkrypt.kafka.replay.StateReplayer;
-import io.enkrypt.kafka.serialization.EthereumKeySerializer;
-import io.enkrypt.kafka.serialization.EthereumValueSerializer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.DbSettings;
@@ -97,9 +95,6 @@ public class KafkaStateReplayConfig {
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
     props.put(ProducerConfig.CLIENT_ID_CONFIG, "ethereumj-state-replayer");
 
-    // we use byte array serialization as we are using rlp where required
-    props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, EthereumKeySerializer.class.getName());
-    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, EthereumValueSerializer.class.getName());
     props.put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, kafkaConfig.getKafkaSchemaRegistryUrl());
 
     props.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, 2000000000);
@@ -113,10 +108,10 @@ public class KafkaStateReplayConfig {
   }
 
   @Bean
-  public KafkaBlockListener kafkaBlockListener(Kafka kafka,
-                                               ExecutorService executor) {
+  public KafkaBlockSummaryPublisher kafkaBlockListener(Kafka kafka,
+                                                       ExecutorService executor) {
 
-    final KafkaBlockListener blockListener = new KafkaBlockListener(kafka);
+    final KafkaBlockSummaryPublisher blockListener = new KafkaBlockSummaryPublisher(kafka);
 
     // run the block listener with it's own thread and handle shutdown
 

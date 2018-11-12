@@ -24,20 +24,16 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.*;
+import org.ethereum.trie.Trie;
+import org.ethereum.trie.TrieImpl;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.sync.SyncManager;
-import org.ethereum.trie.Trie;
-import org.ethereum.trie.TrieImpl;
-import org.ethereum.util.AdvancedDeviceUtils;
-import org.ethereum.util.ByteUtil;
-import org.ethereum.util.FastByteComparisons;
-import org.ethereum.util.RLP;
+import org.ethereum.util.*;
 import org.ethereum.validator.DependentBlockHeaderRule;
 import org.ethereum.validator.ParentBlockHeaderValidator;
 import org.ethereum.vm.hook.VMHook;
-import org.ethereum.vm.program.InternalTransaction;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.slf4j.Logger;
@@ -52,8 +48,17 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.ConcurrentModificationException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.Stack;
 
 import static java.lang.Math.max;
 import static java.lang.Runtime.getRuntime;
@@ -63,7 +68,6 @@ import static java.util.Collections.emptyList;
 import static org.ethereum.core.Denomination.SZABO;
 import static org.ethereum.core.ImportResult.*;
 import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.util.ByteUtil.bytesToBigInteger;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
@@ -99,553 +103,553 @@ import static org.ethereum.util.ByteUtil.toHexString;
 public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchain {
 
 
-    private static final Logger logger = LoggerFactory.getLogger("blockchain");
-    private static final Logger stateLogger = LoggerFactory.getLogger("state");
+  private static final Logger logger = LoggerFactory.getLogger("blockchain");
+  private static final Logger stateLogger = LoggerFactory.getLogger("state");
 
-    // to avoid using minGasPrice=0 from Genesis for the wallet
-    private static final long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
-    private static final int MAGIC_REWARD_OFFSET = 8;
-    public static final byte[] EMPTY_LIST_HASH = sha3(RLP.encodeList(new byte[0]));
+  // to avoid using minGasPrice=0 from Genesis for the wallet
+  private static final long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
+  private static final int MAGIC_REWARD_OFFSET = 8;
+  public static final byte[] EMPTY_LIST_HASH = sha3(RLP.encodeList(new byte[0]));
 
-    @Autowired @Qualifier("defaultRepository")
-    private Repository repository;
+  @Autowired @Qualifier("defaultRepository")
+  private Repository repository;
 
-    @Autowired
-    protected BlockStore blockStore;
+  @Autowired
+  protected BlockStore blockStore;
 
-    private HeaderStore headerStore = null;
+  private HeaderStore headerStore = null;
 
-    @Autowired
-    private TransactionStore transactionStore;
+  @Autowired
+  private TransactionStore transactionStore;
 
-    private Block bestBlock;
+  private Block bestBlock;
 
-    private BigInteger totalDifficulty = ZERO;
+  private BigInteger totalDifficulty = ZERO;
 
-    @Autowired
-    private EthereumListener listener;
+  @Autowired
+  private EthereumListener listener;
 
-    @Autowired
-    ProgramInvokeFactory programInvokeFactory;
+  @Autowired
+  ProgramInvokeFactory programInvokeFactory;
 
-    @Autowired
-    private AdminInfo adminInfo;
+  @Autowired
+  private AdminInfo adminInfo;
 
-    @Autowired
-    private DependentBlockHeaderRule parentHeaderValidator;
+  @Autowired
+  private DependentBlockHeaderRule parentHeaderValidator;
 
-    @Autowired
-    private PendingState pendingState;
+  @Autowired
+  private PendingState pendingState;
 
-    @Autowired
-    EventDispatchThread eventDispatchThread;
+  @Autowired
+  EventDispatchThread eventDispatchThread;
 
-    @Autowired
-    CommonConfig commonConfig = CommonConfig.getDefault();
+  @Autowired
+  CommonConfig commonConfig = CommonConfig.getDefault();
 
-    @Autowired
-    SyncManager syncManager;
+  @Autowired
+  SyncManager syncManager;
 
-    @Autowired
-    PruneManager pruneManager;
+  @Autowired
+  PruneManager pruneManager;
 
-    @Autowired
-    StateSource stateDataSource;
+  @Autowired
+  StateSource stateDataSource;
 
-    @Autowired
-    DbFlushManager dbFlushManager;
+  @Autowired
+  DbFlushManager dbFlushManager;
 
-    @Autowired
-    private VMHook vmHook;
-
-
-    SystemProperties config = SystemProperties.getDefault();
-
-    private List<Chain> altChains = new ArrayList<>();
-    private List<Block> garbage = new ArrayList<>();
-
-    long exitOn = Long.MAX_VALUE;
-
-    public boolean byTest = false;
-    private boolean fork = false;
-
-    private byte[] minerCoinbase;
-    private byte[] minerExtraData;
-    private int UNCLE_LIST_LIMIT;
-    private int UNCLE_GENERATION_LIMIT;
+  @Autowired
+  private VMHook vmHook;
 
 
-    private Stack<State> stateStack = new Stack<>();
+  SystemProperties config = SystemProperties.getDefault();
 
-    /** Tests only **/
-    public BlockchainImpl() {
-    }
+  private List<Chain> altChains = new ArrayList<>();
+  private List<Block> garbage = new ArrayList<>();
 
-    @Autowired
-    public BlockchainImpl(final SystemProperties config) {
-        this.config = config;
-        initConst(config);
-    }
+  long exitOn = Long.MAX_VALUE;
 
-    //todo: autowire over constructor
-    public BlockchainImpl(final BlockStore blockStore, final Repository repository) {
-        this.blockStore = blockStore;
-        this.repository = repository;
-        this.adminInfo = new AdminInfo();
-        this.listener = new EthereumListenerAdapter();
-        this.parentHeaderValidator = null;
-        this.transactionStore = new TransactionStore(new HashMapDB());
-        this.eventDispatchThread = EventDispatchThread.getDefault();
-        this.programInvokeFactory = new ProgramInvokeFactoryImpl();
-        initConst(SystemProperties.getDefault());
-    }
+  public boolean byTest = false;
+  private boolean fork = false;
 
-    public BlockchainImpl withTransactionStore(TransactionStore transactionStore) {
-        this.transactionStore = transactionStore;
-        return this;
-    }
+  private byte[] minerCoinbase;
+  private byte[] minerExtraData;
+  private int UNCLE_LIST_LIMIT;
+  private int UNCLE_GENERATION_LIMIT;
 
-    public BlockchainImpl withAdminInfo(AdminInfo adminInfo) {
-        this.adminInfo = adminInfo;
-        return this;
-    }
 
-    public BlockchainImpl withEthereumListener(EthereumListener listener) {
-        this.listener = listener;
-        return this;
-    }
+  private Stack<State> stateStack = new Stack<>();
 
-    public BlockchainImpl withSyncManager(SyncManager syncManager) {
-        this.syncManager = syncManager;
-        return this;
-    }
+  /** Tests only **/
+  public BlockchainImpl() {
+  }
 
-    public BlockchainImpl withParentBlockHeaderValidator(ParentBlockHeaderValidator parentHeaderValidator) {
-        this.parentHeaderValidator = parentHeaderValidator;
-        return this;
-    }
+  @Autowired
+  public BlockchainImpl(final SystemProperties config) {
+    this.config = config;
+    initConst(config);
+  }
 
-    public BlockchainImpl withVmHook(VMHook vmHook) {
-        this.vmHook = vmHook;
-        return this;
-    }
+  //todo: autowire over constructor
+  public BlockchainImpl(final BlockStore blockStore, final Repository repository) {
+    this.blockStore = blockStore;
+    this.repository = repository;
+    this.adminInfo = new AdminInfo();
+    this.listener = new EthereumListenerAdapter();
+    this.parentHeaderValidator = null;
+    this.transactionStore = new TransactionStore(new HashMapDB());
+    this.eventDispatchThread = EventDispatchThread.getDefault();
+    this.programInvokeFactory = new ProgramInvokeFactoryImpl();
+    initConst(SystemProperties.getDefault());
+  }
 
-    private void initConst(SystemProperties config) {
-        minerCoinbase = config.getMinerCoinbase();
-        minerExtraData = config.getMineExtraData();
-        UNCLE_LIST_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_LIST_LIMIT();
-        UNCLE_GENERATION_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_GENERATION_LIMIT();
-    }
+  public BlockchainImpl withTransactionStore(TransactionStore transactionStore) {
+    this.transactionStore = transactionStore;
+    return this;
+  }
 
-    @Override
-    public byte[] getBestBlockHash() {
-        return getBestBlock().getHash();
-    }
+  public BlockchainImpl withAdminInfo(AdminInfo adminInfo) {
+    this.adminInfo = adminInfo;
+    return this;
+  }
 
-    @Override
-    public long getSize() {
-        return bestBlock.getNumber() + 1;
-    }
+  public BlockchainImpl withEthereumListener(EthereumListener listener) {
+    this.listener = listener;
+    return this;
+  }
 
-    @Override
-    public Block getBlockByNumber(long blockNr) {
-        return blockStore.getChainBlockByNumber(blockNr);
-    }
+  public BlockchainImpl withSyncManager(SyncManager syncManager) {
+    this.syncManager = syncManager;
+    return this;
+  }
 
-    @Override
-    public TransactionInfo getTransactionInfo(byte[] hash) {
+  public BlockchainImpl withParentBlockHeaderValidator(ParentBlockHeaderValidator parentHeaderValidator) {
+    this.parentHeaderValidator = parentHeaderValidator;
+    return this;
+  }
 
-        List<TransactionInfo> infos = transactionStore.get(hash);
+  public BlockchainImpl withVmHook(VMHook vmHook) {
+    this.vmHook = vmHook;
+    return this;
+  }
 
-        if (infos == null || infos.isEmpty())
-            return null;
+  private void initConst(SystemProperties config) {
+    minerCoinbase = config.getMinerCoinbase();
+    minerExtraData = config.getMineExtraData();
+    UNCLE_LIST_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_LIST_LIMIT();
+    UNCLE_GENERATION_LIMIT = config.getBlockchainConfig().getCommonConstants().getUNCLE_GENERATION_LIMIT();
+  }
 
-        TransactionInfo txInfo = null;
-        if (infos.size() == 1) {
-            txInfo = infos.get(0);
-        } else {
-            // pick up the receipt from the block on the main chain
-            for (TransactionInfo info : infos) {
-                Block block = blockStore.getBlockByHash(info.blockHash);
-                Block mainBlock = blockStore.getChainBlockByNumber(block.getNumber());
-                if (FastByteComparisons.equal(info.blockHash, mainBlock.getHash())) {
-                    txInfo = info;
-                    break;
-                }
-            }
+  @Override
+  public byte[] getBestBlockHash() {
+    return getBestBlock().getHash();
+  }
+
+  @Override
+  public long getSize() {
+    return bestBlock.getNumber() + 1;
+  }
+
+  @Override
+  public Block getBlockByNumber(long blockNr) {
+    return blockStore.getChainBlockByNumber(blockNr);
+  }
+
+  @Override
+  public TransactionInfo getTransactionInfo(byte[] hash) {
+
+    List<TransactionInfo> infos = transactionStore.get(hash);
+
+    if (infos == null || infos.isEmpty())
+      return null;
+
+    TransactionInfo txInfo = null;
+    if (infos.size() == 1) {
+      txInfo = infos.get(0);
+    } else {
+      // pick up the receipt from the block on the main chain
+      for (TransactionInfo info : infos) {
+        Block block = blockStore.getBlockByHash(info.blockHash);
+        Block mainBlock = blockStore.getChainBlockByNumber(block.getNumber());
+        if (FastByteComparisons.equal(info.blockHash, mainBlock.getHash())) {
+          txInfo = info;
+          break;
         }
-        if (txInfo == null) {
-            logger.warn("Can't find block from main chain for transaction " + toHexString(hash));
-            return null;
-        }
-
-        Transaction tx = this.getBlockByHash(txInfo.getBlockHash()).getTransactionsList().get(txInfo.getIndex());
-        txInfo.setTransaction(tx);
-
-        return txInfo;
+      }
+    }
+    if (txInfo == null) {
+      logger.warn("Can't find block from main chain for transaction " + toHexString(hash));
+      return null;
     }
 
-    @Override
-    public Block getBlockByHash(byte[] hash) {
-        return blockStore.getBlockByHash(hash);
+    Transaction tx = this.getBlockByHash(txInfo.getBlockHash()).getTransactionsList().get(txInfo.getIndex());
+    txInfo.setTransaction(tx);
+
+    return txInfo;
+  }
+
+  @Override
+  public Block getBlockByHash(byte[] hash) {
+    return blockStore.getBlockByHash(hash);
+  }
+
+  @Override
+  public synchronized List<byte[]> getListOfHashesStartFrom(byte[] hash, int qty) {
+    return blockStore.getListHashesEndWith(hash, qty);
+  }
+
+  @Override
+  public synchronized List<byte[]> getListOfHashesStartFromBlock(long blockNumber, int qty) {
+    long bestNumber = bestBlock.getNumber();
+
+    if (blockNumber > bestNumber) {
+      return emptyList();
     }
 
-    @Override
-    public synchronized List<byte[]> getListOfHashesStartFrom(byte[] hash, int qty) {
-        return blockStore.getListHashesEndWith(hash, qty);
+    if (blockNumber + qty - 1 > bestNumber) {
+      qty = (int) (bestNumber - blockNumber + 1);
     }
 
-    @Override
-    public synchronized List<byte[]> getListOfHashesStartFromBlock(long blockNumber, int qty) {
-        long bestNumber = bestBlock.getNumber();
+    long endNumber = blockNumber + qty - 1;
 
-        if (blockNumber > bestNumber) {
-            return emptyList();
-        }
+    Block block = getBlockByNumber(endNumber);
 
-        if (blockNumber + qty - 1 > bestNumber) {
-            qty = (int) (bestNumber - blockNumber + 1);
-        }
+    List<byte[]> hashes = blockStore.getListHashesEndWith(block.getHash(), qty);
 
-        long endNumber = blockNumber + qty - 1;
+    // asc order of hashes is required in the response
+    Collections.reverse(hashes);
 
-        Block block = getBlockByNumber(endNumber);
+    return hashes;
+  }
 
-        List<byte[]> hashes = blockStore.getListHashesEndWith(block.getHash(), qty);
+  public static byte[] calcTxTrie(List<Transaction> transactions) {
 
-        // asc order of hashes is required in the response
-        Collections.reverse(hashes);
+    Trie txsState = new TrieImpl();
 
-        return hashes;
+    if (transactions == null || transactions.isEmpty())
+      return HashUtil.EMPTY_TRIE_HASH;
+
+    for (int i = 0; i < transactions.size(); i++) {
+      txsState.put(RLP.encodeInt(i), transactions.get(i).getEncoded());
+    }
+    return txsState.getRootHash();
+  }
+
+  public Repository getRepository() {
+    return repository;
+  }
+
+  public Repository getRepositorySnapshot() {
+    return repository.getSnapshotTo(blockStore.getBestBlock().getStateRoot());
+  }
+
+  @Override
+  public BlockStore getBlockStore() {
+    return blockStore;
+  }
+
+  public ProgramInvokeFactory getProgramInvokeFactory() {
+    return programInvokeFactory;
+  }
+
+  private State pushState(byte[] bestBlockHash) {
+    State push = stateStack.push(new State());
+    this.bestBlock = blockStore.getBlockByHash(bestBlockHash);
+    totalDifficulty = blockStore.getTotalDifficultyForHash(bestBlockHash);
+    this.repository = this.repository.getSnapshotTo(this.bestBlock.getStateRoot());
+    return push;
+  }
+
+  private void popState() {
+    State state = stateStack.pop();
+    this.repository = repository.getSnapshotTo(state.root);
+    this.bestBlock = state.savedBest;
+    this.totalDifficulty = state.savedTD;
+  }
+
+  public void dropState() {
+    stateStack.pop();
+  }
+
+  private synchronized BlockSummary tryConnectAndFork(final Block block) {
+    State savedState = pushState(block.getParentHash());
+    this.fork = true;
+
+    final BlockSummary summary;
+    Repository repo;
+    try {
+
+      // FIXME: adding block with no option for flush
+      Block parentBlock = getBlockByHash(block.getParentHash());
+      repo = repository.getSnapshotTo(parentBlock.getStateRoot());
+      summary = add(repo, block);
+      if (summary == null) {
+        return null;
+      }
+    } catch (Throwable th) {
+      logger.error("Unexpected error: ", th);
+      return null;
+    } finally {
+      this.fork = false;
     }
 
-    public static byte[] calcTxTrie(List<Transaction> transactions) {
+    if (summary.betterThan(savedState.savedTD)) {
 
-        Trie txsState = new TrieImpl();
+      logger.info("Rebranching: {} ~> {}", savedState.savedBest.getShortHash(), block.getShortHash());
 
-        if (transactions == null || transactions.isEmpty())
-            return HashUtil.EMPTY_TRIE_HASH;
+      // main branch become this branch
+      // cause we proved that total difficulty
+      // is greateer
+      blockStore.reBranch(block);
 
-        for (int i = 0; i < transactions.size(); i++) {
-            txsState.put(RLP.encodeInt(i), transactions.get(i).getEncoded());
-        }
-        return txsState.getRootHash();
-    }
-
-    public Repository getRepository() {
-        return repository;
-    }
-
-    public Repository getRepositorySnapshot() {
-        return repository.getSnapshotTo(blockStore.getBestBlock().getStateRoot());
-    }
-
-    @Override
-    public BlockStore getBlockStore() {
-        return blockStore;
-    }
-
-    public ProgramInvokeFactory getProgramInvokeFactory() {
-        return programInvokeFactory;
-    }
-
-    private State pushState(byte[] bestBlockHash) {
-        State push = stateStack.push(new State());
-        this.bestBlock = blockStore.getBlockByHash(bestBlockHash);
-        totalDifficulty = blockStore.getTotalDifficultyForHash(bestBlockHash);
-        this.repository = this.repository.getSnapshotTo(this.bestBlock.getStateRoot());
-        return push;
-    }
-
-    private void popState() {
-        State state = stateStack.pop();
-        this.repository = repository.getSnapshotTo(state.root);
-        this.bestBlock = state.savedBest;
-        this.totalDifficulty = state.savedTD;
-    }
-
-    public void dropState() {
-        stateStack.pop();
-    }
-
-    private synchronized BlockSummary tryConnectAndFork(final Block block) {
-        State savedState = pushState(block.getParentHash());
-        this.fork = true;
-
-        final BlockSummary summary;
-        Repository repo;
-        try {
-
-            // FIXME: adding block with no option for flush
-            Block parentBlock = getBlockByHash(block.getParentHash());
-            repo = repository.getSnapshotTo(parentBlock.getStateRoot());
-            summary = add(repo, block);
-            if (summary == null) {
-                return null;
-            }
-        } catch (Throwable th) {
-            logger.error("Unexpected error: ", th);
-            return null;
-        } finally {
-            this.fork = false;
-        }
-
-        if (summary.betterThan(savedState.savedTD)) {
-
-            logger.info("Rebranching: {} ~> {}", savedState.savedBest.getShortHash(), block.getShortHash());
-
-            // main branch become this branch
-            // cause we proved that total difficulty
-            // is greateer
-            blockStore.reBranch(block);
-
-            // The main repository rebranch
-            this.repository = repo;
+      // The main repository rebranch
+      this.repository = repo;
 //            this.repository.syncToRoot(block.getStateRoot());
 
-            dropState();
-        } else {
-            // Stay on previous branch
-            popState();
-        }
-
-        return summary;
+      dropState();
+    } else {
+      // Stay on previous branch
+      popState();
     }
 
+    return summary;
+  }
 
-    public synchronized ImportResult tryToConnect(final Block block) {
 
-        if (logger.isDebugEnabled())
-            logger.debug("Try connect block hash: {}, number: {}",
-                    toHexString(block.getHash()).substring(0, 6),
-                    block.getNumber());
+  public synchronized ImportResult tryToConnect(final Block block) {
 
-        if (blockStore.getMaxNumber() >= block.getNumber() &&
-                blockStore.isBlockExist(block.getHash())) {
+    if (logger.isDebugEnabled())
+      logger.debug("Try connect block hash: {}, number: {}",
+        toHexString(block.getHash()).substring(0, 6),
+        block.getNumber());
 
-            if (logger.isDebugEnabled())
-                logger.debug("Block already exist hash: {}, number: {}",
-                        toHexString(block.getHash()).substring(0, 6),
-                        block.getNumber());
+    if (blockStore.getMaxNumber() >= block.getNumber() &&
+      blockStore.isBlockExist(block.getHash())) {
 
-            // retry of well known block
-            return EXIST;
-        }
+      if (logger.isDebugEnabled())
+        logger.debug("Block already exist hash: {}, number: {}",
+          toHexString(block.getHash()).substring(0, 6),
+          block.getNumber());
 
-        final ImportResult ret;
+      // retry of well known block
+      return EXIST;
+    }
 
-        // The simple case got the block
-        // to connect to the main chain
-        final BlockSummary summary;
-        if (bestBlock.isParentOf(block)) {
-            recordBlock(block);
+    final ImportResult ret;
+
+    // The simple case got the block
+    // to connect to the main chain
+    final BlockSummary summary;
+    if (bestBlock.isParentOf(block)) {
+      recordBlock(block);
 //            Repository repoSnap = repository.getSnapshotTo(bestBlock.getStateRoot());
-            summary = add(repository, block);
+      summary = add(repository, block);
 
-            ret = summary == null ? INVALID_BLOCK : IMPORTED_BEST;
+      ret = summary == null ? INVALID_BLOCK : IMPORTED_BEST;
+    } else {
+
+      if (blockStore.isBlockExist(block.getParentHash())) {
+        BigInteger oldTotalDiff = getTotalDifficulty();
+
+        recordBlock(block);
+        summary = tryConnectAndFork(block);
+
+        ret = summary == null ? INVALID_BLOCK :
+          (summary.betterThan(oldTotalDiff) ? IMPORTED_BEST : IMPORTED_NOT_BEST);
+      } else {
+        summary = null;
+        ret = NO_PARENT;
+      }
+
+    }
+
+    if (ret.isSuccessful()) {
+      listener.onBlock(summary, ret == IMPORTED_BEST);
+      listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
+
+      if (ret == IMPORTED_BEST) {
+        eventDispatchThread.invokeLater(() -> pendingState.processBest(block, summary.getReceipts()));
+      }
+    }
+
+    return ret;
+  }
+
+  public synchronized Block createNewBlock(Block parent, List<Transaction> txs, List<BlockHeader> uncles) {
+    long time = System.currentTimeMillis() / 1000;
+    // adjust time to parent block this may happen due to system clocks difference
+    if (parent.getTimestamp() >= time) time = parent.getTimestamp() + 1;
+
+    return createNewBlock(parent, txs, uncles, time);
+  }
+
+  public synchronized Block createNewBlock(Block parent, List<Transaction> txs, List<BlockHeader> uncles, long time) {
+    final long blockNumber = parent.getNumber() + 1;
+
+    final byte[] extraData = config.getBlockchainConfig().getConfigForBlock(blockNumber).getExtraData(minerExtraData, blockNumber);
+
+    Block block = new Block(parent.getHash(),
+      EMPTY_LIST_HASH, // uncleHash
+      minerCoinbase,
+      new byte[0], // log bloom - from tx receipts
+      new byte[0], // difficulty computed right after block creation
+      blockNumber,
+      parent.getGasLimit(), // (add to config ?)
+      0,  // gas used - computed after running all transactions
+      time,  // block time
+      extraData,  // extra data
+      new byte[0],  // mixHash (to mine)
+      new byte[0],  // nonce   (to mine)
+      new byte[0],  // receiptsRoot - computed after running all transactions
+      calcTxTrie(txs),    // TransactionsRoot - computed after running all transactions
+      new byte[] {0}, // stateRoot - computed after running all transactions
+      txs,
+      null);  // uncle list
+
+    for (BlockHeader uncle : uncles) {
+      block.addUncle(uncle);
+    }
+
+    block.getHeader().setDifficulty(ByteUtil.bigIntegerToBytes(block.getHeader().
+      calcDifficulty(config.getBlockchainConfig(), parent.getHeader())));
+
+    Repository track = repository.getSnapshotTo(parent.getStateRoot());
+    BlockSummary summary = applyBlock(track, block);
+    List<TransactionReceipt> receipts = summary.getReceipts();
+    block.setStateRoot(track.getRoot());
+
+    Bloom logBloom = new Bloom();
+    for (TransactionReceipt receipt : receipts) {
+      logBloom.or(receipt.getBloomFilter());
+    }
+    block.getHeader().setLogsBloom(logBloom.getData());
+    block.getHeader().setGasUsed(receipts.size() > 0 ? receipts.get(receipts.size() - 1).getCumulativeGasLong() : 0);
+    block.getHeader().setReceiptsRoot(calcReceiptsTrie(receipts));
+
+    return block;
+  }
+
+  @Override
+  public BlockSummary add(Block block) {
+    throw new RuntimeException("Not supported");
+  }
+
+  //    @Override
+  public synchronized BlockSummary add(Repository repo, final Block block) {
+    BlockSummary summary = addImpl(repo, block);
+
+    if (summary == null) {
+      stateLogger.warn("Trying to reimport the block for debug...");
+      try {
+        Thread.sleep(50);
+      } catch (InterruptedException e) {
+      }
+      BlockSummary summary1 = addImpl(repo.getSnapshotTo(getBestBlock().getStateRoot()), block);
+      stateLogger.warn("Second import trial " + (summary1 == null ? "FAILED" : "OK"));
+      if (summary1 != null) {
+        if (config.exitOnBlockConflict() && !byTest) {
+          stateLogger.error("Inconsistent behavior, exiting...");
+          System.exit(-1);
         } else {
-
-            if (blockStore.isBlockExist(block.getParentHash())) {
-                BigInteger oldTotalDiff = getTotalDifficulty();
-
-                recordBlock(block);
-                summary = tryConnectAndFork(block);
-
-                ret = summary == null ? INVALID_BLOCK :
-                        (summary.betterThan(oldTotalDiff) ? IMPORTED_BEST : IMPORTED_NOT_BEST);
-            } else {
-                summary = null;
-                ret = NO_PARENT;
-            }
-
+          return summary1;
         }
+      }
+    }
+    return summary;
+  }
 
-        if (ret.isSuccessful()) {
-            listener.onBlock(summary, ret == IMPORTED_BEST);
-            listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
+  public synchronized BlockSummary addImpl(Repository repo, final Block block) {
 
-            if (ret == IMPORTED_BEST) {
-                eventDispatchThread.invokeLater(() -> pendingState.processBest(block, summary.getReceipts()));
-            }
-        }
-
-        return ret;
+    if (exitOn < block.getNumber()) {
+      System.out.print("Exiting after block.number: " + bestBlock.getNumber());
+      dbFlushManager.flushSync();
+      System.exit(-1);
     }
 
-    public synchronized Block createNewBlock(Block parent, List<Transaction> txs, List<BlockHeader> uncles) {
-        long time = System.currentTimeMillis() / 1000;
-        // adjust time to parent block this may happen due to system clocks difference
-        if (parent.getTimestamp() >= time) time = parent.getTimestamp() + 1;
 
-        return createNewBlock(parent, txs, uncles, time);
+    if (!isValid(repo, block)) {
+      logger.warn("Invalid block with number: {}", block.getNumber());
+      return null;
     }
-
-    public synchronized Block createNewBlock(Block parent, List<Transaction> txs, List<BlockHeader> uncles, long time) {
-        final long blockNumber = parent.getNumber() + 1;
-
-        final byte[] extraData = config.getBlockchainConfig().getConfigForBlock(blockNumber).getExtraData(minerExtraData, blockNumber);
-
-        Block block = new Block(parent.getHash(),
-                EMPTY_LIST_HASH, // uncleHash
-                minerCoinbase,
-                new byte[0], // log bloom - from tx receipts
-                new byte[0], // difficulty computed right after block creation
-                blockNumber,
-                parent.getGasLimit(), // (add to config ?)
-                0,  // gas used - computed after running all transactions
-                time,  // block time
-                extraData,  // extra data
-                new byte[0],  // mixHash (to mine)
-                new byte[0],  // nonce   (to mine)
-                new byte[0],  // receiptsRoot - computed after running all transactions
-                calcTxTrie(txs),    // TransactionsRoot - computed after running all transactions
-                new byte[] {0}, // stateRoot - computed after running all transactions
-                txs,
-                null);  // uncle list
-
-        for (BlockHeader uncle : uncles) {
-            block.addUncle(uncle);
-        }
-
-        block.getHeader().setDifficulty(ByteUtil.bigIntegerToBytes(block.getHeader().
-                calcDifficulty(config.getBlockchainConfig(), parent.getHeader())));
-
-        Repository track = repository.getSnapshotTo(parent.getStateRoot());
-        BlockSummary summary = applyBlock(track, block);
-        List<TransactionReceipt> receipts = summary.getReceipts();
-        block.setStateRoot(track.getRoot());
-
-        Bloom logBloom = new Bloom();
-        for (TransactionReceipt receipt : receipts) {
-            logBloom.or(receipt.getBloomFilter());
-        }
-        block.getHeader().setLogsBloom(logBloom.getData());
-        block.getHeader().setGasUsed(receipts.size() > 0 ? receipts.get(receipts.size() - 1).getCumulativeGasLong() : 0);
-        block.getHeader().setReceiptsRoot(calcReceiptsTrie(receipts));
-
-        return block;
-    }
-
-    @Override
-    public BlockSummary add(Block block) {
-        throw new RuntimeException("Not supported");
-    }
-
-    //    @Override
-    public synchronized BlockSummary add(Repository repo, final Block block) {
-        BlockSummary summary = addImpl(repo, block);
-
-        if (summary == null) {
-            stateLogger.warn("Trying to reimport the block for debug...");
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-            }
-            BlockSummary summary1 = addImpl(repo.getSnapshotTo(getBestBlock().getStateRoot()), block);
-            stateLogger.warn("Second import trial " + (summary1 == null ? "FAILED" : "OK"));
-            if (summary1 != null) {
-                if (config.exitOnBlockConflict() && !byTest) {
-                    stateLogger.error("Inconsistent behavior, exiting...");
-                    System.exit(-1);
-                } else {
-                    return summary1;
-                }
-            }
-        }
-        return summary;
-    }
-
-    public synchronized BlockSummary addImpl(Repository repo, final Block block) {
-
-        if (exitOn < block.getNumber()) {
-            System.out.print("Exiting after block.number: " + bestBlock.getNumber());
-            dbFlushManager.flushSync();
-            System.exit(-1);
-        }
-
-
-        if (!isValid(repo, block)) {
-            logger.warn("Invalid block with number: {}", block.getNumber());
-            return null;
-        }
 
 //        Repository track = repo.startTracking();
-        byte[] origRoot = repo.getRoot();
+    byte[] origRoot = repo.getRoot();
 
-        if (block == null)
-            return null;
+    if (block == null)
+      return null;
 
-        // keep chain continuity
+    // keep chain continuity
 //        if (!Arrays.equals(bestBlock.getHash(),
 //                block.getParentHash())) return null;
 
-        if (block.getNumber() >= config.traceStartBlock() && config.traceStartBlock() != -1) {
-            AdvancedDeviceUtils.adjustDetailedTracing(config, block.getNumber());
-        }
+    if (block.getNumber() >= config.traceStartBlock() && config.traceStartBlock() != -1) {
+      AdvancedDeviceUtils.adjustDetailedTracing(config, block.getNumber());
+    }
 
-        BlockSummary summary = processBlock(repo, block);
-        final List<TransactionReceipt> receipts = summary.getReceipts();
+    BlockSummary summary = processBlock(repo, block);
+    final List<TransactionReceipt> receipts = summary.getReceipts();
 
-        // Sanity checks
+    // Sanity checks
 
-        if (!FastByteComparisons.equal(block.getReceiptsRoot(), calcReceiptsTrie(receipts))) {
-            logger.warn("Block's given Receipt Hash doesn't match: {} != {}", toHexString(block.getReceiptsRoot()), toHexString(calcReceiptsTrie(receipts)));
-            logger.warn("Calculated receipts: " + receipts);
-            repo.rollback();
-            summary = null;
-        }
+    if (!FastByteComparisons.equal(block.getReceiptsRoot(), calcReceiptsTrie(receipts))) {
+      logger.warn("Block's given Receipt Hash doesn't match: {} != {}", toHexString(block.getReceiptsRoot()), toHexString(calcReceiptsTrie(receipts)));
+      logger.warn("Calculated receipts: " + receipts);
+      repo.rollback();
+      summary = null;
+    }
 
-        if (!FastByteComparisons.equal(block.getLogBloom(), calcLogBloom(receipts))) {
-            logger.warn("Block's given logBloom Hash doesn't match: {} != {}", toHexString(block.getLogBloom()), toHexString(calcLogBloom(receipts)));
-            repo.rollback();
-            summary = null;
-        }
+    if (!FastByteComparisons.equal(block.getLogBloom(), calcLogBloom(receipts))) {
+      logger.warn("Block's given logBloom Hash doesn't match: {} != {}", toHexString(block.getLogBloom()), toHexString(calcLogBloom(receipts)));
+      repo.rollback();
+      summary = null;
+    }
 
-        if (!FastByteComparisons.equal(block.getStateRoot(), repo.getRoot())) {
+    if (!FastByteComparisons.equal(block.getStateRoot(), repo.getRoot())) {
 
-            stateLogger.warn("BLOCK: State conflict or received invalid block. block: {} worldstate {} mismatch", block.getNumber(), toHexString(repo.getRoot()));
-            stateLogger.warn("Conflict block dump: {}", toHexString(block.getEncoded()));
+      stateLogger.warn("BLOCK: State conflict or received invalid block. block: {} worldstate {} mismatch", block.getNumber(), toHexString(repo.getRoot()));
+      stateLogger.warn("Conflict block dump: {}", toHexString(block.getEncoded()));
 
 //            track.rollback();
 //            repository.rollback();
-            repository = repository.getSnapshotTo(origRoot);
+      repository = repository.getSnapshotTo(origRoot);
 
-            // block is bad so 'rollback' the state root to the original state
+      // block is bad so 'rollback' the state root to the original state
 //            ((RepositoryImpl) repository).setRoot(origRoot);
 
 //            track.rollback();
-            // block is bad so 'rollback' the state root to the original state
+      // block is bad so 'rollback' the state root to the original state
 //            ((RepositoryImpl) repository).setRoot(origRoot);
 
-            if (config.exitOnBlockConflict() && !byTest) {
-                adminInfo.lostConsensus();
-                System.out.println("CONFLICT: BLOCK #" + block.getNumber() + ", dump: " + toHexString(block.getEncoded()));
-                System.exit(1);
-            } else {
-                summary = null;
-            }
-        }
-
-        if (summary != null) {
-            repo.commit();
-            updateTotalDifficulty(block);
-            summary.setTotalDifficulty(getTotalDifficulty());
-
-            if (!byTest) {
-                dbFlushManager.commit(() -> {
-                    storeBlock(block, receipts);
-                    repository.commit();
-                });
-            } else {
-                storeBlock(block, receipts);
-            }
-        }
-
-        return summary;
+      if (config.exitOnBlockConflict() && !byTest) {
+        adminInfo.lostConsensus();
+        System.out.println("CONFLICT: BLOCK #" + block.getNumber() + ", dump: " + toHexString(block.getEncoded()));
+        System.exit(1);
+      } else {
+        summary = null;
+      }
     }
 
-    @Override
-    public void flush() {
+    if (summary != null) {
+      repo.commit();
+      updateTotalDifficulty(block);
+      summary.setTotalDifficulty(getTotalDifficulty());
+
+      if (!byTest) {
+        dbFlushManager.commit(() -> {
+          storeBlock(block, receipts);
+          repository.commit();
+        });
+      } else {
+        storeBlock(block, receipts);
+      }
+    }
+
+    return summary;
+  }
+
+  @Override
+  public void flush() {
 //        repository.flush();
 //        stateDataSource.flush();
 //        blockStore.flush();
@@ -656,751 +660,749 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 //        if (isMemoryBoundFlush()) {
 //            System.gc();
 //        }
+  }
+
+  private boolean needFlushByMemory(double maxMemoryPercents) {
+    return getRuntime().freeMemory() < (getRuntime().totalMemory() * (1 - maxMemoryPercents));
+  }
+
+  public static byte[] calcReceiptsTrie(List<TransactionReceipt> receipts) {
+    Trie receiptsTrie = new TrieImpl();
+
+    if (receipts == null || receipts.isEmpty())
+      return HashUtil.EMPTY_TRIE_HASH;
+
+    for (int i = 0; i < receipts.size(); i++) {
+      receiptsTrie.put(RLP.encodeInt(i), receipts.get(i).getReceiptTrieEncoded());
+    }
+    return receiptsTrie.getRootHash();
+  }
+
+  private byte[] calcLogBloom(List<TransactionReceipt> receipts) {
+
+    Bloom retBloomFilter = new Bloom();
+
+    if (receipts == null || receipts.isEmpty())
+      return retBloomFilter.getData();
+
+    for (TransactionReceipt receipt : receipts) {
+      retBloomFilter.or(receipt.getBloomFilter());
     }
 
-    private boolean needFlushByMemory(double maxMemoryPercents) {
-        return getRuntime().freeMemory() < (getRuntime().totalMemory() * (1 - maxMemoryPercents));
+    return retBloomFilter.getData();
+  }
+
+  public Block getParent(BlockHeader header) {
+
+    return blockStore.getBlockByHash(header.getParentHash());
+  }
+
+
+  public boolean isValid(BlockHeader header) {
+    if (parentHeaderValidator == null) return true;
+
+    Block parentBlock = getParent(header);
+
+    if (!parentHeaderValidator.validate(header, parentBlock.getHeader())) {
+
+      if (logger.isErrorEnabled())
+        parentHeaderValidator.logErrors(logger);
+
+      return false;
     }
 
-    public static byte[] calcReceiptsTrie(List<TransactionReceipt> receipts) {
-        Trie receiptsTrie = new TrieImpl();
+    return true;
+  }
 
-        if (receipts == null || receipts.isEmpty())
-            return HashUtil.EMPTY_TRIE_HASH;
+  /**
+   * This mechanism enforces a homeostasis in terms of the time between blocks;
+   * a smaller period between the last two blocks results in an increase in the
+   * difficulty level and thus additional computation required, lengthening the
+   * likely next period. Conversely, if the period is too large, the difficulty,
+   * and expected time to the next block, is reduced.
+   */
+  private boolean isValid(Repository repo, Block block) {
 
-        for (int i = 0; i < receipts.size(); i++) {
-            receiptsTrie.put(RLP.encodeInt(i), receipts.get(i).getReceiptTrieEncoded());
-        }
-        return receiptsTrie.getRootHash();
-    }
+    boolean isValid = true;
 
-    private byte[] calcLogBloom(List<TransactionReceipt> receipts) {
+    if (!block.isGenesis()) {
+      isValid = isValid(block.getHeader());
 
-        Bloom retBloomFilter = new Bloom();
-
-        if (receipts == null || receipts.isEmpty())
-            return retBloomFilter.getData();
-
-        for (TransactionReceipt receipt : receipts) {
-            retBloomFilter.or(receipt.getBloomFilter());
-        }
-
-        return retBloomFilter.getData();
-    }
-
-    public Block getParent(BlockHeader header) {
-
-        return blockStore.getBlockByHash(header.getParentHash());
-    }
+      // Sanity checks
+      String trieHash = toHexString(block.getTxTrieRoot());
+      String trieListHash = toHexString(calcTxTrie(block.getTransactionsList()));
 
 
-    public boolean isValid(BlockHeader header) {
-        if (parentHeaderValidator == null) return true;
-
-        Block parentBlock = getParent(header);
-
-        if (!parentHeaderValidator.validate(header, parentBlock.getHeader())) {
-
-            if (logger.isErrorEnabled())
-                parentHeaderValidator.logErrors(logger);
-
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * This mechanism enforces a homeostasis in terms of the time between blocks;
-     * a smaller period between the last two blocks results in an increase in the
-     * difficulty level and thus additional computation required, lengthening the
-     * likely next period. Conversely, if the period is too large, the difficulty,
-     * and expected time to the next block, is reduced.
-     */
-    private boolean isValid(Repository repo, Block block) {
-
-        boolean isValid = true;
-
-        if (!block.isGenesis()) {
-            isValid = isValid(block.getHeader());
-
-            // Sanity checks
-            String trieHash = toHexString(block.getTxTrieRoot());
-            String trieListHash = toHexString(calcTxTrie(block.getTransactionsList()));
-
-
-            if (!trieHash.equals(trieListHash)) {
-                logger.warn("Block's given Trie Hash doesn't match: {} != {}", trieHash, trieListHash);
-                return false;
-            }
+      if (!trieHash.equals(trieListHash)) {
+        logger.warn("Block's given Trie Hash doesn't match: {} != {}", trieHash, trieListHash);
+        return false;
+      }
 
 //            if (!validateUncles(block)) return false;
 
-            List<Transaction> txs = block.getTransactionsList();
-            if (!txs.isEmpty()) {
+      List<Transaction> txs = block.getTransactionsList();
+      if (!txs.isEmpty()) {
 //                Repository parentRepo = repository;
 //                if (!Arrays.equals(bestBlock.getHash(), block.getParentHash())) {
 //                    parentRepo = repository.getSnapshotTo(getBlockByHash(block.getParentHash()).getStateRoot());
 //                }
 
-                Map<ByteArrayWrapper, BigInteger> curNonce = new HashMap<>();
+        Map<ByteArrayWrapper, BigInteger> curNonce = new HashMap<>();
 
-                for (Transaction tx : txs) {
-                    byte[] txSender = tx.getSender();
-                    if (txSender == null) {
-                        logger.warn("Invalid transaction: sender in tx with rlp={} is null." +
-                                "Not valid until EIP-86", ByteUtil.toHexString(tx.getEncoded()));
-                        return false;
-                    }
-                    ByteArrayWrapper key = new ByteArrayWrapper(txSender);
-                    BigInteger expectedNonce = curNonce.get(key);
-                    if (expectedNonce == null) {
-                        expectedNonce = repo.getNonce(txSender);
-                    }
-                    curNonce.put(key, expectedNonce.add(ONE));
-                    BigInteger txNonce = new BigInteger(1, tx.getNonce());
-                    if (!expectedNonce.equals(txNonce)) {
-                        logger.warn("Invalid transaction: Tx nonce {} != expected nonce {} (parent nonce: {}): {}",
-                                txNonce, expectedNonce, repo.getNonce(txSender), tx);
-                        return false;
-                    }
-                }
-            }
-        }
-
-        return isValid;
-    }
-
-    public boolean validateUncles(Block block) {
-        String unclesHash = toHexString(block.getHeader().getUnclesHash());
-        String unclesListHash = toHexString(HashUtil.sha3(block.getHeader().getUnclesEncoded(block.getUncleList())));
-
-        if (!unclesHash.equals(unclesListHash)) {
-            logger.warn("Block's given Uncle Hash doesn't match: {} != {}", unclesHash, unclesListHash);
+        for (Transaction tx : txs) {
+          byte[] txSender = tx.getSender();
+          if (txSender == null) {
+            logger.warn("Invalid transaction: sender in tx with rlp={} is null." +
+              "Not valid until EIP-86", ByteUtil.toHexString(tx.getEncoded()));
             return false;
-        }
-
-
-        if (block.getUncleList().size() > UNCLE_LIST_LIMIT) {
-            logger.warn("Uncle list to big: block.getUncleList().size() > UNCLE_LIST_LIMIT");
+          }
+          ByteArrayWrapper key = new ByteArrayWrapper(txSender);
+          BigInteger expectedNonce = curNonce.get(key);
+          if (expectedNonce == null) {
+            expectedNonce = repo.getNonce(txSender);
+          }
+          curNonce.put(key, expectedNonce.add(ONE));
+          BigInteger txNonce = new BigInteger(1, tx.getNonce());
+          if (!expectedNonce.equals(txNonce)) {
+            logger.warn("Invalid transaction: Tx nonce {} != expected nonce {} (parent nonce: {}): {}",
+              txNonce, expectedNonce, repo.getNonce(txSender), tx);
             return false;
+          }
         }
+      }
+    }
 
+    return isValid;
+  }
 
-        Set<ByteArrayWrapper> ancestors = getAncestors(blockStore, block, UNCLE_GENERATION_LIMIT + 1, false);
-        Set<ByteArrayWrapper> usedUncles = getUsedUncles(blockStore, block, false);
+  public boolean validateUncles(Block block) {
+    String unclesHash = toHexString(block.getHeader().getUnclesHash());
+    String unclesListHash = toHexString(HashUtil.sha3(block.getHeader().getUnclesEncoded(block.getUncleList())));
 
-        for (BlockHeader uncle : block.getUncleList()) {
-
-            // - They are valid headers (not necessarily valid blocks)
-            if (!isValid(uncle)) return false;
-
-            //if uncle's parent's number is not less than currentBlock - UNCLE_GEN_LIMIT, mark invalid
-            boolean isValid = !(getParent(uncle).getNumber() < (block.getNumber() - UNCLE_GENERATION_LIMIT));
-            if (!isValid) {
-                logger.warn("Uncle too old: generationGap must be under UNCLE_GENERATION_LIMIT");
-                return false;
-            }
-
-            ByteArrayWrapper uncleHash = new ByteArrayWrapper(uncle.getHash());
-            if (ancestors.contains(uncleHash)) {
-                logger.warn("Uncle is direct ancestor: " + toHexString(uncle.getHash()));
-                return false;
-            }
-
-            if (usedUncles.contains(uncleHash)) {
-                logger.warn("Uncle is not unique: " + toHexString(uncle.getHash()));
-                return false;
-            }
-
-            Block uncleParent = blockStore.getBlockByHash(uncle.getParentHash());
-            if (!ancestors.contains(new ByteArrayWrapper(uncleParent.getHash()))) {
-                logger.warn("Uncle has no common parent: " + toHexString(uncle.getHash()));
-                return false;
-            }
-        }
-
-        return true;
+    if (!unclesHash.equals(unclesListHash)) {
+      logger.warn("Block's given Uncle Hash doesn't match: {} != {}", unclesHash, unclesListHash);
+      return false;
     }
 
 
-    public static Set<ByteArrayWrapper> getAncestors(BlockStore blockStore, Block testedBlock, int limitNum, boolean isParentBlock) {
-        Set<ByteArrayWrapper> ret = new HashSet<>();
-        limitNum = (int) max(0, testedBlock.getNumber() - limitNum);
-        Block it = testedBlock;
-        if (!isParentBlock) {
-            it = blockStore.getBlockByHash(it.getParentHash());
-        }
-        while(it != null && it.getNumber() >= limitNum) {
-            ret.add(new ByteArrayWrapper(it.getHash()));
-            it = blockStore.getBlockByHash(it.getParentHash());
-        }
-        return ret;
+    if (block.getUncleList().size() > UNCLE_LIST_LIMIT) {
+      logger.warn("Uncle list to big: block.getUncleList().size() > UNCLE_LIST_LIMIT");
+      return false;
     }
 
-    public Set<ByteArrayWrapper> getUsedUncles(BlockStore blockStore, Block testedBlock, boolean isParentBlock) {
-        Set<ByteArrayWrapper> ret = new HashSet<>();
-        long limitNum = max(0, testedBlock.getNumber() - UNCLE_GENERATION_LIMIT);
-        Block it = testedBlock;
-        if (!isParentBlock) {
-            it = blockStore.getBlockByHash(it.getParentHash());
-        }
-        while(it.getNumber() > limitNum) {
-            for (BlockHeader uncle : it.getUncleList()) {
-                ret.add(new ByteArrayWrapper(uncle.getHash()));
-            }
-            it = blockStore.getBlockByHash(it.getParentHash());
-        }
-        return ret;
+
+    Set<ByteArrayWrapper> ancestors = getAncestors(blockStore, block, UNCLE_GENERATION_LIMIT + 1, false);
+    Set<ByteArrayWrapper> usedUncles = getUsedUncles(blockStore, block, false);
+
+    for (BlockHeader uncle : block.getUncleList()) {
+
+      // - They are valid headers (not necessarily valid blocks)
+      if (!isValid(uncle)) return false;
+
+      //if uncle's parent's number is not less than currentBlock - UNCLE_GEN_LIMIT, mark invalid
+      boolean isValid = !(getParent(uncle).getNumber() < (block.getNumber() - UNCLE_GENERATION_LIMIT));
+      if (!isValid) {
+        logger.warn("Uncle too old: generationGap must be under UNCLE_GENERATION_LIMIT");
+        return false;
+      }
+
+      ByteArrayWrapper uncleHash = new ByteArrayWrapper(uncle.getHash());
+      if (ancestors.contains(uncleHash)) {
+        logger.warn("Uncle is direct ancestor: " + toHexString(uncle.getHash()));
+        return false;
+      }
+
+      if (usedUncles.contains(uncleHash)) {
+        logger.warn("Uncle is not unique: " + toHexString(uncle.getHash()));
+        return false;
+      }
+
+      Block uncleParent = blockStore.getBlockByHash(uncle.getParentHash());
+      if (!ancestors.contains(new ByteArrayWrapper(uncleParent.getHash()))) {
+        logger.warn("Uncle has no common parent: " + toHexString(uncle.getHash()));
+        return false;
+      }
     }
 
-    private BlockSummary processBlock(Repository track, Block block) {
+    return true;
+  }
 
-        if (!block.isGenesis() && !config.blockChainOnly()) {
-            return applyBlock(track, block);
-        }
-        else {
-            return new BlockSummary(block, new HashMap<>(), new ArrayList<>(), new ArrayList<>(), new BlockStatistics(), false);
-        }
+
+  public static Set<ByteArrayWrapper> getAncestors(BlockStore blockStore, Block testedBlock, int limitNum, boolean isParentBlock) {
+    Set<ByteArrayWrapper> ret = new HashSet<>();
+    limitNum = (int) max(0, testedBlock.getNumber() - limitNum);
+    Block it = testedBlock;
+    if (!isParentBlock) {
+      it = blockStore.getBlockByHash(it.getParentHash());
     }
+    while(it != null && it.getNumber() >= limitNum) {
+      ret.add(new ByteArrayWrapper(it.getHash()));
+      it = blockStore.getBlockByHash(it.getParentHash());
+    }
+    return ret;
+  }
 
-    private BlockSummary applyBlock(Repository track, Block block) {
+  public Set<ByteArrayWrapper> getUsedUncles(BlockStore blockStore, Block testedBlock, boolean isParentBlock) {
+    Set<ByteArrayWrapper> ret = new HashSet<>();
+    long limitNum = max(0, testedBlock.getNumber() - UNCLE_GENERATION_LIMIT);
+    Block it = testedBlock;
+    if (!isParentBlock) {
+      it = blockStore.getBlockByHash(it.getParentHash());
+    }
+    while(it.getNumber() > limitNum) {
+      for (BlockHeader uncle : it.getUncleList()) {
+        ret.add(new ByteArrayWrapper(uncle.getHash()));
+      }
+      it = blockStore.getBlockByHash(it.getParentHash());
+    }
+    return ret;
+  }
 
-        logger.debug("applyBlock: block: [{}] tx.list: [{}]", block.getNumber(), block.getTransactionsList().size());
+  private BlockSummary processBlock(Repository track, Block block) {
 
-        BlockchainConfig blockchainConfig = config.getBlockchainConfig().getConfigForBlock(block.getNumber());
-        blockchainConfig.hardForkTransfers(block, track);
+    if (!block.isGenesis() && !config.blockChainOnly()) {
+      return applyBlock(track, block);
+    }
+    else {
+      return new BlockSummary(block, new HashMap<byte[], BigInteger>(), new ArrayList<TransactionReceipt>(), new ArrayList<TransactionExecutionSummary>());
+    }
+  }
 
-        long saveTime = System.nanoTime();
-        int i = 1;
-        long totalGasUsed = 0;
-        List<TransactionReceipt> receipts = new ArrayList<>();
-        List<TransactionExecutionSummary> summaries = new ArrayList<>();
+  private BlockSummary applyBlock(Repository track, Block block) {
 
-        for (Transaction tx : block.getTransactionsList()) {
-            stateLogger.debug("apply block: [{}] tx: [{}] ", block.getNumber(), i);
+    logger.debug("applyBlock: block: [{}] tx.list: [{}]", block.getNumber(), block.getTransactionsList().size());
 
-            Repository txTrack = track.startTracking();
-            TransactionExecutor executor = new TransactionExecutor(
-                    tx, block.getCoinbase(),
-                    txTrack, blockStore, programInvokeFactory, block, listener, totalGasUsed, vmHook)
-                    .withCommonConfig(commonConfig);
+    BlockchainConfig blockchainConfig = config.getBlockchainConfig().getConfigForBlock(block.getNumber());
+    blockchainConfig.hardForkTransfers(block, track);
 
-            executor.init();
-            executor.execute();
-            executor.go();
-            TransactionExecutionSummary summary = executor.finalization();
+    long saveTime = System.nanoTime();
+    int i = 1;
+    long totalGasUsed = 0;
+    List<TransactionReceipt> receipts = new ArrayList<>();
+    List<TransactionExecutionSummary> summaries = new ArrayList<>();
 
-            totalGasUsed += executor.getGasUsed();
+    for (Transaction tx : block.getTransactionsList()) {
+      stateLogger.debug("apply block: [{}] tx: [{}] ", block.getNumber(), i);
 
-            txTrack.commit();
-            final TransactionReceipt receipt = executor.getReceipt();
+      Repository txTrack = track.startTracking();
+      TransactionExecutor executor = new TransactionExecutor(
+        tx, block.getCoinbase(),
+        txTrack, blockStore, programInvokeFactory, block, listener, totalGasUsed, vmHook)
+        .withCommonConfig(commonConfig);
 
-            if (blockchainConfig.eip658()) {
-                receipt.setTxStatus(receipt.isSuccessful());
-            } else {
-                receipt.setPostTxState(track.getRoot());
-            }
+      executor.init();
+      executor.execute();
+      executor.go();
+      TransactionExecutionSummary summary = executor.finalization();
 
-            if (stateLogger.isInfoEnabled())
-                stateLogger.info("block: [{}] executed tx: [{}] \n  state: [{}]", block.getNumber(), i,
-                        toHexString(track.getRoot()));
+      totalGasUsed += executor.getGasUsed();
 
-            stateLogger.info("[{}] ", receipt.toString());
+      txTrack.commit();
+      final TransactionReceipt receipt = executor.getReceipt();
 
-            if (stateLogger.isInfoEnabled())
-                stateLogger.info("tx[{}].receipt: [{}] ", i, toHexString(receipt.getEncoded()));
+      if (blockchainConfig.eip658()) {
+        receipt.setTxStatus(receipt.isSuccessful());
+      } else {
+        receipt.setPostTxState(track.getRoot());
+      }
 
-            // TODO
+      if (stateLogger.isInfoEnabled())
+        stateLogger.info("block: [{}] executed tx: [{}] \n  state: [{}]", block.getNumber(), i,
+          toHexString(track.getRoot()));
+
+      stateLogger.info("[{}] ", receipt.toString());
+
+      if (stateLogger.isInfoEnabled())
+        stateLogger.info("tx[{}].receipt: [{}] ", i, toHexString(receipt.getEncoded()));
+
+      // TODO
 //            if (block.getNumber() >= config.traceStartBlock())
 //                repository.dumpState(block, totalGasUsed, i++, tx.getHash());
 
-            receipts.add(receipt);
-            if (summary != null) {
-                summaries.add(summary);
-            }
-        }
+      receipts.add(receipt);
+      if (summary != null) {
+        summaries.add(summary);
+      }
+    }
 
-        Map<byte[], BigInteger> rewards = addReward(track, block, summaries);
+    Map<byte[], BigInteger> rewards = addReward(track, block, summaries);
 
-        if (stateLogger.isInfoEnabled())
-            stateLogger.info("applied reward for block: [{}]  \n  state: [{}]",
-                    block.getNumber(),
-                    toHexString(track.getRoot()));
+    if (stateLogger.isInfoEnabled())
+      stateLogger.info("applied reward for block: [{}]  \n  state: [{}]",
+        block.getNumber(),
+        toHexString(track.getRoot()));
 
 
-        // TODO
+    // TODO
 //        if (block.getNumber() >= config.traceStartBlock())
 //            repository.dumpState(block, totalGasUsed, 0, null);
 
-        long totalTime = System.nanoTime() - saveTime;
-        adminInfo.addBlockExecTime(totalTime);
-        logger.debug("block: num: [{}] hash: [{}], executed after: [{}]nano", block.getNumber(), block.getShortHash(), totalTime);
+    long totalTime = System.nanoTime() - saveTime;
+    adminInfo.addBlockExecTime(totalTime);
+    logger.debug("block: num: [{}] hash: [{}], executed after: [{}]nano", block.getNumber(), block.getShortHash(), totalTime);
 
-      final BlockStatistics statistics = BlockStatistics.forBlock(block, receipts, summaries);
+    return new BlockSummary(block, rewards, receipts, summaries);
+  }
 
-      return new BlockSummary(block, rewards, receipts, summaries, statistics, false);
-    }
+  /**
+   * Add reward to block- and every uncle coinbase
+   * assuming the entire block is valid.
+   *
+   * @param block object containing the header and uncles
+   */
+  private Map<byte[], BigInteger> addReward(Repository track, Block block, List<TransactionExecutionSummary> summaries) {
 
-    /**
-     * Add reward to block- and every uncle coinbase
-     * assuming the entire block is valid.
-     *
-     * @param block object containing the header and uncles
-     */
-    private Map<byte[], BigInteger> addReward(Repository track, Block block, List<TransactionExecutionSummary> summaries) {
+    Map<byte[], BigInteger> rewards = new HashMap<>();
 
-        Map<byte[], BigInteger> rewards = new HashMap<>();
+    BigInteger blockReward = config.getBlockchainConfig().getConfigForBlock(block.getNumber()).getConstants().getBLOCK_REWARD();
+    BigInteger inclusionReward = blockReward.divide(BigInteger.valueOf(32));
 
-        BigInteger blockReward = config.getBlockchainConfig().getConfigForBlock(block.getNumber()).getConstants().getBLOCK_REWARD();
-        BigInteger inclusionReward = blockReward.divide(BigInteger.valueOf(32));
+    // Add extra rewards based on number of uncles
+    if (block.getUncleList().size() > 0) {
+      for (BlockHeader uncle : block.getUncleList()) {
+        BigInteger uncleReward = blockReward
+          .multiply(BigInteger.valueOf(MAGIC_REWARD_OFFSET + uncle.getNumber() - block.getNumber()))
+          .divide(BigInteger.valueOf(MAGIC_REWARD_OFFSET));
 
-        // Add extra rewards based on number of uncles
-        if (block.getUncleList().size() > 0) {
-            for (BlockHeader uncle : block.getUncleList()) {
-                BigInteger uncleReward = blockReward
-                        .multiply(BigInteger.valueOf(MAGIC_REWARD_OFFSET + uncle.getNumber() - block.getNumber()))
-                        .divide(BigInteger.valueOf(MAGIC_REWARD_OFFSET));
-
-                track.addBalance(uncle.getCoinbase(),uncleReward);
-                BigInteger existingUncleReward = rewards.get(uncle.getCoinbase());
-                if (existingUncleReward == null) {
-                    rewards.put(uncle.getCoinbase(), uncleReward);
-                } else {
-                    rewards.put(uncle.getCoinbase(), existingUncleReward.add(uncleReward));
-                }
-            }
-        }
-
-        BigInteger minerReward = blockReward.add(inclusionReward.multiply(BigInteger.valueOf(block.getUncleList().size())));
-
-        BigInteger totalFees = BigInteger.ZERO;
-        for (TransactionExecutionSummary summary : summaries) {
-            totalFees = totalFees.add(summary.getFee());
-        }
-
-        rewards.put(block.getCoinbase(), minerReward.add(totalFees));
-        track.addBalance(block.getCoinbase(), minerReward); // fees are already given to the miner during tx execution
-        return rewards;
-    }
-
-    @Override
-    public synchronized void storeBlock(Block block, List<TransactionReceipt> receipts) {
-
-        if (fork)
-            blockStore.saveBlock(block, totalDifficulty, false);
-        else
-            blockStore.saveBlock(block, totalDifficulty, true);
-
-        for (int i = 0; i < receipts.size(); i++) {
-            transactionStore.put(new TransactionInfo(receipts.get(i), block.getHash(), i));
-        }
-
-        if (pruneManager != null) {
-            pruneManager.blockCommitted(block.getHeader());
-        }
-
-        logger.debug("Block saved: number: {}, hash: {}, TD: {}",
-                block.getNumber(), block.getShortHash(), totalDifficulty);
-
-        setBestBlock(block);
-
-        if (logger.isDebugEnabled())
-            logger.debug("block added to the blockChain: index: [{}]", block.getNumber());
-        if (block.getNumber() % 100 == 0)
-            logger.info("*** Last block added [ #{} ]", block.getNumber());
-
-    }
-
-
-    public boolean hasParentOnTheChain(Block block) {
-        return getParent(block.getHeader()) != null;
-    }
-
-    @Override
-    public List<Chain> getAltChains() {
-        return altChains;
-    }
-
-    @Override
-    public List<Block> getGarbage() {
-        return garbage;
-    }
-
-    public TransactionStore getTransactionStore() {
-        return transactionStore;
-    }
-
-    @Override
-    public void setBestBlock(Block block) {
-        bestBlock = block;
-        repository = repository.getSnapshotTo(block.getStateRoot());
-    }
-
-    @Override
-    public synchronized Block getBestBlock() {
-        // the method is synchronized since the bestBlock might be
-        // temporarily switched to the fork while importing non-best block
-        return bestBlock;
-    }
-
-    @Override
-    public synchronized void close() {
-        blockStore.close();
-    }
-
-    @Override
-    public BigInteger getTotalDifficulty() {
-        return totalDifficulty;
-    }
-
-    @Override
-    public synchronized void updateTotalDifficulty(Block block) {
-        totalDifficulty = totalDifficulty.add(block.getDifficultyBI());
-        logger.debug("TD: updated to {}", totalDifficulty);
-    }
-
-    @Override
-    public void setTotalDifficulty(BigInteger totalDifficulty) {
-        this.totalDifficulty = totalDifficulty;
-    }
-
-    private void recordBlock(Block block) {
-
-        if (!config.recordBlocks()) return;
-
-        String dumpDir = config.databaseDir() + "/" + config.dumpDir();
-
-        File dumpFile = new File(dumpDir + "/blocks-rec.dmp");
-        FileWriter fw = null;
-        BufferedWriter bw = null;
-
-        try {
-
-            dumpFile.getParentFile().mkdirs();
-            if (!dumpFile.exists()) dumpFile.createNewFile();
-
-            fw = new FileWriter(dumpFile.getAbsoluteFile(), true);
-            bw = new BufferedWriter(fw);
-
-            if (bestBlock.isGenesis()) {
-                bw.write(Hex.toHexString(bestBlock.getEncoded()));
-                bw.write("\n");
-            }
-
-            bw.write(Hex.toHexString(block.getEncoded()));
-            bw.write("\n");
-
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-        } finally {
-            try {
-                if (bw != null) bw.close();
-                if (fw != null) fw.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public void updateBlockTotDifficulties(long startFrom) {
-        // no synchronization here not to lock instance for long period
-        while(true) {
-            synchronized (this) {
-                ((IndexedBlockStore) blockStore).updateTotDifficulties(startFrom);
-
-                if (startFrom == bestBlock.getNumber()) {
-                    totalDifficulty = blockStore.getTotalDifficultyForHash(bestBlock.getHash());
-                }
-
-                if (startFrom == blockStore.getMaxNumber()) {
-                    Block bestStoredBlock = bestBlock;
-                    BigInteger maxTD = totalDifficulty;
-
-                    // traverse blocks toward max known number to get the best block
-                    for (long num = bestBlock.getNumber() + 1; num <= blockStore.getMaxNumber(); num++) {
-                        List<Block> blocks = ((IndexedBlockStore) blockStore).getBlocksByNumber(num);
-                        for (Block block : blocks) {
-                            BigInteger td = blockStore.getTotalDifficultyForHash(block.getHash());
-                            if (maxTD.compareTo(td) < 0) {
-                                maxTD = td;
-                                bestStoredBlock = block;
-                            }
-                        }
-                    }
-
-                    if (totalDifficulty.compareTo(maxTD) < 0)  {
-                        blockStore.reBranch(bestStoredBlock);
-                        bestBlock = bestStoredBlock;
-                        totalDifficulty = maxTD;
-                        repository = repository.getSnapshotTo(bestBlock.getStateRoot());
-
-                        logger.info("totDifficulties update: re-branch to block {}, totalDifficulty {}",
-                                bestBlock.getHeader().getShortDescr(), totalDifficulty);
-                    }
-
-                    break;
-                }
-                startFrom++;
-            }
-        }
-    }
-
-    public void setRepository(Repository repository) {
-        this.repository = repository;
-    }
-
-    public void setProgramInvokeFactory(ProgramInvokeFactory factory) {
-        this.programInvokeFactory = factory;
-    }
-
-    public void setExitOn(long exitOn) {
-        this.exitOn = exitOn;
-    }
-
-    public void setMinerCoinbase(byte[] minerCoinbase) {
-        this.minerCoinbase = minerCoinbase;
-    }
-
-    @Override
-    public byte[] getMinerCoinbase() {
-        return minerCoinbase;
-    }
-
-    public void setMinerExtraData(byte[] minerExtraData) {
-        this.minerExtraData = minerExtraData;
-    }
-
-    public boolean isBlockExist(byte[] hash) {
-        return blockStore.isBlockExist(hash);
-    }
-
-    public void setParentHeaderValidator(DependentBlockHeaderRule parentHeaderValidator) {
-        this.parentHeaderValidator = parentHeaderValidator;
-    }
-
-    public void setPendingState(PendingState pendingState) {
-        this.pendingState = pendingState;
-    }
-
-    public PendingState getPendingState() {
-        return pendingState;
-    }
-
-    @Override
-    public List<BlockHeader> getListOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit, boolean reverse) {
-        List<BlockHeader> headers = new ArrayList<>();
-        Iterator<BlockHeader> iterator = getIteratorOfHeadersStartFrom(identifier, skip, limit, reverse);
-        while (iterator.hasNext()) {
-            headers.add(iterator.next());
-        }
-
-        return headers;
-    }
-
-    @Override
-    public Iterator<BlockHeader> getIteratorOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit, boolean reverse) {
-
-        // Identifying block header we'll move from
-        BlockHeader startHeader;
-        if (identifier.getHash() != null) {
-            startHeader = findHeaderByHash(identifier.getHash());
+        track.addBalance(uncle.getCoinbase(),uncleReward);
+        BigInteger existingUncleReward = rewards.get(uncle.getCoinbase());
+        if (existingUncleReward == null) {
+          rewards.put(uncle.getCoinbase(), uncleReward);
         } else {
-            startHeader = findHeaderByNumber(identifier.getNumber());
+          rewards.put(uncle.getCoinbase(), existingUncleReward.add(uncleReward));
         }
-
-        // If nothing found or provided hash is not on main chain, return empty array
-        if (startHeader == null) {
-            return EmptyBlockHeadersIterator.INSTANCE;
-        }
-
-        if (identifier.getHash() != null) {
-            BlockHeader mainChainHeader = findHeaderByNumber(startHeader.getNumber());
-            if (!startHeader.equals(mainChainHeader)) return EmptyBlockHeadersIterator.INSTANCE;
-        }
-
-        return new BlockHeadersIterator(startHeader, skip, limit, reverse);
+      }
     }
 
-    /**
-     * Searches block in blockStore, if it's not found there
-     * and headerStore is defined, searches blockHeader in it.
-     * @param number block number
-     * @return  Block header
-     */
-    private BlockHeader findHeaderByNumber(long number) {
-        Block block = blockStore.getChainBlockByNumber(number);
-        if (block == null) {
-            if (headerStore != null) {
-                return headerStore.getHeaderByNumber(number);
-            } else {
-                return null;
-            }
-        } else {
-            return block.getHeader();
-        }
+    BigInteger minerReward = blockReward.add(inclusionReward.multiply(BigInteger.valueOf(block.getUncleList().size())));
+
+    BigInteger totalFees = BigInteger.ZERO;
+    for (TransactionExecutionSummary summary : summaries) {
+      totalFees = totalFees.add(summary.getFee());
     }
 
-    /**
-     * Searches block in blockStore, if it's not found there
-     * and headerStore is defined, searches blockHeader in it.
-     * @param hash block hash
-     * @return Block header
-     */
-    private BlockHeader findHeaderByHash(byte[] hash) {
-        Block block = blockStore.getBlockByHash(hash);
-        if (block == null) {
-            if (headerStore != null) {
-                return headerStore.getHeaderByHash(hash);
-            } else {
-                return null;
-            }
-        } else {
-            return block.getHeader();
-        }
+    rewards.put(block.getCoinbase(), minerReward.add(totalFees));
+    track.addBalance(block.getCoinbase(), minerReward); // fees are already given to the miner during tx execution
+    return rewards;
+  }
+
+  @Override
+  public synchronized void storeBlock(Block block, List<TransactionReceipt> receipts) {
+
+    if (fork)
+      blockStore.saveBlock(block, totalDifficulty, false);
+    else
+      blockStore.saveBlock(block, totalDifficulty, true);
+
+    for (int i = 0; i < receipts.size(); i++) {
+      transactionStore.put(new TransactionInfo(receipts.get(i), block.getHash(), i));
     }
 
-    static class EmptyBlockHeadersIterator implements Iterator<BlockHeader> {
-        final static EmptyBlockHeadersIterator INSTANCE = new EmptyBlockHeadersIterator();
-
-        @Override
-        public boolean hasNext() {
-            return false;
-        }
-
-        @Override
-        public BlockHeader next() {
-            throw new NoSuchElementException("Nothing left");
-        }
+    if (pruneManager != null) {
+      pruneManager.blockCommitted(block.getHeader());
     }
 
-    class BlockHeadersIterator implements Iterator<BlockHeader> {
-        private final BlockHeader startHeader;
-        private final int skip;
-        private final int limit;
-        private final boolean reverse;
-        private Integer position = 0;
-        private Pair<Integer, BlockHeader> cachedNext = null;
+    logger.debug("Block saved: number: {}, hash: {}, TD: {}",
+      block.getNumber(), block.getShortHash(), totalDifficulty);
 
-        BlockHeadersIterator(BlockHeader startHeader, int skip, int limit, boolean reverse) {
-            this.startHeader = startHeader;
-            this.skip = skip;
-            this.limit = limit;
-            this.reverse = reverse;
+    setBestBlock(block);
+
+    if (logger.isDebugEnabled())
+      logger.debug("block added to the blockChain: index: [{}]", block.getNumber());
+    if (block.getNumber() % 100 == 0)
+      logger.info("*** Last block added [ #{} ]", block.getNumber());
+
+  }
+
+
+  public boolean hasParentOnTheChain(Block block) {
+    return getParent(block.getHeader()) != null;
+  }
+
+  @Override
+  public List<Chain> getAltChains() {
+    return altChains;
+  }
+
+  @Override
+  public List<Block> getGarbage() {
+    return garbage;
+  }
+
+  public TransactionStore getTransactionStore() {
+    return transactionStore;
+  }
+
+  @Override
+  public void setBestBlock(Block block) {
+    bestBlock = block;
+    repository = repository.getSnapshotTo(block.getStateRoot());
+  }
+
+  @Override
+  public synchronized Block getBestBlock() {
+    // the method is synchronized since the bestBlock might be
+    // temporarily switched to the fork while importing non-best block
+    return bestBlock;
+  }
+
+  @Override
+  public synchronized void close() {
+    blockStore.close();
+  }
+
+  @Override
+  public BigInteger getTotalDifficulty() {
+    return totalDifficulty;
+  }
+
+  @Override
+  public synchronized void updateTotalDifficulty(Block block) {
+    totalDifficulty = totalDifficulty.add(block.getDifficultyBI());
+    logger.debug("TD: updated to {}", totalDifficulty);
+  }
+
+  @Override
+  public void setTotalDifficulty(BigInteger totalDifficulty) {
+    this.totalDifficulty = totalDifficulty;
+  }
+
+  private void recordBlock(Block block) {
+
+    if (!config.recordBlocks()) return;
+
+    String dumpDir = config.databaseDir() + "/" + config.dumpDir();
+
+    File dumpFile = new File(dumpDir + "/blocks-rec.dmp");
+    FileWriter fw = null;
+    BufferedWriter bw = null;
+
+    try {
+
+      dumpFile.getParentFile().mkdirs();
+      if (!dumpFile.exists()) dumpFile.createNewFile();
+
+      fw = new FileWriter(dumpFile.getAbsoluteFile(), true);
+      bw = new BufferedWriter(fw);
+
+      if (bestBlock.isGenesis()) {
+        bw.write(Hex.toHexString(bestBlock.getEncoded()));
+        bw.write("\n");
+      }
+
+      bw.write(Hex.toHexString(block.getEncoded()));
+      bw.write("\n");
+
+    } catch (IOException e) {
+      logger.error(e.getMessage(), e);
+    } finally {
+      try {
+        if (bw != null) bw.close();
+        if (fw != null) fw.close();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+  public void updateBlockTotDifficulties(long startFrom) {
+    // no synchronization here not to lock instance for long period
+    while(true) {
+      synchronized (this) {
+        ((IndexedBlockStore) blockStore).updateTotDifficulties(startFrom);
+
+        if (startFrom == bestBlock.getNumber()) {
+          totalDifficulty = blockStore.getTotalDifficultyForHash(bestBlock.getHash());
         }
 
-        @Override
-        public boolean hasNext() {
-            if (startHeader == null || position >= limit) {
-                return false;
+        if (startFrom == blockStore.getMaxNumber()) {
+          Block bestStoredBlock = bestBlock;
+          BigInteger maxTD = totalDifficulty;
+
+          // traverse blocks toward max known number to get the best block
+          for (long num = bestBlock.getNumber() + 1; num <= blockStore.getMaxNumber(); num++) {
+            List<Block> blocks = ((IndexedBlockStore) blockStore).getBlocksByNumber(num);
+            for (Block block : blocks) {
+              BigInteger td = blockStore.getTotalDifficultyForHash(block.getHash());
+              if (maxTD.compareTo(td) < 0) {
+                maxTD = td;
+                bestStoredBlock = block;
+              }
             }
+          }
 
-            if (position == 0) {
-                // First
-                cachedNext = Pair.of(0, startHeader);
-                return true;
-            } else if (cachedNext.getLeft().equals(position)) {
-                // Already cached
-                return true;
-            } else {
-                // Main logic
-                BlockHeader prevHeader = cachedNext.getRight();
-                long nextBlockNumber;
-                if (reverse) {
-                    nextBlockNumber = prevHeader.getNumber() - 1 - skip;
-                } else {
-                    nextBlockNumber = prevHeader.getNumber() + 1 + skip;
-                }
+          if (totalDifficulty.compareTo(maxTD) < 0)  {
+            blockStore.reBranch(bestStoredBlock);
+            bestBlock = bestStoredBlock;
+            totalDifficulty = maxTD;
+            repository = repository.getSnapshotTo(bestBlock.getStateRoot());
 
-                BlockHeader nextHeader = null;
-                if (nextBlockNumber >= 0 && nextBlockNumber <= blockStore.getBestBlock().getNumber()) {
-                    nextHeader = findHeaderByNumber(nextBlockNumber);
-                }
+            logger.info("totDifficulties update: re-branch to block {}, totalDifficulty {}",
+              bestBlock.getHeader().getShortDescr(), totalDifficulty);
+          }
 
-                if (nextHeader == null) {
-                    return false;
-                } else {
-                    cachedNext = Pair.of(position, nextHeader);
-                    return true;
-                }
-            }
+          break;
         }
+        startFrom++;
+      }
+    }
+  }
 
-        @Override
-        public BlockHeader next() {
-            if (!hasNext()) {
-                throw new NoSuchElementException("Nothing left");
-            }
+  public void setRepository(Repository repository) {
+    this.repository = repository;
+  }
 
-            if (cachedNext == null || !cachedNext.getLeft().equals(position)) {
-                throw new ConcurrentModificationException("Concurrent modification");
-            }
-            ++position;
+  public void setProgramInvokeFactory(ProgramInvokeFactory factory) {
+    this.programInvokeFactory = factory;
+  }
 
-            return cachedNext.getRight();
-        }
+  public void setExitOn(long exitOn) {
+    this.exitOn = exitOn;
+  }
+
+  public void setMinerCoinbase(byte[] minerCoinbase) {
+    this.minerCoinbase = minerCoinbase;
+  }
+
+  @Override
+  public byte[] getMinerCoinbase() {
+    return minerCoinbase;
+  }
+
+  public void setMinerExtraData(byte[] minerExtraData) {
+    this.minerExtraData = minerExtraData;
+  }
+
+  public boolean isBlockExist(byte[] hash) {
+    return blockStore.isBlockExist(hash);
+  }
+
+  public void setParentHeaderValidator(DependentBlockHeaderRule parentHeaderValidator) {
+    this.parentHeaderValidator = parentHeaderValidator;
+  }
+
+  public void setPendingState(PendingState pendingState) {
+    this.pendingState = pendingState;
+  }
+
+  public PendingState getPendingState() {
+    return pendingState;
+  }
+
+  @Override
+  public List<BlockHeader> getListOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit, boolean reverse) {
+    List<BlockHeader> headers = new ArrayList<>();
+    Iterator<BlockHeader> iterator = getIteratorOfHeadersStartFrom(identifier, skip, limit, reverse);
+    while (iterator.hasNext()) {
+      headers.add(iterator.next());
+    }
+
+    return headers;
+  }
+
+  @Override
+  public Iterator<BlockHeader> getIteratorOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit, boolean reverse) {
+
+    // Identifying block header we'll move from
+    BlockHeader startHeader;
+    if (identifier.getHash() != null) {
+      startHeader = findHeaderByHash(identifier.getHash());
+    } else {
+      startHeader = findHeaderByNumber(identifier.getNumber());
+    }
+
+    // If nothing found or provided hash is not on main chain, return empty array
+    if (startHeader == null) {
+      return EmptyBlockHeadersIterator.INSTANCE;
+    }
+
+    if (identifier.getHash() != null) {
+      BlockHeader mainChainHeader = findHeaderByNumber(startHeader.getNumber());
+      if (!startHeader.equals(mainChainHeader)) return EmptyBlockHeadersIterator.INSTANCE;
+    }
+
+    return new BlockHeadersIterator(startHeader, skip, limit, reverse);
+  }
+
+  /**
+   * Searches block in blockStore, if it's not found there
+   * and headerStore is defined, searches blockHeader in it.
+   * @param number block number
+   * @return  Block header
+   */
+  private BlockHeader findHeaderByNumber(long number) {
+    Block block = blockStore.getChainBlockByNumber(number);
+    if (block == null) {
+      if (headerStore != null) {
+        return headerStore.getHeaderByNumber(number);
+      } else {
+        return null;
+      }
+    } else {
+      return block.getHeader();
+    }
+  }
+
+  /**
+   * Searches block in blockStore, if it's not found there
+   * and headerStore is defined, searches blockHeader in it.
+   * @param hash block hash
+   * @return Block header
+   */
+  private BlockHeader findHeaderByHash(byte[] hash) {
+    Block block = blockStore.getBlockByHash(hash);
+    if (block == null) {
+      if (headerStore != null) {
+        return headerStore.getHeaderByHash(hash);
+      } else {
+        return null;
+      }
+    } else {
+      return block.getHeader();
+    }
+  }
+
+  static class EmptyBlockHeadersIterator implements Iterator<BlockHeader> {
+    final static EmptyBlockHeadersIterator INSTANCE = new EmptyBlockHeadersIterator();
+
+    @Override
+    public boolean hasNext() {
+      return false;
     }
 
     @Override
-    public List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes) {
-        List<byte[]> bodies = new ArrayList<>(hashes.size());
+    public BlockHeader next() {
+      throw new NoSuchElementException("Nothing left");
+    }
+  }
 
-        for (byte[] hash : hashes) {
-            Block block = blockStore.getBlockByHash(hash);
-            if (block == null) break;
-            bodies.add(block.getEncodedBody());
-        }
+  class BlockHeadersIterator implements Iterator<BlockHeader> {
+    private final BlockHeader startHeader;
+    private final int skip;
+    private final int limit;
+    private final boolean reverse;
+    private Integer position = 0;
+    private Pair<Integer, BlockHeader> cachedNext = null;
 
-        return bodies;
+    BlockHeadersIterator(BlockHeader startHeader, int skip, int limit, boolean reverse) {
+      this.startHeader = startHeader;
+      this.skip = skip;
+      this.limit = limit;
+      this.reverse = reverse;
     }
 
     @Override
-    public Iterator<byte[]> getIteratorOfBodiesByHashes(List<byte[]> hashes) {
-        return new BlockBodiesIterator(hashes);
-    }
+    public boolean hasNext() {
+      if (startHeader == null || position >= limit) {
+        return false;
+      }
 
-    class BlockBodiesIterator implements Iterator<byte[]> {
-        private final List<byte[]> hashes;
-        private Integer position = 0;
-
-
-        BlockBodiesIterator(List<byte[]> hashes) {
-            this.hashes = new ArrayList<>(hashes);
+      if (position == 0) {
+        // First
+        cachedNext = Pair.of(0, startHeader);
+        return true;
+      } else if (cachedNext.getLeft().equals(position)) {
+        // Already cached
+        return true;
+      } else {
+        // Main logic
+        BlockHeader prevHeader = cachedNext.getRight();
+        long nextBlockNumber;
+        if (reverse) {
+          nextBlockNumber = prevHeader.getNumber() - 1 - skip;
+        } else {
+          nextBlockNumber = prevHeader.getNumber() + 1 + skip;
         }
 
-        @Override
-        public boolean hasNext() {
-            return position < hashes.size() && blockStore.getBlockByHash(hashes.get(position)) != null;
+        BlockHeader nextHeader = null;
+        if (nextBlockNumber >= 0 && nextBlockNumber <= blockStore.getBestBlock().getNumber()) {
+          nextHeader = findHeaderByNumber(nextBlockNumber);
         }
 
-        @Override
-        public byte[] next() {
-            if (!hasNext()) {
-                throw new NoSuchElementException("Nothing left");
-            }
-
-            Block block = blockStore.getBlockByHash(hashes.get(position));
-            if (block == null) {
-                throw new NoSuchElementException("Nothing left");
-            }
-            ++position;
-
-            return block.getEncodedBody();
+        if (nextHeader == null) {
+          return false;
+        } else {
+          cachedNext = Pair.of(position, nextHeader);
+          return true;
         }
+      }
     }
 
-    private class State {
-//        Repository savedRepo = repository;
-        byte[] root = repository.getRoot();
-        Block savedBest = bestBlock;
-        BigInteger savedTD = totalDifficulty;
+    @Override
+    public BlockHeader next() {
+      if (!hasNext()) {
+        throw new NoSuchElementException("Nothing left");
+      }
+
+      if (cachedNext == null || !cachedNext.getLeft().equals(position)) {
+        throw new ConcurrentModificationException("Concurrent modification");
+      }
+      ++position;
+
+      return cachedNext.getRight();
+    }
+  }
+
+  @Override
+  public List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes) {
+    List<byte[]> bodies = new ArrayList<>(hashes.size());
+
+    for (byte[] hash : hashes) {
+      Block block = blockStore.getBlockByHash(hash);
+      if (block == null) break;
+      bodies.add(block.getEncodedBody());
     }
 
-    public void setPruneManager(PruneManager pruneManager) {
-        this.pruneManager = pruneManager;
+    return bodies;
+  }
+
+  @Override
+  public Iterator<byte[]> getIteratorOfBodiesByHashes(List<byte[]> hashes) {
+    return new BlockBodiesIterator(hashes);
+  }
+
+  class BlockBodiesIterator implements Iterator<byte[]> {
+    private final List<byte[]> hashes;
+    private Integer position = 0;
+
+
+    BlockBodiesIterator(List<byte[]> hashes) {
+      this.hashes = new ArrayList<>(hashes);
     }
 
-    public void setHeaderStore(HeaderStore headerStore) {
-        this.headerStore = headerStore;
+    @Override
+    public boolean hasNext() {
+      return position < hashes.size() && blockStore.getBlockByHash(hashes.get(position)) != null;
     }
+
+    @Override
+    public byte[] next() {
+      if (!hasNext()) {
+        throw new NoSuchElementException("Nothing left");
+      }
+
+      Block block = blockStore.getBlockByHash(hashes.get(position));
+      if (block == null) {
+        throw new NoSuchElementException("Nothing left");
+      }
+      ++position;
+
+      return block.getEncodedBody();
+    }
+  }
+
+  private class State {
+    //        Repository savedRepo = repository;
+    byte[] root = repository.getRoot();
+    Block savedBest = bestBlock;
+    BigInteger savedTD = totalDifficulty;
+  }
+
+  public void setPruneManager(PruneManager pruneManager) {
+    this.pruneManager = pruneManager;
+  }
+
+  public void setHeaderStore(HeaderStore headerStore) {
+    this.headerStore = headerStore;
+  }
 }

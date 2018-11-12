@@ -3,10 +3,9 @@ package io.enkrypt.kafka.config;
 import io.enkrypt.kafka.Kafka;
 import io.enkrypt.kafka.db.BlockSummaryStore;
 import io.enkrypt.kafka.listener.BlockSummaryEthereumListener;
-import io.enkrypt.kafka.listener.KafkaBlockListener;
+import io.enkrypt.kafka.listener.KafkaBlockSummaryPublisher;
 import io.enkrypt.kafka.listener.KafkaPendingTxsListener;
 import io.enkrypt.kafka.mapping.ObjectMapper;
-import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.EventDispatchThread;
 import org.ethereum.listener.CompositeEthereumListener;
@@ -23,7 +22,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @Configuration
-@Import({ KafkaConfig.class })
+@Import({KafkaConfig.class})
 public class KafkaEthereumConfig {
 
   private static Logger logger = LoggerFactory.getLogger("kafka");
@@ -42,9 +41,9 @@ public class KafkaEthereumConfig {
   }
 
   @Bean
-  public KafkaBlockListener kafkaBlockListener(Kafka kafka) {
+  public KafkaBlockSummaryPublisher kafkaBlockListener(Kafka kafka) {
 
-    final KafkaBlockListener blockListener = new KafkaBlockListener(kafka);
+    final KafkaBlockSummaryPublisher blockListener = new KafkaBlockSummaryPublisher(kafka);
 
     // run the block listener with it's own thread and handle shutdown
 
@@ -67,17 +66,27 @@ public class KafkaEthereumConfig {
   }
 
 
-  @Bean @Primary
-  public CompositeEthereumListener ethereumListener(ObjectMapper objectMapper,
+  @Bean
+  @Primary
+  public CompositeEthereumListener ethereumListener(SystemProperties config,
+                                                    ObjectMapper objectMapper,
                                                     BlockSummaryStore blockSummaryStore,
                                                     KafkaPendingTxsListener pendingTxsListener,
-                                                    KafkaBlockListener blockListener) {
+                                                    KafkaBlockSummaryPublisher blockListener) {
 
     final CompositeEthereumListener compositeListener = new CompositeEthereumListener();
 
     // TODO make block listening inline to ensure failure to persist causes all processing to stop
 
-    final BlockSummaryEthereumListener blockSummaryListener = new BlockSummaryEthereumListener(blockSummaryStore, blockListener, pendingTxsListener, objectMapper);
+    final BlockSummaryEthereumListener blockSummaryListener =
+      new BlockSummaryEthereumListener(
+        config,
+        blockSummaryStore,
+        blockListener,
+        pendingTxsListener,
+        objectMapper
+      );
+
     compositeListener.addListener(blockSummaryListener);
 
     return compositeListener;

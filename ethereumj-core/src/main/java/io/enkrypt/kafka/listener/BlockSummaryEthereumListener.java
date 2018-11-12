@@ -1,10 +1,11 @@
 package io.enkrypt.kafka.listener;
 
 import io.enkrypt.avro.capture.*;
-import io.enkrypt.avro.common.Address;
 import io.enkrypt.kafka.db.BlockSummaryStore;
 import io.enkrypt.kafka.mapping.ObjectMapper;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
+import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.Message;
@@ -16,24 +17,30 @@ import org.ethereum.vm.program.InternalTransaction;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.nio.ByteBuffer.wrap;
-import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
 
 public class BlockSummaryEthereumListener implements EthereumListener {
 
+  private final SystemProperties config;
   private final BlockSummaryStore blockSummaryStore;
-  private final KafkaBlockListener kafkaBlockListener;
+  private final KafkaBlockSummaryPublisher kafkaBlockSummaryPublisher;
   private final KafkaPendingTxsListener pendingTxsListener;
   private final ObjectMapper objectMapper;
 
-  public BlockSummaryEthereumListener(BlockSummaryStore blockSummaryStore, KafkaBlockListener kafkaBlockListener, KafkaPendingTxsListener pendingTxsListener, ObjectMapper objectMapper) {
+  public BlockSummaryEthereumListener(SystemProperties config,
+                                      BlockSummaryStore blockSummaryStore,
+                                      KafkaBlockSummaryPublisher kafkaBlockSummaryPublisher,
+                                      KafkaPendingTxsListener pendingTxsListener,
+                                      ObjectMapper objectMapper) {
+    this.config = config;
     this.blockSummaryStore = blockSummaryStore;
-    this.kafkaBlockListener = kafkaBlockListener;
+    this.kafkaBlockSummaryPublisher = kafkaBlockSummaryPublisher;
     this.pendingTxsListener = pendingTxsListener;
     this.objectMapper = objectMapper;
   }
@@ -107,7 +114,7 @@ public class BlockSummaryEthereumListener implements EthereumListener {
     // persist to store for replay later
     try {
       blockSummaryStore.put(number, record);
-      kafkaBlockListener.onBlock(record);
+      kafkaBlockSummaryPublisher.onBlock(record);
     } catch (IOException e) {
 
       // TODO ensure we stop all processing
@@ -172,11 +179,11 @@ public class BlockSummaryEthereumListener implements EthereumListener {
             .setPostTxState(wrap(receipt.getPostTxState()))
             .setCumulativeGas(wrap(receipt.getCumulativeGas()))
             .setBloomFilter(wrap(receipt.getBloomFilter().getData()))
-            .setGasPrice(wrap(bigIntegerToBytes(execSummary.getGasPrice())))
-            .setGasLimit(wrap(bigIntegerToBytes(execSummary.getGasLimit())))
-            .setGasUsed(wrap(bigIntegerToBytes(execSummary.getGasUsed())))
-            .setGasLeftover(wrap(bigIntegerToBytes(execSummary.getGasLeftover())))
-            .setGasRefund(wrap(bigIntegerToBytes(execSummary.getGasRefund())))
+            .setGasPrice(wrap(execSummary.getGasPrice().toByteArray()))
+            .setGasLimit(wrap(execSummary.getGasLimit().toByteArray()))
+            .setGasUsed(wrap(execSummary.getGasUsed().toByteArray()))
+            .setGasLeftover(wrap(execSummary.getGasLeftover().toByteArray()))
+            .setGasRefund(wrap(execSummary.getGasRefund().toByteArray()))
             .setResult(wrap(execSummary.getResult()))
             .setLogInfos(
               execSummary.getLogs().stream()
@@ -196,19 +203,47 @@ public class BlockSummaryEthereumListener implements EthereumListener {
         }).collect(Collectors.toList())
     );
 
-    return BlockSummaryRecord.newBuilder()
+    final BlockSummaryRecord.Builder builder = BlockSummaryRecord.newBuilder()
       .setReverse(false)
-      .setTotalDifficulty(wrap(bigIntegerToBytes(blockSummary.getTotalDifficulty())))
+      .setTotalDifficulty(wrap(blockSummary.getTotalDifficulty().toByteArray()))
       .setBlockBuilder(blockBuilder)
       .setNumPendingTxs(pendingTxsListener.getNumPendingTxs())
       .setRewards(
         blockSummary.getRewards().entrySet().stream()
           .map(e -> BlockRewardRecord.newBuilder()
             .setAddress(wrap(e.getKey()))
-            .setReward(wrap(bigIntegerToBytes(e.getValue())))
+            .setReward(wrap(e.getValue().toByteArray()))
             .build()
           ).collect(Collectors.toList())
-      ).build();
+      );
 
+    if (block.isGenesis()) {
+
+      final Genesis genesis = Genesis.getInstance(config);
+
+      final Map<ByteArrayWrapper, Genesis.PremineAccount> premine = genesis.getPremine();
+      final List<PremineBalanceRecord> premineBalances = new ArrayList<>(premine.size());
+
+      for (Map.Entry<ByteArrayWrapper, Genesis.PremineAccount> entry : premine.entrySet()) {
+
+        final byte[] account = entry.getKey().getData();
+        final AccountState accountState = entry.getValue().accountState;
+
+        premineBalances.add(
+          PremineBalanceRecord
+            .newBuilder()
+            .setAddress(wrap(account))
+            .setAmount(wrap(accountState.getBalance().toByteArray()))
+            .build()
+        );
+
+      }
+
+      builder.setPremineBalances(premineBalances);
+
+    }
+
+    return builder.build();
   }
+
 }

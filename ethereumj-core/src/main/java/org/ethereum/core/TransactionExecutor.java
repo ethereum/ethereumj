@@ -17,21 +17,15 @@
  */
 package org.ethereum.core;
 
-import io.enkrypt.kafka.contract.ERC20Abi;
-import io.enkrypt.kafka.contract.ERC721Abi;
-import io.enkrypt.kafka.models.TokenTransfer;
-import io.enkrypt.kafka.models.TokenTransferKey;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.BlockStore;
-import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.util.ByteArraySet;
-import org.ethereum.util.FastByteComparisons;
 import org.ethereum.vm.*;
 import org.ethereum.vm.hook.VMHook;
 import org.ethereum.vm.program.Program;
@@ -42,7 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
-import java.util.*;
+import java.util.List;
 
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.ArrayUtils.getLength;
@@ -106,7 +100,7 @@ public class TransactionExecutor {
   public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
                              ProgramInvokeFactory programInvokeFactory, Block currentBlock,
                              EthereumListener listener, long gasUsedInTheBlock) {
-    this(tx, coinbase, track, blockStore, programInvokeFactory, currentBlock, listener, gasUsedInTheBlock, VMHook.EMPTY);
+    this(tx, coinbase,track, blockStore, programInvokeFactory, currentBlock, listener, gasUsedInTheBlock, VMHook.EMPTY);
   }
 
   public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
@@ -438,13 +432,6 @@ public class TransactionExecutor {
       }
     }
 
-    summaryBuilder.touchedAccounts(touchedAccounts);
-
-
-    // detect token transfers
-    detectTokenTransfers(summaryBuilder);
-
-    //
     TransactionExecutionSummary summary = summaryBuilder.build();
 
     // Refund for gas leftover
@@ -492,63 +479,6 @@ public class TransactionExecutor {
       listener.onVMTraceCreated(txHash, trace);
     }
     return summary;
-  }
-
-  private TransactionExecutionSummary.Builder detectTokenTransfers(TransactionExecutionSummary.Builder summaryBuilder) {
-
-    final ERC20Abi erc20 = ERC20Abi.getInstance();
-    final ERC721Abi erc721 = ERC721Abi.getInstance();
-
-    final Map<TokenTransferKey, TokenTransfer> transfersMap = new HashMap<>();
-
-    int logIdx = 0;
-
-    for (LogInfo logInfo : result.getLogInfoList()) {
-
-      final byte[] data = logInfo.getData();
-      final List<DataWord> topics = logInfo.getTopics();
-
-      final int currentLogIdx = logIdx++;
-
-      erc20.matchEvent(topics)
-        .filter(e -> ERC20Abi.EVENT_TRANSFER.equals(e.name))
-        .ifPresent(e -> {
-
-          final Optional<TokenTransfer.Builder> erc20Transfer = erc20.decodeTransferEvent(data, topics);
-
-          final Optional<TokenTransfer.Builder> erc721Transfer = erc20Transfer.isPresent() ?
-            Optional.empty() :
-            erc721.decodeTransferEvent(data, topics);
-
-
-          erc20Transfer
-            .filter(builder -> !builder.getValue().equals(BigInteger.ZERO))   // filter out 0 transfers
-            .ifPresent(builder -> {
-
-              // kafka key is the tx hash with the tx idx
-
-              final TokenTransferKey key = new TokenTransferKey(tx.getHash(), currentLogIdx);
-              final TokenTransfer transfer = builder.build();
-
-              transfersMap.put(key, transfer);
-
-            });
-
-          erc721Transfer
-            .ifPresent(builder -> {
-
-              final TokenTransfer transfer = builder.build();
-              final TokenTransferKey key = new TokenTransferKey(tx.getHash(), currentLogIdx);
-
-              transfersMap.put(key, transfer);
-
-            });
-
-        });
-
-    }
-
-    return summaryBuilder.tokenTransfers(transfersMap);
   }
 
   public TransactionExecutor setLocalCall(boolean localCall) {

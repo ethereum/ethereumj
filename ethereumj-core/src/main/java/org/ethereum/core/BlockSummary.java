@@ -33,48 +33,34 @@ import static org.ethereum.util.ByteUtil.toHexString;
 
 public class BlockSummary {
 
-  private final boolean reverse;
-
   private final Block block;
   private final Map<byte[], BigInteger> rewards;
   private final List<TransactionReceipt> receipts;
   private final List<TransactionExecutionSummary> summaries;
   private BigInteger totalDifficulty = BigInteger.ZERO;
-  private final BlockStatistics statistics;
 
   public BlockSummary(byte[] rlp) {
     RLPList rlpList = RLP.unwrapList(rlp);
 
-    this.reverse = RLP.decodeInt(rlpList.get(0).getRLPData(), 0) == 1;
-
-    this.block = new Block(rlpList.get(1).getRLPData());
-    this.rewards = decodeRewards(RLP.unwrapList(rlpList.get(2).getRLPData()));
-    this.summaries = decodeSummaries(RLP.unwrapList(rlpList.get(3).getRLPData()));
+    this.block = new Block(rlpList.get(0).getRLPData());
+    this.rewards = decodeRewards(RLP.unwrapList(rlpList.get(1).getRLPData()));
+    this.summaries = decodeSummaries(RLP.unwrapList(rlpList.get(2).getRLPData()));
     this.receipts = new ArrayList<>();
 
-    Map<String, TransactionReceipt> receiptByTxHash = decodeReceipts(RLP.unwrapList(rlpList.get(4).getRLPData()));
+    Map<String, TransactionReceipt> receiptByTxHash = decodeReceipts(RLP.unwrapList(rlpList.get(3).getRLPData()));
     for (Transaction tx : this.block.getTransactionsList()) {
       TransactionReceipt receipt = receiptByTxHash.get(toHexString(tx.getHash()));
       receipt.setTransaction(tx);
 
       this.receipts.add(receipt);
     }
-
-    this.statistics = new BlockStatistics(rlpList.get(5).getRLPData());
   }
 
-  public BlockSummary(Block block,
-                      Map<byte[], BigInteger> rewards,
-                      List<TransactionReceipt> receipts,
-                      List<TransactionExecutionSummary> summaries,
-                      BlockStatistics statistics,
-                      boolean reverse) {
+  public BlockSummary(Block block, Map<byte[], BigInteger> rewards, List<TransactionReceipt> receipts, List<TransactionExecutionSummary> summaries) {
     this.block = block;
     this.rewards = rewards;
     this.receipts = receipts;
     this.summaries = summaries;
-    this.statistics = statistics;
-    this.reverse = reverse;
   }
 
   public Block getBlock() {
@@ -87,14 +73,6 @@ public class BlockSummary {
 
   public List<TransactionExecutionSummary> getSummaries() {
     return summaries;
-  }
-
-  public BlockStatistics getStatistics() {
-    return statistics;
-  }
-
-  public boolean isReverse() {
-    return reverse;
   }
 
   /**
@@ -114,19 +92,16 @@ public class BlockSummary {
 
   public byte[] getEncoded() {
     return RLP.encodeList(
-      RLP.encodeElement(RLP.encodeInt(reverse ? 1 : 0)),
       block.getEncoded(),
       encodeRewards(rewards),
       encodeSummaries(summaries),
-      encodeReceipts(receipts),
-      statistics.getEncoded()
+      encodeReceipts(receipts)
     );
   }
 
   /**
    * Whether this block could be new best block
    * for the chain with provided old total difficulty
-   *
    * @param oldTotDifficulty Total difficulty for the suggested chain
    * @return True - best, False - not best
    */
@@ -165,9 +140,8 @@ public class BlockSummary {
   private static <K, V> Map<K, V> decodeMap(RLPList list, Function<byte[], K> keyDecoder, Function<byte[], V> valueDecoder) {
     Map<K, V> result = new HashMap<>();
     for (RLPElement entry : list) {
-      RLPList elements = RLP.unwrapList(entry.getRLPData());
-      K key = keyDecoder.apply(elements.get(0).getRLPData());
-      V value = valueDecoder.apply(elements.get(1).getRLPData());
+      K key = keyDecoder.apply(((RLPList) entry).get(0).getRLPData());
+      V value = valueDecoder.apply(((RLPList) entry).get(1).getRLPData());
       result.put(key, value);
     }
     return result;
@@ -199,7 +173,8 @@ public class BlockSummary {
   }
 
   private static Map<byte[], BigInteger> decodeRewards(RLPList rewards) {
-    return decodeMap(rewards, bytes -> bytes, ByteUtil::bytesToBigInteger);
+    return decodeMap(rewards, bytes -> bytes, bytes ->
+      ByteUtil.bytesToBigInteger(bytes)
+    );
   }
-
 }

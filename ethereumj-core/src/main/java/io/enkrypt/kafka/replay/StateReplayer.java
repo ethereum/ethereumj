@@ -3,28 +3,21 @@ package io.enkrypt.kafka.replay;
 import io.enkrypt.avro.capture.BlockSummaryRecord;
 import io.enkrypt.kafka.Kafka;
 import io.enkrypt.kafka.db.BlockSummaryStore;
-import io.enkrypt.kafka.listener.KafkaBlockListener;
+import io.enkrypt.kafka.listener.KafkaBlockSummaryPublisher;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.AccountState;
-import org.ethereum.core.BlockSummary;
-import org.ethereum.core.TransactionExecutionSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 
 import static java.lang.Long.parseLong;
-import static org.ethereum.util.ByteUtil.longToBytes;
 
 public class StateReplayer {
 
   @Autowired
-  KafkaBlockListener blockListener;
+  KafkaBlockSummaryPublisher blockListener;
 
   @Autowired
   BlockSummaryStore store;
