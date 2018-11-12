@@ -17,9 +17,10 @@
  */
 package org.ethereum.core;
 
-import io.enkrypt.kafka.models.TokenTransfer;
-import io.enkrypt.kafka.models.TokenTransferKey;
-import org.ethereum.util.*;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
+import org.ethereum.util.RLPList;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
 import org.ethereum.vm.program.InternalTransaction;
@@ -42,14 +43,11 @@ public class TransactionExecutionSummary {
   private BigInteger gasLeftover = BigInteger.ZERO;
   private BigInteger gasRefund = BigInteger.ZERO;
 
-  private Set<DataWord> deletedAccounts = emptySet();
-  private ByteArraySet touchedAccounts = new ByteArraySet();
-
+  private List<DataWord> deletedAccounts = emptyList();
   private List<InternalTransaction> internalTransactions = emptyList();
   private Map<DataWord, DataWord> storageDiff = emptyMap();
   private TransactionTouchedStorage touchedStorage = new TransactionTouchedStorage();
 
-  private Map<TokenTransferKey, TokenTransfer> tokenTransfers;
 
   private byte[] result;
   private List<LogInfo> logs;
@@ -59,8 +57,6 @@ public class TransactionExecutionSummary {
   private byte[] rlpEncoded;
   private boolean parsed;
 
-  public TransactionExecutionSummary(){
-  }
 
   public TransactionExecutionSummary(Transaction transaction) {
     this.tx = transaction;
@@ -88,16 +84,12 @@ public class TransactionExecutionSummary {
     this.gasLeftover = decodeBigInteger(summary.get(5).getRLPData());
     this.gasRefund = decodeBigInteger(summary.get(6).getRLPData());
     this.deletedAccounts = decodeDeletedAccounts((RLPList) summary.get(7));
-    this.touchedAccounts = decodeTouchedAccounts((RLPList) summary.get(8));
-    this.internalTransactions = decodeInternalTransactions((RLPList) summary.get(9));
-    this.touchedStorage = decodeTouchedStorage(summary.get(10));
-    this.tokenTransfers = decodeTokenTransfers((RLPList) summary.get(11));
-    this.result = summary.get(12).getRLPData();
-    this.logs = decodeLogs((RLPList) summary.get(13));
-
-    byte[] failed = summary.get(14).getRLPData();
+    this.internalTransactions = decodeInternalTransactions((RLPList) summary.get(8));
+    this.touchedStorage = decodeTouchedStorage(summary.get(9));
+    this.result = summary.get(10).getRLPData();
+    this.logs = decodeLogs((RLPList) summary.get(11));
+    byte[] failed = summary.get(12).getRLPData();
     this.failed = isNotEmpty(failed) && RLP.decodeInt(failed, 0) == 1;
-
   }
 
   private static BigInteger decodeBigInteger(byte[] encoded) {
@@ -117,10 +109,8 @@ public class TransactionExecutionSummary {
       RLP.encodeBigInteger(this.gasLeftover),
       RLP.encodeBigInteger(this.gasRefund),
       encodeDeletedAccounts(this.deletedAccounts),
-      encodeTouchedAccounts(this.touchedAccounts),
       encodeInternalTransactions(this.internalTransactions),
       encodeTouchedStorage(this.touchedStorage),
-      encodeTokenTransfers(this.tokenTransfers),
       RLP.encodeElement(this.result),
       encodeLogs(this.logs),
       RLP.encodeInt(this.failed ? 1 : 0)
@@ -201,32 +191,6 @@ public class TransactionExecutionSummary {
     return result;
   }
 
-  private static byte[] encodeTokenTransfers(Map<TokenTransferKey, TokenTransfer> tokenTransfers) {
-
-    if(tokenTransfers == null) return RLP.encodeList();  // empty list
-
-    byte[][] result = new byte[tokenTransfers.size()][];
-    int i = 0;
-    for (Map.Entry<TokenTransferKey, TokenTransfer> entry : tokenTransfers.entrySet()) {
-      byte[] key = RLP.encodeElement(entry.getKey().getEncoded());
-      byte[] value = RLP.encodeElement(entry.getValue().getEncoded());
-      result[i++] = RLP.encodeList(key, value);
-    }
-    return RLP.encodeList(result);
-  }
-
-  private Map<TokenTransferKey, TokenTransfer> decodeTokenTransfers(RLPList list) {
-    Map<TokenTransferKey, TokenTransfer> result = new HashMap<>();
-    for (RLPElement entry : list) {
-      final TokenTransferKey key = new TokenTransferKey(((RLPList) entry).get(0).getRLPData());
-      final TokenTransfer value = TokenTransfer.newBuilder(((RLPList) entry).get(1).getRLPData()).build();
-      result.put(key, value);
-    }
-    return result;
-  }
-
-
-
   private static byte[] encodeInternalTransactions(List<InternalTransaction> internalTransactions) {
     byte[][] result = new byte[internalTransactions.size()][];
     for (int i = 0; i < internalTransactions.size(); i++) {
@@ -245,34 +209,18 @@ public class TransactionExecutionSummary {
     return result;
   }
 
-  private static byte[] encodeTouchedAccounts(Set<byte[]> touchedAccounts) {
-    byte[][] result = new byte[touchedAccounts.size()][];
-    int idx = 0;
-    for (byte[] account : touchedAccounts) {
-      result[idx++] = RLP.encodeElement(account);
-    }
-    return RLP.encodeList(result);
-  }
-
-  private static ByteArraySet decodeTouchedAccounts(RLPList touchedAccounts) {
-    ByteArraySet result = new ByteArraySet();
-    for (RLPElement deletedAccount : touchedAccounts) {
-      result.add(deletedAccount.getRLPData());
-    }
-    return result;
-  }
-
-  private static byte[] encodeDeletedAccounts(Set<DataWord> deletedAccounts) {
+  private static byte[] encodeDeletedAccounts(List<DataWord> deletedAccounts) {
     byte[][] result = new byte[deletedAccounts.size()][];
-    int idx = 0;
-    for (DataWord account : deletedAccounts) {
-      result[idx++] = RLP.encodeElement(account.getData());
+    for (int i = 0; i < deletedAccounts.size(); i++) {
+      DataWord deletedAccount = deletedAccounts.get(i);
+      result[i] = RLP.encodeElement(deletedAccount.getData());
+
     }
     return RLP.encodeList(result);
   }
 
-  private static Set<DataWord> decodeDeletedAccounts(RLPList deletedAccounts) {
-    Set<DataWord> result = new HashSet<>();
+  private static List<DataWord> decodeDeletedAccounts(RLPList deletedAccounts) {
+    List<DataWord> result = new ArrayList<>();
     for (RLPElement deletedAccount : deletedAccounts) {
       result.add(DataWord.of(deletedAccount.getRLPData()));
     }
@@ -332,12 +280,7 @@ public class TransactionExecutionSummary {
     return value;
   }
 
-  public ByteArraySet getTouchedAccounts() {
-    if (!parsed) rlpParse();
-    return touchedAccounts;
-  }
-
-  public Set<DataWord> getDeletedAccounts() {
+  public List<DataWord> getDeletedAccounts() {
     if (!parsed) rlpParse();
     return deletedAccounts;
   }
@@ -374,10 +317,6 @@ public class TransactionExecutionSummary {
     return logs;
   }
 
-  public Map<TokenTransferKey, TokenTransfer> getTokenTransfers() {
-    return tokenTransfers;
-  }
-
   public TransactionTouchedStorage getTouchedStorage() {
     return touchedStorage;
   }
@@ -385,8 +324,6 @@ public class TransactionExecutionSummary {
   public static Builder builderFor(Transaction transaction) {
     return new Builder(transaction);
   }
-
-  public static Builder builderFor(TransactionExecutionSummary summary){ return new Builder(summary); }
 
   public static class Builder {
 
@@ -396,28 +333,6 @@ public class TransactionExecutionSummary {
       Assert.notNull(transaction, "Cannot build TransactionExecutionSummary for null transaction.");
       summary = new TransactionExecutionSummary(transaction);
     }
-
-    Builder(TransactionExecutionSummary proto) {
-      summary = new TransactionExecutionSummary();
-
-      // shallow copy
-
-      gasUsed(proto.gasUsed)
-        .gasLeftover(proto.gasLeftover)
-        .gasRefund(proto.gasRefund)
-        .internalTransactions(proto.internalTransactions)
-        .touchedAccounts(proto.touchedAccounts)
-        .deletedAccounts(proto.deletedAccounts)
-        .storageDiff(proto.storageDiff)
-        .logs(proto.logs)
-        .result(proto.result)
-        .tokenTransfers(proto.tokenTransfers);
-
-      summary.touchedStorage = proto.touchedStorage;
-      summary.failed = proto.failed;
-
-    }
-
 
     public Builder gasUsed(BigInteger gasUsed) {
       summary.gasUsed = gasUsed;
@@ -439,15 +354,11 @@ public class TransactionExecutionSummary {
       return this;
     }
 
-    public Builder touchedAccounts(ByteArraySet touchedAccounts) {
-      summary.touchedAccounts = new ByteArraySet();
-      summary.touchedAccounts.addAll(touchedAccounts);
-      return this;
-    }
-
     public Builder deletedAccounts(Set<DataWord> deletedAccounts) {
-      summary.deletedAccounts = new HashSet<>();
-      summary.deletedAccounts.addAll(deletedAccounts);
+      summary.deletedAccounts = new ArrayList<>();
+      for (DataWord account : deletedAccounts) {
+        summary.deletedAccounts.add(account);
+      }
       return this;
     }
 
@@ -474,11 +385,6 @@ public class TransactionExecutionSummary {
 
     public Builder result(byte[] result) {
       summary.result = result;
-      return this;
-    }
-
-    public Builder tokenTransfers(Map<TokenTransferKey, TokenTransfer> transfersMap) {
-      summary.tokenTransfers = transfersMap;
       return this;
     }
 
