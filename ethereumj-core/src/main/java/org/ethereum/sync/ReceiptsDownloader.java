@@ -52,8 +52,6 @@ import static java.lang.Math.min;
 public class ReceiptsDownloader {
     private final static Logger logger = LoggerFactory.getLogger("sync");
     private static final long REQUEST_TIMEOUT = 5 * 1000;
-    private static int requestedBlocksCounter = 0;
-    private static int receivedBlocksCounter = 0;
     private static final int MAX_IN_REQUEST = 100;
     private static final int MIN_IN_REQUEST = 10;
     private int requestLimit = 2000;
@@ -169,7 +167,7 @@ public class ReceiptsDownloader {
             try {
 
               if (toDownload.isEmpty()) {
-                if (fillBlockQueue() > 0 || System.currentTimeMillis() - t > REQUEST_TIMEOUT || (requestedBlocksCounter > 0  && requestedBlocksCounter == receivedBlocksCounter)) {
+                if (fillBlockQueue() > 0 || System.currentTimeMillis() - t > REQUEST_TIMEOUT || toDownload.size() == 0) {
                   toDownload = getToDownload();
                   t = System.currentTimeMillis();
                 }
@@ -188,12 +186,10 @@ public class ReceiptsDownloader {
                                     processDownloaded(list.get(i), result.get(i));
                                 }
                                 processQueue();
-                                receivedBlocksCounter++;
                             }
                             @Override
                             public void onFailure(Throwable t) {}
                         });
-                      requestedBlocksCounter++;
                     }
                 } else {
                     try {
