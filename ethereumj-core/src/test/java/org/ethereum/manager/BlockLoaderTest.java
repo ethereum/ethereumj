@@ -9,7 +9,6 @@ import org.ethereum.db.DbFlushManager;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.validator.BlockHeaderRule;
 import org.ethereum.validator.BlockHeaderValidator;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -28,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toList;
@@ -142,8 +140,8 @@ public class BlockLoaderTest {
         assertFalse(loaded);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testNoDumpsLoading() {
-        blockLoader.loadBlocks();
+        assertFalse(blockLoader.loadBlocks());
     }
 }

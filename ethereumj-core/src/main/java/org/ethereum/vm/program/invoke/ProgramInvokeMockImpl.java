@@ -37,6 +37,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     private byte[] msgData;
 
     private Repository repository;
+    private Repository origRepository;
     private byte[] ownerAddress = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
     private final byte[] contractAddress = Hex.decode("471fd3ad3e9eeadeec4608b92d16ce6b500704cc");
 
@@ -61,6 +62,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
                         + "6040016014525451606001601e52545160800160"
                         + "28525460a052546016604860003960166000f260"
                         + "00603f556103e75660005460005360200235"));
+        this.origRepository = this.repository.clone();
     }
 
     public ProgramInvokeMockImpl(boolean defaults) {
@@ -237,12 +239,21 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     }
 
     @Override
+    public Repository getOrigRepository() {
+        return this.origRepository;
+    }
+
+    @Override
     public BlockStore getBlockStore() {
         return new BlockStoreDummy();
     }
 
     public void setRepository(Repository repository) {
         this.repository = repository;
+    }
+
+    public void setOrigRepository(Repository repository) {
+        this.origRepository = repository.clone();
     }
 
     @Override

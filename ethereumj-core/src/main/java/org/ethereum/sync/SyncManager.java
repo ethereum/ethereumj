@@ -27,6 +27,7 @@ import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.util.ExecutorPipeline;
 import org.ethereum.validator.BlockHeaderValidator;
+import org.ethereum.validator.DependentBlockHeaderRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -90,6 +91,9 @@ public class SyncManager extends BlockDownloader {
 
     @Autowired
     private FastSyncManager fastSyncManager;
+
+    @Autowired
+    private DependentBlockHeaderRule parentHeaderValidator;
 
     ChannelManager channelManager;
 
@@ -161,7 +165,8 @@ public class SyncManager extends BlockDownloader {
         logger.info("Initializing SyncManager regular sync.");
         this.syncDoneType = syncDoneType;
 
-        syncQueue = new SyncQueueImpl(blockchain);
+        syncQueue = new SyncQueueImpl(blockchain)
+                .withParentHeaderValidator(parentHeaderValidator);
         super.init(syncQueue, pool, "RegularSync");
 
         Runnable queueProducer = this::produceQueue;
@@ -393,7 +398,9 @@ public class SyncManager extends BlockDownloader {
         }
 
         logger.debug("Adding new block to sync queue: " + block.getShortDescr());
-        syncQueue.addHeaders(singletonList(new BlockHeaderWrapper(block.getHeader(), nodeId)));
+        SyncQueueIfc.ValidatedHeaders res = syncQueue.addHeadersAndValidate(
+                singletonList(new BlockHeaderWrapper(block.getHeader(), nodeId)));
+        dropIfValidationFailed(res);
 
         synchronized (this) {
             List<Block> newBlocks = syncQueue.addBlocks(singletonList(block));
