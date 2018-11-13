@@ -17,6 +17,7 @@
  */
 package org.ethereum.sharding.processing.validation;
 
+import org.ethereum.sharding.crypto.DummySign;
 import org.ethereum.sharding.crypto.Sign;
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.processing.db.BeaconStore;
@@ -33,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.ethereum.sharding.processing.consensus.BeaconConstants.CYCLE_LENGTH;
@@ -58,6 +60,16 @@ public class AttestationsValidator {
         rules = new ArrayList<>();
         rules.add(validateProposerAttestation());
         rules.add(validateAttestations());
+    }
+
+    private AttestationsValidator(BeaconStore store, Sign sign, List<ValidationRule<Data>> rules) {
+        this.store = store;
+        this.sign = sign;
+        this.rules = rules;
+    }
+
+    public static AttestationsValidator createDummy() {
+        return new AttestationsValidator(null, new DummySign(), Collections.emptyList());
     }
 
     /**

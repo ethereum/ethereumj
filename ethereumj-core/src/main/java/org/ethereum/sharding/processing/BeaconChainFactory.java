@@ -22,7 +22,7 @@ import org.ethereum.db.DbFlushManager;
 import org.ethereum.sharding.crypto.Sign;
 import org.ethereum.sharding.processing.consensus.BeaconStateTransition;
 import org.ethereum.sharding.processing.consensus.GenesisTransition;
-import org.ethereum.sharding.processing.consensus.NumberAsScore;
+import org.ethereum.sharding.processing.consensus.MaximumVotesAsScore;
 import org.ethereum.sharding.processing.consensus.ScoreFunction;
 import org.ethereum.sharding.processing.consensus.StateTransition;
 import org.ethereum.sharding.processing.db.BeaconStore;
@@ -56,7 +56,7 @@ public class BeaconChainFactory {
         BeaconValidator beaconValidator = new BeaconValidator(store);
         StateValidator stateValidator = new StateValidator();
         AttestationsValidator attestationsValidator = new AttestationsValidator(store, sign);
-        ScoreFunction scoreFunction = new NumberAsScore();
+        ScoreFunction scoreFunction = new MaximumVotesAsScore(store);
 
         return new BeaconChainImpl(beaconDbFlusher, store, stateTransitionFunction, repository,
                 beaconValidator, stateValidator, attestationsValidator, scoreFunction, genesisStateTransition);

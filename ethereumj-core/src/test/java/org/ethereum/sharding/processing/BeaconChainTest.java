@@ -21,7 +21,6 @@ import com.google.common.util.concurrent.Futures;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.DbFlushManager;
-import org.ethereum.sharding.crypto.DummySign;
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.domain.BeaconGenesis;
 import org.ethereum.sharding.processing.consensus.NoTransition;
@@ -30,6 +29,9 @@ import org.ethereum.sharding.processing.db.IndexedBeaconStore;
 import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.BeaconStateRepository;
 import org.ethereum.sharding.processing.state.StateRepository;
+import org.ethereum.sharding.processing.validation.AttestationsValidator;
+import org.ethereum.sharding.processing.validation.BeaconValidator;
+import org.ethereum.sharding.processing.validation.StateValidator;
 import org.junit.Test;
 
 import java.math.BigInteger;
@@ -186,9 +188,9 @@ public class BeaconChainTest {
             inst.store = new IndexedBeaconStore(new HashMapDB<>(), new HashMapDB<>());
             inst.repository = new BeaconStateRepository(new HashMapDB<>(), new HashMapDB<>(),
                     new HashMapDB<>(), new HashMapDB<>(), new HashMapDB<>());
-            inst.beaconChain = (BeaconChainImpl) BeaconChainFactory.create(
-                    new DummyFlusher(), inst.store, inst.repository, new NoTransition(), new NoTransition(),
-                    new DummySign());
+            inst.beaconChain = new BeaconChainImpl(new DummyFlusher(), inst.store, new NoTransition(), inst.repository,
+                    new BeaconValidator(inst.store), new StateValidator(), AttestationsValidator.createDummy(),
+                    (block, state) -> BigInteger.valueOf(block.getMainChainRef()[0]), new NoTransition());
             return inst;
         }
 
@@ -221,6 +223,7 @@ public class BeaconChainTest {
             BigInteger expectedScore = BigInteger.ZERO;
             for (Beacon b : chain) {
                 assertTrue(store.exist(b.getHash()));
+                expectedScore = expectedScore.add(beaconChain.scoreFunction.apply(b, null));
             }
 
             Beacon expectedHead = chain[chain.length - 1];

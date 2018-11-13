@@ -79,7 +79,7 @@ public class BeaconChainImpl implements BeaconChain {
         this.repository = repository;
         this.beaconValidator = beaconValidator;
         this.stateValidator = stateValidator;
-        this.attestationsValidator =attestationsValidator;
+        this.attestationsValidator = attestationsValidator;
         this.scoreFunction = scoreFunction;
         this.genesisStateTransition = genesisStateTransition;
     }
