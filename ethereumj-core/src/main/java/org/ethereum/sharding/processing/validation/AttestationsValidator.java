@@ -216,6 +216,7 @@ public class AttestationsValidator {
         public Data(Beacon parent, BeaconState state, BeaconStore store, Sign sign) {
             this.parent = parent;
             this.state = state;
+            this.store = store;
             this.sign = sign;
         }
     }
