@@ -29,14 +29,15 @@ import org.ethereum.sharding.processing.db.IndexedBeaconStore;
 import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.BeaconStateRepository;
 import org.ethereum.sharding.processing.state.StateRepository;
-import org.ethereum.sharding.processing.validation.AttestationsValidator;
 import org.ethereum.sharding.processing.validation.BeaconValidator;
+import org.ethereum.sharding.processing.validation.BeaconValidatorImpl;
 import org.ethereum.sharding.processing.validation.StateValidator;
 import org.junit.Test;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Future;
 
@@ -188,8 +189,11 @@ public class BeaconChainTest {
             inst.store = new IndexedBeaconStore(new HashMapDB<>(), new HashMapDB<>());
             inst.repository = new BeaconStateRepository(new HashMapDB<>(), new HashMapDB<>(),
                     new HashMapDB<>(), new HashMapDB<>(), new HashMapDB<>());
-            inst.beaconChain = new BeaconChainImpl(new DummyFlusher(), inst.store, new NoTransition(), inst.repository,
-                    new BeaconValidator(inst.store), new StateValidator(), AttestationsValidator.createDummy(),
+            List<BeaconValidator> beaconValidators = new ArrayList<BeaconValidator>() {{
+                add(new BeaconValidatorImpl(inst.store));
+            }};
+            inst.beaconChain = new BeaconChainImpl(new DummyFlusher(), inst.store, new NoTransition(),
+                    inst.repository, beaconValidators, new StateValidator(),
                     (block, state) -> BigInteger.valueOf(block.getMainChainRef()[0]), new NoTransition());
             return inst;
         }

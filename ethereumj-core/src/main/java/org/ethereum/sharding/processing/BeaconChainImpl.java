@@ -20,7 +20,6 @@ package org.ethereum.sharding.processing;
 import org.ethereum.core.Block;
 import org.ethereum.db.DbFlushManager;
 import org.ethereum.sharding.processing.consensus.GenesisTransition;
-import org.ethereum.sharding.processing.validation.AttestationsValidator;
 import org.ethereum.sharding.pubsub.Event;
 import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.processing.consensus.ScoreFunction;
@@ -38,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigInteger;
+import java.util.List;
 
 import static org.ethereum.sharding.pubsub.Events.onBeaconBlock;
 import static org.ethereum.sharding.pubsub.Events.onBeaconChainLoaded;
@@ -58,8 +58,7 @@ public class BeaconChainImpl implements BeaconChain {
 
     StateTransition<BeaconState> transitionFunction;
     StateTransition<BeaconState> genesisStateTransition;
-    BeaconValidator beaconValidator;
-    AttestationsValidator attestationsValidator;
+    List<BeaconValidator> beaconValidators;
     StateValidator stateValidator;
     StateRepository repository;
     ScoreFunction scoreFunction;
@@ -70,16 +69,14 @@ public class BeaconChainImpl implements BeaconChain {
 
     public BeaconChainImpl(DbFlushManager beaconDbFlusher, BeaconStore store,
                            StateTransition<BeaconState> transitionFunction, StateRepository repository,
-                           BeaconValidator beaconValidator, StateValidator stateValidator,
-                           AttestationsValidator attestationsValidator, ScoreFunction scoreFunction,
-                           StateTransition<BeaconState> genesisStateTransition) {
+                           List<BeaconValidator> beaconValidators, StateValidator stateValidator,
+                           ScoreFunction scoreFunction, StateTransition<BeaconState> genesisStateTransition) {
         this.beaconDbFlusher = beaconDbFlusher;
         this.store = store;
         this.transitionFunction = transitionFunction;
         this.repository = repository;
-        this.beaconValidator = beaconValidator;
+        this.beaconValidators = beaconValidators;
         this.stateValidator = stateValidator;
-        this.attestationsValidator = attestationsValidator;
         this.scoreFunction = scoreFunction;
         this.genesisStateTransition = genesisStateTransition;
     }
@@ -121,10 +118,10 @@ public class BeaconChainImpl implements BeaconChain {
     @Override
     public synchronized ProcessingResult insert(Beacon block) {
         ValidationResult vRes;
-        if ((vRes = beaconValidator.validateAndLog(block)) != ValidationResult.Success)
-            return ProcessingResult.fromValidation(vRes);
-        if ((vRes = attestationsValidator.validateAndLog(block)) != ValidationResult.Success)
-            return ProcessingResult.fromValidation(vRes);
+        for (BeaconValidator validator : beaconValidators) {
+            if ((vRes = validator.validateAndLog(block)) != ValidationResult.Success)
+                return ProcessingResult.fromValidation(vRes);
+        }
 
         // apply state transition
         Beacon parent = pullParent(block);

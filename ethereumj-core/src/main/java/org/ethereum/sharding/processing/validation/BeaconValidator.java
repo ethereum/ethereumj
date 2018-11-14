@@ -15,50 +15,14 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.ethereum.sharding.processing.validation;
 
 import org.ethereum.sharding.domain.Beacon;
-import org.ethereum.sharding.processing.db.BeaconStore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.ethereum.sharding.processing.validation.ValidationResult.Exist;
-import static org.ethereum.sharding.processing.validation.ValidationResult.NoParent;
-import static org.ethereum.sharding.processing.validation.ValidationResult.Success;
 
 /**
- * Runs a set of basic validations that is triggered before block processing.
- *
- * @author Mikhail Kalinin
- * @since 16.08.2018
+ * Runs a validation or a set of validations of beacon block
  */
-public class BeaconValidator {
-
-    private static final Logger logger = LoggerFactory.getLogger("beacon");
-
-    BeaconStore store;
-    List<ValidationRule<BeaconStore>> rules;
-
-    public BeaconValidator(BeaconStore store) {
-        this.store = store;
-
-        rules = new ArrayList<>();
-        rules.add((block, st) -> st.exist(block.getHash()) ? Exist : Success);
-        rules.add((block, st) -> st.exist(block.getParentHash()) ? Success : NoParent);
-    }
-
-    public ValidationResult validateAndLog(Beacon block) {
-        for (ValidationRule<BeaconStore> rule : rules) {
-            ValidationResult res = rule.apply(block, store);
-            if (res != Success) {
-                logger.info("Process block {}, status: {}", block.toString(), res);
-                return res;
-            }
-        }
-
-        return Success;
-    }
+public interface BeaconValidator {
+    ValidationResult validateAndLog(Beacon block);
 }
