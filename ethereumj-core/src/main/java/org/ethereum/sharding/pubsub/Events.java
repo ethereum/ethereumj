@@ -18,6 +18,7 @@
 package org.ethereum.sharding.pubsub;
 
 import org.ethereum.sharding.domain.Beacon;
+import org.ethereum.sharding.processing.state.AttestationRecord;
 import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.registration.ValidatorRegistrationService;
 
@@ -43,5 +44,17 @@ public class Events {
 
     public static ValidatorStateUpdated onValidatorStateUpdated(ValidatorRegistrationService.State newState) {
         return new ValidatorStateUpdated(newState);
+    }
+
+    public static StateRecalc onStateRecalc(long slot) {
+        return new StateRecalc(slot);
+    }
+
+    public static BeaconAttestationIncluded onBeaconAttestationIncluded(AttestationRecord attestation) {
+        return new BeaconAttestationIncluded(attestation);
+    }
+
+    public static BeaconBlockAttested onBeaconBlockAttested(AttestationRecord attestation) {
+        return new BeaconBlockAttested(attestation);
     }
 }

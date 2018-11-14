@@ -25,6 +25,7 @@ import org.ethereum.sharding.processing.state.CrystallizedState;
 import org.ethereum.sharding.processing.state.Dynasty;
 import org.ethereum.sharding.processing.state.Finality;
 import org.ethereum.sharding.pubsub.BeaconAttestationIncluded;
+import org.ethereum.sharding.pubsub.Events;
 import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.pubsub.StateRecalc;
 import org.ethereum.sharding.registration.ValidatorRepository;
@@ -36,6 +37,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.ethereum.sharding.processing.consensus.BeaconConstants.CYCLE_LENGTH;
+import static org.ethereum.sharding.pubsub.Events.onBeaconAttestationIncluded;
+import static org.ethereum.sharding.pubsub.Events.onStateRecalc;
 import static org.ethereum.sharding.util.BeaconUtils.cycleStartSlot;
 
 /**
@@ -71,7 +74,7 @@ public class BeaconStateTransition implements StateTransition<BeaconState> {
         CrystallizedState crystallized = to.getCrystallizedState();
         ActiveState activeState = to.getActiveState();
 
-        block.getAttestations().forEach(at -> publisher.publish(new BeaconAttestationIncluded(at)));
+        block.getAttestations().forEach(at -> publisher.publish(onBeaconAttestationIncluded(at)));
         activeState = activeState.addPendingAttestations(block.getAttestations());
 
         if (block.getSlotNumber() - crystallized.getLastStateRecalc() >= CYCLE_LENGTH) {
@@ -86,7 +89,7 @@ public class BeaconStateTransition implements StateTransition<BeaconState> {
                     .withLastStateRecalc(cycleStartSlot(block))
                     .withFinality(finality);
             if (publisher != null) {
-                publisher.publish(new StateRecalc(crystallized.getLastStateRecalc()));
+                publisher.publish(onStateRecalc(crystallized.getLastStateRecalc()));
             }
 
             // remove attestations older than last_state_recalc

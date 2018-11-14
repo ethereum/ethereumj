@@ -30,6 +30,7 @@ import org.ethereum.sharding.processing.state.AttestationRecord;
 import org.ethereum.sharding.processing.state.Committee;
 import org.ethereum.sharding.pubsub.BeaconBlockAttested;
 import org.ethereum.sharding.pubsub.BeaconBlockImported;
+import org.ethereum.sharding.pubsub.Events;
 import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.processing.BeaconChain;
 import org.slf4j.Logger;
@@ -48,6 +49,7 @@ import java.util.stream.Collectors;
 
 import static java.lang.Math.max;
 import static org.ethereum.sharding.processing.consensus.BeaconConstants.SLOT_DURATION;
+import static org.ethereum.sharding.pubsub.Events.onBeaconBlockAttested;
 import static org.ethereum.sharding.util.BeaconUtils.calcNextAssignedSlot;
 import static org.ethereum.sharding.util.BeaconUtils.getCurrentSlotNumber;
 import static org.ethereum.sharding.util.BeaconUtils.getSlotStartTime;
@@ -191,7 +193,7 @@ public class ValidatorServiceImpl implements ValidatorService {
             BeaconAttester.Input input = new BeaconAttester.Input(slotNumber, index, head);
             AttestationRecord attestation = attester.attestBlock(input, pubKeysMap.get(index.getValidatorIdx()));
             logger.info("Attestation by #{} on slot #{}", index.getValidatorIdx(), slotNumber);
-            publisher.publish(new BeaconBlockAttested(attestation));
+            publisher.publish(onBeaconBlockAttested(attestation));
             return attestation;
         });
 
