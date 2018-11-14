@@ -56,13 +56,9 @@ public class AttestationsValidator {
     List<ValidationRule<Data>> rules;
 
     public AttestationsValidator(BeaconStore store, StateRepository repository, Sign sign) {
-        this.store = store;
-        this.repository = repository;
-        this.sign = sign;
-
-        rules = new ArrayList<>();
-        rules.add(validateProposerAttestation());
-        rules.add(validateAttestations());
+        this(store, repository, sign, new ArrayList<>());
+        rules.add(ProposerAttestationRule);
+        rules.add(CommonAttestationRule);
     }
 
     private AttestationsValidator(BeaconStore store, StateRepository repository,
@@ -83,120 +79,116 @@ public class AttestationsValidator {
      * Attestation from the proposer of the block should be included
      * along with the block in the network message object
      */
-    private ValidationRule<Data> validateProposerAttestation() {
-        return (block, data) -> {
-            if (block.getSlotNumber() == 0) {
-                return Success;
-            }
-
-            CrystallizedState crystallized = data.state.getCrystallizedState();
-
-            Committee[][] committees = crystallized.getDynasty().getCommittees();
-
-            int index = (int) data.parent.getSlotNumber() % committees.length;
-
-            if (block.getAttestations().isEmpty()) {
-                return InvalidAttestations;
-            }
-
-            AttestationRecord proposerAttestation = block.getAttestations().get(0);
-
-            if (proposerAttestation.getSlot() != data.parent.getSlotNumber()) {
-                return InvalidAttestations;
-            }
-            if (!FastByteComparisons.equal(data.parent.getHash(), proposerAttestation.getShardBlockHash())) {
-                return InvalidAttestations;
-            }
-
-            if (!proposerAttestation.getAttesterBitfield().hasVoted(index)) {
-                return InvalidAttestations;
-            }
-
+    ValidationRule<Data> ProposerAttestationRule = (block, data) -> {
+        if (block.getSlotNumber() == 0) {
             return Success;
-        };
-    }
+        }
 
-    private ValidationRule<Data> validateAttestations() {
-        return (block, data) -> {
-            CrystallizedState crystallized = data.state.getCrystallizedState();
-            List<AttestationRecord> attestationRecords = block.getAttestations();
-            List<byte[]> recentBlockHashes = data.state.getActiveState().getRecentBlockHashes();
+        CrystallizedState crystallized = data.state.getCrystallizedState();
 
-            for (AttestationRecord attestation : attestationRecords) {
-                // Too early
-                if (attestation.getSlot() > data.parent.getSlotNumber()) {
-                    return InvalidAttestations;
-                }
+        Committee[][] committees = crystallized.getDynasty().getCommittees();
 
-                // Too old
-                if (attestation.getSlot() < Math.max(data.parent.getSlotNumber() - CYCLE_LENGTH + 1, 0)) {
-                    return InvalidAttestations;
-                }
+        int index = (int) data.parent.getSlotNumber() % committees.length;
 
-                // Incorrect justified
-                if (attestation.getJustifiedSlot() > crystallized.getFinality().getLastJustifiedSlot()) {
-                    return InvalidAttestations;
-                }
+        if (block.getAttestations().isEmpty()) {
+            return InvalidAttestations;
+        }
 
-                Beacon justified = store.getByHash(attestation.getJustifiedBlockHash());
-                if (justified == null ||
-                        store.getCanonicalByNumber(justified.getSlotNumber()) != justified) {
-                    return InvalidAttestations;
-                }
+        AttestationRecord proposerAttestation = block.getAttestations().get(0);
 
-                if (justified.getSlotNumber() != attestation.getJustifiedSlot()) {
-                    return InvalidAttestations;
-                }
+        if (proposerAttestation.getSlot() != data.parent.getSlotNumber()) {
+            return InvalidAttestations;
+        }
+        if (!FastByteComparisons.equal(data.parent.getHash(), proposerAttestation.getShardBlockHash())) {
+            return InvalidAttestations;
+        }
 
-                // Given an attestation and the block they were included in,
-                // the list of hashes that were included in the signature
-                long fromSlot = attestation.getSlot() - CYCLE_LENGTH + 1;
-                long toSlot = attestation.getSlot() - attestation.getObliqueParentHashes().size();
-                long sBack = block.getSlotNumber() - CYCLE_LENGTH * 2;
-                List<byte[]> parentHashes = new ArrayList<>();
-                for (int i = (int) (fromSlot - sBack); i <= toSlot - sBack; ++i) {
-                    if (i < 0 || i >= CYCLE_LENGTH * 2) return InvalidAttestations;
-                    parentHashes.add(recentBlockHashes.get(i));
-                }
-                parentHashes.addAll(attestation.getObliqueParentHashes());
+        if (!proposerAttestation.getAttesterBitfield().hasVoted(index)) {
+            return InvalidAttestations;
+        }
 
-                int slotOffset = (int) (attestation.getSlot() - crystallized.getDynasty().getStartSlot());
-                List<Committee.Index> attestationIndices = scanCommittees(
-                        crystallized.getDynasty().getCommittees(), slotOffset, attestation.getShardId());
+        return Success;
+    };
 
-                // Validate bitfield
-                if (attestation.getAttesterBitfield().size() != Bitfield.calcLength(attestationIndices.size())) {
-                    return InvalidAttestations;
-                }
+    ValidationRule<Data> CommonAttestationRule = (block, data) -> {
+        CrystallizedState crystallized = data.state.getCrystallizedState();
+        List<AttestationRecord> attestationRecords = block.getAttestations();
+        List<byte[]> recentBlockHashes = data.state.getActiveState().getRecentBlockHashes();
 
-                // Confirm that there were no votes of nonexistent attesters
-                int lastBit = attestationIndices.size();
-                for (int i = lastBit - 1; i < Bitfield.calcLength(attestationIndices.size()) * Byte.SIZE; ++i) {
-                    if (attestation.getAttesterBitfield().hasVoted(i)) {
-                        return InvalidAttestations;
-                    }
-                }
+        for (AttestationRecord attestation : attestationRecords) {
+            // Too early
+            if (attestation.getSlot() > data.parent.getSlotNumber()) {
+                return InvalidAttestations;
+            }
 
-                // Validate aggregate signature
-                List<BigInteger> pubKeys = new ArrayList<>();
-                for (Committee.Index index : attestationIndices) {
-                    if (attestation.getAttesterBitfield().hasVoted(index.getValidatorIdx())) {
-                        byte[] key = crystallized.getDynasty().getValidatorSet().get(index.getValidatorIdx()).getPubKey();
-                        pubKeys.add(ByteUtil.bytesToBigInteger(key));
-                    }
-                }
+            // Too old
+            if (attestation.getSlot() < Math.max(data.parent.getSlotNumber() - CYCLE_LENGTH + 1, 0)) {
+                return InvalidAttestations;
+            }
 
-                byte[] msgHash = BeaconUtils.calcMessageHash(attestation.getSlot(), parentHashes,
-                        attestation.getShardId(), attestation.getShardBlockHash(), attestation.getJustifiedSlot());
+            // Incorrect justified
+            if (attestation.getJustifiedSlot() > crystallized.getFinality().getLastJustifiedSlot()) {
+                return InvalidAttestations;
+            }
 
-                if (!sign.verify(attestation.getAggregateSig(), msgHash, sign.aggPubs(pubKeys))) {
+            Beacon justified = store.getByHash(attestation.getJustifiedBlockHash());
+            if (justified == null ||
+                    store.getCanonicalByNumber(justified.getSlotNumber()) != justified) {
+                return InvalidAttestations;
+            }
+
+            if (justified.getSlotNumber() != attestation.getJustifiedSlot()) {
+                return InvalidAttestations;
+            }
+
+            // Given an attestation and the block they were included in,
+            // the list of hashes that were included in the signature
+            long fromSlot = attestation.getSlot() - CYCLE_LENGTH + 1;
+            long toSlot = attestation.getSlot() - attestation.getObliqueParentHashes().size();
+            long sBack = block.getSlotNumber() - CYCLE_LENGTH * 2;
+            List<byte[]> parentHashes = new ArrayList<>();
+            for (int i = (int) (fromSlot - sBack); i <= toSlot - sBack; ++i) {
+                if (i < 0 || i >= CYCLE_LENGTH * 2) return InvalidAttestations;
+                parentHashes.add(recentBlockHashes.get(i));
+            }
+            parentHashes.addAll(attestation.getObliqueParentHashes());
+
+            int slotOffset = (int) (attestation.getSlot() - crystallized.getDynasty().getStartSlot());
+            List<Committee.Index> attestationIndices = scanCommittees(
+                    crystallized.getDynasty().getCommittees(), slotOffset, attestation.getShardId());
+
+            // Validate bitfield
+            if (attestation.getAttesterBitfield().size() != Bitfield.calcLength(attestationIndices.size())) {
+                return InvalidAttestations;
+            }
+
+            // Confirm that there were no votes of nonexistent attesters
+            int lastBit = attestationIndices.size();
+            for (int i = lastBit - 1; i < Bitfield.calcLength(attestationIndices.size()) * Byte.SIZE; ++i) {
+                if (attestation.getAttesterBitfield().hasVoted(i)) {
                     return InvalidAttestations;
                 }
             }
 
-            return Success;
-        };
-    }
+            // Validate aggregate signature
+            List<BigInteger> pubKeys = new ArrayList<>();
+            for (Committee.Index index : attestationIndices) {
+                if (attestation.getAttesterBitfield().hasVoted(index.getValidatorIdx())) {
+                    byte[] key = crystallized.getDynasty().getValidatorSet().get(index.getValidatorIdx()).getPubKey();
+                    pubKeys.add(ByteUtil.bytesToBigInteger(key));
+                }
+            }
+
+            byte[] msgHash = BeaconUtils.calcMessageHash(attestation.getSlot(), parentHashes,
+                    attestation.getShardId(), attestation.getShardBlockHash(), attestation.getJustifiedSlot());
+
+            if (!sign.verify(attestation.getAggregateSig(), msgHash, sign.aggPubs(pubKeys))) {
+                return InvalidAttestations;
+            }
+        }
+
+        return Success;
+    };
 
     public ValidationResult validateAndLog(Beacon block) {
         Beacon parent = store.getByHash(block.getParentHash());
