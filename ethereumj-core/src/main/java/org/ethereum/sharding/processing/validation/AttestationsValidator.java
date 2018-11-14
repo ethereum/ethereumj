@@ -79,7 +79,7 @@ public class AttestationsValidator {
      * Attestation from the proposer of the block should be included
      * along with the block in the network message object
      */
-    ValidationRule<Data> ProposerAttestationRule = (block, data) -> {
+    static final ValidationRule<Data> ProposerAttestationRule = (block, data) -> {
         if (block.getSlotNumber() == 0) {
             return Success;
         }
@@ -110,7 +110,7 @@ public class AttestationsValidator {
         return Success;
     };
 
-    ValidationRule<Data> CommonAttestationRule = (block, data) -> {
+    static final ValidationRule<Data> CommonAttestationRule = (block, data) -> {
         CrystallizedState crystallized = data.state.getCrystallizedState();
         List<AttestationRecord> attestationRecords = block.getAttestations();
         List<byte[]> recentBlockHashes = data.state.getActiveState().getRecentBlockHashes();
@@ -131,9 +131,9 @@ public class AttestationsValidator {
                 return InvalidAttestations;
             }
 
-            Beacon justified = store.getByHash(attestation.getJustifiedBlockHash());
+            Beacon justified = data.store.getByHash(attestation.getJustifiedBlockHash());
             if (justified == null ||
-                    store.getCanonicalByNumber(justified.getSlotNumber()) != justified) {
+                    data.store.getCanonicalByNumber(justified.getSlotNumber()) != justified) {
                 return InvalidAttestations;
             }
 
@@ -182,7 +182,7 @@ public class AttestationsValidator {
             byte[] msgHash = BeaconUtils.calcMessageHash(attestation.getSlot(), parentHashes,
                     attestation.getShardId(), attestation.getShardBlockHash(), attestation.getJustifiedSlot());
 
-            if (!sign.verify(attestation.getAggregateSig(), msgHash, sign.aggPubs(pubKeys))) {
+            if (!data.sign.verify(attestation.getAggregateSig(), msgHash, data.sign.aggPubs(pubKeys))) {
                 return InvalidAttestations;
             }
         }
@@ -197,7 +197,7 @@ public class AttestationsValidator {
         assert state != null;
 
         for (ValidationRule<Data> rule : rules) {
-            ValidationResult res = rule.apply(block, new Data(parent, state, sign));
+            ValidationResult res = rule.apply(block, new Data(parent, state, store, sign));
             if (res != Success) {
                 logger.info("Process attestations validation in block {}, status: {}", block.toString(), res);
                 return res;
@@ -211,8 +211,9 @@ public class AttestationsValidator {
         Beacon parent;
         BeaconState state;
         Sign sign;
+        BeaconStore store;
 
-        public Data(Beacon parent, BeaconState state, Sign sign) {
+        public Data(Beacon parent, BeaconState state, BeaconStore store, Sign sign) {
             this.parent = parent;
             this.state = state;
             this.sign = sign;
