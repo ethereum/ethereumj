@@ -19,15 +19,11 @@ package org.ethereum.sharding.processing.consensus;
 
 import org.ethereum.sharding.domain.Beacon;
 import org.ethereum.sharding.processing.state.ActiveState;
-import org.ethereum.sharding.processing.state.AttestationRecord;
 import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.CrystallizedState;
 import org.ethereum.sharding.processing.state.Dynasty;
 import org.ethereum.sharding.processing.state.Finality;
-import org.ethereum.sharding.pubsub.BeaconAttestationIncluded;
-import org.ethereum.sharding.pubsub.Events;
 import org.ethereum.sharding.pubsub.Publisher;
-import org.ethereum.sharding.pubsub.StateRecalc;
 import org.ethereum.sharding.registration.ValidatorRepository;
 import org.ethereum.sharding.validator.BeaconAttester;
 import org.slf4j.Logger;
@@ -93,13 +89,7 @@ public class BeaconStateTransition implements StateTransition<BeaconState> {
             }
 
             // remove attestations older than last_state_recalc
-            List<AttestationRecord> uptodateAttestations = new ArrayList<>();
-            for (AttestationRecord record : activeState.getPendingAttestations()) {
-                if (record.getSlot() >= crystallized.getLastStateRecalc()) {
-                    uptodateAttestations.add(record);
-                }
-            }
-            activeState = activeState.withPendingAttestations(uptodateAttestations);
+            activeState = activeState.removeAttestationsPriorTo(crystallized.getLastStateRecalc());
         }
 
         return new BeaconState(crystallized, activeState);

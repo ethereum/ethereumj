@@ -85,6 +85,16 @@ public class ActiveState {
         return new ActiveState(pendingAttestations, this.pendingSpecials, this.recentBlockHashes, this.randaoMix);
     }
 
+    public ActiveState removeAttestationsPriorTo(long slot) {
+        List<AttestationRecord> uptodateAttestations = new ArrayList<>();
+        for (AttestationRecord record : pendingAttestations) {
+            if (record.getSlot() >= slot) {
+                uptodateAttestations.add(record);
+            }
+        }
+        return withPendingAttestations(uptodateAttestations);
+    }
+
     public ActiveState(byte[] encoded) {
         RLPList list = RLP.unwrapList(encoded);
 
