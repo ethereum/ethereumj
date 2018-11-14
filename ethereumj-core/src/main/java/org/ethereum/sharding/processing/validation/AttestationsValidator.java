@@ -25,6 +25,7 @@ import org.ethereum.sharding.processing.state.AttestationRecord;
 import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.Committee;
 import org.ethereum.sharding.processing.state.CrystallizedState;
+import org.ethereum.sharding.processing.state.StateRepository;
 import org.ethereum.sharding.util.BeaconUtils;
 import org.ethereum.sharding.util.Bitfield;
 import org.ethereum.util.ByteUtil;
@@ -50,11 +51,13 @@ public class AttestationsValidator {
     private static final Logger logger = LoggerFactory.getLogger("beacon");
 
     BeaconStore store;
+    StateRepository repository;
     Sign sign;
     List<ValidationRule<Data>> rules;
 
-    public AttestationsValidator(BeaconStore store, Sign sign) {
+    public AttestationsValidator(BeaconStore store, StateRepository repository, Sign sign) {
         this.store = store;
+        this.repository = repository;
         this.sign = sign;
 
         rules = new ArrayList<>();
@@ -62,14 +65,16 @@ public class AttestationsValidator {
         rules.add(validateAttestations());
     }
 
-    private AttestationsValidator(BeaconStore store, Sign sign, List<ValidationRule<Data>> rules) {
+    private AttestationsValidator(BeaconStore store, StateRepository repository,
+                                  Sign sign, List<ValidationRule<Data>> rules) {
         this.store = store;
+        this.repository = repository;
         this.sign = sign;
         this.rules = rules;
     }
 
     public static AttestationsValidator createDummy() {
-        return new AttestationsValidator(null, new DummySign(), Collections.emptyList());
+        return new AttestationsValidator(null, null, new DummySign(), Collections.emptyList());
     }
 
     /**
@@ -193,9 +198,14 @@ public class AttestationsValidator {
         };
     }
 
-    public ValidationResult validateAndLog(Beacon block, Beacon parent, BeaconState state) {
+    public ValidationResult validateAndLog(Beacon block) {
+        Beacon parent = store.getByHash(block.getParentHash());
+        assert parent != null;
+        BeaconState state = repository.get(parent.getStateHash());
+        assert state != null;
+
         for (ValidationRule<Data> rule : rules) {
-            ValidationResult res = rule.apply(block, new Data(parent, state));
+            ValidationResult res = rule.apply(block, new Data(parent, state, sign));
             if (res != Success) {
                 logger.info("Process attestations validation in block {}, status: {}", block.toString(), res);
                 return res;
@@ -208,10 +218,12 @@ public class AttestationsValidator {
     class Data {
         Beacon parent;
         BeaconState state;
+        Sign sign;
 
-        public Data(Beacon parent, BeaconState state) {
+        public Data(Beacon parent, BeaconState state, Sign sign) {
             this.parent = parent;
             this.state = state;
+            this.sign = sign;
         }
     }
 }

@@ -55,7 +55,7 @@ public class BeaconChainFactory {
 
         BeaconValidator beaconValidator = new BeaconValidator(store);
         StateValidator stateValidator = new StateValidator();
-        AttestationsValidator attestationsValidator = new AttestationsValidator(store, sign);
+        AttestationsValidator attestationsValidator = new AttestationsValidator(store, repository, sign);
         ScoreFunction scoreFunction = new MaximumVotesAsScore(store);
 
         return new BeaconChainImpl(beaconDbFlusher, store, stateTransitionFunction, repository,

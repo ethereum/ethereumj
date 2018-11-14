@@ -123,13 +123,12 @@ public class BeaconChainImpl implements BeaconChain {
         ValidationResult vRes;
         if ((vRes = beaconValidator.validateAndLog(block)) != ValidationResult.Success)
             return ProcessingResult.fromValidation(vRes);
-
-        Beacon parent = pullParent(block);
-        BeaconState currentState = pullState(parent);
-        if ((vRes = attestationsValidator.validateAndLog(block, parent, currentState)) != ValidationResult.Success)
+        if ((vRes = attestationsValidator.validateAndLog(block)) != ValidationResult.Success)
             return ProcessingResult.fromValidation(vRes);
 
         // apply state transition
+        Beacon parent = pullParent(block);
+        BeaconState currentState = pullState(parent);
         BeaconState newState = transitionFunction.applyBlock(block, currentState);
 
         if ((vRes = stateValidator.validateAndLog(block, newState)) != ValidationResult.Success)
