@@ -21,11 +21,20 @@ import org.ethereum.TestUtils;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockHeaderWrapper;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.FastByteComparisons;
+import org.ethereum.validator.DependentBlockHeaderRule;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.ethereum.crypto.HashUtil.randomPeerId;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 /**
  * Created by Anton Nashatyrev on 30.05.2016.
@@ -157,6 +166,46 @@ public class SyncQueueImplTest {
     }
 
     @Test
+    // a copy of testReverseHeaders2 with #addHeadersAndValidate() instead #addHeaders(),
+    // makes sure that nothing is broken
+    public void testReverseHeaders3() {
+        List<Block> randomChain = TestUtils.getRandomChain(new byte[32], 0, 194);
+        Peer[] peers = new Peer[]{new Peer(randomChain), new Peer(randomChain)};
+        SyncQueueReverseImpl syncQueue = new SyncQueueReverseImpl(randomChain.get(randomChain.size() - 1).getHash(), true);
+        List<BlockHeaderWrapper> result = new ArrayList<>();
+        int peerIdx = 1;
+        int cnt = 0;
+        while (cnt < 100) {
+            System.out.println("Cnt: " + cnt++);
+            Collection<SyncQueueIfc.HeadersRequest> headersRequests = syncQueue.requestHeaders(192, 10, Integer.MAX_VALUE);
+            if (headersRequests == null) break;
+            for (SyncQueueIfc.HeadersRequest request : headersRequests) {
+                System.out.println("Req: " + request);
+                List<BlockHeader> headers = peers[peerIdx].getHeaders(request);
+
+                // Removing genesis header, which we will not get from real peers
+                Iterator<BlockHeader> it = headers.iterator();
+                while (it.hasNext()) {
+                    if (FastByteComparisons.equal(it.next().getHash(), randomChain.get(0).getHash())) it.remove();
+                }
+
+                peerIdx = (peerIdx + 1) % 2;
+                SyncQueueIfc.ValidatedHeaders ret = syncQueue.addHeadersAndValidate(createHeadersFromHeaders(headers, peer0));
+                assert ret.isValid();
+                result.addAll(ret.getHeaders());
+                System.out.println("Result length: " + result.size());
+            }
+        }
+
+        assert cnt != 100;
+        assert result.size() == randomChain.size() - 1; // - genesis
+        for (int  i = 0; i < result.size() - 1; i++) {
+            assert Arrays.equals(result.get(i + 1).getHash(), result.get(i).getHeader().getParentHash());
+        }
+        assert Arrays.equals(randomChain.get(0).getHash(), result.get(result.size() - 1).getHeader().getParentHash());
+    }
+
+    @Test
     public void testLongLongestChain() {
         List<Block> randomChain = TestUtils.getRandomAltChain(new byte[32], 0, 10500, 3);
         SyncQueueImpl syncQueue = new SyncQueueImpl(randomChain);
@@ -244,6 +293,76 @@ public class SyncQueueImplTest {
         randomChain.addAll(blockSaver2);
 
         assert new SyncQueueImpl(randomChain).getLongestChain().size() == 15; // 0 .. 14
+    }
+
+    @Test
+    public void testValidateChain() {
+        List<Block> randomChain = TestUtils.getRandomChain(new byte[32], 0, 100);
+        SyncQueueImpl queue = new SyncQueueImpl(randomChain);
+        byte[] nodeId = randomPeerId();
+
+        List<Block> chain = TestUtils.getRandomChain(randomChain.get(randomChain.size() - 1).getHash(),
+                100, SyncQueueImpl.MAX_CHAIN_LEN - 100 - 1);
+        queue.addHeaders(createHeadersFromBlocks(chain, nodeId));
+
+        List<SyncQueueImpl.HeaderElement> longestChain = queue.getLongestChain();
+
+        // no validator is set
+        assertEquals(SyncQueueIfc.ValidatedHeaders.Empty, queue.validateChain(longestChain));
+
+        chain = TestUtils.getRandomChain(chain.get(chain.size() - 1).getHash(),
+                SyncQueueImpl.MAX_CHAIN_LEN - 1, SyncQueueImpl.MAX_CHAIN_LEN);
+        queue.addHeaders(createHeadersFromBlocks(chain, nodeId));
+
+        chain = TestUtils.getRandomChain(chain.get(chain.size() - 1).getHash(),
+                2 * SyncQueueImpl.MAX_CHAIN_LEN - 1, SyncQueueImpl.MAX_CHAIN_LEN);
+
+        // the chain is invalid
+        queue.withParentHeaderValidator(RedRule);
+        SyncQueueIfc.ValidatedHeaders ret = queue.addHeadersAndValidate(createHeadersFromBlocks(chain, nodeId));
+        assertFalse(ret.isValid());
+        assertArrayEquals(nodeId, ret.getNodeId());
+
+        // the chain is valid
+        queue.withParentHeaderValidator(GreenRule);
+        ret = queue.addHeadersAndValidate(createHeadersFromBlocks(chain, nodeId));
+        assertEquals(SyncQueueIfc.ValidatedHeaders.Empty, ret);
+    }
+
+    @Test
+    public void testEraseChain() {
+        List<Block> randomChain = TestUtils.getRandomChain(new byte[32], 0, 1024);
+        SyncQueueImpl queue = new SyncQueueImpl(randomChain);
+
+        List<Block> chain1 = TestUtils.getRandomChain(randomChain.get(randomChain.size() - 1).getHash(),
+                1024, SyncQueueImpl.MAX_CHAIN_LEN / 2);
+        queue.addHeaders(createHeadersFromBlocks(chain1, randomPeerId()));
+
+        List<Block> chain2 = TestUtils.getRandomChain(randomChain.get(randomChain.size() - 1).getHash(),
+                1024, SyncQueueImpl.MAX_CHAIN_LEN / 2 - 1);
+        queue.addHeaders(createHeadersFromBlocks(chain2, randomPeerId()));
+
+        List<SyncQueueImpl.HeaderElement> longestChain = queue.getLongestChain();
+        long maxNum = longestChain.get(longestChain.size() - 1).header.getNumber();
+        assertEquals(1024 + SyncQueueImpl.MAX_CHAIN_LEN / 2 - 1, maxNum);
+        assertEquals(1024 + SyncQueueImpl.MAX_CHAIN_LEN / 2 - 1, queue.getHeadersCount());
+
+        List<Block> chain3 = TestUtils.getRandomChain(chain1.get(chain1.size() - 1).getHash(),
+                1024 + SyncQueueImpl.MAX_CHAIN_LEN / 2, SyncQueueImpl.MAX_CHAIN_LEN / 10);
+        // the chain is invalid and must be erased
+        queue.withParentHeaderValidator(new DependentBlockHeaderRule() {
+            @Override
+            public boolean validate(BlockHeader header, BlockHeader dependency) {
+                // chain2 should become best after erasing
+                return header.getNumber() < chain2.get(chain2.size() - 2).getNumber();
+            }
+        });
+        queue.addHeadersAndValidate(createHeadersFromBlocks(chain3, randomPeerId()));
+
+        longestChain = queue.getLongestChain();
+        assertEquals(maxNum - 1, queue.getHeadersCount());
+        assertEquals(chain2.get(chain2.size() - 1).getHeader(),
+                longestChain.get(longestChain.size() - 1).header.getHeader());
     }
 
     public void test2Impl(List<Block> mainChain, List<Block> initChain, Peer[] peers) {
@@ -382,4 +501,18 @@ public class SyncQueueImplTest {
         }
         return ret;
     }
+
+    static final DependentBlockHeaderRule RedRule = new DependentBlockHeaderRule() {
+        @Override
+        public boolean validate(BlockHeader header, BlockHeader dependency) {
+            return false;
+        }
+    };
+
+    static final DependentBlockHeaderRule GreenRule = new DependentBlockHeaderRule() {
+        @Override
+        public boolean validate(BlockHeader header, BlockHeader dependency) {
+            return true;
+        }
+    };
 }

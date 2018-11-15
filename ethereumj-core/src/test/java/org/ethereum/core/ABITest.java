@@ -335,4 +335,38 @@ public class ABITest {
         Assert.assertArrayEquals((Object[]) objects[1], strings);
         Assert.assertEquals(((Number) objects[2]).intValue(), 222);
     }
+    
+    @Test
+    public void twoDimensionalArrayType_hasDimensionDefinitionInCorrectOrder() {
+        String funcJson = "{  \n" + 
+                "      'constant':false,\n" + 
+                "      'inputs':[  \n" + 
+                "         {  \n" + 
+                "            'name':'param1',\n" + 
+                "            'type':'address[5][]'\n" + 
+                "         },\n" + 
+                "         {  \n" + 
+                "            'name':'param2',\n" + 
+                "            'type':'uint256[6][2]'\n" + 
+                "         },\n" + 
+                "         {  \n" + 
+                "            'name':'param2',\n" + 
+                "            'type':'uint256[][]'\n" + 
+                "         },\n" +
+                "         {  \n" + 
+                "            'name':'param3',\n" + 
+                "            'type':'uint256[][2]'\n" + 
+                "         }\n" +
+                "      ],\n" + 
+                "      'name':'testTwoDimArray',\n" + 
+                "      'outputs':[],\n" + 
+                "      'payable':false,\n" + 
+                "      'type':'function'\n" + 
+                "}";
+        funcJson = funcJson.replaceAll("'", "\"");
+        CallTransaction.Function function = CallTransaction.Function.fromJsonInterface(funcJson);
+        String expected = "testTwoDimArray(address[5][],uint256[6][2],uint256[][],uint256[][2])";
+        String actual = function.toString();
+        Assert.assertEquals(expected, actual);
+    }
 }
