@@ -36,7 +36,6 @@ public interface BeaconAttester {
      */
     AttestationRecord attestBlock(Input in, byte[] pubKey);
 
-
     class Input {
         long slotNumber;
         Committee.Index index;

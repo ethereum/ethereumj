@@ -32,7 +32,7 @@ import static org.ethereum.util.ByteUtil.isSingleZero;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
- * Active beacon chain state
+ * Active beacon chain stated
  */
 public class ActiveState {
     // Attestations that have not yet been processed
@@ -43,9 +43,6 @@ public class ActiveState {
     private final List<byte[]> recentBlockHashes;
     // RANDAO state
     private final byte[] randaoMix;
-
-    // TODO: Add pending_specials
-
 
     public ActiveState(List<AttestationRecord> pendingAttestations, List<SpecialRecord> pendingSpecials,
                        List<byte[]> recentBlockHashes, byte[] randaoMix) {
@@ -68,6 +65,34 @@ public class ActiveState {
         }
 
         return new ActiveState(pendingAttestations, pendingSpecials, recentBlockHashes, new byte[32]);
+    }
+
+    /**
+     * Adds new attestations to the end of the list
+     * Produces new instance keeping immutability
+     * @param pendingAttestations   Attestations to add
+     * @return updated ActiveState
+     */
+    public ActiveState addPendingAttestations(List<AttestationRecord> pendingAttestations) {
+        List<AttestationRecord> mergedAttestations = new ArrayList<>();
+        mergedAttestations.addAll(this.getPendingAttestations());
+        mergedAttestations.addAll(pendingAttestations);
+
+        return this.withPendingAttestations(mergedAttestations);
+    }
+
+    public ActiveState withPendingAttestations(List<AttestationRecord> pendingAttestations) {
+        return new ActiveState(pendingAttestations, this.pendingSpecials, this.recentBlockHashes, this.randaoMix);
+    }
+
+    public ActiveState removeAttestationsPriorTo(long slot) {
+        List<AttestationRecord> uptodateAttestations = new ArrayList<>();
+        for (AttestationRecord record : pendingAttestations) {
+            if (record.getSlot() >= slot) {
+                uptodateAttestations.add(record);
+            }
+        }
+        return withPendingAttestations(uptodateAttestations);
     }
 
     public ActiveState(byte[] encoded) {

@@ -15,22 +15,29 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.sharding.processing.validation;
+package org.ethereum.sharding.pubsub;
+
+import org.ethereum.sharding.processing.state.AttestationRecord;
 
 /**
- * Enumerates possible results of beacon blocks validation.
- *
- * @author Mikhail Kalinin
- * @since 16.08.2018
+ * Pushed when {@link AttestationRecord} is included in some block,
+ * so we could drop it from the pool
  */
-public enum ValidationResult {
-    Exist,
-    NoParent,
-    StateMismatch,
-    InvalidAttestations,
-    Success;
+public class BeaconAttestationIncluded extends Event<BeaconAttestationIncluded.Data> {
 
-    public boolean isSuccess() {
-        return this == Success;
+    public static class Data {
+        private final AttestationRecord attestationRecord;
+
+        public Data(AttestationRecord attestationRecord) {
+            this.attestationRecord = attestationRecord;
+        }
+
+        public AttestationRecord getAttestationRecord() {
+            return attestationRecord;
+        }
+    }
+
+    public BeaconAttestationIncluded(AttestationRecord attestationRecord) {
+        super(new Data(attestationRecord));
     }
 }

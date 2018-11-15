@@ -19,17 +19,26 @@ package org.ethereum.sharding.processing;
 
 import org.ethereum.core.Block;
 import org.ethereum.db.DbFlushManager;
+import org.ethereum.sharding.crypto.Sign;
 import org.ethereum.sharding.processing.consensus.BeaconStateTransition;
 import org.ethereum.sharding.processing.consensus.GenesisTransition;
-import org.ethereum.sharding.processing.consensus.NumberAsScore;
+import org.ethereum.sharding.processing.consensus.MaximumVotesAsScore;
 import org.ethereum.sharding.processing.consensus.ScoreFunction;
 import org.ethereum.sharding.processing.consensus.StateTransition;
 import org.ethereum.sharding.processing.db.BeaconStore;
 import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.StateRepository;
+import org.ethereum.sharding.processing.validation.AttestationsValidator;
 import org.ethereum.sharding.processing.validation.BeaconValidator;
+import org.ethereum.sharding.processing.validation.BasicBeaconValidator;
+import org.ethereum.sharding.processing.validation.MultiBeaconValidator;
 import org.ethereum.sharding.processing.validation.StateValidator;
+import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.registration.ValidatorRepository;
+import org.ethereum.sharding.validator.BeaconAttester;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A factory that creates {@link BeaconChain} instance.
@@ -47,28 +56,35 @@ public class BeaconChainFactory {
 
     public static BeaconChain create(DbFlushManager beaconDbFlusher, BeaconStore store,
                                      StateRepository repository, StateTransition<BeaconState> genesisStateTransition,
-                                     StateTransition<BeaconState> stateTransitionFunction) {
-
-        BeaconValidator beaconValidator = new BeaconValidator(store);
+                                     StateTransition<BeaconState> stateTransitionFunction, Sign sign) {
+        List<BeaconValidator> beaconValidators = new ArrayList<BeaconValidator>() {{
+            add(new BasicBeaconValidator(store));
+            add(new AttestationsValidator(store, repository, sign));
+        }};
+        BeaconValidator multiValidator = new MultiBeaconValidator(beaconValidators);
         StateValidator stateValidator = new StateValidator();
-        ScoreFunction scoreFunction = new NumberAsScore();
+        ScoreFunction scoreFunction = new MaximumVotesAsScore(store);
 
-        return new BeaconChainImpl(beaconDbFlusher, store, stateTransitionFunction,
-                repository, beaconValidator, stateValidator, scoreFunction, genesisStateTransition);
+        return new BeaconChainImpl(beaconDbFlusher, store, stateTransitionFunction, repository,
+                multiValidator, stateValidator, scoreFunction, genesisStateTransition);
     }
 
     public static BeaconChain create(DbFlushManager beaconDbFlusher, BeaconStore store, StateRepository repository,
-                                     ValidatorRepository validatorRepository, Block bestBlock) {
+                                     ValidatorRepository validatorRepository, Block bestBlock,
+                                     BeaconAttester beaconAttester, Publisher publisher, Sign sign) {
 
         StateTransition<BeaconState> genesisStateTransition = new GenesisTransition(validatorRepository)
                 .withMainChainRef(bestBlock.getHash());
 
-        return create(beaconDbFlusher, store, repository, genesisStateTransition, stateTransition(validatorRepository));
+        return create(beaconDbFlusher, store, repository, genesisStateTransition,
+                stateTransition(validatorRepository, beaconAttester, publisher), sign);
     }
 
-    public static StateTransition<BeaconState> stateTransition(ValidatorRepository validatorRepository) {
+    public static StateTransition<BeaconState> stateTransition(ValidatorRepository validatorRepository,
+                                                               BeaconAttester beaconAttester,
+                                                               Publisher publisher) {
         if (stateTransition == null)
-            stateTransition = new BeaconStateTransition(validatorRepository);
+            stateTransition = new BeaconStateTransition(validatorRepository, beaconAttester, publisher);
         return stateTransition;
     }
 }

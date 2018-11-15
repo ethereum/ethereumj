@@ -15,22 +15,27 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with the ethereumJ library. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.ethereum.sharding.processing.validation;
+package org.ethereum.sharding.pubsub;
 
 /**
- * Enumerates possible results of beacon blocks validation.
- *
- * @author Mikhail Kalinin
- * @since 16.08.2018
+ * Pushed when state recalc happens and
+ * crystallized state {@link org.ethereum.sharding.processing.state.CrystallizedState} is changed
  */
-public enum ValidationResult {
-    Exist,
-    NoParent,
-    StateMismatch,
-    InvalidAttestations,
-    Success;
+public class StateRecalc extends Event<StateRecalc.Data> {
 
-    public boolean isSuccess() {
-        return this == Success;
+    public static class Data {
+        private final Long slot;
+
+        public Data(Long slot) {
+            this.slot = slot;
+        }
+
+        public Long getSlot() {
+            return slot;
+        }
+    }
+
+    public StateRecalc(Long slot) {
+        super(new Data(slot));
     }
 }

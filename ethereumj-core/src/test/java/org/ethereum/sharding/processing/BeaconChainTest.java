@@ -29,6 +29,8 @@ import org.ethereum.sharding.processing.db.IndexedBeaconStore;
 import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.BeaconStateRepository;
 import org.ethereum.sharding.processing.state.StateRepository;
+import org.ethereum.sharding.processing.validation.BasicBeaconValidator;
+import org.ethereum.sharding.processing.validation.StateValidator;
 import org.junit.Test;
 
 import java.math.BigInteger;
@@ -85,18 +87,18 @@ public class BeaconChainTest {
         Beacon b1 = helper.createBlock(g);
         Beacon b2 = helper.createBlock(b1);
         Beacon b3 = helper.createBlock(b2);
-        Beacon b4 = helper.createBlock(b3);
-        Beacon b5 = helper.createBlock(b4, 6);
-        Beacon b6 = helper.createBlock(b5);
+        Beacon b4 = helper.createBlock(b3, 5);
+        Beacon b5 = helper.createBlock(b4, 7);
+        Beacon b6 = helper.createBlock(b5, 9);
 
         Beacon b31 = helper.createBlock(b2, 4);
         Beacon b41 = helper.createBlock(b31);
 
-        Beacon b42 = helper.createBlock(b31);
+        Beacon b42 = helper.createBlock(b31, 6);
 
         Beacon b52 = helper.createBlock(b42);
         Beacon b53 = helper.createBlock(b42);
-        Beacon b54 = helper.createBlock(b42, 6);
+        Beacon b54 = helper.createBlock(b42, 8);
 
         assertEquals(Best, beaconChain.insert(b1));
         assertEquals(Best, beaconChain.insert(b2));
@@ -138,7 +140,7 @@ public class BeaconChainTest {
         assertTrue(helper.store.exist(b53.getHash()));
         helper.checkCanonical(b1, b2, b31, b42, b54);
 
-        // b6 beats b53
+        // b6 beats b54
         assertEquals(Best, beaconChain.insert(b6));
         helper.checkCanonical(b1, b2, b3, b4, b5, b6);
     }
@@ -185,9 +187,9 @@ public class BeaconChainTest {
             inst.store = new IndexedBeaconStore(new HashMapDB<>(), new HashMapDB<>());
             inst.repository = new BeaconStateRepository(new HashMapDB<>(), new HashMapDB<>(),
                     new HashMapDB<>(), new HashMapDB<>(), new HashMapDB<>());
-            inst.beaconChain = (BeaconChainImpl) BeaconChainFactory.create(
-                    new DummyFlusher(), inst.store, inst.repository, new NoTransition(), new NoTransition());
-            inst.beaconChain.scoreFunction = (block, state) -> BigInteger.valueOf(block.getMainChainRef()[0]);
+            inst.beaconChain = new BeaconChainImpl(new DummyFlusher(), inst.store, new NoTransition(),
+                    inst.repository, new BasicBeaconValidator(inst.store), new StateValidator(),
+                    (block, state) -> BigInteger.valueOf(block.getMainChainRef()[0]), new NoTransition());
             return inst;
         }
 
@@ -220,7 +222,10 @@ public class BeaconChainTest {
             BigInteger expectedScore = BigInteger.ZERO;
             for (Beacon b : chain) {
                 assertTrue(store.exist(b.getHash()));
-                expectedScore = expectedScore.add(beaconChain.scoreFunction.apply(b, null));
+            }
+
+            if (chain.length > 0) {
+                expectedScore = beaconChain.scoreFunction.apply(chain[chain.length - 1], null);
             }
 
             Beacon expectedHead = chain[chain.length - 1];

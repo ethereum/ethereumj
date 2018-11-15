@@ -17,9 +17,11 @@
  */
 package org.ethereum.sharding.util;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Bitfield is bit array where every bit represents status of
@@ -48,7 +50,7 @@ public class Bitfield {
      * @param num  Number of attesters
      * @return  Bitfield length in bytes
      */
-    private int calcLength(int num) {
+    public static int calcLength(int num) {
         return num == 0 ? 0 : (num - 1) / Byte.SIZE + 1;
     }
 
@@ -95,6 +97,10 @@ public class Bitfield {
         return votes;
     }
 
+    public static Bitfield orBitfield(Bitfield... bitfields) {
+        return orBitfield(new ArrayList<>(Arrays.asList(bitfields)));
+    }
+
     /**
      * OR aggregation function
      * OR aggregation of input bitfields
@@ -119,6 +125,20 @@ public class Bitfield {
 
     public int size() {
         return size;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Bitfield bitfield = (Bitfield) o;
+        return size == bitfield.size &&
+                Objects.equals(payload, bitfield.payload);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(payload, size);
     }
 
     public byte[] getData() {

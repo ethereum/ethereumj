@@ -43,8 +43,7 @@ public class BeaconAttesterImpl implements BeaconAttester {
     ValidatorConfig config;
     Sign sign;
 
-    public BeaconAttesterImpl(StateRepository repository, BeaconStore store, ValidatorConfig config,
-                              Sign sign) {
+    public BeaconAttesterImpl(StateRepository repository, BeaconStore store, ValidatorConfig config, Sign sign) {
         this.repository = repository;
         this.store = store;
         this.config = config;
