@@ -201,7 +201,7 @@ public class AttestationsValidator implements BeaconValidator {
         return Success;
     }
 
-    class Data {
+    static class Data {
         Beacon parent;
         BeaconState state;
         Sign sign;

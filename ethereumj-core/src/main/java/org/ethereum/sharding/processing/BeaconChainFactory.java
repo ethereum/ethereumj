@@ -30,7 +30,8 @@ import org.ethereum.sharding.processing.state.BeaconState;
 import org.ethereum.sharding.processing.state.StateRepository;
 import org.ethereum.sharding.processing.validation.AttestationsValidator;
 import org.ethereum.sharding.processing.validation.BeaconValidator;
-import org.ethereum.sharding.processing.validation.BeaconValidatorImpl;
+import org.ethereum.sharding.processing.validation.BasicBeaconValidator;
+import org.ethereum.sharding.processing.validation.MultiBeaconValidator;
 import org.ethereum.sharding.processing.validation.StateValidator;
 import org.ethereum.sharding.pubsub.Publisher;
 import org.ethereum.sharding.registration.ValidatorRepository;
@@ -57,14 +58,15 @@ public class BeaconChainFactory {
                                      StateRepository repository, StateTransition<BeaconState> genesisStateTransition,
                                      StateTransition<BeaconState> stateTransitionFunction, Sign sign) {
         List<BeaconValidator> beaconValidators = new ArrayList<BeaconValidator>() {{
-            add(new BeaconValidatorImpl(store));
+            add(new BasicBeaconValidator(store));
             add(new AttestationsValidator(store, repository, sign));
         }};
+        BeaconValidator multiValidator = new MultiBeaconValidator(beaconValidators);
         StateValidator stateValidator = new StateValidator();
         ScoreFunction scoreFunction = new MaximumVotesAsScore(store);
 
         return new BeaconChainImpl(beaconDbFlusher, store, stateTransitionFunction, repository,
-                beaconValidators, stateValidator, scoreFunction, genesisStateTransition);
+                multiValidator, stateValidator, scoreFunction, genesisStateTransition);
     }
 
     public static BeaconChain create(DbFlushManager beaconDbFlusher, BeaconStore store, StateRepository repository,

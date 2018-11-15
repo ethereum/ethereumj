@@ -37,7 +37,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigInteger;
-import java.util.List;
 
 import static org.ethereum.sharding.pubsub.Events.onBeaconBlock;
 import static org.ethereum.sharding.pubsub.Events.onBeaconChainLoaded;
@@ -58,7 +57,7 @@ public class BeaconChainImpl implements BeaconChain {
 
     StateTransition<BeaconState> transitionFunction;
     StateTransition<BeaconState> genesisStateTransition;
-    List<BeaconValidator> beaconValidators;
+    BeaconValidator beaconValidator;
     StateValidator stateValidator;
     StateRepository repository;
     ScoreFunction scoreFunction;
@@ -69,13 +68,13 @@ public class BeaconChainImpl implements BeaconChain {
 
     public BeaconChainImpl(DbFlushManager beaconDbFlusher, BeaconStore store,
                            StateTransition<BeaconState> transitionFunction, StateRepository repository,
-                           List<BeaconValidator> beaconValidators, StateValidator stateValidator,
+                           BeaconValidator beaconValidator, StateValidator stateValidator,
                            ScoreFunction scoreFunction, StateTransition<BeaconState> genesisStateTransition) {
         this.beaconDbFlusher = beaconDbFlusher;
         this.store = store;
         this.transitionFunction = transitionFunction;
         this.repository = repository;
-        this.beaconValidators = beaconValidators;
+        this.beaconValidator = beaconValidator;
         this.stateValidator = stateValidator;
         this.scoreFunction = scoreFunction;
         this.genesisStateTransition = genesisStateTransition;
@@ -118,10 +117,8 @@ public class BeaconChainImpl implements BeaconChain {
     @Override
     public synchronized ProcessingResult insert(Beacon block) {
         ValidationResult vRes;
-        for (BeaconValidator validator : beaconValidators) {
-            if ((vRes = validator.validateAndLog(block)) != ValidationResult.Success)
-                return ProcessingResult.fromValidation(vRes);
-        }
+        if ((vRes = beaconValidator.validateAndLog(block)) != ValidationResult.Success)
+            return ProcessingResult.fromValidation(vRes);
 
         // apply state transition
         Beacon parent = pullParent(block);

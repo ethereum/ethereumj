@@ -35,14 +35,14 @@ import static org.ethereum.sharding.processing.validation.ValidationResult.Succe
  * @author Mikhail Kalinin
  * @since 16.08.2018
  */
-public class BeaconValidatorImpl implements BeaconValidator {
+public class BasicBeaconValidator implements BeaconValidator {
 
     private static final Logger logger = LoggerFactory.getLogger("beacon");
 
     BeaconStore store;
     List<ValidationRule<BeaconStore>> rules;
 
-    public BeaconValidatorImpl(BeaconStore store) {
+    public BasicBeaconValidator(BeaconStore store) {
         this.store = store;
 
         rules = new ArrayList<>();
