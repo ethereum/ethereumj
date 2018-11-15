@@ -161,7 +161,7 @@ public class BlockSummaryEthereumListener implements EthereumListener {
       .collect(Collectors.toMap(r -> wrap(r.getTransaction().getHash()), r -> r));
 
 
-    blockBuilder.setTransactions(
+    blockBuilder.setTxReceipts(
       txnsByHash.entrySet().stream()
         .map(entry -> {
 
