@@ -132,8 +132,7 @@ public class BeaconChainImpl implements BeaconChain {
             return ProcessingResult.fromValidation(vRes);
 
         // calculate block and chain score
-        BigInteger blockScore = scoreFunction.apply(block, newState);
-        BigInteger chainScore = store.getChainScore(parent.getHash()).add(blockScore);
+        BigInteger chainScore = scoreFunction.apply(block, newState);
 
         ScoredChainHead newHead = new ScoredChainHead(block, chainScore, newState);
 
