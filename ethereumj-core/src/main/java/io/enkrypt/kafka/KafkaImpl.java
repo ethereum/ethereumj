@@ -1,7 +1,9 @@
 package io.enkrypt.kafka;
 
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
+import io.enkrypt.avro.capture.BlockSummaryKeyRecord;
 import io.enkrypt.avro.capture.BlockSummaryRecord;
+import io.enkrypt.avro.capture.TransactionKeyRecord;
 import io.enkrypt.avro.capture.TransactionRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -13,20 +15,20 @@ import java.util.Properties;
 
 public class KafkaImpl implements Kafka {
 
-  private KafkaProducer<Long, BlockSummaryRecord> blockSummaryProducer;
-  private KafkaProducer<byte[], TransactionRecord> txProducer;
+  private KafkaProducer<BlockSummaryKeyRecord, BlockSummaryRecord> blockSummaryProducer;
+  private KafkaProducer<TransactionKeyRecord, TransactionRecord> txProducer;
 
   public KafkaImpl(Properties config) {
 
     final Properties txConfig = copy(config);
     txConfig.put(ProducerConfig.CLIENT_ID_CONFIG, "ethereumj-pending-transactions");
-    txConfig.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
+    txConfig.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class.getName());
     txConfig.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class.getName());
 
     this.txProducer = new KafkaProducer<>(txConfig);
 
     final Properties blockSummaryConfig = copy(config);
-    blockSummaryConfig.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, LongSerializer.class.getName());
+    blockSummaryConfig.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class.getName());
     blockSummaryConfig.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class.getName());
 
     // transactional settings
@@ -39,12 +41,12 @@ public class KafkaImpl implements Kafka {
   }
 
   @Override
-  public KafkaProducer<byte[], TransactionRecord> getPendingTransactionsProducer() {
+  public KafkaProducer<TransactionKeyRecord, TransactionRecord> getPendingTransactionsProducer() {
     return txProducer;
   }
 
   @Override
-  public KafkaProducer<Long, BlockSummaryRecord> getBlockSummaryProducer() {
+  public KafkaProducer<BlockSummaryKeyRecord, BlockSummaryRecord> getBlockSummaryProducer() {
     return blockSummaryProducer;
   }
 

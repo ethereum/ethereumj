@@ -1,5 +1,6 @@
 package io.enkrypt.kafka.listener;
 
+import io.enkrypt.avro.capture.TransactionKeyRecord;
 import io.enkrypt.avro.capture.TransactionRecord;
 import io.enkrypt.kafka.Kafka;
 import io.enkrypt.kafka.mapping.ObjectMapper;
@@ -13,12 +14,13 @@ import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class KafkaPendingTxsListener implements EthereumListener {
 
-  private final Producer<byte[], TransactionRecord> producer;
+  private final Producer<TransactionKeyRecord, TransactionRecord> producer;
   private final ObjectMapper objectMapper;
 
   private final AtomicInteger numPendingTxs = new AtomicInteger(0);
@@ -34,7 +36,12 @@ public class KafkaPendingTxsListener implements EthereumListener {
 
   @Override
   public void onPendingTransactionUpdate(final TransactionReceipt txReceipt, final PendingTransactionState state, final Block block) {
+
     final byte[] txHash = txReceipt.getTransaction().getHash();
+
+    final TransactionKeyRecord key = TransactionKeyRecord.newBuilder()
+      .setHash(ByteBuffer.wrap(txHash))
+      .build();
 
     try {
 
@@ -45,13 +52,13 @@ public class KafkaPendingTxsListener implements EthereumListener {
           // send a tombstone to 'remove' as any included transactions will be sent in the onBlock and
           // we no longer care about dropped transactions
 
-          producer.send(new ProducerRecord<>(Kafka.TOPIC_PENDING_TRANSACTIONS, txHash, null)).get();
+          producer.send(new ProducerRecord<>(Kafka.TOPIC_PENDING_TRANSACTIONS, key, null)).get();
           numPendingTxs.decrementAndGet();
           break;
 
         case NEW_PENDING:
           final TransactionRecord record = objectMapper.convert(null, Transaction.class, TransactionRecord.class, txReceipt.getTransaction());
-          producer.send(new ProducerRecord<>(Kafka.TOPIC_PENDING_TRANSACTIONS, txHash, record)).get();
+          producer.send(new ProducerRecord<>(Kafka.TOPIC_PENDING_TRANSACTIONS, key, record)).get();
           numPendingTxs.incrementAndGet();
           break;
 

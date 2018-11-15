@@ -1,6 +1,7 @@
 package io.enkrypt.kafka.listener;
 
 import io.enkrypt.avro.capture.BlockRecord;
+import io.enkrypt.avro.capture.BlockSummaryKeyRecord;
 import io.enkrypt.avro.capture.BlockSummaryRecord;
 import io.enkrypt.kafka.Kafka;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -83,7 +84,7 @@ public class KafkaBlockSummaryPublisher implements Runnable {
 
   private void publishBatch(List<BlockSummaryRecord> batch) {
 
-    final KafkaProducer<Long, BlockSummaryRecord> producer = kafka.getBlockSummaryProducer();
+    final KafkaProducer<BlockSummaryKeyRecord, BlockSummaryRecord> producer = kafka.getBlockSummaryProducer();
 
     producer.beginTransaction();
 
@@ -96,9 +97,13 @@ public class KafkaBlockSummaryPublisher implements Runnable {
         final BlockRecord block = record.getBlock();
         final long number = block.getHeader().getNumber();
 
+        final BlockSummaryKeyRecord key = BlockSummaryKeyRecord.newBuilder()
+          .setNumber(number)
+          .build();
+
         // publish block summary
 
-        futures.add(producer.send(new ProducerRecord<>(Kafka.TOPIC_BLOCKS, number, record)));
+        futures.add(producer.send(new ProducerRecord<>(Kafka.TOPIC_BLOCKS, key, record)));
 
       }
 
