@@ -368,7 +368,7 @@ public class SyncQueueImpl implements SyncQueueIfc {
     }
 
     @Override
-    public ValidatedHeaders addHeadersAndValidate(Collection<BlockHeaderWrapper> headers) {
+    public synchronized ValidatedHeaders addHeadersAndValidate(Collection<BlockHeaderWrapper> headers) {
         for (BlockHeaderWrapper header : headers) {
             addHeader(header);
         }
