@@ -1,9 +1,6 @@
 package io.enkrypt.kafka.mapping;
 
 import io.enkrypt.avro.capture.TransactionRecord;
-import io.enkrypt.avro.common.Address;
-import io.enkrypt.avro.common.Hash;
-import io.enkrypt.avro.common.Nonce;
 import org.ethereum.core.Transaction;
 
 import static com.google.common.base.Preconditions.checkArgument;

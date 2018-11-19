@@ -1,8 +1,6 @@
 package io.enkrypt.kafka.mapping;
 
 import io.enkrypt.avro.capture.BlockHeaderRecord;
-import io.enkrypt.avro.common.Address;
-import io.enkrypt.avro.common.Hash;
 import org.ethereum.core.BlockHeader;
 
 import static com.google.common.base.Preconditions.checkArgument;

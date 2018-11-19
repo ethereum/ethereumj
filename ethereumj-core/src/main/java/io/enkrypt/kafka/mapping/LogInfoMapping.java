@@ -1,11 +1,9 @@
 package io.enkrypt.kafka.mapping;
 
 import io.enkrypt.avro.capture.LogInfoRecord;
-import io.enkrypt.avro.common.Address;
 import io.enkrypt.avro.common.DataWord;
 import org.ethereum.vm.LogInfo;
 
-import java.nio.ByteBuffer;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
