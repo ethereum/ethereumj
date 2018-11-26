@@ -252,14 +252,35 @@ public class HashUtil {
      * there is an agreement on using first 256-bits of BLAKE2B-512 digest
      */
     public static byte[] blake2b(byte[] data) {
+        return blake2b(data, 32);
+    }
+
+    /**
+     * Blake2b cryptographic hash function
+     * 512-bytes version is used
+     * @param data      Input
+     * @param nBytes    Number of bytes for output, 64 not truncated, if less, truncates output
+     * @return  hash
+     */
+    private static byte[] blake2b(byte[] data, int nBytes) {
+        if (nBytes > 64 || nBytes < 0) throw new RuntimeException("nBytes should be in range of 512 bits (64 bytes)");
         try {
             MessageDigest digest = MessageDigest.getInstance("BLAKE2B-512");
             digest.update(data);
-            return Arrays.copyOf(digest.digest(), 32);
+            return Arrays.copyOf(digest.digest(), nBytes);
         } catch (NoSuchAlgorithmException e) {
             LOG.error("Can't find such algorithm", e);
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Blake2b cryptographic hash function
+     * 512 bit result is truncated to 384 bits (48 bytes) output
+     * @return hash
+     */
+    public static byte[] blake2b384(byte[] data) {
+        return blake2b(data, 48);
     }
 
     public static String shortHash(byte[] hash) {

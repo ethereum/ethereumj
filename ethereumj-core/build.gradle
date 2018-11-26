@@ -156,6 +156,7 @@ dependencies {
     }
 
     compile "org.xerial.snappy:snappy-java:1.1.4" // Snappy compression
+    compile "org.miracl.milagro.amcl:milagro-crypto-java:0.4.0"  // BLS381 crypto implementation
 
     // used to hide spring initialization logs messages in samples
     optional "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
