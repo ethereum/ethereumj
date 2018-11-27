@@ -131,7 +131,27 @@ public abstract class SolidityType {
                 throw new RuntimeException("List value expected for type " + getName());
             }
         }
-        
+
+        protected byte[] encodeTuple(List l) {
+            byte[][] elems;
+            if (elementType.isDynamicType()) {
+                elems = new byte[l.size() * 2][];
+                int offset = l.size() * 32;
+                for (int i = 0; i < l.size(); i++) {
+                    elems[i] = IntType.encodeInt(offset);
+                    byte[] encoded = elementType.encode(l.get(i));
+                    elems[l.size() + i] = encoded;
+                    offset += 32 * ((encoded.length - 1) / 32 + 1);
+                }
+            } else {
+                elems = new byte[l.size()][];
+                for (int i = 0; i < l.size(); i++) {
+                    elems[i] = elementType.encode(l.get(i));
+                }
+            }
+            return ByteUtil.merge(elems);
+        }
+
         public SolidityType getElementType() {
             return elementType;
         }
@@ -158,11 +178,7 @@ public abstract class SolidityType {
         @Override
         public byte[] encodeList(List l) {
             if (l.size() != size) throw new RuntimeException("List size (" + l.size() + ") != " + size + " for type " + getName());
-            byte[][] elems = new byte[size][];
-            for (int i = 0; i < l.size(); i++) {
-                elems[i] = elementType.encode(l.get(i));
-            }
-            return ByteUtil.merge(elems);
+            return encodeTuple(l);
         }
 
         @Override
@@ -177,8 +193,16 @@ public abstract class SolidityType {
 
         @Override
         public int getFixedSize() {
-            // return negative if elementType is dynamic
-            return elementType.getFixedSize() * size;
+            if (isDynamicType()) {
+                return 32;
+            } else {
+                return elementType.getFixedSize() * size;
+            }
+        }
+
+        @Override
+        public boolean isDynamicType() {
+            return getElementType().isDynamicType() && size > 0;
         }
     }
 
@@ -194,26 +218,7 @@ public abstract class SolidityType {
 
         @Override
         public byte[] encodeList(List l) {
-            byte[][] elems;
-            if (elementType.isDynamicType()) {
-                elems = new byte[l.size() * 2 + 1][];
-                elems[0] = IntType.encodeInt(l.size());
-                int offset = l.size() * 32;
-                for (int i = 0; i < l.size(); i++) {
-                    elems[i + 1] = IntType.encodeInt(offset);
-                    byte[] encoded = elementType.encode(l.get(i));
-                    elems[l.size() + i + 1] = encoded;
-                    offset += 32 * ((encoded.length - 1) / 32 + 1);
-                }
-            } else {
-                elems = new byte[l.size() + 1][];
-                elems[0] = IntType.encodeInt(l.size());
-
-                for (int i = 0; i < l.size(); i++) {
-                    elems[i + 1] = elementType.encode(l.get(i));
-                }
-            }
-            return ByteUtil.merge(elems);
+            return ByteUtil.merge(IntType.encodeInt(l.size()), encodeTuple(l));
         }
 
         @Override

@@ -19,6 +19,10 @@ package org.ethereum.core;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 
+import org.ethereum.solidity.SolidityType;
+import org.ethereum.util.blockchain.SolidityCallResult;
+import org.ethereum.util.blockchain.SolidityContract;
+import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -469,4 +473,105 @@ public class ABITest {
         Object[] decode = function.decode(Hex.decode(input));
         Assert.assertArrayEquals(args, decode);
     }
+
+    @Test
+    public void staticArrayWithDynamicElements() {
+        // static array with dynamic elements is itself dynamic type
+        String funcJson = "{   " +
+                "      'constant':false, " +
+                "      'inputs':[{   " +
+                "            'name':'p1', " +
+                "            'type':'address[][2]' " +
+                "          }]," +
+                "      'name':'f1', " +
+                "      'outputs':[], " +
+                "      'payable':false, " +
+                "      'type':'function' " +
+                "}";
+        funcJson = funcJson.replaceAll("'", "\"");
+
+        CallTransaction.Function function = CallTransaction.Function.fromJsonInterface(funcJson);
+        Assert.assertTrue(function.inputs[0].type instanceof SolidityType.StaticArrayType);
+        Assert.assertTrue(function.inputs[0].type.isDynamicType());
+
+        try {
+            function.encode((Object) new byte[][][]{
+                    new byte[][]{
+                            Hex.decode("1111111111111111111111111111111111111111"),
+                    }}
+            );
+            throw new RuntimeException("Exception should be thrown");
+        } catch (Exception e) {
+            System.out.println("Expected exception: " + e);
+        }
+
+        Object[] args = new Object[]{
+                new byte[][][]{
+                        new byte[][]{
+                                Hex.decode("1111111111111111111111111111111111111111"),
+                                Hex.decode("2222222222222222222222222222222222222222"),
+                                Hex.decode("3333333333333333333333333333333333333333"),
+                        },
+                        new byte[][]{
+                                Hex.decode("4444444444444444444444444444444444444444"),
+                        }
+                }
+        };
+
+        byte[] bytes = function.encode(args);
+        String input = "7e5f5dc50000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000000300000000000000000000000011111111111111111111111111111111111111110000000000000000000000002222222222222222222222222222222222222222000000000000000000000000333333333333333333333333333333333333333300000000000000000000000000000000000000000000000000000000000000010000000000000000000000004444444444444444444444444444444444444444";
+        System.out.println(Hex.toHexString(bytes));
+
+        Assert.assertEquals(input, Hex.toHexString(bytes));
+//        Object[] decode = function.decode(bytes);
+//        Assert.assertArrayEquals(args, decode);
+    }
+
+    @Test
+    public void encodeTest() {
+        String contract =
+                "pragma solidity ^0.4.3;\n" +
+                "pragma experimental ABIEncoderV2;\n"+
+                "contract A {" +
+                        "  function call(uint[][2] arr) public returns (uint) {" +
+                        "    if (arr.length != 2) return 2;" +
+                        "    if (arr[0].length != 3) return 3;" +
+                        "    if (arr[1].length != 2) return 4;" +
+                        "    if (arr[0][0] != 10) return 5;" +
+                        "    if (arr[0][1] != 11) return 6;" +
+                        "    if (arr[0][2] != 12) return 7;" +
+                        "    if (arr[1][0] != 13) return 8;" +
+                        "    if (arr[1][1] != 14) return 9;" +
+                        "    return 1;" +
+                        "  }" +
+                        "  function ret() public returns (uint[][2]) {" +
+                        "    uint[][2] a1;" +
+                        "    a1[0] = [uint(3),uint(4),uint(5)];" +
+                        "    a1[1] = [uint(6),uint(7)];" +
+                        "    return a1;" +
+                        "  }" +
+                        "}";
+
+        StandaloneBlockchain bc = new StandaloneBlockchain().withAutoblock(true);
+        SolidityContract a = bc.submitNewContract(contract);
+        SolidityCallResult res = a.callFunction("call",
+                (Object) new BigInteger[][]{
+                        new BigInteger[]{
+                                BigInteger.valueOf(10),
+                                BigInteger.valueOf(11),
+                                BigInteger.valueOf(12),
+                        },
+                        new BigInteger[]{
+                                BigInteger.valueOf(13),
+                                BigInteger.valueOf(14),
+                        },
+                }
+        );
+        Assert.assertTrue(res.isSuccessful());
+        Assert.assertEquals(BigInteger.valueOf(1), res.getReturnValue());
+
+        a.callConstFunction("ret");
+//        System.out.println(res1);
+    }
+
 }
