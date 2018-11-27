@@ -4,9 +4,7 @@ import org.apache.milagro.amcl.BLS381.BIG;
 import org.apache.milagro.amcl.BLS381.ECP;
 import org.apache.milagro.amcl.BLS381.ECP2;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.ethereum.sharding.crypto.BLS381Milagro.ECP2_POINT_SIZE;
 import static org.ethereum.sharding.crypto.BLS381Milagro.ECP_POINT_SIZE;
