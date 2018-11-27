@@ -1,0 +1,15 @@
+FROM java:openjdk-8-jdk
+
+RUN apt-get update  && \
+    apt-get install -y git curl zsh && \
+    apt-get clean && \
+    apt-get autoremove
+
+ENV SHELL /bin/zsh
+
+RUN mkdir /ethereumj
+WORKDIR /ethereumj
+
+COPY . /ethereumj
+
+CMD "./gradlew --no-daemon run"
