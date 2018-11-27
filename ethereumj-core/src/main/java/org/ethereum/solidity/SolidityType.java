@@ -56,7 +56,7 @@ public abstract class SolidityType {
 
     @JsonCreator
     public static SolidityType getType(String typeName) {
-        if (typeName.contains("[")) return ArrayType.getType(typeName);
+        if (typeName.endsWith("]")) return ArrayType.getType(typeName);
         if ("bool".equals(typeName)) return new BoolType();
         if (typeName.startsWith("int")) return new IntType(typeName);
         if (typeName.startsWith("uint")) return new UnsignedIntType(typeName);
@@ -101,8 +101,8 @@ public abstract class SolidityType {
 
     public static abstract class ArrayType extends SolidityType {
         public static ArrayType getType(String typeName) {
-            int idx1 = typeName.indexOf("[");
-            int idx2 = typeName.indexOf("]", idx1);
+            int idx1 = typeName.lastIndexOf("[");
+            int idx2 = typeName.lastIndexOf("]");
             if (idx1 + 1 == idx2) {
                 return new DynamicArrayType(typeName);
             } else {
@@ -114,11 +114,7 @@ public abstract class SolidityType {
 
         public ArrayType(String name) {
             super(name);
-            int idx = name.indexOf("[");
-            String st = name.substring(0, idx);
-            int idx2 = name.indexOf("]", idx);
-            String subDim = idx2 + 1 == name.length() ? "" : name.substring(idx2 + 1);
-            elementType = SolidityType.getType(st + subDim);
+            elementType = SolidityType.getType(name.substring(0, name.lastIndexOf("[")));
         }
 
         @Override
@@ -165,8 +161,8 @@ public abstract class SolidityType {
 
         public StaticArrayType(String name) {
             super(name);
-            int idx1 = name.indexOf("[");
-            int idx2 = name.indexOf("]", idx1);
+            int idx1 = name.lastIndexOf("[");
+            int idx2 = name.lastIndexOf("]");
             String dim = name.substring(idx1 + 1, idx2);
             size = Integer.parseInt(dim);
         }
