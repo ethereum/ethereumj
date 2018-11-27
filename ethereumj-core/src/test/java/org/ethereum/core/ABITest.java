@@ -25,6 +25,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
+import java.math.BigInteger;
+
 /**
  * @author Anton Nashatyrev
  */
@@ -335,38 +337,136 @@ public class ABITest {
         Assert.assertArrayEquals((Object[]) objects[1], strings);
         Assert.assertEquals(((Number) objects[2]).intValue(), 222);
     }
-    
+
     @Test
     public void twoDimensionalArrayType_hasDimensionDefinitionInCorrectOrder() {
-        String funcJson = "{  \n" + 
-                "      'constant':false,\n" + 
-                "      'inputs':[  \n" + 
-                "         {  \n" + 
-                "            'name':'param1',\n" + 
-                "            'type':'address[5][]'\n" + 
-                "         },\n" + 
-                "         {  \n" + 
-                "            'name':'param2',\n" + 
-                "            'type':'uint256[6][2]'\n" + 
-                "         },\n" + 
-                "         {  \n" + 
-                "            'name':'param2',\n" + 
-                "            'type':'uint256[][]'\n" + 
+        String funcJson = "{  \n" +
+                "      'constant':false,\n" +
+                "      'inputs':[  \n" +
+                "         {  \n" +
+                "            'name':'param1',\n" +
+                "            'type':'address[5][]'\n" +
                 "         },\n" +
-                "         {  \n" + 
-                "            'name':'param3',\n" + 
-                "            'type':'uint256[][2]'\n" + 
+                "         {  \n" +
+                "            'name':'param2',\n" +
+                "            'type':'uint256[6][2]'\n" +
+                "         },\n" +
+                "         {  \n" +
+                "            'name':'param2',\n" +
+                "            'type':'uint256[][]'\n" +
+                "         },\n" +
+                "         {  \n" +
+                "            'name':'param3',\n" +
+                "            'type':'uint256[][2]'\n" +
                 "         }\n" +
-                "      ],\n" + 
-                "      'name':'testTwoDimArray',\n" + 
-                "      'outputs':[],\n" + 
-                "      'payable':false,\n" + 
-                "      'type':'function'\n" + 
+                "      ],\n" +
+                "      'name':'testTwoDimArray',\n" +
+                "      'outputs':[],\n" +
+                "      'payable':false,\n" +
+                "      'type':'function'\n" +
                 "}";
         funcJson = funcJson.replaceAll("'", "\"");
         CallTransaction.Function function = CallTransaction.Function.fromJsonInterface(funcJson);
         String expected = "testTwoDimArray(address[5][],uint256[6][2],uint256[][],uint256[][2])";
         String actual = function.toString();
         Assert.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void twoDimensionalArrayTypeAsParameter_isDecoded() {
+        String funcJson = "{   " +
+                "      'constant':false, " +
+                "      'inputs':[   " +
+                "         {   " +
+                "            'name':'orderAddresses', " +
+                "            'type':'address[5][]' " +
+                "         }, " +
+                "         {   " +
+                "            'name':'orderValues', " +
+                "            'type':'uint256[6][]' " +
+                "         }, " +
+                "         {   " +
+                "            'name':'fillTakerTokenAmounts', " +
+                "            'type':'uint256[]' " +
+                "         }, " +
+                "         {   " +
+                "            'name':'v', " +
+                "            'type':'uint8[]' " +
+                "         }, " +
+                "         {   " +
+                "            'name':'r', " +
+                "            'type':'bytes32[]' " +
+                "         }, " +
+                "         {   " +
+                "            'name':'s', " +
+                "            'type':'bytes32[]' " +
+                "         } " +
+                "      ], " +
+                "      'name':'batchFillOrKillOrders', " +
+                "      'outputs':[], " +
+                "      'payable':false, " +
+                "      'type':'function' " +
+                "   }";
+        funcJson = funcJson.replaceAll("'", "\"");
+        CallTransaction.Function function = CallTransaction.Function.fromJsonInterface(funcJson);
+
+        Object[] args = new Object[]{
+                new byte[][][]{
+                        new byte[][]{
+                                Hex.decode("1b2a9cc5ea11c11b70908d75207b5b1f0ac4a839"),
+                                Hex.decode("e697a9f14f182c5291287dbeb47d41773091f035"),
+                                Hex.decode("c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"),
+                                Hex.decode("2d0ea9f9591205a642eb01826ba4fa019eb0efc6"),
+                                Hex.decode("8124071f810d533ff63de61d0c98db99eeb99d64")
+                        },
+                        new byte[][]{
+                                Hex.decode("1b2a9cc5ea11c11b70908d75207b5b1f0ac4a839"),
+                                Hex.decode("e697a9f14f182c5291287dbeb47d41773091f035"),
+                                Hex.decode("2d0ea9f9591205a642eb01826ba4fa019eb0efc6"),
+                                Hex.decode("c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"),
+                                Hex.decode("8124071f810d533ff63de61d0c98db99eeb99d64")
+                        }
+                }, new BigInteger[][]{
+                new BigInteger[]{
+                            new BigInteger("15920000000000000000"),
+                            new BigInteger("1592000000000000000000"),
+                            BigInteger.valueOf(0),
+                            BigInteger.valueOf(0),
+                            BigInteger.valueOf(1537516391517L),
+                            new BigInteger("88416929899962839058958574884878701761157019606353286750292520499350182621314")
+                },
+                new BigInteger[]{
+                            new BigInteger("1642000000000000000000"),
+                            new BigInteger("16420000000000002000"),
+                            BigInteger.valueOf(0),
+                            BigInteger.valueOf(0),
+                            BigInteger.valueOf(1537517358153L),
+                            new BigInteger("93513067008724755490443777049125356883124657581213787456489051336421643029820")
+                        }
+                },
+                new BigInteger[]{
+                        new BigInteger("14000000000000000000"),
+                        new BigInteger("140000000000000017")
+                },
+                new BigInteger[]{
+                        BigInteger.valueOf(27),
+                        BigInteger.valueOf(28)
+                },
+                new byte[][]{
+                        Hex.decode("9202d3602753ffdb469e9dbae74cbe7528c648f708334f7791acc6fe0ce8182b"),
+                        Hex.decode("ef362daf1bc2c805797761ae93a6c46ed53d73483a2bcc5b499ab65a8ba7f16c")
+                },
+                new byte[][]{
+                        Hex.decode("0b43ad3ff547ebf5089802a74e764692bdc092190438b31be34d1d79406a75ba"),
+                        Hex.decode("4e87fcd4ead36423d5bbcc7f1b41616235a17ec1f053a66827281bab104b718b")
+                }
+        };
+        byte[] bytes = function.encode(args);
+
+        String input = "4f15078700000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000022000000000000000000000000000000000000000000000000000000000000003c00000000000000000000000000000000000000000000000000000000000000420000000000000000000000000000000000000000000000000000000000000048000000000000000000000000000000000000000000000000000000000000004e000000000000000000000000000000000000000000000000000000000000000020000000000000000000000001b2a9cc5ea11c11b70908d75207b5b1f0ac4a839000000000000000000000000e697a9f14f182c5291287dbeb47d41773091f035000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc20000000000000000000000002d0ea9f9591205a642eb01826ba4fa019eb0efc60000000000000000000000008124071f810d533ff63de61d0c98db99eeb99d640000000000000000000000001b2a9cc5ea11c11b70908d75207b5b1f0ac4a839000000000000000000000000e697a9f14f182c5291287dbeb47d41773091f0350000000000000000000000002d0ea9f9591205a642eb01826ba4fa019eb0efc6000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc20000000000000000000000008124071f810d533ff63de61d0c98db99eeb99d640000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000dcef33a6f83800000000000000000000000000000000000000000000000000564d702d38f5e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000165fb1e4c5dc37a357a19313983db8360977d0c3cfe274a9deb63fc1a994f3c290b2644f0820000000000000000000000000000000000000000000000590353dc4fa7680000000000000000000000000000000000000000000000000000e3df8f00cbea07d00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000165fb2d0c49cebe85312f1f1cc97430bc1315aff0fbb0d7f1219c8759774672c9939e168d3c0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000c249fdd32778000000000000000000000000000000000000000000000000000001f161421c8e00110000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000001b000000000000000000000000000000000000000000000000000000000000001c00000000000000000000000000000000000000000000000000000000000000029202d3602753ffdb469e9dbae74cbe7528c648f708334f7791acc6fe0ce8182bef362daf1bc2c805797761ae93a6c46ed53d73483a2bcc5b499ab65a8ba7f16c00000000000000000000000000000000000000000000000000000000000000020b43ad3ff547ebf5089802a74e764692bdc092190438b31be34d1d79406a75ba4e87fcd4ead36423d5bbcc7f1b41616235a17ec1f053a66827281bab104b718b";
+        Assert.assertEquals(input, Hex.toHexString(bytes));
+
+        Object[] decode = function.decode(Hex.decode(input));
+        Assert.assertArrayEquals(args, decode);
     }
 }
