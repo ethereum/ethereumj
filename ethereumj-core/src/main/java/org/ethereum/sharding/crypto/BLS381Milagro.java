@@ -71,19 +71,12 @@ public class BLS381Milagro {
      * @param hash      Message hash, expects 384 bits
      * @return  signature, point on G1 (bytes)
      */
-    public byte[] signMessage(BIG sigKey, byte[] hash) {
+    public ECP signMessage(BIG sigKey, byte[] hash) {
         // Map hash value to GroupG1 (ECP)
         ECP point = ECP.mapit(hash);
         ECP g1 = point.mul(sigKey);
 
-        return ecpToBytes(g1);
-    }
-
-    private byte[] ecpToBytes(ECP point) {
-        byte[] res = new byte[ECP_POINT_SIZE];
-        point.toBytes(res, false);
-
-        return res;
+        return g1;
     }
 
     /**
@@ -107,6 +100,44 @@ public class BLS381Milagro {
         FP12 p = PAIR.ate(point2, point);
         return PAIR.fexp(p);
     }
+
+    public ECP combine(ECP... sigs) {
+        ECP res = null;
+
+        for(ECP sig: sigs) {
+            if (res == null) {
+                res = sig;
+            } else {
+                res.add(sig);
+            }
+        }
+
+        return res;
+    }
+
+    public ECP2 combine(ECP2... vers) {
+        ECP2 res = null;
+
+        for(ECP2 ver: vers) {
+            if (res == null) {
+                res = ver;
+            } else {
+                res.add(ver);
+            }
+        }
+
+        return res;
+    }
+//
+//
+//    proc add*(a: var ECP2_BLS381, b: ECP2_BLS381) {.inline.} =
+//            ## Add point ``b`` to point ``a``.
+//            # ECP2_BLS381_add() always return 0.
+//    discard ECP2_BLS381_add(addr a, unsafeAddr b)
+//
+//    proc add*(a: var ECP_BLS381, b: ECP_BLS381) {.inline.} =
+//            ## Add point ``b`` to point ``a``.
+//    ECP_BLS381_add(addr a, unsafeAddr b)
 
     class KeyPair {
         BIG sigKey;  // Signature (private key), point in GroupG1

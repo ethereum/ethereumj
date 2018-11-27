@@ -21,8 +21,11 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.ethereum.crypto.HashUtil.blake2b384;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -68,5 +71,75 @@ public class RealSignTest {
 
         byte[] sig1 = bls381.signMessage(keyPair.sigKey, hash1);
         assertFalse(bls381.verifyMessage(sig1, hash0, keyPair.verKey));
+    }
+
+    @Test
+    public void aggregatedSignatureTest() {
+        List<BLS381.KeyPair> keyPairs = new ArrayList<>();
+        final int SIGNERS = 5;
+        for (int i = 0; i < SIGNERS; ++i) {
+            keyPairs.add(bls381.newKeyPair());
+        }
+
+        for (String msg : messages) {
+            byte[] hash = blake2b384(msg.getBytes());
+
+            List<byte[]> signs = new ArrayList<>();
+            for (int i = 0; i < SIGNERS; ++i) {
+                signs.add(bls381.signMessage(keyPairs.get(i).sigKey, hash));
+            }
+
+            // aggregate signs
+            byte[] aggSigs = bls381.combineSignatures(signs);
+
+            // aggregate verKeys
+            List<byte[]> verKeys = keyPairs.stream().map(kp -> kp.verKey).collect(Collectors.toList());
+            byte[] aggVerKeys = bls381.combineVerificationKeys(verKeys);
+
+            // Verify
+            assertTrue(bls381.verifyMessage(aggSigs, hash, aggVerKeys));
+
+            // not all signs
+            List<byte[]> slicedSigns = new ArrayList<>(signs.subList(0, SIGNERS - 1));
+            byte[] aggSigsSliced = bls381.combineSignatures(slicedSigns);
+            assertEquals(SIGNERS - 1, slicedSigns.size());
+            assertFalse(bls381.verifyMessage(aggSigsSliced, hash, aggVerKeys));
+            // bad sign instead
+            slicedSigns.add(bls381.signMessage(bls381.newKeyPair().sigKey, hash));
+            assertEquals(SIGNERS, slicedSigns.size());
+            assertFalse(bls381.verifyMessage(bls381.combineSignatures(slicedSigns), hash, aggVerKeys));
+
+            // not all verKeys
+            List<byte[]> slicedVerKeys = new ArrayList<>(verKeys.subList(0, SIGNERS - 1));
+            byte[] aggVerKeysSliced = bls381.combineVerificationKeys(slicedVerKeys);
+            assertEquals(SIGNERS - 1, slicedVerKeys.size());
+            assertFalse(bls381.verifyMessage(aggSigs, hash, aggVerKeysSliced));
+            // bad verKey instead
+            slicedVerKeys.add(bls381.newKeyPair().verKey);
+            assertEquals(SIGNERS, slicedVerKeys.size());
+            assertFalse(bls381.verifyMessage(aggSigs, hash, bls381.combineVerificationKeys(slicedVerKeys)));
+
+            // change the order of signs, 2 at the end reversed
+            assertEquals(SIGNERS, signs.size());
+            List<byte[]> signsMixed = new ArrayList<>(signs.subList(0, SIGNERS - 2));
+            signsMixed.add(signs.get(SIGNERS - 1));
+            signsMixed.add(signs.get(SIGNERS - 2));
+            assertArrayEquals(signs.get(SIGNERS - 1), signsMixed.get(SIGNERS - 2));
+            assertArrayEquals(signs.get(SIGNERS - 2), signsMixed.get(SIGNERS - 1));
+            byte[] aggSigsMixed = bls381.combineSignatures(signsMixed);
+            assertEquals(SIGNERS, signsMixed.size());
+            assertTrue(bls381.verifyMessage(aggSigsMixed, hash, aggVerKeys));
+
+            // change the order of verKeys, 2 at the end reversed
+            assertEquals(SIGNERS, verKeys.size());
+            List<byte[]> mixedVerKeys = new ArrayList<>(verKeys.subList(0, SIGNERS - 2));
+            mixedVerKeys.add(verKeys.get(SIGNERS - 1));
+            mixedVerKeys.add(verKeys.get(SIGNERS - 2));
+            assertArrayEquals(verKeys.get(SIGNERS - 1), mixedVerKeys.get(SIGNERS - 2));
+            assertArrayEquals(verKeys.get(SIGNERS - 2), mixedVerKeys.get(SIGNERS - 1));
+            byte[] aggVerKeysMixed = bls381.combineVerificationKeys(mixedVerKeys);
+            assertEquals(SIGNERS, mixedVerKeys.size());
+            assertTrue(bls381.verifyMessage(aggSigs, hash, aggVerKeysMixed));
+        }
     }
 }
