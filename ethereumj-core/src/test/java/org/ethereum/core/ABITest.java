@@ -523,12 +523,12 @@ public class ABITest {
         System.out.println(Hex.toHexString(bytes));
 
         Assert.assertEquals(input, Hex.toHexString(bytes));
-//        Object[] decode = function.decode(bytes);
-//        Assert.assertArrayEquals(args, decode);
+        Object[] decode = function.decode(bytes);
+        Assert.assertArrayEquals(args, decode);
     }
 
     @Test
-    public void encodeTest() {
+    public void staticArrayWithDynamicElementsSolidity() {
         String contract =
                 "pragma solidity ^0.4.3;\n" +
                 "pragma experimental ABIEncoderV2;\n"+
@@ -570,8 +570,20 @@ public class ABITest {
         Assert.assertTrue(res.isSuccessful());
         Assert.assertEquals(BigInteger.valueOf(1), res.getReturnValue());
 
-        a.callConstFunction("ret");
-//        System.out.println(res1);
+        Object[] ret = a.callConstFunction("ret");
+        Assert.assertArrayEquals(
+                new Object[] {
+            new BigInteger[][]{
+                new BigInteger[]{
+                        BigInteger.valueOf(3),
+                        BigInteger.valueOf(4),
+                        BigInteger.valueOf(5),
+                },
+                new BigInteger[]{
+                        BigInteger.valueOf(6),
+                        BigInteger.valueOf(7),
+                },
+        }}, ret);
     }
 
 }

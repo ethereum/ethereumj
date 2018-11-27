@@ -152,6 +152,22 @@ public abstract class SolidityType {
             return ByteUtil.merge(elems);
         }
 
+        public Object[] decodeTuple(byte[] encoded, int origOffset, int len) {
+            int offset = origOffset;
+            Object[] ret = new Object[len];
+
+            for (int i = 0; i < len; i++) {
+                if (elementType.isDynamicType()) {
+                    ret[i] = elementType.decode(encoded, origOffset + IntType.decodeInt(encoded, offset).intValue());
+                } else {
+                    ret[i] = elementType.decode(encoded, offset);
+                }
+                offset += elementType.getFixedSize();
+            }
+            return ret;
+        }
+
+
         public SolidityType getElementType() {
             return elementType;
         }
@@ -183,12 +199,7 @@ public abstract class SolidityType {
 
         @Override
         public Object[] decode(byte[] encoded, int offset) {
-            Object[] result = new Object[size];
-            for (int i = 0; i < size; i++) {
-                result[i] = elementType.decode(encoded, offset + i * elementType.getFixedSize());
-            }
-
-            return result;
+            return decodeTuple(encoded, offset, size);
         }
 
         @Override
@@ -224,19 +235,7 @@ public abstract class SolidityType {
         @Override
         public Object decode(byte[] encoded, int origOffset) {
             int len = IntType.decodeInt(encoded, origOffset).intValue();
-            origOffset += 32;
-            int offset = origOffset;
-            Object[] ret = new Object[len];
-
-            for (int i = 0; i < len; i++) {
-                if (elementType.isDynamicType()) {
-                    ret[i] = elementType.decode(encoded, origOffset + IntType.decodeInt(encoded, offset).intValue());
-                } else {
-                    ret[i] = elementType.decode(encoded, offset);
-                }
-                offset += elementType.getFixedSize();
-            }
-            return ret;
+            return decodeTuple(encoded, origOffset + 32, len);
         }
 
         @Override
