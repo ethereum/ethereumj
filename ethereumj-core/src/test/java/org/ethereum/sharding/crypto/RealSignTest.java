@@ -23,11 +23,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.ethereum.crypto.HashUtil.blake2b384;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test for {@link BLS381}
  */
 public class RealSignTest {
+
+    BLS381 bls381 = new BLS381();
 
     List<String> messages = new ArrayList<String>() {{
             add("Small msg");
@@ -39,12 +43,30 @@ public class RealSignTest {
 
     @Test
     public void simpleSignTest() {
-        BLS381 bls381 = new BLS381();
         BLS381.KeyPair keyPair = bls381.newKeyPair();
         for (String msg : messages) {
             byte[] hash = blake2b384(msg.getBytes());
             byte[] sig = bls381.signMessage(keyPair.sigKey, hash);
-            assert bls381.verifyMessage(sig, hash, keyPair.verKey);
+            assertTrue(bls381.verifyMessage(sig, hash, keyPair.verKey));
         }
+    }
+
+    @Test
+    public void successFailSignTest() {
+        BLS381.KeyPair keyPair = bls381.newKeyPair();
+
+        byte[] hash0 = blake2b384(messages.get(0).getBytes());
+        byte[] sig0 = bls381.signMessage(keyPair.sigKey, hash0);
+
+        assertTrue(bls381.verifyMessage(sig0, hash0, keyPair.verKey));
+
+        byte[] hash1 = blake2b384(messages.get(1).getBytes());
+        assertFalse(bls381.verifyMessage(sig0, hash1, keyPair.verKey));
+
+        byte[] hash2 = blake2b384(messages.get(2).getBytes());
+        assertFalse(bls381.verifyMessage(sig0, hash2, keyPair.verKey));
+
+        byte[] sig1 = bls381.signMessage(keyPair.sigKey, hash1);
+        assertFalse(bls381.verifyMessage(sig1, hash0, keyPair.verKey));
     }
 }
