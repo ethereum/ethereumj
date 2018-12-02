@@ -17,10 +17,12 @@
  */
 package org.ethereum.sharding.crypto;
 
+import org.ethereum.util.ByteUtil;
+
 import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.List;
 
-import static org.ethereum.crypto.HashUtil.blake2b;
 import static org.ethereum.crypto.HashUtil.sha3;
 
 /**
@@ -28,16 +30,16 @@ import static org.ethereum.crypto.HashUtil.sha3;
  */
 public class DummySign implements Sign {
 
+    SecureRandom random = new SecureRandom();
+
     /**
      * Sign the message
      */
     @Override
-    public Signature sign(byte[] msg, BigInteger privateKey) {
+    public Signature sign(byte[] msgHash, BigInteger privateKey) {
         byte[] rSource = sha3(privateKey.toByteArray());
-        byte[] sSource = sha3(msg, privateKey.toByteArray());
-        Signature res = new Signature();
-        res.r = new BigInteger(rSource);
-        res.s = new BigInteger(sSource);
+        byte[] sSource = sha3(msgHash, privateKey.toByteArray());
+        Signature res = new Signature(new BigInteger(ByteUtil.merge(rSource, sSource)));
 
         return res;
     }
@@ -46,13 +48,24 @@ public class DummySign implements Sign {
      * Verifies whether signature is made by signer with pubKey
      */
     @Override
-    public boolean verify(Signature signature, byte[] msg, BigInteger pubKey) {
+    public boolean verify(Signature signature, byte[] msgHash, BigInteger pubKey) {
         byte[] rSource = sha3(pubKey.toByteArray());
-        byte[] sSource = sha3(msg, pubKey.toByteArray());
-        Signature res = new Signature();
-        res.r = new BigInteger(rSource);
-        res.s = new BigInteger(sSource);
+        byte[] sSource = sha3(msgHash, pubKey.toByteArray());
+        Signature res = new Signature(new BigInteger(ByteUtil.merge(rSource, sSource)));
+
         return res.equals(signature);
+    }
+
+    @Override
+    public KeyPair newKeyPair() {
+        KeyPair res = new KeyPair();
+        byte[] sigKey = new byte[48];
+        random.nextBytes(sigKey);
+
+        res.sigKey = new BigInteger(sigKey);
+        res.verKey = privToPub(res.sigKey);
+
+        return res;
     }
 
     @Override

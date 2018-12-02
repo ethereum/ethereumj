@@ -15,7 +15,7 @@ import static org.apache.milagro.amcl.BLS381.BIG.MODBYTES;
 /**
  * Implementation uses internal {@link org.apache.milagro.amcl} types
  */
-public class BLS381Milagro {
+public class MilagroBLS381 {
 
     public static BIG CURVE_ORDER = new BIG(ROM.CURVE_Order);
 
@@ -30,7 +30,7 @@ public class BLS381Milagro {
     /**
      * Creates new random Signature (Private) key
      */
-    public BIG newSigKey() {
+    private BIG newSigKey() {
         RAND rand = new RAND();
         byte[] randomBytes = new byte[PRIVATE_SIZE];
         random.nextBytes(randomBytes);
@@ -44,9 +44,9 @@ public class BLS381Milagro {
      * Obtains Verification (Public) key
      * from Signature (Private) key on ECP2
      */
-    public ECP2 fromSigKey(BIG sigKey) {
-        ECP2 point = generator2();
-        return point.mul(sigKey);
+    ECP2 fromSigKey(BIG sigKey) {
+        ECP2 gen2 = generator2();
+        return gen2.mul(sigKey);
     }
 
     private ECP2 generator2() {
@@ -57,7 +57,7 @@ public class BLS381Milagro {
      * Creates new random pair of Signature (Private) and
      * Verification (Public) keys
      */
-    public KeyPair newKeyPair() {
+    KeyPair newKeyPair() {
         KeyPair res = new KeyPair();
         res.sigKey = newSigKey();
         res.verKey = fromSigKey(res.sigKey);
@@ -71,12 +71,12 @@ public class BLS381Milagro {
      * @param hash      Message hash, expects 384 bits
      * @return  signature, point on G1 (bytes)
      */
-    public ECP signMessage(BIG sigKey, byte[] hash) {
+    ECP signMessage(BIG sigKey, byte[] hash) {
         // Map hash value to GroupG1 (ECP)
-        ECP point = ECP.mapit(hash);
-        ECP g1 = point.mul(sigKey);
+        ECP hashG1 = ECP.mapit(hash);
+        ECP point = hashG1.mul(sigKey);
 
-        return g1;
+        return point;
     }
 
     /**
@@ -87,7 +87,7 @@ public class BLS381Milagro {
      * @param verKey    Verification key, G2 point
      * @return  true if message is signature is done with the key
      */
-    public boolean verifyMessage(ECP sig, byte[] hash, ECP2 verKey) {
+    boolean verifyMessage(ECP sig, byte[] hash, ECP2 verKey) {
         ECP2 generator = generator2();
         ECP point = ECP.mapit(hash);
         FP12 lhs = atePairing(generator, sig);
@@ -101,7 +101,7 @@ public class BLS381Milagro {
         return PAIR.fexp(p);
     }
 
-    public ECP combine(ECP... sigs) {
+    ECP combine(ECP... sigs) {
         ECP res = null;
 
         for(ECP sig: sigs) {
@@ -115,7 +115,7 @@ public class BLS381Milagro {
         return res;
     }
 
-    public ECP2 combine(ECP2... vers) {
+    ECP2 combine(ECP2... vers) {
         ECP2 res = null;
 
         for(ECP2 ver: vers) {
@@ -128,16 +128,6 @@ public class BLS381Milagro {
 
         return res;
     }
-//
-//
-//    proc add*(a: var ECP2_BLS381, b: ECP2_BLS381) {.inline.} =
-//            ## Add point ``b`` to point ``a``.
-//            # ECP2_BLS381_add() always return 0.
-//    discard ECP2_BLS381_add(addr a, unsafeAddr b)
-//
-//    proc add*(a: var ECP_BLS381, b: ECP_BLS381) {.inline.} =
-//            ## Add point ``b`` to point ``a``.
-//    ECP_BLS381_add(addr a, unsafeAddr b)
 
     class KeyPair {
         BIG sigKey;  // Signature (private key), point in GroupG1

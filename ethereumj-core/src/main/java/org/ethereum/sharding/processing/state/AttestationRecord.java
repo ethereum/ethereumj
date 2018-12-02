@@ -87,9 +87,7 @@ public class AttestationRecord {
         this.justifiedBlockHash = list.get(6).getRLPData();
 
         RLPList sigList = RLP.unwrapList(list.get(7).getRLPData());
-        this.aggregateSig = new Sign.Signature();
-        this.aggregateSig.r = ByteUtil.bytesToBigInteger(sigList.get(0).getRLPData());
-        this.aggregateSig.s = ByteUtil.bytesToBigInteger(sigList.get(1).getRLPData());
+        this.aggregateSig = new Sign.Signature(ByteUtil.bytesToBigInteger(sigList.get(0).getRLPData()));
     }
 
     public long getSlot() {
@@ -125,9 +123,8 @@ public class AttestationRecord {
     }
 
     public byte[] getEncoded() {
-        byte[][] encodedAggSig = new byte[2][];
-        encodedAggSig[0] = bigIntegerToBytes(aggregateSig.r);
-        encodedAggSig[1] = bigIntegerToBytes(aggregateSig.s);
+        byte[][] encodedAggSig = new byte[1][];
+        encodedAggSig[0] = bigIntegerToBytes(aggregateSig.value);
 
         byte[][] encodedHashes = new byte[obliqueParentHashes.size()][];
         for (int i = 0; i < obliqueParentHashes.size(); i++)

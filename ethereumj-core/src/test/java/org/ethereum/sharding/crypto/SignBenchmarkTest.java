@@ -20,6 +20,7 @@ package org.ethereum.sharding.crypto;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,14 +28,16 @@ import java.util.stream.Collectors;
 
 import static org.ethereum.crypto.HashUtil.blake2b384;
 import static org.junit.Assert.assertTrue;
+import static org.ethereum.sharding.crypto.Sign.Signature;
+import static org.ethereum.sharding.crypto.Sign.KeyPair;
 
 /**
- * Benchmark for {@link BLS381}
+ * Benchmark for {@link BLS381Sign}
  */
 @Ignore
 public class SignBenchmarkTest {
 
-    BLS381 bls381 = new BLS381();
+    BLS381Sign bls381 = new BLS381Sign();
 
     private static final int MESSAGE_BYTES = 4096;
     private static final int ROUNDS = 10;
@@ -49,7 +52,7 @@ public class SignBenchmarkTest {
             byte[] message = new byte[MESSAGE_BYTES];
             random.nextBytes(message);
 
-            List<BLS381.KeyPair> keyPairs = new ArrayList<>();
+            List<KeyPair> keyPairs = new ArrayList<>();
 
             long start = System.nanoTime();
             for (int i = 0; i < SIGNERS; ++i) {
@@ -60,31 +63,31 @@ public class SignBenchmarkTest {
 
             byte[] hash = blake2b384(message);
 
-            List<byte[]> signs = new ArrayList<>();
+            List<Signature> signs = new ArrayList<>();
             start = System.nanoTime();
             for (int i = 0; i < SIGNERS; ++i) {
-                signs.add(bls381.signMessage(keyPairs.get(i).sigKey, hash));
+                signs.add(bls381.sign(hash, keyPairs.get(i).sigKey));
             }
             finish = System.nanoTime();
             System.out.println(String.format("Signs message by %s signers in %s", SIGNERS, formatNs(finish - start)));
 
             // aggregate signs
             start = System.nanoTime();
-            byte[] aggSigs = bls381.combineSignatures(signs);
+            Signature aggSigs = bls381.aggSigns(signs);
             finish = System.nanoTime();
             System.out.println(String.format("Aggregated %s signatures in %s", SIGNERS, formatNs(finish - start)));
 
 
             // aggregate verKeys
-            List<byte[]> verKeys = keyPairs.stream().map(kp -> kp.verKey).collect(Collectors.toList());
+            List<BigInteger> verKeys = keyPairs.stream().map(kp -> kp.verKey).collect(Collectors.toList());
             start = System.nanoTime();
-            byte[] aggVerKeys = bls381.combineVerificationKeys(verKeys);
+            BigInteger aggVerKeys = bls381.aggPubs(verKeys);
             finish = System.nanoTime();
             System.out.println(String.format("Aggregated %s verKeys in %s", SIGNERS, formatNs(finish - start)));
 
             // Verify
             start = System.nanoTime();
-            assertTrue(bls381.verifyMessage(aggSigs, hash, aggVerKeys));
+            assertTrue(bls381.verify(aggSigs, hash, aggVerKeys));
             finish = System.nanoTime();
             System.out.println(String.format("Verified signature in %s", formatNs(finish - start)));
         }

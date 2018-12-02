@@ -17,129 +17,138 @@
  */
 package org.ethereum.sharding.crypto;
 
+import org.junit.Before;
 import org.junit.Test;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.ethereum.crypto.HashUtil.blake2b384;
-import static org.junit.Assert.assertArrayEquals;
+import static org.ethereum.sharding.crypto.Sign.Signature;
+import static org.ethereum.sharding.crypto.Sign.KeyPair;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Test for {@link BLS381}
+ * Test for {@link BLS381Sign}
  */
 public class RealSignTest {
 
-    BLS381 bls381 = new BLS381();
+    private Sign sign;
 
-    List<String> messages = new ArrayList<String>() {{
-            add("Small msg");
-            add("121220888888822111212");
-            add("Some message to sign");
-            add("Some message to sign, making it bigger, ......, still bigger........................, not some entropy, hu2jnnddsssiu8921n ckhddss2222");
-            add(" is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.");
+    private List<String> messages = new ArrayList<String>() {{
+            add("Lorem ipsum");
+            add("8874187471849717971");
+            add("Lorem ipsum dolor");
+            add("Lorem ipsum dolor sit amet, eum oratio dictas consequuntur ut. Melius posidonium te vel vide hdh313fdhqbif89389hd2dnqd!@#!@");
+            add("Lorem ipsum dolor sit amet, eum oratio dictas consequuntur ut. Melius posidonium te vel vide hdh313fdhqbif89389hd2dnqd!@#!@ Lorem ipsum dolor sit amet, qui audiam regione deterruisset ad, alia fugit signiferumque ad sit. An liber debet utroque est, id vim molestiae prodesset. Cum quas labore ex. Eos homero iuvaret ut. Adipisci erroribus ne duo, cu eos movet facilis sadipscing. Cu suscipiantur interpretaris nam, vix ex dicat zril. Vis dicta doming appareat ex, sit ex cibo perfecto instructior, ubique dissentiet delicatissimi ius eu. Mentitum argumentum ad mea, vim ex prima eirmod. Mei ad omnes maluisset. Ne vis nonumy antiopam tincidunt, laoreet consulatu ius ne, sea in ferri elitr sapientem.");
     }};
+
+
+    @Before
+    public void setup() {
+        this.sign = new BLS381Sign();
+    }
 
     @Test
     public void simpleSignTest() {
-        BLS381.KeyPair keyPair = bls381.newKeyPair();
+        KeyPair keyPair = sign.newKeyPair();
         for (String msg : messages) {
             byte[] hash = blake2b384(msg.getBytes());
-            byte[] sig = bls381.signMessage(keyPair.sigKey, hash);
-            assertTrue(bls381.verifyMessage(sig, hash, keyPair.verKey));
+            Signature sig = sign.sign(hash, keyPair.sigKey);
+            assertTrue(sign.verify(sig, hash, keyPair.verKey));
         }
     }
 
     @Test
     public void successFailSignTest() {
-        BLS381.KeyPair keyPair = bls381.newKeyPair();
+        KeyPair keyPair = sign.newKeyPair();
 
         byte[] hash0 = blake2b384(messages.get(0).getBytes());
-        byte[] sig0 = bls381.signMessage(keyPair.sigKey, hash0);
+        Signature sig0 = sign.sign(hash0, keyPair.sigKey);
 
-        assertTrue(bls381.verifyMessage(sig0, hash0, keyPair.verKey));
+        assertTrue(sign.verify(sig0, hash0, keyPair.verKey));
 
         byte[] hash1 = blake2b384(messages.get(1).getBytes());
-        assertFalse(bls381.verifyMessage(sig0, hash1, keyPair.verKey));
+        assertFalse(sign.verify(sig0, hash1, keyPair.verKey));
 
         byte[] hash2 = blake2b384(messages.get(2).getBytes());
-        assertFalse(bls381.verifyMessage(sig0, hash2, keyPair.verKey));
+        assertFalse(sign.verify(sig0, hash2, keyPair.verKey));
 
-        byte[] sig1 = bls381.signMessage(keyPair.sigKey, hash1);
-        assertFalse(bls381.verifyMessage(sig1, hash0, keyPair.verKey));
+        Signature sig1 = sign.sign(hash1, keyPair.sigKey);
+        assertFalse(sign.verify(sig1, hash0, keyPair.verKey));
     }
 
     @Test
     public void aggregatedSignatureTest() {
-        List<BLS381.KeyPair> keyPairs = new ArrayList<>();
+        List<KeyPair> keyPairs = new ArrayList<>();
         final int SIGNERS = 5;
         for (int i = 0; i < SIGNERS; ++i) {
-            keyPairs.add(bls381.newKeyPair());
+            keyPairs.add(sign.newKeyPair());
         }
 
         for (String msg : messages) {
             byte[] hash = blake2b384(msg.getBytes());
 
-            List<byte[]> signs = new ArrayList<>();
+            List<Signature> signs = new ArrayList<>();
             for (int i = 0; i < SIGNERS; ++i) {
-                signs.add(bls381.signMessage(keyPairs.get(i).sigKey, hash));
+                signs.add(sign.sign(hash, keyPairs.get(i).sigKey));
             }
 
             // aggregate signs
-            byte[] aggSigs = bls381.combineSignatures(signs);
+            Signature aggSigs = sign.aggSigns(signs);
 
             // aggregate verKeys
-            List<byte[]> verKeys = keyPairs.stream().map(kp -> kp.verKey).collect(Collectors.toList());
-            byte[] aggVerKeys = bls381.combineVerificationKeys(verKeys);
+            List<BigInteger> verKeys = keyPairs.stream().map(kp -> kp.verKey).collect(Collectors.toList());
+            BigInteger aggVerKeys = sign.aggPubs(verKeys);
 
             // Verify
-            assertTrue(bls381.verifyMessage(aggSigs, hash, aggVerKeys));
+            assertTrue(sign.verify(aggSigs, hash, aggVerKeys));
 
             // not all signs
-            List<byte[]> slicedSigns = new ArrayList<>(signs.subList(0, SIGNERS - 1));
-            byte[] aggSigsSliced = bls381.combineSignatures(slicedSigns);
+            List<Signature> slicedSigns = new ArrayList<>(signs.subList(0, SIGNERS - 1));
+            Signature aggSigsSliced = sign.aggSigns(slicedSigns);
             assertEquals(SIGNERS - 1, slicedSigns.size());
-            assertFalse(bls381.verifyMessage(aggSigsSliced, hash, aggVerKeys));
+            assertFalse(sign.verify(aggSigsSliced, hash, aggVerKeys));
             // bad sign instead
-            slicedSigns.add(bls381.signMessage(bls381.newKeyPair().sigKey, hash));
+            slicedSigns.add(sign.sign(hash, sign.newKeyPair().sigKey));
             assertEquals(SIGNERS, slicedSigns.size());
-            assertFalse(bls381.verifyMessage(bls381.combineSignatures(slicedSigns), hash, aggVerKeys));
+            assertFalse(sign.verify(sign.aggSigns(slicedSigns), hash, aggVerKeys));
 
             // not all verKeys
-            List<byte[]> slicedVerKeys = new ArrayList<>(verKeys.subList(0, SIGNERS - 1));
-            byte[] aggVerKeysSliced = bls381.combineVerificationKeys(slicedVerKeys);
+            List<BigInteger> slicedVerKeys = new ArrayList<>(verKeys.subList(0, SIGNERS - 1));
+            BigInteger aggVerKeysSliced = sign.aggPubs(slicedVerKeys);
             assertEquals(SIGNERS - 1, slicedVerKeys.size());
-            assertFalse(bls381.verifyMessage(aggSigs, hash, aggVerKeysSliced));
+            assertFalse(sign.verify(aggSigs, hash, aggVerKeysSliced));
             // bad verKey instead
-            slicedVerKeys.add(bls381.newKeyPair().verKey);
+            slicedVerKeys.add(sign.newKeyPair().verKey);
             assertEquals(SIGNERS, slicedVerKeys.size());
-            assertFalse(bls381.verifyMessage(aggSigs, hash, bls381.combineVerificationKeys(slicedVerKeys)));
+            assertFalse(sign.verify(aggSigs, hash, sign.aggPubs(slicedVerKeys)));
 
             // change the order of signs, 2 at the end reversed
             assertEquals(SIGNERS, signs.size());
-            List<byte[]> signsMixed = new ArrayList<>(signs.subList(0, SIGNERS - 2));
+            List<Signature> signsMixed = new ArrayList<>(signs.subList(0, SIGNERS - 2));
             signsMixed.add(signs.get(SIGNERS - 1));
             signsMixed.add(signs.get(SIGNERS - 2));
-            assertArrayEquals(signs.get(SIGNERS - 1), signsMixed.get(SIGNERS - 2));
-            assertArrayEquals(signs.get(SIGNERS - 2), signsMixed.get(SIGNERS - 1));
-            byte[] aggSigsMixed = bls381.combineSignatures(signsMixed);
+            assertEquals(signs.get(SIGNERS - 1), signsMixed.get(SIGNERS - 2));
+            assertEquals(signs.get(SIGNERS - 2), signsMixed.get(SIGNERS - 1));
+            Signature aggSigsMixed = sign.aggSigns(signsMixed);
             assertEquals(SIGNERS, signsMixed.size());
-            assertTrue(bls381.verifyMessage(aggSigsMixed, hash, aggVerKeys));
+            assertTrue(sign.verify(aggSigsMixed, hash, aggVerKeys));
 
             // change the order of verKeys, 2 at the end reversed
             assertEquals(SIGNERS, verKeys.size());
-            List<byte[]> mixedVerKeys = new ArrayList<>(verKeys.subList(0, SIGNERS - 2));
+            List<BigInteger> mixedVerKeys = new ArrayList<>(verKeys.subList(0, SIGNERS - 2));
             mixedVerKeys.add(verKeys.get(SIGNERS - 1));
             mixedVerKeys.add(verKeys.get(SIGNERS - 2));
-            assertArrayEquals(verKeys.get(SIGNERS - 1), mixedVerKeys.get(SIGNERS - 2));
-            assertArrayEquals(verKeys.get(SIGNERS - 2), mixedVerKeys.get(SIGNERS - 1));
-            byte[] aggVerKeysMixed = bls381.combineVerificationKeys(mixedVerKeys);
+            assertEquals(verKeys.get(SIGNERS - 1), mixedVerKeys.get(SIGNERS - 2));
+            assertEquals(verKeys.get(SIGNERS - 2), mixedVerKeys.get(SIGNERS - 1));
+            BigInteger aggVerKeysMixed = sign.aggPubs(mixedVerKeys);
             assertEquals(SIGNERS, mixedVerKeys.size());
-            assertTrue(bls381.verifyMessage(aggSigs, hash, aggVerKeysMixed));
+            assertTrue(sign.verify(aggSigs, hash, aggVerKeysMixed));
         }
     }
 }

@@ -17,6 +17,7 @@
  */
 package org.ethereum.sharding.crypto;
 
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
@@ -25,7 +26,8 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.sharding.crypto.Sign.KeyPair;
+import static org.ethereum.crypto.HashUtil.blake2b384;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -34,43 +36,51 @@ import static org.junit.Assert.assertTrue;
  */
 public class SignTest {
 
-    Sign sign = new DummySign();
+    private Sign sign;
+
+    @Before
+    public void setup() {
+        this.sign = new DummySign();
+//        this.sign = new BLS381Sign();
+    }
 
     @Test
     public void testBasics() {
-        byte[] msg = Hex.decode("0737626387abcdef");
-        BigInteger privKey = new BigInteger(sha3(msg));
-        BigInteger pubKey = sign.privToPub(privKey);
+        byte[] msg = blake2b384(Hex.decode("0737626387abcdef"));
+        KeyPair keyPair = sign.newKeyPair();
+        BigInteger privKey = keyPair.sigKey;
+        BigInteger pubKey = keyPair.verKey;
         Sign.Signature signature = sign.sign(msg, privKey);
         assertTrue(sign.verify(signature, msg, pubKey));
         assertFalse(sign.verify(signature, msg, pubKey.add(BigInteger.ONE)));
-        Sign.Signature brokenSignature = new Sign.Signature();
-        brokenSignature.r = signature.r.subtract(BigInteger.ONE);
-        brokenSignature.s = signature.s;
+        Sign.Signature brokenSignature = new Sign.Signature(signature.value.subtract(BigInteger.ONE));
         assertFalse(sign.verify(brokenSignature, msg, pubKey));
         msg[0] = 13;
         assertFalse(sign.verify(signature, msg, pubKey));
     }
 
     @Test
-    @Ignore("Until real implementation")
+    @Ignore("Fails in dummy, passes in real implementation")
     public void testKeyNotDummy() {
-        byte[] msg = Hex.decode("0737626387abcdef");
-        BigInteger privKey = new BigInteger(sha3(msg));
+        byte[] msg = blake2b384(Hex.decode("0737626387abcdef"));
+        KeyPair keyPair = sign.newKeyPair();
+        BigInteger privKey = keyPair.sigKey;
         Sign.Signature signature = sign.sign(msg, privKey);
         assertFalse(sign.verify(signature, msg, privKey)); // pubKey should be here
     }
 
     @Test
     public void testAggregation() {
-        byte[] msg = Hex.decode("0737626387abcdef");
+        byte[] msg = blake2b384(Hex.decode("0737626387abcdef"));
 
-        BigInteger privKey = new BigInteger(sha3(msg));
-        BigInteger pubKey = sign.privToPub(privKey);
+        KeyPair keyPair = sign.newKeyPair();
+        BigInteger privKey = keyPair.sigKey;
+        BigInteger pubKey = keyPair.verKey;
         Sign.Signature signature = sign.sign(msg, privKey);
 
-        BigInteger privKey2 = new BigInteger(sha3(Hex.decode("abcdef")));
-        BigInteger pubKey2 = sign.privToPub(privKey2);
+        KeyPair keyPair2 = sign.newKeyPair();
+        BigInteger privKey2 = keyPair2.sigKey;
+        BigInteger pubKey2 = keyPair2.verKey;
         Sign.Signature signature2 = sign.sign(msg, privKey2);
 
         List<Sign.Signature> aggSigns = new ArrayList<>();
@@ -87,20 +97,23 @@ public class SignTest {
     }
 
     @Test
-    @Ignore("Until real implementation")
+    @Ignore("Fails in dummy, passes in real implementation")
     public void testAggregationIsReal() {
-        byte[] msg = Hex.decode("0737626387abcdef");
+        byte[] msg = blake2b384(Hex.decode("0737626387abcdef"));
 
-        BigInteger privKey = new BigInteger(sha3(msg));
-        BigInteger pubKey = sign.privToPub(privKey);
+        KeyPair keyPair = sign.newKeyPair();
+        BigInteger privKey = keyPair.sigKey;
+        BigInteger pubKey = keyPair.verKey;
         Sign.Signature signature = sign.sign(msg, privKey);
 
-        BigInteger privKey2 = new BigInteger(sha3(Hex.decode("abcdef")));
-        BigInteger pubKey2 = sign.privToPub(privKey);
+        KeyPair keyPair2 = sign.newKeyPair();
+        BigInteger privKey2 = keyPair2.sigKey;
+        BigInteger pubKey2 = keyPair2.verKey;
         Sign.Signature signature2 = sign.sign(msg, privKey2);
 
-        BigInteger privKey3 = new BigInteger(sha3(Hex.decode("1dfb0a")));
-        BigInteger pubKey3 = sign.privToPub(privKey3);
+        KeyPair keyPair3 = sign.newKeyPair();
+        BigInteger privKey3 = keyPair3.sigKey;
+        BigInteger pubKey3 = keyPair3.verKey;
         Sign.Signature signature3 = sign.sign(msg, privKey3);
 
         Sign.Signature aggSign12 = sign.aggSigns(new ArrayList<Sign.Signature>(){{add(signature); add(signature2);}});
