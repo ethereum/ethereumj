@@ -7,130 +7,224 @@ import org.apache.milagro.amcl.BLS381.FP12;
 import org.apache.milagro.amcl.BLS381.PAIR;
 import org.apache.milagro.amcl.BLS381.ROM;
 import org.apache.milagro.amcl.RAND;
+import org.ethereum.util.ByteUtil;
 
+import java.math.BigInteger;
 import java.security.SecureRandom;
+import java.util.Objects;
 
-import static org.apache.milagro.amcl.BLS381.BIG.MODBYTES;
+import static org.ethereum.sharding.crypto.BLS381Sign.ECP2_POINT_SIZE;
+import static org.ethereum.sharding.crypto.BLS381Sign.ECP_POINT_SIZE;
+import static org.ethereum.sharding.crypto.BLS381Sign.INT_SIZE;
 
-/**
- * Implementation uses internal {@link org.apache.milagro.amcl} types
- */
-public class MilagroBLS381 {
+public class MilagroBLS381 implements BLS381 {
 
     public static BIG CURVE_ORDER = new BIG(ROM.CURVE_Order);
-
-    public static int PRIVATE_SIZE = MODBYTES;
-
-    public static int ECP_POINT_SIZE = 2 * MODBYTES + 1;
-
-    public static int ECP2_POINT_SIZE = 4 * MODBYTES;
 
     private SecureRandom random = new SecureRandom();
 
     /**
-     * Creates new random Signature (Private) key
+     * Returns random scalar which is on a curve
      */
-    private BIG newSigKey() {
+    @Override
+    public BI generatePrivate() {
         RAND rand = new RAND();
-        byte[] randomBytes = new byte[PRIVATE_SIZE];
+        byte[] randomBytes = new byte[INT_SIZE];
         random.nextBytes(randomBytes);
-        rand.seed(PRIVATE_SIZE, randomBytes);
+        rand.seed(INT_SIZE, randomBytes);
         BIG randomNumber = BIG.randomnum(CURVE_ORDER, rand);
 
-        return randomNumber;
+        return new MilagroBIG(randomNumber);
     }
 
     /**
-     * Obtains Verification (Public) key
-     * from Signature (Private) key on ECP2
+     * Restores private key from standard {@link BigInteger}
      */
-    ECP2 fromSigKey(BIG sigKey) {
-        ECP2 gen2 = generator2();
-        return gen2.mul(sigKey);
-    }
+    @Override
+    public BI restorePrivate(BigInteger value) {
+        byte[] sigKeyBytes = ByteUtil.bigIntegerToBytes(value, INT_SIZE);
 
-    private ECP2 generator2() {
-        return ECP2.generator();
+        return restorePrivate(sigKeyBytes);
     }
 
     /**
-     * Creates new random pair of Signature (Private) and
-     * Verification (Public) keys
+     * Restores private key from byte array
      */
-    KeyPair newKeyPair() {
-        KeyPair res = new KeyPair();
-        res.sigKey = newSigKey();
-        res.verKey = fromSigKey(res.sigKey);
+    @Override
+    public BI restorePrivate(byte[] value) {
+        BIG sigKey = BIG.fromBytes(value);
 
-        return res;
+        return new MilagroBIG(sigKey);
     }
 
-    /**
-     * Signs the message using its hash
-     * @param sigKey    Private key
-     * @param hash      Message hash, expects 384 bits
-     * @return  signature, point on G1 (bytes)
-     */
-    ECP signMessage(BIG sigKey, byte[] hash) {
-        // Map hash value to GroupG1 (ECP)
-        ECP hashG1 = ECP.mapit(hash);
-        ECP point = hashG1.mul(sigKey);
-
-        return point;
-    }
-
-    /**
-     * Verifies 384-bit hash and signature sig using Verification (Public)
-     * key verKey. Returns true if verification succeeded.
-     * @param sig       Signature, G1 point
-     * @param hash      message hash
-     * @param verKey    Verification key, G2 point
-     * @return  true if message is signature is done with the key
-     */
-    boolean verifyMessage(ECP sig, byte[] hash, ECP2 verKey) {
-        ECP2 generator = generator2();
-        ECP point = ECP.mapit(hash);
-        FP12 lhs = atePairing(generator, sig);
-        FP12 rhs = atePairing(verKey, point);
-
-        return lhs.equals(rhs);
-    }
-
-    private FP12 atePairing(ECP2 point2, ECP point) {
-        FP12 p = PAIR.ate(point2, point);
-        return PAIR.fexp(p);
-    }
-
-    ECP combine(ECP... sigs) {
-        ECP res = null;
-
-        for(ECP sig: sigs) {
-            if (res == null) {
-                res = sig;
-            } else {
-                res.add(sig);
-            }
+    @Override
+    public ECP1Point restoreECP1(byte[] value) {
+        if (value == null || value.length != ECP_POINT_SIZE) {
+            throw new RuntimeException(String.format("Supports only %s size byte[] input", ECP_POINT_SIZE));
         }
 
-        return res;
+        return new MilagroECP1(ECP.fromBytes(value));
     }
 
-    ECP2 combine(ECP2... vers) {
-        ECP2 res = null;
-
-        for(ECP2 ver: vers) {
-            if (res == null) {
-                res = ver;
-            } else {
-                res.add(ver);
-            }
+    @Override
+    public ECP2Point restoreECP2(byte[] value) {
+        if (value == null || value.length != ECP2_POINT_SIZE) {
+            throw new RuntimeException(String.format("Supports only %s size byte[] input", ECP2_POINT_SIZE));
         }
 
-        return res;
+        return new MilagroECP2(ECP2.fromBytes(value));
     }
 
-    class KeyPair {
-        BIG sigKey;  // Signature (private key), point in GroupG1
-        ECP2 verKey;  // Verification (public key), point in GroupG2
+    /**
+     * @return base point (generator) on ECP2
+     */
+    @Override
+    public ECP2Point generator2() {
+        return new MilagroECP2(ECP2.generator());
+    }
+
+    /**
+     * Maps value to GroupG1 (ECP)
+     */
+    @Override
+    public ECP1Point mapToECP1(byte[] value) {
+        if (value == null || value.length != INT_SIZE) {
+            throw new RuntimeException(String.format("Supports only %s size byte[] input", INT_SIZE));
+        }
+
+        return new MilagroECP1(ECP.mapit(value));
+    }
+
+    @Override
+    public FP12Point pair(ECP2Point pointECP2, ECP1Point pointECP1) {
+        if (!(pointECP2 instanceof MilagroECP2) || !(pointECP1 instanceof MilagroECP1)) {
+            throw new RuntimeException("Supports only Milagro format of ECP2 and ECP1");
+        }
+        MilagroECP2 ecp2Point = (MilagroECP2) pointECP2;
+        MilagroECP1 ecp1Point = (MilagroECP1) pointECP1;
+
+        FP12 p = PAIR.ate(ecp2Point.value, ecp1Point.value);
+        FP12 res = PAIR.fexp(p);
+
+        return new MilagroFP12(res);
+    }
+
+    class MilagroECP1 implements ECP1Point {
+        ECP value;
+
+        public MilagroECP1(ECP value) {
+            this.value = value;
+        }
+
+        @Override
+        public void add(ECP1Point value) {
+            if (!(value instanceof MilagroECP1)) {
+                throw new RuntimeException("Supports only Milagro format of ECP1 point");
+            }
+
+            MilagroECP1 multiplier = (MilagroECP1) value;
+            this.value.add(multiplier.value);
+        }
+
+        @Override
+        public ECP1Point mul(BI value) {
+            if (!(value instanceof MilagroBIG)) {
+                throw new RuntimeException("Supports only Milagro format of BigInteger");
+            }
+
+            MilagroBIG scalar = (MilagroBIG) value;
+            return new MilagroECP1(this.value.mul(scalar.value));
+        }
+
+        @Override
+        public BigInteger asBigInteger() {
+            return new BigInteger(asByteArray());
+        }
+
+        @Override
+        public byte[] asByteArray() {
+            byte[] res = new byte[ECP_POINT_SIZE];
+            value.toBytes(res, false);
+
+            return res;
+        }
+    }
+
+    class MilagroECP2 implements ECP2Point {
+        ECP2 value;
+
+        public MilagroECP2(ECP2 value) {
+            this.value = value;
+        }
+
+        @Override
+        public void add(ECP2Point value) {
+            if (!(value instanceof MilagroECP2)) {
+                throw new RuntimeException("Supports only Milagro format of ECP2 point");
+            }
+
+            MilagroECP2 multiplier = (MilagroECP2) value;
+            this.value.add(multiplier.value);
+        }
+
+        @Override
+        public ECP2Point mul(BI value) {
+            if (!(value instanceof MilagroBIG)) {
+                throw new RuntimeException("Supports only Milagro format of BigInteger");
+            }
+
+            MilagroBIG scalar = (MilagroBIG) value;
+            return new MilagroECP2(this.value.mul(scalar.value));
+        }
+
+        @Override
+        public BigInteger asBigInteger() {
+            return new BigInteger(asByteArray());
+        }
+
+        @Override
+        public byte[] asByteArray() {
+            byte[] res = new byte[ECP2_POINT_SIZE];
+            value.toBytes(res);
+
+            return res;
+        }
+    }
+
+    class MilagroBIG implements BI {
+        BIG value;
+
+        public MilagroBIG(BIG value) {
+            this.value = value;
+        }
+
+        @Override
+        public BigInteger asBigInteger() {
+            return new BigInteger(asByteArray());
+        }
+
+        @Override
+        public byte[] asByteArray() {
+            byte[] res = new byte[INT_SIZE];
+            value.toBytes(res);
+
+            return res;
+        }
+    }
+
+    class MilagroFP12 implements FP12Point {
+        FP12 value;
+
+        public MilagroFP12(FP12 value) {
+            this.value = value;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            MilagroFP12 that = (MilagroFP12) o;
+            return value.equals(that.value);
+        }
     }
 }

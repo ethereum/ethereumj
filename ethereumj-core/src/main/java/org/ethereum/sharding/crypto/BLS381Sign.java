@@ -1,16 +1,10 @@
 package org.ethereum.sharding.crypto;
 
-import org.apache.milagro.amcl.BLS381.BIG;
-import org.apache.milagro.amcl.BLS381.ECP;
-import org.apache.milagro.amcl.BLS381.ECP2;
 import org.ethereum.util.ByteUtil;
 
 import java.math.BigInteger;
 import java.util.List;
-
-import static org.ethereum.sharding.crypto.MilagroBLS381.ECP2_POINT_SIZE;
-import static org.ethereum.sharding.crypto.MilagroBLS381.ECP_POINT_SIZE;
-import static org.ethereum.sharding.crypto.MilagroBLS381.PRIVATE_SIZE;
+import java.util.stream.Collectors;
 
 /**
  *  This is an implementation of signature creation, verification and
@@ -20,26 +14,29 @@ import static org.ethereum.sharding.crypto.MilagroBLS381.PRIVATE_SIZE;
  *  https://github.com/zkcrypto/pairing/tree/master/src/bls12_381/
  *  Why this curve was chosen:
  *  https://z.cash/blog/new-snark-curve/
- *
- *  Milagro implementation {@link MilagroBLS381} of BLS12-381 curve is used underneath.
  */
 public class BLS381Sign implements Sign {
 
-    MilagroBLS381 milagro = new MilagroBLS381();
+    public static int INT_SIZE = 48;
+
+    public static int ECP_POINT_SIZE = 2 * INT_SIZE + 1;
+
+    public static int ECP2_POINT_SIZE = 4 * INT_SIZE;
+
+    //  Milagro implementation of BLS12-381 curve is used underneath.
+    private BLS381 bls381 = new MilagroBLS381();
 
     /**
      * Creates new random pair of Signature (Private) and
      * Verification (Public) keys
      */
     public KeyPair newKeyPair() {
-        MilagroBLS381.KeyPair keyPair = milagro.newKeyPair();
-        byte[] sigKey = new byte[PRIVATE_SIZE];
-        keyPair.sigKey.toBytes(sigKey);
-        byte[] verKey = ecp2ToBytes(keyPair.verKey);
+        BLS381.BI sigKey = bls381.generatePrivate();
+        BLS381.ECP2Point verKey = bls381.generator2().mul(sigKey);
 
         KeyPair res = new KeyPair();
-        res.sigKey = new BigInteger(sigKey);
-        res.verKey = new BigInteger(verKey);
+        res.sigKey = sigKey.asBigInteger();
+        res.verKey = verKey.asBigInteger();
 
         return res;
     }
@@ -49,18 +46,10 @@ public class BLS381Sign implements Sign {
      */
     @Override
     public BigInteger privToPub(BigInteger privKey) {
-        byte[] sigKeyBytes = ByteUtil.bigIntegerToBytes(privKey, PRIVATE_SIZE);
-        BIG sigKey = BIG.fromBytes(sigKeyBytes);
-        byte[] verKey = ecp2ToBytes(milagro.fromSigKey(sigKey));
+        BLS381.BI sigKey = bls381.restorePrivate(privKey);
+        BLS381.ECP2Point verKey = bls381.generator2().mul(sigKey);
 
-        return new BigInteger(verKey);
-    }
-
-    private byte[] ecp2ToBytes(ECP2 point) {
-        byte[] res = new byte[ECP2_POINT_SIZE];
-        point.toBytes(res);
-
-        return res;
+        return verKey.asBigInteger();
     }
 
     /**
@@ -71,10 +60,10 @@ public class BLS381Sign implements Sign {
      */
     @Override
     public Signature sign(byte[] msgHash, BigInteger privateKey) {
-        byte[] sigKeyBytes = ByteUtil.bigIntegerToBytes(privateKey, PRIVATE_SIZE);
-        ECP signPoint = milagro.signMessage(BIG.fromBytes(sigKeyBytes), msgHash);
+        BLS381.ECP1Point hashPointECP1 = bls381.mapToECP1(msgHash);
+        BLS381.ECP1Point signature = hashPointECP1.mul(bls381.restorePrivate(privateKey));
 
-        return new Signature(new BigInteger(ecpToBytes(signPoint)));
+        return new Signature(signature.asBigInteger());
     }
 
     /**
@@ -91,7 +80,16 @@ public class BLS381Sign implements Sign {
         byte[] verKeyBytes = ByteUtil.bigIntegerToBytes(publicKey, ECP2_POINT_SIZE);
         byte[] sigKeyBytes = ByteUtil.bigIntegerToBytes(signature.value, ECP_POINT_SIZE);
 
-        return milagro.verifyMessage(ECP.fromBytes(sigKeyBytes), msgHash, ECP2.fromBytes(verKeyBytes));
+        BLS381.ECP1Point sigPoint = bls381.restoreECP1(sigKeyBytes);
+        BLS381.ECP2Point publicKeyPoint = bls381.restoreECP2(verKeyBytes);
+
+        BLS381.ECP2Point generator = bls381.generator2();
+        BLS381.ECP1Point point = bls381.mapToECP1(msgHash);
+
+        BLS381.FP12Point lhs = bls381.pair(generator, sigPoint);
+        BLS381.FP12Point rhs = bls381.pair(publicKeyPoint, point);
+
+        return lhs.equals(rhs);
     }
 
     /**
@@ -99,13 +97,20 @@ public class BLS381Sign implements Sign {
      */
     @Override
     public Signature aggSigns(List<Signature> signatures) {
-        ECP[] sigs = signatures.stream()
-                .map((Signature s) -> ECP.fromBytes(ByteUtil.bigIntegerToBytes(s.value, ECP_POINT_SIZE)))
-                .toArray(ECP[]::new);
-        ECP combinedSig = milagro.combine(sigs);
-        BigInteger sig = new BigInteger(ecpToBytes(combinedSig));
+        List<BLS381.ECP1Point> sigs = signatures.stream()
+                .map((Signature s) -> bls381.restoreECP1(ByteUtil.bigIntegerToBytes(s.value, ECP_POINT_SIZE)))
+                .collect(Collectors.toList());
 
-        return new Signature(sig);
+        BLS381.ECP1Point g1Agg = null;
+        for(BLS381.ECP1Point sig: sigs) {
+            if (g1Agg == null) {
+                g1Agg = sig;
+            } else {
+                g1Agg.add(sig);
+            }
+        }
+
+        return new Signature(g1Agg.asBigInteger());
     }
 
     /**
@@ -113,18 +118,20 @@ public class BLS381Sign implements Sign {
      */
     @Override
     public BigInteger aggPubs(List<BigInteger> verificationKeys) {
-        ECP2[] verKeys = verificationKeys.stream()
-                .map((BigInteger b) -> ECP2.fromBytes(ByteUtil.bigIntegerToBytes(b, ECP2_POINT_SIZE)))
-                .toArray(ECP2[]::new);
-        ECP2 combinedVerKey = milagro.combine(verKeys);
+        List<BLS381.ECP2Point> verKeys = verificationKeys.stream()
+                .map((BigInteger b) -> bls381.restoreECP2(ByteUtil.bigIntegerToBytes(b, ECP2_POINT_SIZE)))
+                .collect(Collectors.toList());
 
-        return new BigInteger(ecp2ToBytes(combinedVerKey));
-    }
+        BLS381.ECP2Point g2Agg = null;
 
-    private byte[] ecpToBytes(ECP point) {
-        byte[] res = new byte[ECP_POINT_SIZE];
-        point.toBytes(res, false);
+        for(BLS381.ECP2Point ver: verKeys) {
+            if (g2Agg == null) {
+                g2Agg = ver;
+            } else {
+                g2Agg.add(ver);
+            }
+        }
 
-        return res;
+        return g2Agg.asBigInteger();
     }
 }
