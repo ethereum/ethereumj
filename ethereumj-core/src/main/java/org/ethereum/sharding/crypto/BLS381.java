@@ -5,24 +5,58 @@ package org.ethereum.sharding.crypto;
  */
 public interface BLS381 {
 
+    /**
+     * Generates random private key
+     * Private key is correct scalar
+     */
     Scalar generateRandomPrivate();
 
+    /**
+     * Restores scalar from byte[]
+     */
     Scalar restoreScalar(byte[] value);
 
+    /**
+     * Restores point on elliptic curve #1
+     * @return ECP1
+     */
     P1 restoreECP1(byte[] value);
 
+    /**
+     * Restores point on elliptic curve #2
+     * @return ECP2
+     */
     P2 restoreECP2(byte[] value);
 
+    /**
+     * @return Generator of ECP2
+     */
     P2 generator2();
 
+    /**
+     * Maps byte[] value to ECP1
+     * @return  eligible mapping
+     */
     P1 mapToECP1(byte[] value);
 
-    FP12 pair(P2 pointECP2, P1 pointECP1);
+    /**
+     * Pairing function
+     * @param point2    Point on ECP2
+     * @param point1    Point on ECP1
+     * @return element of FP12
+     */
+    FP12 pair(P2 point2, P1 point1);
 
+    /**
+     * Represents scalar compliant with curve order
+     */
     interface Scalar {
         byte[] asByteArray();
     }
 
+    /**
+     * Represents point on ECP1 (elliptic curve #1)
+     */
     interface P1 {
         P1 mul(Scalar value);
 
@@ -31,6 +65,9 @@ public interface BLS381 {
         byte[] asByteArray();
     }
 
+    /**
+     * Represents point on ECP2 (elliptic curve #2)
+     */
     interface P2 {
         P2 mul(Scalar value);
 
@@ -39,6 +76,9 @@ public interface BLS381 {
         byte[] asByteArray();
     }
 
+    /**
+     * Represents element of FP12 extension field
+     */
     interface FP12 {
         boolean equals(FP12 other);
     }

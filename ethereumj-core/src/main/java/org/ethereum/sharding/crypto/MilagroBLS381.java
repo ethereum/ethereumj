@@ -82,12 +82,12 @@ public class MilagroBLS381 implements BLS381 {
     }
 
     @Override
-    public FP12 pair(P2 pointECP2, P1 pointECP1) {
-        if (!(pointECP2 instanceof MilagroECP2) || !(pointECP1 instanceof MilagroECP1)) {
+    public FP12 pair(P2 point2, P1 point1) {
+        if (!(point2 instanceof MilagroECP2) || !(point1 instanceof MilagroECP1)) {
             throw new RuntimeException("Supports only Milagro format of ECP2 and ECP1");
         }
-        MilagroECP2 ecp2Point = (MilagroECP2) pointECP2;
-        MilagroECP1 ecp1Point = (MilagroECP1) pointECP1;
+        MilagroECP2 ecp2Point = (MilagroECP2) point2;
+        MilagroECP1 ecp1Point = (MilagroECP1) point1;
 
         org.apache.milagro.amcl.BLS381.FP12 p = PAIR.ate(ecp2Point.value, ecp1Point.value);
         org.apache.milagro.amcl.BLS381.FP12 res = PAIR.fexp(p);
