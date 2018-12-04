@@ -6,6 +6,11 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.ethereum.sharding.crypto.BLS381.BI;
+import static org.ethereum.sharding.crypto.BLS381.ECP1Point;
+import static org.ethereum.sharding.crypto.BLS381.ECP2Point;
+import static org.ethereum.sharding.crypto.BLS381.FP12Point;
+
 /**
  *  This is an implementation of signature creation, verification and
  *  aggregation based on the BLS12-381 pairing-friendly elliptic curve.
@@ -31,8 +36,8 @@ public class BLS381Sign implements Sign {
      * Verification (Public) keys
      */
     public KeyPair newKeyPair() {
-        BLS381.BI sigKey = bls381.generatePrivate();
-        BLS381.ECP2Point verKey = bls381.generator2().mul(sigKey);
+        BI sigKey = bls381.generatePrivate();
+        ECP2Point verKey = bls381.generator2().mul(sigKey);
 
         KeyPair res = new KeyPair();
         res.sigKey = sigKey.asBigInteger();
@@ -46,8 +51,8 @@ public class BLS381Sign implements Sign {
      */
     @Override
     public BigInteger privToPub(BigInteger privKey) {
-        BLS381.BI sigKey = bls381.restorePrivate(privKey);
-        BLS381.ECP2Point verKey = bls381.generator2().mul(sigKey);
+        BI sigKey = bls381.restorePrivate(privKey);
+        ECP2Point verKey = bls381.generator2().mul(sigKey);
 
         return verKey.asBigInteger();
     }
@@ -60,8 +65,8 @@ public class BLS381Sign implements Sign {
      */
     @Override
     public Signature sign(byte[] msgHash, BigInteger privateKey) {
-        BLS381.ECP1Point hashPointECP1 = bls381.mapToECP1(msgHash);
-        BLS381.ECP1Point signature = hashPointECP1.mul(bls381.restorePrivate(privateKey));
+        ECP1Point hashPointECP1 = bls381.mapToECP1(msgHash);
+        ECP1Point signature = hashPointECP1.mul(bls381.restorePrivate(privateKey));
 
         return new Signature(signature.asBigInteger());
     }
@@ -80,14 +85,14 @@ public class BLS381Sign implements Sign {
         byte[] verKeyBytes = ByteUtil.bigIntegerToBytes(publicKey, ECP2_POINT_SIZE);
         byte[] sigKeyBytes = ByteUtil.bigIntegerToBytes(signature.value, ECP_POINT_SIZE);
 
-        BLS381.ECP1Point sigPoint = bls381.restoreECP1(sigKeyBytes);
-        BLS381.ECP2Point publicKeyPoint = bls381.restoreECP2(verKeyBytes);
+        ECP1Point sigPoint = bls381.restoreECP1(sigKeyBytes);
+        ECP2Point publicKeyPoint = bls381.restoreECP2(verKeyBytes);
 
-        BLS381.ECP2Point generator = bls381.generator2();
-        BLS381.ECP1Point point = bls381.mapToECP1(msgHash);
+        ECP2Point generator = bls381.generator2();
+        ECP1Point point = bls381.mapToECP1(msgHash);
 
-        BLS381.FP12Point lhs = bls381.pair(generator, sigPoint);
-        BLS381.FP12Point rhs = bls381.pair(publicKeyPoint, point);
+        FP12Point lhs = bls381.pair(generator, sigPoint);
+        FP12Point rhs = bls381.pair(publicKeyPoint, point);
 
         return lhs.equals(rhs);
     }
@@ -97,12 +102,12 @@ public class BLS381Sign implements Sign {
      */
     @Override
     public Signature aggSigns(List<Signature> signatures) {
-        List<BLS381.ECP1Point> sigs = signatures.stream()
+        List<ECP1Point> sigs = signatures.stream()
                 .map((Signature s) -> bls381.restoreECP1(ByteUtil.bigIntegerToBytes(s.value, ECP_POINT_SIZE)))
                 .collect(Collectors.toList());
 
-        BLS381.ECP1Point g1Agg = null;
-        for(BLS381.ECP1Point sig: sigs) {
+        ECP1Point g1Agg = null;
+        for(ECP1Point sig: sigs) {
             if (g1Agg == null) {
                 g1Agg = sig;
             } else {
@@ -118,13 +123,13 @@ public class BLS381Sign implements Sign {
      */
     @Override
     public BigInteger aggPubs(List<BigInteger> verificationKeys) {
-        List<BLS381.ECP2Point> verKeys = verificationKeys.stream()
+        List<ECP2Point> verKeys = verificationKeys.stream()
                 .map((BigInteger b) -> bls381.restoreECP2(ByteUtil.bigIntegerToBytes(b, ECP2_POINT_SIZE)))
                 .collect(Collectors.toList());
 
-        BLS381.ECP2Point g2Agg = null;
+        ECP2Point g2Agg = null;
 
-        for(BLS381.ECP2Point ver: verKeys) {
+        for(ECP2Point ver: verKeys) {
             if (g2Agg == null) {
                 g2Agg = ver;
             } else {

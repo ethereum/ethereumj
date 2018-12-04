@@ -11,7 +11,6 @@ import org.ethereum.util.ByteUtil;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
-import java.util.Objects;
 
 import static org.ethereum.sharding.crypto.BLS381Sign.ECP2_POINT_SIZE;
 import static org.ethereum.sharding.crypto.BLS381Sign.ECP_POINT_SIZE;
