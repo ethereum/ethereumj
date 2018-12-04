@@ -17,7 +17,6 @@
  */
 package org.ethereum.sharding.processing.state;
 
-import org.ethereum.sharding.crypto.Sign;
 import org.ethereum.sharding.util.Bitfield;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
@@ -28,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
 import static org.ethereum.util.ByteUtil.byteArrayToLong;
 import static org.ethereum.util.ByteUtil.bytesToBigInteger;
 import static org.ethereum.util.ByteUtil.intToBytesNoLeadZeroes;
@@ -55,11 +53,11 @@ public class AttestationRecord {
     private final long justifiedSlot;
     private final byte[] justifiedBlockHash;
     // The actual signature
-    private final Sign.Signature aggregateSig;
+    private final byte[] aggregateSig;
 
     public AttestationRecord(long slot, int shardId, List<byte[]> obliqueParentHashes, byte[] shardBlockHash,
                              Bitfield attesterBitfield, long justifiedSlot, byte[] justifiedBlockHash,
-                             Sign.Signature aggregateSig) {
+                             byte[] aggregateSig) {
         this.slot = slot;
         this.shardId = shardId;
         this.obliqueParentHashes = obliqueParentHashes;
@@ -85,9 +83,7 @@ public class AttestationRecord {
         this.attesterBitfield = new Bitfield(list.get(4).getRLPData());
         this.justifiedSlot = byteArrayToLong(list.get(5).getRLPData());
         this.justifiedBlockHash = list.get(6).getRLPData();
-
-        RLPList sigList = RLP.unwrapList(list.get(7).getRLPData());
-        this.aggregateSig = new Sign.Signature(ByteUtil.bytesToBigInteger(sigList.get(0).getRLPData()));
+        this.aggregateSig = list.get(7).getRLPData();
     }
 
     public long getSlot() {
@@ -118,14 +114,11 @@ public class AttestationRecord {
         return justifiedBlockHash;
     }
 
-    public Sign.Signature getAggregateSig() {
+    public byte[] getAggregateSig() {
         return aggregateSig;
     }
 
     public byte[] getEncoded() {
-        byte[][] encodedAggSig = new byte[1][];
-        encodedAggSig[0] = bigIntegerToBytes(aggregateSig.value);
-
         byte[][] encodedHashes = new byte[obliqueParentHashes.size()][];
         for (int i = 0; i < obliqueParentHashes.size(); i++)
             encodedHashes[i] = RLP.encodeElement(obliqueParentHashes.get(i));
@@ -137,7 +130,7 @@ public class AttestationRecord {
                 attesterBitfield.getData(),
                 longToBytesNoLeadZeroes(justifiedSlot),
                 justifiedBlockHash,
-                RLP.wrapList(encodedAggSig));
+                aggregateSig);
     }
 
     @Override

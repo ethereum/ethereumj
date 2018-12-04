@@ -18,6 +18,7 @@
 package org.ethereum.sharding.crypto;
 
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
@@ -36,24 +37,23 @@ public class DummySign implements Sign {
      * Sign the message
      */
     @Override
-    public Signature sign(byte[] msgHash, BigInteger privateKey) {
+    public byte[] sign(byte[] msgHash, BigInteger privateKey) {
         byte[] rSource = sha3(privateKey.toByteArray());
         byte[] sSource = sha3(msgHash, privateKey.toByteArray());
-        Signature res = new Signature(new BigInteger(ByteUtil.merge(rSource, sSource)));
 
-        return res;
+        return ByteUtil.merge(rSource, sSource);
     }
 
     /**
      * Verifies whether signature is made by signer with pubKey
      */
     @Override
-    public boolean verify(Signature signature, byte[] msgHash, BigInteger pubKey) {
+    public boolean verify(byte[] signature, byte[] msgHash, BigInteger pubKey) {
         byte[] rSource = sha3(pubKey.toByteArray());
         byte[] sSource = sha3(msgHash, pubKey.toByteArray());
-        Signature res = new Signature(new BigInteger(ByteUtil.merge(rSource, sSource)));
+        byte[] res = ByteUtil.merge(rSource, sSource);
 
-        return res.equals(signature);
+        return FastByteComparisons.equal(res, signature);
     }
 
     @Override
@@ -77,7 +77,7 @@ public class DummySign implements Sign {
      * Aggregates several signatures in one
      */
     @Override
-    public Signature aggSigns(List<Signature> signatures) {
+    public byte[] aggSigns(List<byte[]> signatures) {
         if (signatures.isEmpty())
             throw new RuntimeException("Couldn't aggregate empty list");
 

@@ -17,6 +17,7 @@
  */
 package org.ethereum.sharding.crypto;
 
+import org.ethereum.util.FastByteComparisons;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -50,10 +51,13 @@ public class SignTest {
         KeyPair keyPair = sign.newKeyPair();
         BigInteger privKey = keyPair.sigKey;
         BigInteger pubKey = keyPair.verKey;
-        Sign.Signature signature = sign.sign(msg, privKey);
+        byte[] signature = sign.sign(msg, privKey);
         assertTrue(sign.verify(signature, msg, pubKey));
         assertFalse(sign.verify(signature, msg, pubKey.add(BigInteger.ONE)));
-        Sign.Signature brokenSignature = new Sign.Signature(signature.value.subtract(BigInteger.ONE));
+        byte[] brokenSignature = new byte[signature.length];
+        System.arraycopy(signature, 0, brokenSignature, 0, signature.length);
+        brokenSignature[signature.length - 1] = 0x1c;
+        assertFalse(FastByteComparisons.equal(signature, brokenSignature));
         assertFalse(sign.verify(brokenSignature, msg, pubKey));
         msg[0] = 13;
         assertFalse(sign.verify(signature, msg, pubKey));
@@ -65,7 +69,7 @@ public class SignTest {
         byte[] msg = blake2b384(Hex.decode("0737626387abcdef"));
         KeyPair keyPair = sign.newKeyPair();
         BigInteger privKey = keyPair.sigKey;
-        Sign.Signature signature = sign.sign(msg, privKey);
+        byte[] signature = sign.sign(msg, privKey);
         assertFalse(sign.verify(signature, msg, privKey)); // pubKey should be here
     }
 
@@ -76,17 +80,17 @@ public class SignTest {
         KeyPair keyPair = sign.newKeyPair();
         BigInteger privKey = keyPair.sigKey;
         BigInteger pubKey = keyPair.verKey;
-        Sign.Signature signature = sign.sign(msg, privKey);
+        byte[] signature = sign.sign(msg, privKey);
 
         KeyPair keyPair2 = sign.newKeyPair();
         BigInteger privKey2 = keyPair2.sigKey;
         BigInteger pubKey2 = keyPair2.verKey;
-        Sign.Signature signature2 = sign.sign(msg, privKey2);
+        byte[] signature2 = sign.sign(msg, privKey2);
 
-        List<Sign.Signature> aggSigns = new ArrayList<>();
+        List<byte[]> aggSigns = new ArrayList<>();
         aggSigns.add(signature);
         aggSigns.add(signature2);
-        Sign.Signature aggSign = sign.aggSigns(aggSigns);
+        byte[] aggSign = sign.aggSigns(aggSigns);
 
         List<BigInteger> pubKeys = new ArrayList<>();
         pubKeys.add(pubKey);
@@ -104,21 +108,21 @@ public class SignTest {
         KeyPair keyPair = sign.newKeyPair();
         BigInteger privKey = keyPair.sigKey;
         BigInteger pubKey = keyPair.verKey;
-        Sign.Signature signature = sign.sign(msg, privKey);
+        byte[] signature = sign.sign(msg, privKey);
 
         KeyPair keyPair2 = sign.newKeyPair();
         BigInteger privKey2 = keyPair2.sigKey;
         BigInteger pubKey2 = keyPair2.verKey;
-        Sign.Signature signature2 = sign.sign(msg, privKey2);
+        byte[] signature2 = sign.sign(msg, privKey2);
 
         KeyPair keyPair3 = sign.newKeyPair();
         BigInteger privKey3 = keyPair3.sigKey;
         BigInteger pubKey3 = keyPair3.verKey;
-        Sign.Signature signature3 = sign.sign(msg, privKey3);
+        byte[] signature3 = sign.sign(msg, privKey3);
 
-        Sign.Signature aggSign12 = sign.aggSigns(new ArrayList<Sign.Signature>(){{add(signature); add(signature2);}});
-        Sign.Signature aggSign13 = sign.aggSigns(new ArrayList<Sign.Signature>(){{add(signature); add(signature3);}});
-        Sign.Signature aggSign23 = sign.aggSigns(new ArrayList<Sign.Signature>(){{add(signature2); add(signature3);}});
+        byte[] aggSign12 = sign.aggSigns(new ArrayList<byte[]>(){{add(signature); add(signature2);}});
+        byte[] aggSign13 = sign.aggSigns(new ArrayList<byte[]>(){{add(signature); add(signature3);}});
+        byte[] aggSign23 = sign.aggSigns(new ArrayList<byte[]>(){{add(signature2); add(signature3);}});
 
         BigInteger aggPubs12 = sign.aggPubs(new ArrayList<BigInteger>(){{add(pubKey); add(pubKey2);}});
         BigInteger aggPubs13 = sign.aggPubs(new ArrayList<BigInteger>(){{add(pubKey); add(pubKey3);}});

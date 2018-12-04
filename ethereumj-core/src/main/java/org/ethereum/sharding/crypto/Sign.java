@@ -2,7 +2,6 @@ package org.ethereum.sharding.crypto;
 
 import java.math.BigInteger;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Signature point of entry
@@ -26,45 +25,22 @@ public interface Sign {
     /**
      * Sign the message
      */
-    Signature sign(byte[] msgHash, BigInteger privateKey);
+    byte[] sign(byte[] msgHash, BigInteger privateKey);
 
     /**
      * Verifies whether signature is made by signer with publicKey
      */
-    boolean verify(Signature signature, byte[] msgHash, BigInteger publicKey);
+    boolean verify(byte[] signature, byte[] msgHash, BigInteger publicKey);
 
     /**
      * Aggregates several signatures in one
      */
-    Signature aggSigns(List<Signature> signatures);
+    byte[] aggSigns(List<byte[]> signatures);
 
     /**
      * Aggregates public keys
      */
     BigInteger aggPubs(List<BigInteger> pubKeys);
-
-    class Signature {
-        public BigInteger value;
-
-        public Signature(BigInteger value) {
-            this.value = value;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Signature signature = (Signature) o;
-            return Objects.equals(value, signature.value);
-        }
-
-        @Override
-        public String toString() {
-            return "Signature{" +
-                    "value=" + value +
-                    '}';
-        }
-    }
 
     class KeyPair {
         BigInteger sigKey;  // Signature (private key)

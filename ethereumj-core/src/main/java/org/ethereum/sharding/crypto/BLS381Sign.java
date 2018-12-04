@@ -6,10 +6,10 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.ethereum.sharding.crypto.BLS381.BI;
-import static org.ethereum.sharding.crypto.BLS381.ECP1Point;
-import static org.ethereum.sharding.crypto.BLS381.ECP2Point;
-import static org.ethereum.sharding.crypto.BLS381.FP12Point;
+import static org.ethereum.sharding.crypto.BLS381.Scalar;
+import static org.ethereum.sharding.crypto.BLS381.P1;
+import static org.ethereum.sharding.crypto.BLS381.P2;
+import static org.ethereum.sharding.crypto.BLS381.FP12;
 
 /**
  *  This is an implementation of signature creation, verification and
@@ -22,11 +22,11 @@ import static org.ethereum.sharding.crypto.BLS381.FP12Point;
  */
 public class BLS381Sign implements Sign {
 
-    public static int INT_SIZE = 48;
+    public static int SCALAR_SIZE = 48;
 
-    public static int ECP_POINT_SIZE = 2 * INT_SIZE + 1;
+    public static int ECP_POINT_SIZE = 2 * SCALAR_SIZE + 1;
 
-    public static int ECP2_POINT_SIZE = 4 * INT_SIZE;
+    public static int ECP2_POINT_SIZE = 4 * SCALAR_SIZE;
 
     //  Milagro implementation of BLS12-381 curve is used underneath.
     private BLS381 bls381 = new MilagroBLS381();
@@ -36,12 +36,12 @@ public class BLS381Sign implements Sign {
      * Verification (Public) keys
      */
     public KeyPair newKeyPair() {
-        BI sigKey = bls381.generatePrivate();
-        ECP2Point verKey = bls381.generator2().mul(sigKey);
+        Scalar sigKey = bls381.generateRandomPrivate();
+        P2 verKey = bls381.generator2().mul(sigKey);
 
         KeyPair res = new KeyPair();
-        res.sigKey = sigKey.asBigInteger();
-        res.verKey = verKey.asBigInteger();
+        res.sigKey = new BigInteger(sigKey.asByteArray());
+        res.verKey = new BigInteger(verKey.asByteArray());
 
         return res;
     }
@@ -51,10 +51,10 @@ public class BLS381Sign implements Sign {
      */
     @Override
     public BigInteger privToPub(BigInteger privKey) {
-        BI sigKey = bls381.restorePrivate(privKey);
-        ECP2Point verKey = bls381.generator2().mul(sigKey);
+        Scalar sigKey = bls381.restoreScalar(ByteUtil.bigIntegerToBytes(privKey, SCALAR_SIZE));
+        P2 verKey = bls381.generator2().mul(sigKey);
 
-        return verKey.asBigInteger();
+        return new BigInteger(verKey.asByteArray());
     }
 
     /**
@@ -64,11 +64,11 @@ public class BLS381Sign implements Sign {
      * @return  signature, point on G1 (bytes)
      */
     @Override
-    public Signature sign(byte[] msgHash, BigInteger privateKey) {
-        ECP1Point hashPointECP1 = bls381.mapToECP1(msgHash);
-        ECP1Point signature = hashPointECP1.mul(bls381.restorePrivate(privateKey));
+    public byte[] sign(byte[] msgHash, BigInteger privateKey) {
+        P1 hashPointECP1 = bls381.mapToECP1(msgHash);
+        P1 signature = hashPointECP1.mul(bls381.restoreScalar(ByteUtil.bigIntegerToBytes(privateKey, SCALAR_SIZE)));
 
-        return new Signature(signature.asBigInteger());
+        return signature.asByteArray();
     }
 
     /**
@@ -80,19 +80,17 @@ public class BLS381Sign implements Sign {
      * @return  true if message is signature is done with the key
      */
     @Override
-    public boolean verify(Signature signature, byte[] msgHash, BigInteger publicKey) {
+    public boolean verify(byte[] signature, byte[] msgHash, BigInteger publicKey) {
         // signature to ECP2, publicKey to ECP
         byte[] verKeyBytes = ByteUtil.bigIntegerToBytes(publicKey, ECP2_POINT_SIZE);
-        byte[] sigKeyBytes = ByteUtil.bigIntegerToBytes(signature.value, ECP_POINT_SIZE);
+        P1 sigPoint = bls381.restoreECP1(signature);
+        P2 publicKeyPoint = bls381.restoreECP2(verKeyBytes);
 
-        ECP1Point sigPoint = bls381.restoreECP1(sigKeyBytes);
-        ECP2Point publicKeyPoint = bls381.restoreECP2(verKeyBytes);
+        P2 generator = bls381.generator2();
+        P1 point = bls381.mapToECP1(msgHash);
 
-        ECP2Point generator = bls381.generator2();
-        ECP1Point point = bls381.mapToECP1(msgHash);
-
-        FP12Point lhs = bls381.pair(generator, sigPoint);
-        FP12Point rhs = bls381.pair(publicKeyPoint, point);
+        FP12 lhs = bls381.pair(generator, sigPoint);
+        FP12 rhs = bls381.pair(publicKeyPoint, point);
 
         return lhs.equals(rhs);
     }
@@ -101,13 +99,13 @@ public class BLS381Sign implements Sign {
      * Aggregates several signatures in one
      */
     @Override
-    public Signature aggSigns(List<Signature> signatures) {
-        List<ECP1Point> sigs = signatures.stream()
-                .map((Signature s) -> bls381.restoreECP1(ByteUtil.bigIntegerToBytes(s.value, ECP_POINT_SIZE)))
+    public byte[] aggSigns(List<byte[]> signatures) {
+        List<P1> sigs = signatures.stream()
+                .map((byte[] signature) -> bls381.restoreECP1(signature))
                 .collect(Collectors.toList());
 
-        ECP1Point g1Agg = null;
-        for(ECP1Point sig: sigs) {
+        P1 g1Agg = null;
+        for(P1 sig: sigs) {
             if (g1Agg == null) {
                 g1Agg = sig;
             } else {
@@ -115,7 +113,7 @@ public class BLS381Sign implements Sign {
             }
         }
 
-        return new Signature(g1Agg.asBigInteger());
+        return g1Agg.asByteArray();
     }
 
     /**
@@ -123,13 +121,13 @@ public class BLS381Sign implements Sign {
      */
     @Override
     public BigInteger aggPubs(List<BigInteger> verificationKeys) {
-        List<ECP2Point> verKeys = verificationKeys.stream()
+        List<P2> verKeys = verificationKeys.stream()
                 .map((BigInteger b) -> bls381.restoreECP2(ByteUtil.bigIntegerToBytes(b, ECP2_POINT_SIZE)))
                 .collect(Collectors.toList());
 
-        ECP2Point g2Agg = null;
+        P2 g2Agg = null;
 
-        for(ECP2Point ver: verKeys) {
+        for(P2 ver: verKeys) {
             if (g2Agg == null) {
                 g2Agg = ver;
             } else {
@@ -137,6 +135,6 @@ public class BLS381Sign implements Sign {
             }
         }
 
-        return g2Agg.asBigInteger();
+        return new BigInteger(g2Agg.asByteArray());
     }
 }

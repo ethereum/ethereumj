@@ -1,53 +1,45 @@
 package org.ethereum.sharding.crypto;
 
-import java.math.BigInteger;
-
 /**
  * Common interface for BLS381-12 implementation
  */
 public interface BLS381 {
 
-    BI generatePrivate();
+    Scalar generateRandomPrivate();
 
-    BI restorePrivate(BigInteger value);
+    Scalar restoreScalar(byte[] value);
 
-    BI restorePrivate(byte[] value);
+    P1 restoreECP1(byte[] value);
 
-    ECP1Point restoreECP1(byte[] value);
+    P2 restoreECP2(byte[] value);
 
-    ECP2Point restoreECP2(byte[] value);
+    P2 generator2();
 
-    ECP2Point generator2();
+    P1 mapToECP1(byte[] value);
 
-    ECP1Point mapToECP1(byte[] value);
+    FP12 pair(P2 pointECP2, P1 pointECP1);
 
-    FP12Point pair(ECP2Point pointECP2, ECP1Point pointECP1);
+    interface Scalar {
+        byte[] asByteArray();
+    }
 
-    interface BI {
-        BigInteger asBigInteger();
+    interface P1 {
+        P1 mul(Scalar value);
+
+        void add(P1 value);
 
         byte[] asByteArray();
     }
 
-    interface ECP1Point {
-        ECP1Point mul(BI value);
+    interface P2 {
+        P2 mul(Scalar value);
 
-        void add(ECP1Point value);
-
-        BigInteger asBigInteger();
+        void add(P2 value);
 
         byte[] asByteArray();
     }
 
-    interface ECP2Point {
-        ECP2Point mul(BI value);
-
-        void add(ECP2Point value);
-
-        BigInteger asBigInteger();
-
-        byte[] asByteArray();
+    interface FP12 {
+        boolean equals(FP12 other);
     }
-
-    interface FP12Point {}
 }

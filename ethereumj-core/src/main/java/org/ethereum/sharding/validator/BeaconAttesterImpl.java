@@ -54,9 +54,9 @@ public class BeaconAttesterImpl implements BeaconAttester {
     public AttestationRecord attestBlock(Input in, byte[] pubKey) {
         long lastJustified = in.state.getCrystallizedState().getFinality().getLastJustifiedSlot();
         byte[] msgHash = in.block.getHash();
-        List<Sign.Signature> aggSigns = new ArrayList<>();
+        List<byte[]> aggSigns = new ArrayList<>();
         aggSigns.add(sign.sign(msgHash, new BigInteger(pubKey)));
-        Sign.Signature aggSignature = sign.aggSigns(aggSigns);
+        byte[] aggSignature = sign.aggSigns(aggSigns);
         AttestationRecord attestationRecord = new AttestationRecord(
                 in.slotNumber,
                 in.index.getShardId(),

@@ -3,18 +3,15 @@ package org.ethereum.sharding.crypto;
 import org.apache.milagro.amcl.BLS381.BIG;
 import org.apache.milagro.amcl.BLS381.ECP;
 import org.apache.milagro.amcl.BLS381.ECP2;
-import org.apache.milagro.amcl.BLS381.FP12;
 import org.apache.milagro.amcl.BLS381.PAIR;
 import org.apache.milagro.amcl.BLS381.ROM;
 import org.apache.milagro.amcl.RAND;
-import org.ethereum.util.ByteUtil;
 
-import java.math.BigInteger;
 import java.security.SecureRandom;
 
 import static org.ethereum.sharding.crypto.BLS381Sign.ECP2_POINT_SIZE;
 import static org.ethereum.sharding.crypto.BLS381Sign.ECP_POINT_SIZE;
-import static org.ethereum.sharding.crypto.BLS381Sign.INT_SIZE;
+import static org.ethereum.sharding.crypto.BLS381Sign.SCALAR_SIZE;
 
 public class MilagroBLS381 implements BLS381 {
 
@@ -26,38 +23,28 @@ public class MilagroBLS381 implements BLS381 {
      * Returns random scalar which is on a curve
      */
     @Override
-    public BI generatePrivate() {
+    public Scalar generateRandomPrivate() {
         RAND rand = new RAND();
-        byte[] randomBytes = new byte[INT_SIZE];
+        byte[] randomBytes = new byte[SCALAR_SIZE];
         random.nextBytes(randomBytes);
-        rand.seed(INT_SIZE, randomBytes);
+        rand.seed(SCALAR_SIZE, randomBytes);
         BIG randomNumber = BIG.randomnum(CURVE_ORDER, rand);
 
         return new MilagroBIG(randomNumber);
     }
 
     /**
-     * Restores private key from standard {@link BigInteger}
-     */
-    @Override
-    public BI restorePrivate(BigInteger value) {
-        byte[] sigKeyBytes = ByteUtil.bigIntegerToBytes(value, INT_SIZE);
-
-        return restorePrivate(sigKeyBytes);
-    }
-
-    /**
      * Restores private key from byte array
      */
     @Override
-    public BI restorePrivate(byte[] value) {
+    public Scalar restoreScalar(byte[] value) {
         BIG sigKey = BIG.fromBytes(value);
 
         return new MilagroBIG(sigKey);
     }
 
     @Override
-    public ECP1Point restoreECP1(byte[] value) {
+    public P1 restoreECP1(byte[] value) {
         if (value == null || value.length != ECP_POINT_SIZE) {
             throw new RuntimeException(String.format("Supports only %s size byte[] input", ECP_POINT_SIZE));
         }
@@ -66,7 +53,7 @@ public class MilagroBLS381 implements BLS381 {
     }
 
     @Override
-    public ECP2Point restoreECP2(byte[] value) {
+    public P2 restoreECP2(byte[] value) {
         if (value == null || value.length != ECP2_POINT_SIZE) {
             throw new RuntimeException(String.format("Supports only %s size byte[] input", ECP2_POINT_SIZE));
         }
@@ -78,7 +65,7 @@ public class MilagroBLS381 implements BLS381 {
      * @return base point (generator) on ECP2
      */
     @Override
-    public ECP2Point generator2() {
+    public P2 generator2() {
         return new MilagroECP2(ECP2.generator());
     }
 
@@ -86,29 +73,29 @@ public class MilagroBLS381 implements BLS381 {
      * Maps value to GroupG1 (ECP)
      */
     @Override
-    public ECP1Point mapToECP1(byte[] value) {
-        if (value == null || value.length != INT_SIZE) {
-            throw new RuntimeException(String.format("Supports only %s size byte[] input", INT_SIZE));
+    public P1 mapToECP1(byte[] value) {
+        if (value == null || value.length != SCALAR_SIZE) {
+            throw new RuntimeException(String.format("Supports only %s size byte[] input", SCALAR_SIZE));
         }
 
         return new MilagroECP1(ECP.mapit(value));
     }
 
     @Override
-    public FP12Point pair(ECP2Point pointECP2, ECP1Point pointECP1) {
+    public FP12 pair(P2 pointECP2, P1 pointECP1) {
         if (!(pointECP2 instanceof MilagroECP2) || !(pointECP1 instanceof MilagroECP1)) {
             throw new RuntimeException("Supports only Milagro format of ECP2 and ECP1");
         }
         MilagroECP2 ecp2Point = (MilagroECP2) pointECP2;
         MilagroECP1 ecp1Point = (MilagroECP1) pointECP1;
 
-        FP12 p = PAIR.ate(ecp2Point.value, ecp1Point.value);
-        FP12 res = PAIR.fexp(p);
+        org.apache.milagro.amcl.BLS381.FP12 p = PAIR.ate(ecp2Point.value, ecp1Point.value);
+        org.apache.milagro.amcl.BLS381.FP12 res = PAIR.fexp(p);
 
         return new MilagroFP12(res);
     }
 
-    class MilagroECP1 implements ECP1Point {
+    class MilagroECP1 implements P1 {
         ECP value;
 
         public MilagroECP1(ECP value) {
@@ -116,7 +103,7 @@ public class MilagroBLS381 implements BLS381 {
         }
 
         @Override
-        public void add(ECP1Point value) {
+        public void add(P1 value) {
             if (!(value instanceof MilagroECP1)) {
                 throw new RuntimeException("Supports only Milagro format of ECP1 point");
             }
@@ -126,18 +113,13 @@ public class MilagroBLS381 implements BLS381 {
         }
 
         @Override
-        public ECP1Point mul(BI value) {
+        public P1 mul(Scalar value) {
             if (!(value instanceof MilagroBIG)) {
                 throw new RuntimeException("Supports only Milagro format of BigInteger");
             }
 
             MilagroBIG scalar = (MilagroBIG) value;
             return new MilagroECP1(this.value.mul(scalar.value));
-        }
-
-        @Override
-        public BigInteger asBigInteger() {
-            return new BigInteger(asByteArray());
         }
 
         @Override
@@ -149,7 +131,7 @@ public class MilagroBLS381 implements BLS381 {
         }
     }
 
-    class MilagroECP2 implements ECP2Point {
+    class MilagroECP2 implements P2 {
         ECP2 value;
 
         public MilagroECP2(ECP2 value) {
@@ -157,7 +139,7 @@ public class MilagroBLS381 implements BLS381 {
         }
 
         @Override
-        public void add(ECP2Point value) {
+        public void add(P2 value) {
             if (!(value instanceof MilagroECP2)) {
                 throw new RuntimeException("Supports only Milagro format of ECP2 point");
             }
@@ -167,18 +149,13 @@ public class MilagroBLS381 implements BLS381 {
         }
 
         @Override
-        public ECP2Point mul(BI value) {
+        public P2 mul(Scalar value) {
             if (!(value instanceof MilagroBIG)) {
                 throw new RuntimeException("Supports only Milagro format of BigInteger");
             }
 
             MilagroBIG scalar = (MilagroBIG) value;
             return new MilagroECP2(this.value.mul(scalar.value));
-        }
-
-        @Override
-        public BigInteger asBigInteger() {
-            return new BigInteger(asByteArray());
         }
 
         @Override
@@ -190,7 +167,7 @@ public class MilagroBLS381 implements BLS381 {
         }
     }
 
-    class MilagroBIG implements BI {
+    class MilagroBIG implements Scalar {
         BIG value;
 
         public MilagroBIG(BIG value) {
@@ -198,24 +175,24 @@ public class MilagroBLS381 implements BLS381 {
         }
 
         @Override
-        public BigInteger asBigInteger() {
-            return new BigInteger(asByteArray());
-        }
-
-        @Override
         public byte[] asByteArray() {
-            byte[] res = new byte[INT_SIZE];
+            byte[] res = new byte[SCALAR_SIZE];
             value.toBytes(res);
 
             return res;
         }
     }
 
-    class MilagroFP12 implements FP12Point {
-        FP12 value;
+    class MilagroFP12 implements FP12 {
+        org.apache.milagro.amcl.BLS381.FP12 value;
 
-        public MilagroFP12(FP12 value) {
+        public MilagroFP12(org.apache.milagro.amcl.BLS381.FP12 value) {
             this.value = value;
+        }
+
+        @Override
+        public boolean equals(FP12 other) {
+            return equals((Object) other);
         }
 
         @Override

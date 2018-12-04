@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 
 import static org.ethereum.crypto.HashUtil.blake2b384;
 import static org.junit.Assert.assertTrue;
-import static org.ethereum.sharding.crypto.Sign.Signature;
 import static org.ethereum.sharding.crypto.Sign.KeyPair;
 
 /**
@@ -63,7 +62,7 @@ public class SignBenchmarkTest {
 
             byte[] hash = blake2b384(message);
 
-            List<Signature> signs = new ArrayList<>();
+            List<byte[]> signs = new ArrayList<>();
             start = System.nanoTime();
             for (int i = 0; i < SIGNERS; ++i) {
                 signs.add(bls381.sign(hash, keyPairs.get(i).sigKey));
@@ -73,7 +72,7 @@ public class SignBenchmarkTest {
 
             // aggregate signs
             start = System.nanoTime();
-            Signature aggSigs = bls381.aggSigns(signs);
+            byte[] aggSigs = bls381.aggSigns(signs);
             finish = System.nanoTime();
             System.out.println(String.format("Aggregated %s signatures in %s", SIGNERS, formatNs(finish - start)));
 
