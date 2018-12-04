@@ -296,6 +296,14 @@ public class SolidityCompiler {
             }
         }
 
+        //new in solidity 0.5.0: using stdin requires an explicit "-". The following output
+        //of 'solc' if no file is provided, e.g.,: solc --combined-json abi,bin,interface,metadata
+        //
+        // No input files given. If you wish to use the standard input please specify "-" explicitly.
+        //
+        // For older solc version "-" is not an issue as it is accepet as well
+        commandParts.add("-");
+
         return commandParts;
     }
 
