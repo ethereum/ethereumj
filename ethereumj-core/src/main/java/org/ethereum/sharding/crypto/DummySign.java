@@ -37,7 +37,7 @@ public class DummySign implements Sign {
      * Sign the message
      */
     @Override
-    public byte[] sign(byte[] msgHash, BigInteger privateKey) {
+    public byte[] sign(byte[] msgHash, byte[] domain, BigInteger privateKey) {
         byte[] rSource = sha3(privateKey.toByteArray());
         byte[] sSource = sha3(msgHash, privateKey.toByteArray());
 
@@ -48,7 +48,7 @@ public class DummySign implements Sign {
      * Verifies whether signature is made by signer with pubKey
      */
     @Override
-    public boolean verify(byte[] signature, byte[] msgHash, BigInteger pubKey) {
+    public boolean verify(byte[] signature, byte[] msgHash, BigInteger pubKey, byte[] domain) {
         byte[] rSource = sha3(pubKey.toByteArray());
         byte[] sSource = sha3(msgHash, pubKey.toByteArray());
         byte[] res = ByteUtil.merge(rSource, sSource);

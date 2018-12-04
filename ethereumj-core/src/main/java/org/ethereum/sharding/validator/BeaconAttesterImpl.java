@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static org.ethereum.sharding.crypto.BLS381Sign.DOMAIN;
+
 /**
  * Default implementation of {@link BeaconAttester}.
  */
@@ -55,7 +57,7 @@ public class BeaconAttesterImpl implements BeaconAttester {
         long lastJustified = in.state.getCrystallizedState().getFinality().getLastJustifiedSlot();
         byte[] msgHash = in.block.getHash();
         List<byte[]> aggSigns = new ArrayList<>();
-        aggSigns.add(sign.sign(msgHash, new BigInteger(pubKey)));
+        aggSigns.add(sign.sign(msgHash, DOMAIN, new BigInteger(pubKey)));
         byte[] aggSignature = sign.aggSigns(aggSigns);
         AttestationRecord attestationRecord = new AttestationRecord(
                 in.slotNumber,

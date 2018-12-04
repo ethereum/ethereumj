@@ -62,23 +62,23 @@ public class MilagroBLS381 implements BLS381 {
     }
 
     /**
-     * @return base point (generator) on ECP2
+     * @return base point (generator) on ECP1
      */
     @Override
-    public P2 generator2() {
-        return new MilagroECP2(ECP2.generator());
+    public P1 generator() {
+        return new MilagroECP1(ECP.generator());
     }
 
     /**
-     * Maps value to GroupG1 (ECP)
+     * Maps value to GroupG2 (ECP2)
      */
     @Override
-    public P1 mapToECP1(byte[] value) {
+    public P2 mapToECP2(byte[] value) {
         if (value == null || value.length != SCALAR_SIZE) {
             throw new RuntimeException(String.format("Supports only %s size byte[] input", SCALAR_SIZE));
         }
 
-        return new MilagroECP1(ECP.mapit(value));
+        return new MilagroECP2(ECP2.mapit(value));
     }
 
     @Override

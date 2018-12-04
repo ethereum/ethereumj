@@ -29,15 +29,17 @@ public interface BLS381 {
     P2 restoreECP2(byte[] value);
 
     /**
-     * @return Generator of ECP2
+     * @return Generator of ECP1
      */
-    P2 generator2();
+    P1 generator();
 
+    // FIXME: REMOVE ME
     /**
-     * Maps byte[] value to ECP1
+     * Maps byte[] value to ECP2
      * @return  eligible mapping
      */
-    P1 mapToECP1(byte[] value);
+    @Deprecated
+    P2 mapToECP2(byte[] value);
 
     /**
      * Pairing function

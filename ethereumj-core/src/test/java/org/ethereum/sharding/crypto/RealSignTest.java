@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.ethereum.crypto.HashUtil.blake2b384;
+import static org.ethereum.sharding.crypto.BLS381Sign.DOMAIN;
 import static org.ethereum.sharding.crypto.Sign.KeyPair;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -57,8 +58,8 @@ public class RealSignTest {
         KeyPair keyPair = sign.newKeyPair();
         for (String msg : messages) {
             byte[] hash = blake2b384(msg.getBytes());
-            byte[] sig = sign.sign(hash, keyPair.sigKey);
-            assertTrue(sign.verify(sig, hash, keyPair.verKey));
+            byte[] sig = sign.sign(hash, DOMAIN, keyPair.sigKey);
+            assertTrue(sign.verify(sig, hash, keyPair.verKey, DOMAIN));
         }
     }
 
@@ -67,18 +68,18 @@ public class RealSignTest {
         KeyPair keyPair = sign.newKeyPair();
 
         byte[] hash0 = blake2b384(messages.get(0).getBytes());
-        byte[] sig0 = sign.sign(hash0, keyPair.sigKey);
+        byte[] sig0 = sign.sign(hash0, DOMAIN, keyPair.sigKey);
 
-        assertTrue(sign.verify(sig0, hash0, keyPair.verKey));
+        assertTrue(sign.verify(sig0, hash0, keyPair.verKey, DOMAIN));
 
         byte[] hash1 = blake2b384(messages.get(1).getBytes());
-        assertFalse(sign.verify(sig0, hash1, keyPair.verKey));
+        assertFalse(sign.verify(sig0, hash1, keyPair.verKey, DOMAIN));
 
         byte[] hash2 = blake2b384(messages.get(2).getBytes());
-        assertFalse(sign.verify(sig0, hash2, keyPair.verKey));
+        assertFalse(sign.verify(sig0, hash2, keyPair.verKey, DOMAIN));
 
-        byte[] sig1 = sign.sign(hash1, keyPair.sigKey);
-        assertFalse(sign.verify(sig1, hash0, keyPair.verKey));
+        byte[] sig1 = sign.sign(hash1, DOMAIN, keyPair.sigKey);
+        assertFalse(sign.verify(sig1, hash0, keyPair.verKey, DOMAIN));
     }
 
     @Test
@@ -94,7 +95,7 @@ public class RealSignTest {
 
             List<byte[]> signs = new ArrayList<>();
             for (int i = 0; i < SIGNERS; ++i) {
-                signs.add(sign.sign(hash, keyPairs.get(i).sigKey));
+                signs.add(sign.sign(hash, DOMAIN, keyPairs.get(i).sigKey));
             }
 
             // aggregate signs
@@ -105,27 +106,27 @@ public class RealSignTest {
             BigInteger aggVerKeys = sign.aggPubs(verKeys);
 
             // Verify
-            assertTrue(sign.verify(aggSigs, hash, aggVerKeys));
+            assertTrue(sign.verify(aggSigs, hash, aggVerKeys, DOMAIN));
 
             // not all signs
             List<byte[]> slicedSigns = new ArrayList<>(signs.subList(0, SIGNERS - 1));
             byte[] aggSigsSliced = sign.aggSigns(slicedSigns);
             assertEquals(SIGNERS - 1, slicedSigns.size());
-            assertFalse(sign.verify(aggSigsSliced, hash, aggVerKeys));
+            assertFalse(sign.verify(aggSigsSliced, hash, aggVerKeys, DOMAIN));
             // bad sign instead
-            slicedSigns.add(sign.sign(hash, sign.newKeyPair().sigKey));
+            slicedSigns.add(sign.sign(hash, DOMAIN, sign.newKeyPair().sigKey));
             assertEquals(SIGNERS, slicedSigns.size());
-            assertFalse(sign.verify(sign.aggSigns(slicedSigns), hash, aggVerKeys));
+            assertFalse(sign.verify(sign.aggSigns(slicedSigns), hash, aggVerKeys, DOMAIN));
 
             // not all verKeys
             List<BigInteger> slicedVerKeys = new ArrayList<>(verKeys.subList(0, SIGNERS - 1));
             BigInteger aggVerKeysSliced = sign.aggPubs(slicedVerKeys);
             assertEquals(SIGNERS - 1, slicedVerKeys.size());
-            assertFalse(sign.verify(aggSigs, hash, aggVerKeysSliced));
+            assertFalse(sign.verify(aggSigs, hash, aggVerKeysSliced, DOMAIN));
             // bad verKey instead
             slicedVerKeys.add(sign.newKeyPair().verKey);
             assertEquals(SIGNERS, slicedVerKeys.size());
-            assertFalse(sign.verify(aggSigs, hash, sign.aggPubs(slicedVerKeys)));
+            assertFalse(sign.verify(aggSigs, hash, sign.aggPubs(slicedVerKeys), DOMAIN));
 
             // change the order of signs, 2 at the end reversed
             assertEquals(SIGNERS, signs.size());
@@ -136,7 +137,7 @@ public class RealSignTest {
             assertEquals(signs.get(SIGNERS - 2), signsMixed.get(SIGNERS - 1));
             byte[] aggSigsMixed = sign.aggSigns(signsMixed);
             assertEquals(SIGNERS, signsMixed.size());
-            assertTrue(sign.verify(aggSigsMixed, hash, aggVerKeys));
+            assertTrue(sign.verify(aggSigsMixed, hash, aggVerKeys, DOMAIN));
 
             // change the order of verKeys, 2 at the end reversed
             assertEquals(SIGNERS, verKeys.size());
@@ -147,7 +148,7 @@ public class RealSignTest {
             assertEquals(verKeys.get(SIGNERS - 2), mixedVerKeys.get(SIGNERS - 1));
             BigInteger aggVerKeysMixed = sign.aggPubs(mixedVerKeys);
             assertEquals(SIGNERS, mixedVerKeys.size());
-            assertTrue(sign.verify(aggSigs, hash, aggVerKeysMixed));
+            assertTrue(sign.verify(aggSigs, hash, aggVerKeysMixed, DOMAIN));
         }
     }
 }

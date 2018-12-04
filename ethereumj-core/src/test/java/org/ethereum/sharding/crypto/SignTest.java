@@ -27,6 +27,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.ethereum.sharding.crypto.BLS381Sign.DOMAIN;
 import static org.ethereum.sharding.crypto.Sign.KeyPair;
 import static org.ethereum.crypto.HashUtil.blake2b384;
 import static org.junit.Assert.assertFalse;
@@ -51,16 +52,16 @@ public class SignTest {
         KeyPair keyPair = sign.newKeyPair();
         BigInteger privKey = keyPair.sigKey;
         BigInteger pubKey = keyPair.verKey;
-        byte[] signature = sign.sign(msg, privKey);
-        assertTrue(sign.verify(signature, msg, pubKey));
-        assertFalse(sign.verify(signature, msg, pubKey.add(BigInteger.ONE)));
+        byte[] signature = sign.sign(msg, DOMAIN, privKey);
+        assertTrue(sign.verify(signature, msg, pubKey, DOMAIN));
+        assertFalse(sign.verify(signature, msg, pubKey.add(BigInteger.ONE), DOMAIN));
         byte[] brokenSignature = new byte[signature.length];
         System.arraycopy(signature, 0, brokenSignature, 0, signature.length);
         brokenSignature[signature.length - 1] = 0x1c;
         assertFalse(FastByteComparisons.equal(signature, brokenSignature));
-        assertFalse(sign.verify(brokenSignature, msg, pubKey));
+        assertFalse(sign.verify(brokenSignature, msg, pubKey, DOMAIN));
         msg[0] = 13;
-        assertFalse(sign.verify(signature, msg, pubKey));
+        assertFalse(sign.verify(signature, msg, pubKey, DOMAIN));
     }
 
     @Test
@@ -69,8 +70,8 @@ public class SignTest {
         byte[] msg = blake2b384(Hex.decode("0737626387abcdef"));
         KeyPair keyPair = sign.newKeyPair();
         BigInteger privKey = keyPair.sigKey;
-        byte[] signature = sign.sign(msg, privKey);
-        assertFalse(sign.verify(signature, msg, privKey)); // pubKey should be here
+        byte[] signature = sign.sign(msg, DOMAIN, privKey);
+        assertFalse(sign.verify(signature, msg, sign.privToPub(privKey), DOMAIN));
     }
 
     @Test
@@ -80,12 +81,12 @@ public class SignTest {
         KeyPair keyPair = sign.newKeyPair();
         BigInteger privKey = keyPair.sigKey;
         BigInteger pubKey = keyPair.verKey;
-        byte[] signature = sign.sign(msg, privKey);
+        byte[] signature = sign.sign(msg, DOMAIN, privKey);
 
         KeyPair keyPair2 = sign.newKeyPair();
         BigInteger privKey2 = keyPair2.sigKey;
         BigInteger pubKey2 = keyPair2.verKey;
-        byte[] signature2 = sign.sign(msg, privKey2);
+        byte[] signature2 = sign.sign(msg, DOMAIN, privKey2);
 
         List<byte[]> aggSigns = new ArrayList<>();
         aggSigns.add(signature);
@@ -97,7 +98,7 @@ public class SignTest {
         pubKeys.add(pubKey2);
         BigInteger aggPubs = sign.aggPubs(pubKeys);
 
-        assertTrue(sign.verify(aggSign, msg, aggPubs));
+        assertTrue(sign.verify(aggSign, msg, aggPubs, DOMAIN));
     }
 
     @Test
@@ -108,17 +109,17 @@ public class SignTest {
         KeyPair keyPair = sign.newKeyPair();
         BigInteger privKey = keyPair.sigKey;
         BigInteger pubKey = keyPair.verKey;
-        byte[] signature = sign.sign(msg, privKey);
+        byte[] signature = sign.sign(msg, DOMAIN, privKey);
 
         KeyPair keyPair2 = sign.newKeyPair();
         BigInteger privKey2 = keyPair2.sigKey;
         BigInteger pubKey2 = keyPair2.verKey;
-        byte[] signature2 = sign.sign(msg, privKey2);
+        byte[] signature2 = sign.sign(msg, DOMAIN, privKey2);
 
         KeyPair keyPair3 = sign.newKeyPair();
         BigInteger privKey3 = keyPair3.sigKey;
         BigInteger pubKey3 = keyPair3.verKey;
-        byte[] signature3 = sign.sign(msg, privKey3);
+        byte[] signature3 = sign.sign(msg, DOMAIN, privKey3);
 
         byte[] aggSign12 = sign.aggSigns(new ArrayList<byte[]>(){{add(signature); add(signature2);}});
         byte[] aggSign13 = sign.aggSigns(new ArrayList<byte[]>(){{add(signature); add(signature3);}});
@@ -128,16 +129,16 @@ public class SignTest {
         BigInteger aggPubs13 = sign.aggPubs(new ArrayList<BigInteger>(){{add(pubKey); add(pubKey3);}});
         BigInteger aggPubs23 = sign.aggPubs(new ArrayList<BigInteger>(){{add(pubKey2); add(pubKey3);}});
 
-        assertTrue(sign.verify(aggSign12, msg, aggPubs12));
-        assertFalse(sign.verify(aggSign12, msg, aggPubs23));
-        assertFalse(sign.verify(aggSign12, msg, aggPubs13));
+        assertTrue(sign.verify(aggSign12, msg, aggPubs12, DOMAIN));
+        assertFalse(sign.verify(aggSign12, msg, aggPubs23, DOMAIN));
+        assertFalse(sign.verify(aggSign12, msg, aggPubs13, DOMAIN));
 
-        assertTrue(sign.verify(aggSign13, msg, aggPubs13));
-        assertFalse(sign.verify(aggSign13, msg, aggPubs23));
-        assertFalse(sign.verify(aggSign13, msg, aggPubs12));
+        assertTrue(sign.verify(aggSign13, msg, aggPubs13, DOMAIN));
+        assertFalse(sign.verify(aggSign13, msg, aggPubs23, DOMAIN));
+        assertFalse(sign.verify(aggSign13, msg, aggPubs12, DOMAIN));
 
-        assertTrue(sign.verify(aggSign23, msg, aggPubs23));
-        assertFalse(sign.verify(aggSign23, msg, aggPubs12));
-        assertFalse(sign.verify(aggSign23, msg, aggPubs13));
+        assertTrue(sign.verify(aggSign23, msg, aggPubs23, DOMAIN));
+        assertFalse(sign.verify(aggSign23, msg, aggPubs12, DOMAIN));
+        assertFalse(sign.verify(aggSign23, msg, aggPubs13, DOMAIN));
     }
 }

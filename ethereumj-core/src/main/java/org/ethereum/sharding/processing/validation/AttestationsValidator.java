@@ -36,6 +36,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.ethereum.sharding.crypto.BLS381Sign.DOMAIN;
 import static org.ethereum.sharding.processing.consensus.BeaconConstants.CYCLE_LENGTH;
 import static org.ethereum.sharding.processing.validation.ValidationResult.InvalidAttestations;
 import static org.ethereum.sharding.processing.validation.ValidationResult.Success;
@@ -176,7 +177,7 @@ public class AttestationsValidator implements BeaconValidator {
             byte[] msgHash = BeaconUtils.calcMessageHash(attestation.getSlot(), parentHashes,
                     attestation.getShardId(), attestation.getShardBlockHash(), attestation.getJustifiedSlot());
 
-            if (!data.sign.verify(attestation.getAggregateSig(), msgHash, data.sign.aggPubs(pubKeys))) {
+            if (!data.sign.verify(attestation.getAggregateSig(), msgHash, data.sign.aggPubs(pubKeys), DOMAIN)) {
                 return InvalidAttestations;
             }
         }

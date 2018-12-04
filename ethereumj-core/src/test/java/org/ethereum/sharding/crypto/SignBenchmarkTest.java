@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.ethereum.crypto.HashUtil.blake2b384;
+import static org.ethereum.sharding.crypto.BLS381Sign.DOMAIN;
 import static org.junit.Assert.assertTrue;
 import static org.ethereum.sharding.crypto.Sign.KeyPair;
 
@@ -65,7 +66,7 @@ public class SignBenchmarkTest {
             List<byte[]> signs = new ArrayList<>();
             start = System.nanoTime();
             for (int i = 0; i < SIGNERS; ++i) {
-                signs.add(bls381.sign(hash, keyPairs.get(i).sigKey));
+                signs.add(bls381.sign(hash, DOMAIN, keyPairs.get(i).sigKey));
             }
             finish = System.nanoTime();
             System.out.println(String.format("Signs message by %s signers in %s", SIGNERS, formatNs(finish - start)));
@@ -86,7 +87,7 @@ public class SignBenchmarkTest {
 
             // Verify
             start = System.nanoTime();
-            assertTrue(bls381.verify(aggSigs, hash, aggVerKeys));
+            assertTrue(bls381.verify(aggSigs, hash, aggVerKeys, DOMAIN));
             finish = System.nanoTime();
             System.out.println(String.format("Verified signature in %s", formatNs(finish - start)));
         }

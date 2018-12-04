@@ -25,12 +25,12 @@ public interface Sign {
     /**
      * Sign the message
      */
-    byte[] sign(byte[] msgHash, BigInteger privateKey);
+    byte[] sign(byte[] msgHash, byte[] domain, BigInteger privateKey);
 
     /**
      * Verifies whether signature is made by signer with publicKey
      */
-    boolean verify(byte[] signature, byte[] msgHash, BigInteger publicKey);
+    boolean verify(byte[] signature, byte[] msgHash, BigInteger publicKey, byte[] domain);
 
     /**
      * Aggregates several signatures in one
