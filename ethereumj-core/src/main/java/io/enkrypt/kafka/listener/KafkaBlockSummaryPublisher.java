@@ -1,8 +1,7 @@
 package io.enkrypt.kafka.listener;
 
+import io.enkrypt.avro.capture.BlockKeyRecord;
 import io.enkrypt.avro.capture.BlockRecord;
-import io.enkrypt.avro.capture.BlockSummaryKeyRecord;
-import io.enkrypt.avro.capture.BlockSummaryRecord;
 import io.enkrypt.kafka.Kafka;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -11,6 +10,7 @@ import org.apache.kafka.common.errors.ProducerFencedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -25,8 +25,8 @@ public class KafkaBlockSummaryPublisher implements Runnable {
 
   private final Kafka kafka;
 
-  private final ConcurrentLinkedQueue<BlockSummaryRecord> queue;
-  private final ArrayList<BlockSummaryRecord> batch;
+  private final ConcurrentLinkedQueue<BlockRecord> queue;
+  private final ArrayList<BlockRecord> batch;
 
   private final int batchSize = 512;
 
@@ -38,7 +38,7 @@ public class KafkaBlockSummaryPublisher implements Runnable {
     this.batch = new ArrayList<>(batchSize);
   }
 
-  public void onBlock(BlockSummaryRecord record) {
+  public void onBlock(BlockRecord record) {
     queue.add(record);
   }
 
@@ -48,7 +48,7 @@ public class KafkaBlockSummaryPublisher implements Runnable {
 
   public void run() {
 
-    BlockSummaryRecord next;
+    BlockRecord next;
 
     while (running) {
       try {
@@ -82,9 +82,9 @@ public class KafkaBlockSummaryPublisher implements Runnable {
     logger.info("Stopped");
   }
 
-  private void publishBatch(List<BlockSummaryRecord> batch) {
+  private void publishBatch(List<BlockRecord> batch) {
 
-    final KafkaProducer<BlockSummaryKeyRecord, BlockSummaryRecord> producer = kafka.getBlockSummaryProducer();
+    final KafkaProducer<BlockKeyRecord, BlockRecord> producer = kafka.getBlockProducer();
 
     producer.beginTransaction();
 
@@ -92,12 +92,11 @@ public class KafkaBlockSummaryPublisher implements Runnable {
 
     try {
 
-      for (BlockSummaryRecord record : batch) {
+      for (BlockRecord record : batch) {
 
-        final BlockRecord block = record.getBlock();
-        final long number = block.getHeader().getNumber();
+        final ByteBuffer number = record.getHeader().getNumber();
 
-        final BlockSummaryKeyRecord key = BlockSummaryKeyRecord.newBuilder()
+        final BlockKeyRecord key = BlockKeyRecord.newBuilder()
           .setNumber(number)
           .build();
 

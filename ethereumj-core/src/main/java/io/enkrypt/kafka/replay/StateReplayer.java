@@ -1,8 +1,8 @@
 package io.enkrypt.kafka.replay;
 
-import io.enkrypt.avro.capture.BlockSummaryRecord;
+import io.enkrypt.avro.capture.BlockRecord;
 import io.enkrypt.kafka.Kafka;
-import io.enkrypt.kafka.db.BlockSummaryStore;
+import io.enkrypt.kafka.db.BlockRecordStore;
 import io.enkrypt.kafka.listener.KafkaBlockSummaryPublisher;
 import org.ethereum.config.SystemProperties;
 import org.slf4j.Logger;
@@ -20,7 +20,7 @@ public class StateReplayer {
   KafkaBlockSummaryPublisher blockListener;
 
   @Autowired
-  BlockSummaryStore store;
+  BlockRecordStore store;
 
   @Autowired
   SystemProperties config;
@@ -38,7 +38,7 @@ public class StateReplayer {
 
   public void replay() {
 
-    BlockSummaryRecord blockSummary;
+    BlockRecord blockSummary;
     long number = parseLong(config.getProperty("replay.from", "0"));
 
     logger.info("Attempting to replay from number = {}", number);
@@ -47,7 +47,6 @@ public class StateReplayer {
       do {
 
         blockSummary = store.get(number);
-
 
         if (blockSummary != null) {
 

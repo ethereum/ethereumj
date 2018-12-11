@@ -1,7 +1,7 @@
 package io.enkrypt.kafka;
 
-import io.enkrypt.avro.capture.BlockSummaryKeyRecord;
-import io.enkrypt.avro.capture.BlockSummaryRecord;
+import io.enkrypt.avro.capture.BlockKeyRecord;
+import io.enkrypt.avro.capture.BlockRecord;
 import io.enkrypt.avro.capture.TransactionKeyRecord;
 import io.enkrypt.avro.capture.TransactionRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -14,7 +14,7 @@ public class NullKafka implements Kafka {
   }
 
   @Override
-  public KafkaProducer<BlockSummaryKeyRecord, BlockSummaryRecord> getBlockSummaryProducer() {
+  public KafkaProducer<BlockKeyRecord, BlockRecord> getBlockProducer() {
     return null;
   }
 }

@@ -1,21 +1,19 @@
 package io.enkrypt.kafka;
 
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
-import io.enkrypt.avro.capture.BlockSummaryKeyRecord;
-import io.enkrypt.avro.capture.BlockSummaryRecord;
+import io.enkrypt.avro.capture.BlockKeyRecord;
+import io.enkrypt.avro.capture.BlockRecord;
 import io.enkrypt.avro.capture.TransactionKeyRecord;
 import io.enkrypt.avro.capture.TransactionRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.ByteArraySerializer;
-import org.apache.kafka.common.serialization.LongSerializer;
 
 import java.util.Map;
 import java.util.Properties;
 
 public class KafkaImpl implements Kafka {
 
-  private KafkaProducer<BlockSummaryKeyRecord, BlockSummaryRecord> blockSummaryProducer;
+  private KafkaProducer<BlockKeyRecord, BlockRecord> blockSummaryProducer;
   private KafkaProducer<TransactionKeyRecord, TransactionRecord> txProducer;
 
   public KafkaImpl(Properties config) {
@@ -46,7 +44,7 @@ public class KafkaImpl implements Kafka {
   }
 
   @Override
-  public KafkaProducer<BlockSummaryKeyRecord, BlockSummaryRecord> getBlockSummaryProducer() {
+  public KafkaProducer<BlockKeyRecord, BlockRecord> getBlockProducer() {
     return blockSummaryProducer;
   }
 

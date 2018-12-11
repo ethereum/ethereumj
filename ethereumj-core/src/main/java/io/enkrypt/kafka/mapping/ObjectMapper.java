@@ -1,11 +1,8 @@
 package io.enkrypt.kafka.mapping;
 
-import io.enkrypt.avro.capture.BlockHeaderRecord;
-import io.enkrypt.avro.capture.InternalTransactionRecord;
-import io.enkrypt.avro.capture.LogInfoRecord;
-import io.enkrypt.avro.capture.TransactionRecord;
+import io.enkrypt.avro.capture.*;
+import org.ethereum.core.*;
 import org.ethereum.core.BlockHeader;
-import org.ethereum.core.Transaction;
 import org.ethereum.vm.LogInfo;
 import org.ethereum.vm.program.InternalTransaction;
 
@@ -22,10 +19,12 @@ public class ObjectMapper implements ObjectMapping {
   public ObjectMapper() {
     this.objectMappings = new HashMap<>();
 
-    add(LogInfo.class, LogInfoRecord.class, new LogInfoMapping());
+    add(LogInfo.class, LogRecord.class, new LogInfoMapping());
+    add(TransactionReceipt.class, TransactionReceiptRecord.class, new TransactionReceiptMapping());
     add(Transaction.class, TransactionRecord.class, new TransactionMapping());
     add(InternalTransaction.class, InternalTransactionRecord.class, new InternalTransactionMapping());
     add(BlockHeader.class, BlockHeaderRecord.class, new BlockHeaderMapping());
+    add(BlockSummary.class, BlockRecord.Builder.class, new BlockSummaryMapping());
   }
 
   public <A, B> ObjectMapper add(Class<A> from, Class<B> to, ObjectMapping mapping) {

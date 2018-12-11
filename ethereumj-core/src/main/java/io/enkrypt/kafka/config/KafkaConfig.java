@@ -4,7 +4,7 @@ import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
 import io.enkrypt.kafka.Kafka;
 import io.enkrypt.kafka.KafkaImpl;
 import io.enkrypt.kafka.NullKafka;
-import io.enkrypt.kafka.db.BlockSummaryStore;
+import io.enkrypt.kafka.db.BlockRecordStore;
 import io.enkrypt.kafka.mapping.ObjectMapper;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.ethereum.config.CommonConfig;
@@ -31,8 +31,8 @@ public class KafkaConfig {
   }
 
   @Bean
-  public BlockSummaryStore blockSummaryStore() {
-    return new BlockSummaryStore(commonConfig.keyValueDataSource("block-summaries"));
+  public BlockRecordStore blockSummaryStore() {
+    return new BlockRecordStore(commonConfig.keyValueDataSource("block-summaries"));
   }
 
   @Bean

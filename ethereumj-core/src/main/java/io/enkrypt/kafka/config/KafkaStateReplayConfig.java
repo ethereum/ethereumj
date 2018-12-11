@@ -4,7 +4,7 @@ import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
 import io.enkrypt.kafka.Kafka;
 import io.enkrypt.kafka.KafkaImpl;
 import io.enkrypt.kafka.NullKafka;
-import io.enkrypt.kafka.db.BlockSummaryStore;
+import io.enkrypt.kafka.db.BlockRecordStore;
 import io.enkrypt.kafka.listener.KafkaBlockSummaryPublisher;
 import io.enkrypt.kafka.listener.KafkaPendingTxsListener;
 import io.enkrypt.kafka.mapping.ObjectMapper;
@@ -52,8 +52,8 @@ public class KafkaStateReplayConfig {
   }
 
   @Bean
-  public BlockSummaryStore blockSummaryStore() {
-    return new BlockSummaryStore(dbSource("block-summaries", DbSettings.DEFAULT));
+  public BlockRecordStore blockSummaryStore() {
+    return new BlockRecordStore(dbSource("block-summaries", DbSettings.DEFAULT));
   }
 
   @Bean

@@ -1,11 +1,10 @@
 package io.enkrypt.kafka.mapping;
 
-import io.enkrypt.avro.capture.LogInfoRecord;
-import io.enkrypt.avro.common.Address;
-import io.enkrypt.avro.common.DataWord;
+import io.enkrypt.avro.capture.LogRecord;
+import io.enkrypt.avro.common.Data20;
+import io.enkrypt.avro.common.Data32;
 import org.ethereum.vm.LogInfo;
 
-import java.nio.ByteBuffer;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -16,17 +15,17 @@ public class LogInfoMapping implements ObjectMapping {
   @Override
   public <A, B> B convert(ObjectMapping mappers, Class<A> from, Class<B> to, A value) {
     checkArgument(LogInfo.class == from);
-    checkArgument(LogInfoRecord.class == to);
+    checkArgument(LogRecord.class == to);
 
     final LogInfo logInfo = (LogInfo) value;
 
-    final LogInfoRecord record = LogInfoRecord.newBuilder()
-      .setAddress(wrap(logInfo.getAddress()))
+    final LogRecord record = LogRecord.newBuilder()
+      .setAddress(new Data20(logInfo.getAddress()))
       .setData(wrap(logInfo.getData()))
       .setTopics(
         logInfo.getTopics()
           .stream()
-          .map(d -> new DataWord(d.getData()))
+          .map(d -> new Data32(d.getData()))
           .collect(Collectors.toList())
       ).build();
 

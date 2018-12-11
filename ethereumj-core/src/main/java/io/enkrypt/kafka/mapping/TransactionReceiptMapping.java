@@ -1,0 +1,50 @@
+package io.enkrypt.kafka.mapping;
+
+import io.enkrypt.avro.capture.LogRecord;
+import io.enkrypt.avro.capture.TransactionReceiptRecord;
+import io.enkrypt.avro.capture.TransactionRecord;
+import io.enkrypt.avro.common.Data1;
+import io.enkrypt.avro.common.Data20;
+import io.enkrypt.avro.common.Data256;
+import io.enkrypt.avro.common.Data32;
+import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionReceipt;
+import org.ethereum.crypto.ECKey;
+import org.ethereum.vm.LogInfo;
+
+import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static java.nio.ByteBuffer.wrap;
+
+public class TransactionReceiptMapping implements ObjectMapping {
+
+  @Override
+  public <A, B> B convert(ObjectMapping mappers, Class<A> from, Class<B> to, A value) {
+
+    checkArgument(TransactionReceipt.class == from);
+    checkArgument(TransactionReceiptRecord.class == to);
+
+    final TransactionReceipt r = (TransactionReceipt) value;
+    final Transaction tx = r.getTransaction();
+
+    TransactionReceiptRecord.Builder builder = TransactionReceiptRecord.newBuilder()
+      .setTransactionHash(new Data32(tx.getHash()))
+      .setCumulativeGasUsed(wrap(r.getCumulativeGas()))
+      .setGasUsed(wrap(r.getGasUsed()))
+      .setLogsBloom(new Data256(r.getBloomFilter().getData()))
+      .setRaw(wrap(r.getEncoded()));
+
+    if(tx.getContractAddress() != null) builder.setContractAddress(new Data20(tx.getContractAddress()));
+    if(r.getPostTxState() != null) builder.setStatus(new Data1(r.getPostTxState()));
+
+    builder.setLogs(
+      r.getLogInfoList()
+      .stream()
+      .map(l -> mappers.convert(mappers, LogInfo.class, LogRecord.class, l))
+      .collect(Collectors.toList())
+    );
+
+    return to.cast(builder.build());
+  }
+}

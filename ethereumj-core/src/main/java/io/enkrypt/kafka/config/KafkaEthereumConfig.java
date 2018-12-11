@@ -1,7 +1,7 @@
 package io.enkrypt.kafka.config;
 
 import io.enkrypt.kafka.Kafka;
-import io.enkrypt.kafka.db.BlockSummaryStore;
+import io.enkrypt.kafka.db.BlockRecordStore;
 import io.enkrypt.kafka.listener.BlockSummaryEthereumListener;
 import io.enkrypt.kafka.listener.KafkaBlockSummaryPublisher;
 import io.enkrypt.kafka.listener.KafkaPendingTxsListener;
@@ -70,7 +70,7 @@ public class KafkaEthereumConfig {
   @Primary
   public CompositeEthereumListener ethereumListener(SystemProperties config,
                                                     ObjectMapper objectMapper,
-                                                    BlockSummaryStore blockSummaryStore,
+                                                    BlockRecordStore blockRecordStore,
                                                     KafkaPendingTxsListener pendingTxsListener,
                                                     KafkaBlockSummaryPublisher blockListener) {
 
@@ -81,7 +81,7 @@ public class KafkaEthereumConfig {
     final BlockSummaryEthereumListener blockSummaryListener =
       new BlockSummaryEthereumListener(
         config,
-        blockSummaryStore,
+        blockRecordStore,
         blockListener,
         pendingTxsListener,
         objectMapper
