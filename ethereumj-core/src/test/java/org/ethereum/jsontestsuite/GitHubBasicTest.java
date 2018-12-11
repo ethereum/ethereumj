@@ -83,7 +83,7 @@ public class GitHubBasicTest {
     }
 
     @Test
-    @Ignore("Disable Ropsten until cached tests commit is updated to commitSHA")
+    @Ignore("Disable Ropsten until tests are updated with correct difficulty")
     public void btDifficultyRopsten() throws IOException, ParseException {
         runDifficultyTest(new RopstenNetConfig(), "BasicTests/difficultyRopsten.json", commitSHA);
     }
