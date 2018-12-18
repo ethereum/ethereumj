@@ -136,7 +136,7 @@ dependencies {
 
     compile "org.apache.kafka:kafka-clients:2.0.0"
     compile "io.confluent:kafka-streams-avro-serde:5.0.1"
-    compile "io.enkrypt:avro:0.0.1-SNAPSHOT"
+    compile "io.enkrypt:avro:2.0.0"
 
 
     compile "com.cedarsoftware:java-util:1.8.0" // for deep equals

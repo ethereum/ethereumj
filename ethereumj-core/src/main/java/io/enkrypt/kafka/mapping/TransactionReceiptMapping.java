@@ -36,7 +36,7 @@ public class TransactionReceiptMapping implements ObjectMapping {
       .setRaw(wrap(r.getEncoded()));
 
     if(tx.getContractAddress() != null) builder.setContractAddress(new Data20(tx.getContractAddress()));
-    if(r.getPostTxState() != null) builder.setStatus(new Data1(r.getPostTxState()));
+    if(r.getPostTxState() != null) builder.setStatus(wrap(r.getPostTxState()));
 
     builder.setLogs(
       r.getLogInfoList()
