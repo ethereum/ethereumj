@@ -31,22 +31,22 @@ public class BlockHeaderMapping implements ObjectMapping {
 
     final BlockHeaderRecord.Builder builder = BlockHeaderRecord.newBuilder()
       .setNumber(wrap(BigInteger.valueOf(h.getNumber()).toByteArray()))
-      .setHash(new Data32(h.getHash()))
-      .setParentHash(new Data32(h.getParentHash()))
-      .setNonce(new Data8(h.getNonce()))
-      .setSha3Uncles(new Data32(h.getUnclesHash()))
-      .setLogsBloom(new Data256(h.getLogsBloom()))
-      .setTransactionsRoot(new Data32(h.getTxTrieRoot()))
-      .setStateRoot(new Data32(h.getStateRoot()))
-      .setReceiptsRoot(new Data32(h.getReceiptsRoot()))
-      .setAuthor(new Data20(h.getCoinbase()))
-      .setDifficulty(wrap(h.getDifficulty()))
-      .setGasLimit(wrap(h.getGasLimit()))
+      .setHash(new Data32(h.getHash().clone()))
+      .setParentHash(new Data32(h.getParentHash().clone()))
+      .setNonce(new Data8(h.getNonce().clone()))
+      .setSha3Uncles(new Data32(h.getUnclesHash().clone()))
+      .setLogsBloom(new Data256(h.getLogsBloom().clone()))
+      .setTransactionsRoot(new Data32(h.getTxTrieRoot().clone()))
+      .setStateRoot(new Data32(h.getStateRoot().clone()))
+      .setReceiptsRoot(new Data32(h.getReceiptsRoot().clone()))
+      .setAuthor(new Data20(h.getCoinbase().clone()))
+      .setDifficulty(wrap(h.getDifficulty().clone()))
+      .setGasLimit(wrap(h.getGasLimit().clone()))
       .setGasUsed(wrap(BigInteger.valueOf(h.getGasUsed()).toByteArray()))
       .setTimestamp(h.getTimestamp())
-      .setRaw(wrap(h.getEncoded()));
+      .setRaw(wrap(h.getEncoded().clone()));
 
-    if(h.getExtraData() != null) builder.setExtraData(wrap(h.getExtraData()));
+    if(h.getExtraData() != null) builder.setExtraData(wrap(h.getExtraData().clone()));
 
     return to.cast(builder.build());
   }

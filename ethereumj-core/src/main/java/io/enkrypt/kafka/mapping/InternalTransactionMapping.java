@@ -27,17 +27,17 @@ public class InternalTransactionMapping implements ObjectMapping {
       .setDepth(internalTx.getDeep())
       .setRejected(internalTx.isRejected())
       .setNote(internalTx.getNote())
-      .setNonce(wrap(internalTx.getNonce()))
-      .setFrom(new Data20(internalTx.getSender()))
-      .setValue(wrap(internalTx.getValue()))
-      .setGasPrice(wrap(internalTx.getGasPrice()))
-      .setGas(wrap(internalTx.getGasLimit()))
+      .setNonce(wrap(internalTx.getNonce().clone()))
+      .setFrom(new Data20(internalTx.getSender().clone()))
+      .setValue(wrap(internalTx.getValue().clone()))
+      .setGasPrice(wrap(internalTx.getGasPrice().clone()))
+      .setGas(wrap(internalTx.getGasLimit().clone()))
       .setChainId(internalTx.getChainId())
-      .setRaw(wrap(internalTx.getEncodedRaw()));
+      .setRaw(wrap(internalTx.getEncodedRaw().clone()));
 
-    if(internalTx.getReceiveAddress() != null && internalTx.getReceiveAddress().length == 20) builder.setTo(new Data20(internalTx.getReceiveAddress()));
-    if(internalTx.getData() != null) builder.setInput(wrap(internalTx.getData()));
-    if(internalTx.getContractAddress() != null) builder.setCreates(new Data20(internalTx.getContractAddress()));
+    if(internalTx.getReceiveAddress() != null && internalTx.getReceiveAddress().length == 20) builder.setTo(new Data20(internalTx.getReceiveAddress().clone()));
+    if(internalTx.getData() != null) builder.setInput(wrap(internalTx.getData().clone()));
+    if(internalTx.getContractAddress() != null) builder.setCreates(new Data20(internalTx.getContractAddress().clone()));
 
     return to.cast(builder.build());
   }

@@ -31,8 +31,8 @@ public class BlockSummaryMapping implements ObjectMapping {
     final BlockRecord.Builder builder = BlockRecord.newBuilder()
       .setHeader(mappers.convert(mappers, BlockHeader.class, BlockHeaderRecord.class, b.getHeader()))
       .setTotalDifficulty(wrap(b.getCumulativeDifficulty().toByteArray()))
-      .setUnclesHash(new Data32(b.getUnclesHash()))
-      .setRaw(wrap(b.getEncoded()));
+      .setUnclesHash(new Data32(b.getUnclesHash().clone()))
+      .setRaw(wrap(b.getEncoded().clone()));
 
     builder.setUncles(
       b.getUncleList()
@@ -89,7 +89,7 @@ public class BlockSummaryMapping implements ObjectMapping {
         .stream()
         .map(e -> BlockRewardRecord
           .newBuilder()
-          .setAddress(new Data20(e.getKey()))
+          .setAddress(new Data20(e.getKey().clone()))
           .setReward(wrap(e.getValue().toByteArray()))
           .build()
         )

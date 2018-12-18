@@ -29,14 +29,14 @@ public class TransactionReceiptMapping implements ObjectMapping {
     final Transaction tx = r.getTransaction();
 
     TransactionReceiptRecord.Builder builder = TransactionReceiptRecord.newBuilder()
-      .setTransactionHash(new Data32(tx.getHash()))
-      .setCumulativeGasUsed(wrap(r.getCumulativeGas()))
-      .setGasUsed(wrap(r.getGasUsed()))
-      .setLogsBloom(new Data256(r.getBloomFilter().getData()))
-      .setRaw(wrap(r.getEncoded()));
+      .setTransactionHash(new Data32(tx.getHash().clone()))
+      .setCumulativeGasUsed(wrap(r.getCumulativeGas().clone()))
+      .setGasUsed(wrap(r.getGasUsed().clone()))
+      .setLogsBloom(new Data256(r.getBloomFilter().getData().clone()))
+      .setRaw(wrap(r.getEncoded().clone()));
 
-    if(tx.getContractAddress() != null) builder.setContractAddress(new Data20(tx.getContractAddress()));
-    if(r.getPostTxState() != null) builder.setStatus(wrap(r.getPostTxState()));
+    if(tx.getContractAddress() != null) builder.setContractAddress(new Data20(tx.getContractAddress().clone()));
+    if(r.getPostTxState() != null) builder.setStatus(wrap(r.getPostTxState().clone()));
 
     builder.setLogs(
       r.getLogInfoList()

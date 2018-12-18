@@ -20,12 +20,12 @@ public class LogInfoMapping implements ObjectMapping {
     final LogInfo logInfo = (LogInfo) value;
 
     final LogRecord record = LogRecord.newBuilder()
-      .setAddress(new Data20(logInfo.getAddress()))
-      .setData(wrap(logInfo.getData()))
+      .setAddress(new Data20(logInfo.getAddress().clone()))
+      .setData(wrap(logInfo.getData().clone()))
       .setTopics(
         logInfo.getTopics()
           .stream()
-          .map(d -> new Data32(d.getData()))
+          .map(d -> new Data32(d.getData().clone()))
           .collect(Collectors.toList())
       ).build();
 

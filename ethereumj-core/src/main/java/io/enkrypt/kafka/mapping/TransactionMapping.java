@@ -15,6 +15,7 @@ import static java.nio.ByteBuffer.wrap;
 
 public class TransactionMapping implements ObjectMapping {
 
+  @SuppressWarnings("Duplicates")
   @Override
   public <A, B> B convert(ObjectMapping mappers, Class<A> from, Class<B> to, A value) {
 
@@ -27,20 +28,20 @@ public class TransactionMapping implements ObjectMapping {
 
     final TransactionRecord.Builder builder = TransactionRecord.newBuilder()
       .setHash(new Data32(tx.getHash()))
-      .setNonce(wrap(tx.getNonce()))
-      .setFrom(new Data20(tx.getSender()))
-      .setValue(wrap(tx.getValue()))
-      .setGasPrice(wrap(tx.getGasPrice()))
-      .setGas(wrap(tx.getGasLimit()))
+      .setNonce(wrap(tx.getNonce().clone()))
+      .setFrom(new Data20(tx.getSender().clone()))
+      .setValue(wrap(tx.getValue().clone()))
+      .setGasPrice(wrap(tx.getGasPrice().clone()))
+      .setGas(wrap(tx.getGasLimit().clone()))
       .setV(new Data1(new byte[]{ signature.v }))
       .setR(wrap(signature.r.toByteArray()))
       .setS(wrap(signature.s.toByteArray()))
       .setChainId(tx.getChainId())
-      .setRaw(wrap(tx.getEncodedRaw()));
+      .setRaw(wrap(tx.getEncodedRaw().clone()));
 
-    if(tx.getReceiveAddress() != null && tx.getReceiveAddress().length == 20) builder.setTo(new Data20(tx.getReceiveAddress()));
-    if(tx.getData() != null) builder.setInput(wrap(tx.getData()));
-    if(tx.getContractAddress() != null) builder.setCreates(new Data20(tx.getContractAddress()));
+    if(tx.getReceiveAddress() != null && tx.getReceiveAddress().length == 20) builder.setTo(new Data20(tx.getReceiveAddress().clone()));
+    if(tx.getData() != null) builder.setInput(wrap(tx.getData().clone()));
+    if(tx.getContractAddress() != null) builder.setCreates(new Data20(tx.getContractAddress().clone()));
 
     return to.cast(builder.build());
   }
