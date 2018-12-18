@@ -60,6 +60,8 @@ public class BlockSummaryMapping implements ObjectMapping {
           final TransactionReceiptRecord record = mappers.convert(mappers, TransactionReceipt.class, TransactionReceiptRecord.class, t);
           final TransactionExecutionSummary executionSummary = execSummariesByHash.get(wrap(record.getTransactionHash().bytes()));
 
+          if(executionSummary == null) return record;
+
           return TransactionReceiptRecord.newBuilder(record)
             // deleted accounts
             .setDeletedAccounts(
