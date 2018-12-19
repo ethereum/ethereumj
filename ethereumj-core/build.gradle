@@ -136,8 +136,7 @@ dependencies {
 
     compile "org.apache.kafka:kafka-clients:2.0.0"
     compile "io.confluent:kafka-streams-avro-serde:5.0.1"
-    compile "io.enkrypt:avro:2.0.0"
-
+    compile "io.enkrypt:avro:0.1.0"
 
     compile "com.cedarsoftware:java-util:1.8.0" // for deep equals
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
@@ -252,7 +251,7 @@ bintray {
     pkg {
         userOrg = 'enkryptio' //An optional organization name when the repo belongs to one of the user's orgs
         repo = 'maven'
-        name = 'org.ethereum'
+        name = 'io.enkrypt'
     }
 }
 

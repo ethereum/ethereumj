@@ -24,7 +24,7 @@ subprojects {
 
     def config = new ConfigSlurper().parse(new File("$projectDir/src/main/resources/version.properties").toURI().toURL())
 
-    group = 'org.ethereum'
+    group = 'io.enkrypt'
 
     version = config.versionNumber + ("master" == gitCurBranch() ? "-RELEASE" : "-SNAPSHOT")
 
@@ -40,5 +40,6 @@ subprojects {
         jcenter()
         maven { url "https://dl.bintray.com/ethereum/maven/" }
         maven { url "http://packages.confluent.io/maven/" }
+        maven { url "https://dl.bintray.com/enkryptio/maven/" }
     }
 }
