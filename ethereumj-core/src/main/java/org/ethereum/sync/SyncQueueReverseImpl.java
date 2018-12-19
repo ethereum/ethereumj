@@ -143,7 +143,7 @@ public class SyncQueueReverseImpl implements SyncQueueIfc {
     }
 
     @Override
-    public ValidatedHeaders addHeadersAndValidate(Collection<BlockHeaderWrapper> headers) {
+    public synchronized ValidatedHeaders addHeadersAndValidate(Collection<BlockHeaderWrapper> headers) {
         List<BlockHeaderWrapper> added = addHeaders(headers);
         return new ValidatedHeaders(added, true);
     }

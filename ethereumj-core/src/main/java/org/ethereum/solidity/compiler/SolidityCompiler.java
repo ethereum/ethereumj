@@ -306,6 +306,14 @@ public class SolidityCompiler {
     public Result compileSrc(byte[] source, boolean optimize, boolean combinedJson, Option... options) throws IOException {
         List<String> commandParts = prepareCommandOptions(optimize, combinedJson, options);
 
+        //new in solidity 0.5.0: using stdin requires an explicit "-". The following output
+        //of 'solc' if no file is provided, e.g.,: solc --combined-json abi,bin,interface,metadata
+        //
+        // No input files given. If you wish to use the standard input please specify "-" explicitly.
+        //
+        // For older solc version "-" is not an issue as it is accepet as well
+        commandParts.add("-");
+
         ProcessBuilder processBuilder = new ProcessBuilder(commandParts)
                 .directory(solc.getExecutable().getParentFile());
         processBuilder.environment().put("LD_LIBRARY_PATH",
