@@ -26,8 +26,8 @@ import java.io.IOException;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubTestNetTest {
 
-    static String commitSHA = "7f638829311dfc1d341c1db85d8a891f57fa4da7";
-    static String treeSHA = "12ee51045ace4a3075e39fe58128fdaa74b3fbd0"; // https://github.com/ethereum/tests/tree/develop/BlockchainTests/TransitionTests
+    static String commitSHA = "725dbc73a54649e22a00330bd0f4d6699a5060e5";
+    static String treeSHA = "36528084e10bf993fdb20cc304f3421c7324c2a4"; // https://github.com/ethereum/tests/tree/develop/BlockchainTests/TransitionTests
 
     static BlockchainTestSuite suite;
 
@@ -64,5 +64,10 @@ public class GitHubTestNetTest {
     @Test
     public void bcEIP158ToByzantium() throws IOException {
         suite.runAll("bcEIP158ToByzantium", GitHubJSONTestSuite.Network.EIP158ToByzantiumAt5);
+    }
+
+    @Test
+    public void byzantiumToConstantinople() throws IOException {
+        suite.runAll("bcByzantiumToConstantinople", GitHubJSONTestSuite.Network.ByzantiumToConstantinopleAt5);
     }
 }
