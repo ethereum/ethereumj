@@ -32,7 +32,7 @@ import static org.ethereum.jsontestsuite.GitHubJSONTestSuite.runTrieTest;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GithubTrieTest {
 
-    String commitSHA = "6581e1fc35b1d0fdec86bd4eea552a7c742d6bca";
+    String commitSHA = "253e99861fe406c7b1daf3d6a0c40906e8a8fd8f";
 
     @Test
     public void hexEncodedSecureTrieTest() throws IOException {
