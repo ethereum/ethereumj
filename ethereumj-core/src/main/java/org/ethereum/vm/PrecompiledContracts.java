@@ -259,7 +259,7 @@ public class PrecompiledContracts {
 
             // check if modulus is zero
             if (isZero(mod))
-                return Pair.of(true, EMPTY_BYTE_ARRAY);
+                return Pair.of(true, new byte[modLen]); // should keep length of the result
 
             byte[] res = stripLeadingZeroes(base.modPow(exp, mod).toByteArray());
 
