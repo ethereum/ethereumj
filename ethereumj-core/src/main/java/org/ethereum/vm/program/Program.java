@@ -543,9 +543,7 @@ public class Program {
             // reset storage if the contract with the same address already exists
             // TCK test case only - normally this is near-impossible situation in the real network
             ContractDetails contractDetails = program.getStorage().getContractDetails(newAddress);
-            for (DataWord key : contractDetails.getStorageKeys()) {
-                program.storageSave(key, DataWord.ZERO);
-            }
+            contractDetails.deleteStorage();
             vm.play(program);
             result = program.getResult();
         }
