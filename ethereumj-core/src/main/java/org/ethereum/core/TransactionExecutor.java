@@ -290,7 +290,7 @@ public class TransactionExecutor {
             result.spendGas(basicTxCost);
         } else {
             Repository originalRepo = track;
-            // removes address in main trackc copy if the same address already exists
+            // removes address in main track copy if the same address already exists
             // TCK test case only - normally this is near-impossible situation in the real network
             if (cacheTrack.hasContractDetails(newContractAddress)) {
                 originalRepo = track.clone();
