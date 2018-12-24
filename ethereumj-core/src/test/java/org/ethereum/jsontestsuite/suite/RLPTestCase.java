@@ -72,7 +72,7 @@ public class RLPTestCase {
         }
 
         byte[] in = buildRLP(this.in);
-        String expected = this.out.toLowerCase();
+        String expected = parseOut();
         String computed = Hex.toHexString(in);
         this.computed.add(computed);
         this.expected.add(expected);
@@ -80,7 +80,7 @@ public class RLPTestCase {
 
     public void doDecode() {
 
-        String out = this.out.toLowerCase();
+        String out = parseOut();
 
         try {
             RLPList list = RLP.decode2(Hex.decode(out));
@@ -89,6 +89,15 @@ public class RLPTestCase {
             if (!"INVALID".equals(in)){
                 throw e;
             }
+        }
+    }
+
+    private String parseOut() {
+        String out = this.out.toLowerCase();
+        if (out.startsWith("0x")) {
+            return out.substring(2);
+        } else {
+            return out;
         }
     }
 
