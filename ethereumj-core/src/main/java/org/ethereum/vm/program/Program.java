@@ -521,17 +521,31 @@ public class Program {
         // [5] COOK THE INVOKE AND EXECUTE
         byte[] nonce = getStorage().getNonce(senderAddress).toByteArray();
         InternalTransaction internalTx = addInternalTx(nonce, getGasLimit(), senderAddress, null, endowment, programCode, "create");
+        Repository originalRepo = this.invoke.getOrigRepository();
+        // removes address in main track copy if the same address already exists
+        // TCK test case only - normally this is near-impossible situation in the real network
+        if (!contractAlreadyExists && track.hasContractDetails(newAddress)) {
+            originalRepo = originalRepo.clone();
+            originalRepo.delete(newAddress);
+        }
         ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
                 this, DataWord.of(newAddress), getOwnerAddress(), value, gasLimit,
-                newBalance, null, track, this.invoke.getOrigRepository(), this.invoke.getBlockStore(), false, byTestingSuite());
+                newBalance, null, track, originalRepo, this.invoke.getBlockStore(), false, byTestingSuite());
 
         ProgramResult result = ProgramResult.createEmpty();
 
         if (contractAlreadyExists) {
             result.setException(new BytecodeExecutionException("Trying to create a contract with existing contract address: 0x" + toHexString(newAddress)));
         } else if (isNotEmpty(programCode)) {
+            //
             VM vm = new VM(config, vmHook);
             Program program = new Program(programCode, programInvoke, internalTx, config, vmHook).withCommonConfig(commonConfig);
+            // reset storage if the contract with the same address already exists
+            // TCK test case only - normally this is near-impossible situation in the real network
+            ContractDetails contractDetails = program.getStorage().getContractDetails(newAddress);
+            for (DataWord key : contractDetails.getStorageKeys()) {
+                program.storageSave(key, DataWord.ZERO);
+            }
             vm.play(program);
             result = program.getResult();
         }
