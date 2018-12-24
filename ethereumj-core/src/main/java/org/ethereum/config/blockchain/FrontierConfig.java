@@ -45,11 +45,6 @@ public class FrontierConfig extends OlympicConfig {
         public int getMIN_GAS_LIMIT() {
             return 5000;
         }
-
-        @Override
-        public boolean touchCoinbaseOnTxReject() {
-            return true;
-        }
     };
 
     public FrontierConfig() {

@@ -403,10 +403,7 @@ public class TransactionExecutor {
     }
 
     public TransactionExecutionSummary finalization() {
-        if (!readyToExecute) {
-            touchCoinbaseInFrontier();
-            return null;
-        }
+        if (!readyToExecute) return null;
 
         TransactionExecutionSummary.Builder summaryBuilder = TransactionExecutionSummary.builderFor(tx)
                 .gasLeftover(m_endGas)
@@ -488,15 +485,7 @@ public class TransactionExecutor {
             saveProgramTraceFile(config, txHash, trace);
             listener.onVMTraceCreated(txHash, trace);
         }
-
-        touchCoinbaseInFrontier();
         return summary;
-    }
-
-    private void touchCoinbaseInFrontier() {
-        if (blockchainConfig.getConstants().touchCoinbaseOnTxReject()) {
-            track.addBalance(coinbase, BigInteger.ZERO);
-        }
     }
 
     public TransactionExecutor setLocalCall(boolean localCall) {
