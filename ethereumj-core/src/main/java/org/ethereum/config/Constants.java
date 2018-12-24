@@ -108,6 +108,10 @@ public class Constants {
      */
     public boolean hasDelegateCallOpcode() {return false; }
 
+    public boolean touchCoinbaseOnTxReject() {
+        return false;
+    }
+
     /**
      * Introduced in the Homestead release
      */

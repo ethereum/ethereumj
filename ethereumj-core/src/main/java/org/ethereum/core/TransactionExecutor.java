@@ -403,7 +403,12 @@ public class TransactionExecutor {
     }
 
     public TransactionExecutionSummary finalization() {
-        if (!readyToExecute) return null;
+        if (!readyToExecute) {
+            if (blockchainConfig.getConstants().touchCoinbaseOnTxReject()) {
+                track.addBalance(coinbase, BigInteger.ZERO);
+            }
+            return null;
+        }
 
         TransactionExecutionSummary.Builder summaryBuilder = TransactionExecutionSummary.builderFor(tx)
                 .gasLeftover(m_endGas)
