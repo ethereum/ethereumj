@@ -537,7 +537,6 @@ public class Program {
         if (contractAlreadyExists) {
             result.setException(new BytecodeExecutionException("Trying to create a contract with existing contract address: 0x" + toHexString(newAddress)));
         } else if (isNotEmpty(programCode)) {
-            //
             VM vm = new VM(config, vmHook);
             Program program = new Program(programCode, programInvoke, internalTx, config, vmHook).withCommonConfig(commonConfig);
             // reset storage if the contract with the same address already exists
