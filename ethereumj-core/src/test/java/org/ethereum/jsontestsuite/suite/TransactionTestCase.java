@@ -17,45 +17,15 @@
  */
 package org.ethereum.jsontestsuite.suite;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.ethereum.jsontestsuite.suite.model.TransactionTck;
+import org.ethereum.jsontestsuite.GitHubJSONTestSuite;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class TransactionTestCase {
-
-    private String blocknumber;
-    private TransactionTck transaction;
-    private String hash;
     private String rlp;
-    private String sender;
-    private String senderExpect;
-
+    private String expectedHash;
+    private String expectedRlp;
+    private GitHubJSONTestSuite.Network network;
 
     public TransactionTestCase() {
-    }
-
-    public String getBlocknumber() {
-        return blocknumber;
-    }
-
-    public void setBlocknumber(String blocknumber) {
-        this.blocknumber = blocknumber;
-    }
-
-    public TransactionTck getTransaction() {
-        return transaction;
-    }
-
-    public void setTransaction(TransactionTck transaction) {
-        this.transaction = transaction;
-    }
-
-    public String getHash() {
-        return hash;
-    }
-
-    public void setHash(String hash) {
-        this.hash = hash;
     }
 
     public String getRlp() {
@@ -66,19 +36,27 @@ public class TransactionTestCase {
         this.rlp = rlp;
     }
 
-    public String getSender() {
-        return sender;
+    public String getExpectedHash() {
+        return expectedHash;
     }
 
-    public void setSender(String sender) {
-        this.sender = sender;
+    public void setExpectedHash(String expectedHash) {
+        this.expectedHash = expectedHash;
     }
 
-    public String getSenderExpect() {
-        return senderExpect;
+    public String getExpectedRlp() {
+        return expectedRlp;
     }
 
-    public void setSenderExpect(String senderExpect) {
-        this.senderExpect = senderExpect;
+    public void setExpectedRlp(String expectedRlp) {
+        this.expectedRlp = expectedRlp;
+    }
+
+    public GitHubJSONTestSuite.Network getNetwork() {
+        return network;
+    }
+
+    public void setNetwork(GitHubJSONTestSuite.Network network) {
+        this.network = network;
     }
 }

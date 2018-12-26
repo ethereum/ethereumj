@@ -32,15 +32,16 @@ import java.util.Set;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubBlockStateTest {
 
-    static String commitSHA = "7f638829311dfc1d341c1db85d8a891f57fa4da7";
-    static String treeSHA = "9b96943196bfbb8b49651eab5e479956d7dabcc7"; // https://github.com/ethereum/tests/tree/develop/BlockchainTests/GeneralStateTests/
+    static String commitSHA = "253e99861fe406c7b1daf3d6a0c40906e8a8fd8f";
+    static String treeSHA = "724427f69f5573ed0f504a534b3ecbcd3070fa28"; // https://github.com/ethereum/tests/tree/develop/BlockchainTests/GeneralStateTests/
 
     static GitHubJSONTestSuite.Network[] targetNets = {
             GitHubJSONTestSuite.Network.Frontier,
             GitHubJSONTestSuite.Network.Homestead,
             GitHubJSONTestSuite.Network.EIP150,
             GitHubJSONTestSuite.Network.EIP158,
-            GitHubJSONTestSuite.Network.Byzantium
+            GitHubJSONTestSuite.Network.Byzantium,
+            GitHubJSONTestSuite.Network.Constantinople
     };
 
     static BlockchainTestSuite suite;
@@ -153,7 +154,6 @@ public class GitHubBlockStateTest {
     }
 
     @Test
-    @Ignore
     public void bcStMemoryStressTest() throws IOException {
         Set<String> excluded = new HashSet<>();
         excluded.add("mload32bitBound_return2");// The test extends memory to 4Gb which can't be handled with Java arrays
@@ -302,42 +302,22 @@ public class GitHubBlockStateTest {
     }
 
     @Test
-    @Ignore("Broken tests format, delayed until resolved")
-    public void stExtCodeHashCallCode() throws IOException {
-        String commit = "10ab37c095bb87d2e781bcf112b6104912fccb44";
-        String filePath = "GeneralStateTests/stExtCodeHash/extCodeHashCallCode_d0g0v0.json";
-        BlockchainTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Constantinople);
-        BlockchainTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Byzantium);
+    public void stExtCodeHash() throws IOException {
+        suite.runAll("stExtCodeHash");
     }
 
     @Test
-    @Ignore("Broken tests format, delayed until resolved")
-    public void stExtCodeHashCall() throws IOException {
-        String commit = "10ab37c095bb87d2e781bcf112b6104912fccb44";
-        String filePath = "GeneralStateTests/stExtCodeHash/extCodeHashCall_d0g0v0.json";
-        BlockchainTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Constantinople);
-        BlockchainTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Byzantium);
-    }
-
-    @Test
-    @Ignore("Update after all tests could pass latest develop")
     public void stShiftTest() throws IOException {
         suite.runAll("stShift");
-// TODO: Update all, this one passes with following settings:
-//        String commitSHA = "560e2cd6cf881821180d46d9cc4c542e19cfea1d";
-//        String treeSHA = "8457a6a49f53218575a349abc311c55939797bff";
-//           targetNets += GitHubJSONTestSuite.Network.Constantinople
     }
 
     @Test
-    @Ignore("Update after all tests could pass latest develop")
     public void stCreate2Test() throws IOException {
-        suite.runAll("stCreate2", new HashSet<>(Arrays.asList(
-                "create2collisionStorage_d1g0v0"   // Tests excluded because they test unreal prestate
-        )));                                       // (nonce, balance 0, code empty, but some storage)
-// TODO: Update all, this one passes with following settings:
-//        String commitSHA = "e2d84e1c00289bc259ad631efb6b42390e6a291a";
-//        String treeSHA = "d74573a79cf607744759acde258bf7c3cf849bf1";
-//           targetNets += GitHubJSONTestSuite.Network.Constantinople
+        suite.runAll("stCreate2");
+    }
+
+    @Test
+    public void stSstoreTest() throws IOException {
+        suite.runAll("stSStoreTest");
     }
 }

@@ -19,10 +19,12 @@ package org.ethereum.jsontestsuite.suite;
 
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
+import org.ethereum.vm.DataWord;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
@@ -93,6 +95,14 @@ public abstract class AbstractContractDetails implements ContractDetails {
     }
 
     public abstract ContractDetails clone();
+
+    @Override
+    public void deleteStorage() {
+        Set<DataWord> keys = getStorageKeys();
+        for (DataWord key: keys) {
+            put(key, DataWord.ZERO);
+        }
+    }
 
     @Override
     public String toString() {

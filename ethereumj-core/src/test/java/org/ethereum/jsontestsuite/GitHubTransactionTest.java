@@ -31,8 +31,8 @@ import java.util.HashSet;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubTransactionTest {
 
-    static String commitSHA = "7f638829311dfc1d341c1db85d8a891f57fa4da7";
-    static String treeSHA = "1405e8a09a6f695e843259b9029b04a3fc4da3fa";  // https://github.com/ethereum/tests/tree/develop/TransactionTests/
+    static String commitSHA = "253e99861fe406c7b1daf3d6a0c40906e8a8fd8f";
+    static String treeSHA = "8c0d8131cb772b572862f0d88e778830bfddb006";  // https://github.com/ethereum/tests/tree/develop/TransactionTests/
 
     static TxTestSuite suite;
 
@@ -47,58 +47,55 @@ public class GitHubTransactionTest {
         SystemProperties.getDefault().setBlockchainConfig(new MainNetConfig());
     }
 
-    @Ignore
     @Test
-    public void runSingleTest() throws IOException, ParseException {
-        TxTestSuite.runSingle(commitSHA, "ttWrongRLPFrontier/RLPArrayLengthWithFirstZeros.json");
+    public void ttAddress() throws IOException, ParseException {
+        suite.runAll("ttAddress");
     }
 
     @Test
-    public void ttConstantinople() throws IOException, ParseException {
-        suite.runAll("ttConstantinople");
-    }
-
-    @Test
-    public void ttEip155VitaliksEip158() throws IOException, ParseException {
-        suite.runAll("ttEip155VitaliksEip158");
-    }
-
-    @Test
-    public void ttEip155VitaliksHomesead() throws IOException, ParseException {
-        suite.runAll("ttEip155VitaliksHomesead");
-    }
-
-    @Test
-    public void ttEip158() throws IOException, ParseException {
-        suite.runAll("ttEip158");
-    }
-
-    @Test
-    public void ttFrontier() throws IOException, ParseException {
-        suite.run("ttFrontier", new HashSet<>(Arrays.asList(
+    public void ttData() throws IOException, ParseException {
+        suite.run("ttData", new HashSet<>(Arrays.asList(
                 "String10MbData"    // too big to run it each time
         )));
     }
 
     @Test
-    public void ttHomestead() throws IOException, ParseException {
-        suite.run("ttHomestead", new HashSet<>(Arrays.asList(
-                "String10MbData"    // too big to run it each time
-        )));
+    public void ttGasLimit() throws IOException, ParseException {
+        suite.runAll("ttGasLimit");
     }
 
     @Test
-    public void ttVRuleEip158() throws IOException, ParseException {
-        suite.runAll("ttVRuleEip158");
+    public void ttGasPrice() throws IOException, ParseException {
+        suite.runAll("ttGasPrice");
     }
 
     @Test
-    public void ttWrongRLPFrontier() throws IOException, ParseException {
-        suite.runAll("ttWrongRLPFrontier");
+    public void ttNonce() throws IOException, ParseException {
+        suite.runAll("ttNonce");
     }
 
     @Test
-    public void ttWrongRLPHomestead() throws IOException, ParseException {
-        suite.runAll("ttWrongRLPHomestead");
+    public void ttRSValue() throws IOException, ParseException {
+        suite.runAll("ttRSValue");
+    }
+
+    @Test
+    public void ttVValue() throws IOException, ParseException {
+        suite.runAll("ttVValue");
+    }
+
+    @Test
+    public void ttSignature() throws IOException, ParseException {
+        suite.runAll("ttSignature");
+    }
+
+    @Test
+    public void ttValue() throws IOException, ParseException {
+        suite.runAll("ttValue");
+    }
+
+    @Test
+    public void ttWrongRLP() throws IOException, ParseException {
+        suite.runAll("ttWrongRLP");
     }
 }

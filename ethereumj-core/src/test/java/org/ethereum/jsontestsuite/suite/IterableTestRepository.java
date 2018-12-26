@@ -354,6 +354,14 @@ public class IterableTestRepository implements Repository {
         }
 
         @Override
+        public void deleteStorage() {
+            Set<DataWord> keys = getStorageKeys();
+            for (DataWord key: keys) {
+                put(key, DataWord.ZERO);
+            }
+        }
+
+        @Override
         public Map<DataWord, DataWord> getStorage(@Nullable Collection<DataWord> keys) {
             throw new RuntimeException();
         }
