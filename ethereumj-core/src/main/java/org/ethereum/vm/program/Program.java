@@ -522,8 +522,9 @@ public class Program {
         byte[] nonce = getStorage().getNonce(senderAddress).toByteArray();
         InternalTransaction internalTx = addInternalTx(nonce, getGasLimit(), senderAddress, null, endowment, programCode, "create");
         Repository originalRepo = this.invoke.getOrigRepository();
-        // removes address in main track copy if the same address already exists
-        // TCK test case only - normally this is near-impossible situation in the real network
+        // Some TCK tests have storage only addresses (no code, zero none etc) - impossible situation in the real network
+        // So, we should clean up it before reuse, but as tx not always goes successful, state should be correctly
+        // reverted in that case too
         if (!contractAlreadyExists && track.hasContractDetails(newAddress)) {
             originalRepo = originalRepo.clone();
             originalRepo.delete(newAddress);
