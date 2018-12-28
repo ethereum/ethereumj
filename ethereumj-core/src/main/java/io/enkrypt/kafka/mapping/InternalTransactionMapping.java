@@ -1,11 +1,7 @@
 package io.enkrypt.kafka.mapping;
 
 import io.enkrypt.avro.capture.InternalTransactionRecord;
-import io.enkrypt.avro.capture.TransactionRecord;
-import io.enkrypt.avro.common.Data1;
 import io.enkrypt.avro.common.Data20;
-import io.enkrypt.avro.common.Data32;
-import org.ethereum.crypto.ECKey;
 import org.ethereum.vm.program.InternalTransaction;
 
 import static com.google.common.base.Preconditions.checkArgument;

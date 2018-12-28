@@ -2,14 +2,11 @@ package io.enkrypt.kafka.mapping;
 
 import io.enkrypt.avro.capture.*;
 import io.enkrypt.avro.common.Data20;
-import io.enkrypt.avro.common.Data256;
 import io.enkrypt.avro.common.Data32;
-import io.enkrypt.avro.common.Data8;
 import org.ethereum.core.*;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.vm.program.InternalTransaction;
 
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.stream.Collectors;

@@ -2,14 +2,11 @@ package io.enkrypt.kafka.mapping;
 
 import io.enkrypt.avro.capture.LogRecord;
 import io.enkrypt.avro.capture.TransactionReceiptRecord;
-import io.enkrypt.avro.capture.TransactionRecord;
-import io.enkrypt.avro.common.Data1;
 import io.enkrypt.avro.common.Data20;
 import io.enkrypt.avro.common.Data256;
 import io.enkrypt.avro.common.Data32;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionReceipt;
-import org.ethereum.crypto.ECKey;
 import org.ethereum.vm.LogInfo;
 
 import java.util.stream.Collectors;

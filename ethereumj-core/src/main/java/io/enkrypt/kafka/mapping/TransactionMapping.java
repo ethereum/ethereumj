@@ -8,8 +8,6 @@ import io.enkrypt.avro.common.Data32;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 
-import java.nio.ByteBuffer;
-
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.nio.ByteBuffer.wrap;
 

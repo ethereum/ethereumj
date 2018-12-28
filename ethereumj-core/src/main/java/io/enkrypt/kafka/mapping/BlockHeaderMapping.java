@@ -1,20 +1,13 @@
 package io.enkrypt.kafka.mapping;
 
 import io.enkrypt.avro.capture.BlockHeaderRecord;
-import io.enkrypt.avro.capture.BlockRecord;
-import io.enkrypt.avro.capture.TransactionRecord;
 import io.enkrypt.avro.common.Data20;
 import io.enkrypt.avro.common.Data256;
 import io.enkrypt.avro.common.Data32;
 import io.enkrypt.avro.common.Data8;
-import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
-import org.ethereum.core.BlockSummary;
-import org.ethereum.core.Transaction;
 
 import java.math.BigInteger;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.nio.ByteBuffer.wrap;
