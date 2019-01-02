@@ -140,7 +140,7 @@ public class Program {
         this.traceListener = new ProgramTraceListener(config.vmTrace());
         this.memory = setupProgramListener(new Memory());
         this.stack = setupProgramListener(new Stack());
-        this.originalRepo = programInvoke.getRepository().clone();
+        this.originalRepo = programInvoke.getOrigRepository();
         this.storage = setupProgramListener(new Storage(programInvoke));
         this.trace = new ProgramTrace(config, programInvoke);
         this.blockchainConfig = config.getBlockchainConfig().getConfigForBlock(programInvoke.getNumber().longValue());
@@ -521,9 +521,17 @@ public class Program {
         // [5] COOK THE INVOKE AND EXECUTE
         byte[] nonce = getStorage().getNonce(senderAddress).toByteArray();
         InternalTransaction internalTx = addInternalTx(nonce, getGasLimit(), senderAddress, null, endowment, programCode, "create");
+        Repository originalRepo = this.invoke.getOrigRepository();
+        // Some TCK tests have storage only addresses (no code, zero nonce etc) - impossible situation in the real network
+        // So, we should clean up it before reuse, but as tx not always goes successful, state should be correctly
+        // reverted in that case too
+        if (!contractAlreadyExists && track.hasContractDetails(newAddress)) {
+            originalRepo = originalRepo.clone();
+            originalRepo.delete(newAddress);
+        }
         ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
                 this, DataWord.of(newAddress), getOwnerAddress(), value, gasLimit,
-                newBalance, null, track, this.invoke.getBlockStore(), false, byTestingSuite());
+                newBalance, null, track, originalRepo, this.invoke.getBlockStore(), false, byTestingSuite());
 
         ProgramResult result = ProgramResult.createEmpty();
 
@@ -532,6 +540,10 @@ public class Program {
         } else if (isNotEmpty(programCode)) {
             VM vm = new VM(config, vmHook);
             Program program = new Program(programCode, programInvoke, internalTx, config, vmHook).withCommonConfig(commonConfig);
+            // reset storage if the contract with the same address already exists
+            // TCK test case only - normally this is near-impossible situation in the real network
+            ContractDetails contractDetails = program.getStorage().getContractDetails(newAddress);
+            contractDetails.deleteStorage();
             vm.play(program);
             result = program.getResult();
         }
@@ -659,7 +671,7 @@ public class Program {
                     this, DataWord.of(contextAddress),
                     msg.getType().callIsDelegate() ? getCallerAddress() : getOwnerAddress(),
                     msg.getType().callIsDelegate() ? getCallValue() : msg.getEndowment(),
-                    msg.getGas(), contextBalance, data, track, this.invoke.getBlockStore(),
+                    msg.getGas(), contextBalance, data, track, this.invoke.getOrigRepository(), this.invoke.getBlockStore(),
                     msg.getType().callIsStatic() || isStaticCall(), byTestingSuite());
 
             VM vm = new VM(config, vmHook);
@@ -777,8 +789,14 @@ public class Program {
     }
 
     public byte[] getCodeHashAt(DataWord address) {
-        byte[] code = invoke.getRepository().getCodeHash(address.getLast20Bytes());
-        return nullToEmpty(code);
+        AccountState state = invoke.getRepository().getAccountState(address.getLast20Bytes());
+        // return 0 as a code hash of empty account (an account that would be removed by state clearing)
+        if (state != null && state.isEmpty()) {
+            return EMPTY_BYTE_ARRAY;
+        } else {
+            byte[] code = invoke.getRepository().getCodeHash(address.getLast20Bytes());
+            return nullToEmpty(code);
+        }
     }
 
     public DataWord getOwnerAddress() {

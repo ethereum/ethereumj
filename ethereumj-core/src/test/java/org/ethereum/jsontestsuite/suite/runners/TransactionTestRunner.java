@@ -18,15 +18,13 @@
 package org.ethereum.jsontestsuite.suite.runners;
 
 import org.ethereum.config.BlockchainConfig;
-import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Transaction;
 import org.ethereum.jsontestsuite.suite.TransactionTestCase;
 import org.ethereum.jsontestsuite.suite.Utils;
-import org.ethereum.jsontestsuite.suite.builder.TransactionBuilder;
-import org.ethereum.jsontestsuite.suite.validators.TransactionValidator;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -42,7 +40,8 @@ public class TransactionTestRunner {
 
     protected TransactionTestCase transactionTestCase;
     protected Transaction transaction = null;
-    protected Transaction expectedTransaction;
+    protected byte[] expectedHash;
+    protected byte[] expectedSender;
     protected long blockNumber;
     protected BlockchainConfig blockchainConfig;
 
@@ -51,10 +50,8 @@ public class TransactionTestRunner {
     }
 
     public List<String> runImpl() {
-
-        blockNumber = transactionTestCase.getBlocknumber() == null ? 0 : Utils.parseLong(transactionTestCase.getBlocknumber());
-        logger.info("Block number: {}", blockNumber);
-        this.blockchainConfig = SystemProperties.getDefault().getBlockchainConfig().getConfigForBlock(blockNumber);
+        this.blockNumber = 0;
+        this.blockchainConfig = transactionTestCase.getNetwork().getConfig().getConfigForBlock(blockNumber);
 
         try {
             byte[] rlp = Utils.parseData(transactionTestCase.getRlp());
@@ -69,12 +66,14 @@ public class TransactionTestRunner {
             logger.info("Transaction data skipped because it's too big", transaction);
         }
 
-        expectedTransaction = transactionTestCase.getTransaction() == null ? null : TransactionBuilder.build(transactionTestCase.getTransaction());
-        if (expectedTransaction == null || expectedTransaction.getEncoded().length < 10000) {
-            logger.info("Expected transaction: {}", expectedTransaction);
-        } else {
-            logger.info("Expected transaction data skipped because it's too big", transaction);
-        }
+        this.expectedHash = (transactionTestCase.getExpectedHash() != null && !transactionTestCase.getExpectedHash().isEmpty())
+                ? ByteUtil.hexStringToBytes(transactionTestCase.getExpectedHash())
+                : null;
+        this.expectedSender = (transactionTestCase.getExpectedRlp() != null && !transactionTestCase.getExpectedRlp().isEmpty())
+                ? ByteUtil.hexStringToBytes(transactionTestCase.getExpectedRlp())
+                : null;
+        logger.info("Expected transaction: [hash: {}, sender: {}]",
+                ByteUtil.toHexString(expectedHash), ByteUtil.toHexString(expectedSender));
 
         // Not enough GAS
         if (transaction != null) {
@@ -88,30 +87,24 @@ public class TransactionTestRunner {
         String acceptFail = null;
         boolean shouldAccept = transaction != null && blockchainConfig.acceptTransactionSignature(transaction);
         if (!shouldAccept) transaction = null;
-        if (shouldAccept != (expectedTransaction != null)) {
+        if (shouldAccept == (expectedSender == null)) {
             acceptFail = "Transaction shouldn't be accepted";
         }
 
         String wrongSender = null;
         String wrongHash = null;
-        if (transaction != null && expectedTransaction != null) {
+        if (transaction != null && expectedHash != null) {
             // Verifying sender
-            if (!Hex.toHexString(transaction.getSender()).equals(transactionTestCase.getSender()))
+            if (!FastByteComparisons.equal(transaction.getSender(), expectedSender))
                 wrongSender = "Sender is incorrect in parsed transaction";
             // Verifying hash
             // NOTE: "hash" is not required field in test case
-            if (transactionTestCase.getHash() != null &&
-                    !Hex.toHexString(transaction.getHash()).equals(transactionTestCase.getHash()))
+            if (expectedHash != null &&
+                    !FastByteComparisons.equal(transaction.getHash(), expectedHash))
                 wrongHash = "Hash is incorrect in parsed transaction";
         }
 
-        logger.info("--------- POST Validation---------");
         List<String> results = new ArrayList<>();
-
-        ArrayList<String> outputSummary =
-                TransactionValidator.valid(transaction, expectedTransaction);
-
-        results.addAll(outputSummary);
         if (acceptFail != null) results.add(acceptFail);
         if (wrongSender != null) results.add(wrongSender);
         if (wrongHash != null) results.add(wrongHash);

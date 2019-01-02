@@ -38,7 +38,7 @@ import static org.ethereum.jsontestsuite.GitHubJSONTestSuite.runDifficultyTest;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubBasicTest {
 
-    String commitSHA = "7f638829311dfc1d341c1db85d8a891f57fa4da7";
+    String commitSHA = "253e99861fe406c7b1daf3d6a0c40906e8a8fd8f";
 
     @Test
     public void btCrypto() throws IOException {
@@ -53,6 +53,11 @@ public class GitHubBasicTest {
     @Test
     public void btDifficultyByzantium() throws IOException, ParseException {
         runDifficultyTest(new ByzantiumConfig(new DaoHFConfig()), "BasicTests/difficultyByzantium.json", commitSHA);
+    }
+
+    @Test
+    public void btDifficultyConstantinople() throws IOException, ParseException {
+        runDifficultyTest(new ConstantinopleConfig(new DaoHFConfig()), "BasicTests/difficultyConstantinople.json", commitSHA);
     }
 
     @Test
@@ -83,7 +88,7 @@ public class GitHubBasicTest {
     }
 
     @Test
-    @Ignore("Disable Ropsten until tests are updated with correct difficulty")
+    @Ignore("Disable Ropsten until cached tests commit is updated to commitSHA")
     public void btDifficultyRopsten() throws IOException, ParseException {
         runDifficultyTest(new RopstenNetConfig(), "BasicTests/difficultyRopsten.json", commitSHA);
     }

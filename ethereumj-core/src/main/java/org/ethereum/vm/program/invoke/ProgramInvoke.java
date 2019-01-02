@@ -69,6 +69,8 @@ public interface ProgramInvoke {
 
     Repository getRepository();
 
+    Repository getOrigRepository();
+
     BlockStore getBlockStore();
 
     boolean isStaticCall();

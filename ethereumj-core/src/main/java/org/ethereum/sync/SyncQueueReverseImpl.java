@@ -143,6 +143,12 @@ public class SyncQueueReverseImpl implements SyncQueueIfc {
     }
 
     @Override
+    public synchronized ValidatedHeaders addHeadersAndValidate(Collection<BlockHeaderWrapper> headers) {
+        List<BlockHeaderWrapper> added = addHeaders(headers);
+        return new ValidatedHeaders(added, true);
+    }
+
+    @Override
     public synchronized BlocksRequest requestBlocks(int maxSize) {
         List<BlockHeaderWrapper> reqHeaders = new ArrayList<>();
         for (BlockHeaderWrapper header : headers.descendingMap().values()) {

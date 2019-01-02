@@ -23,6 +23,7 @@ import org.ethereum.core.BlockHeaderWrapper;
 import org.ethereum.core.Blockchain;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.ByteArrayMap;
+import org.ethereum.validator.DependentBlockHeaderRule;
 
 import java.util.*;
 import java.util.function.Function;
@@ -183,6 +184,8 @@ public class SyncQueueImpl implements SyncQueueIfc {
 
     Random rnd = new Random(); // ;)
 
+    DependentBlockHeaderRule parentHeaderValidator = null;
+
     public SyncQueueImpl(List<Block> initBlocks) {
         init(initBlocks);
     }
@@ -264,6 +267,10 @@ public class SyncQueueImpl implements SyncQueueIfc {
 
     private void trimChain() {
         List<HeaderElement> longestChain = getLongestChain();
+        trimChainImpl(longestChain);
+    }
+
+    private void trimChainImpl(List<HeaderElement> longestChain) {
         if (longestChain.size() > MAX_CHAIN_LEN) {
             long newTrimNum = getLongestChain().get(longestChain.size() - MAX_CHAIN_LEN).header.getNumber();
             for (int i = 0; darkZoneNum < newTrimNum; darkZoneNum++, i++) {
@@ -361,6 +368,86 @@ public class SyncQueueImpl implements SyncQueueIfc {
     }
 
     @Override
+    public synchronized ValidatedHeaders addHeadersAndValidate(Collection<BlockHeaderWrapper> headers) {
+        for (BlockHeaderWrapper header : headers) {
+            addHeader(header);
+        }
+
+        List<HeaderElement> longestChain = getLongestChain();
+
+        // do not run the payload if chain is too short
+        if (longestChain.size() > MAX_CHAIN_LEN) {
+            ValidatedHeaders result = validateChain(longestChain);
+            if (result.isValid()) {
+                trimChainImpl(longestChain);
+            } else {
+                // erase chain starting from first invalid header
+                eraseChain(longestChain, result.getHeaders().get(0).getNumber());
+            }
+
+            return result;
+        }
+
+        return ValidatedHeaders.Empty;
+    }
+
+    /**
+     * Runs parent header validation and returns after first occurrence of invalid header
+     */
+    ValidatedHeaders validateChain(List<HeaderElement> chain) {
+        if (parentHeaderValidator == null)
+            return ValidatedHeaders.Empty;
+
+        for (int i = 1; i < chain.size(); i++) {
+            BlockHeaderWrapper parent = chain.get(i - 1).header;
+            BlockHeaderWrapper header = chain.get(i).header;
+            if (!parentHeaderValidator.validate(header.getHeader(), parent.getHeader())) {
+                return new ValidatedHeaders(Collections.singletonList(header), false,
+                        parentHeaderValidator.getErrors().isEmpty() ? "" : parentHeaderValidator.getErrors().get(0));
+            }
+        }
+
+        return ValidatedHeaders.Empty;
+    }
+
+    void eraseChain(List<HeaderElement> chain, long startFrom) {
+        if (chain.isEmpty())
+            return;
+
+        // prevent from going beyond dark zone
+        startFrom = Math.max(darkZoneNum + 1, startFrom);
+
+        HeaderElement head = chain.get(chain.size() - 1);
+        for (int i = chain.size() - 1; i >= 0; i--) {
+            HeaderElement el = chain.get(i);
+            if (el.header.getNumber() < startFrom) break; // erase up to startFrom number
+            Map<ByteArrayWrapper, HeaderElement> gen = headers.get(el.header.getNumber());
+            gen.remove(new ByteArrayWrapper(el.header.getHash()));
+            // clean empty gens
+            if (gen.isEmpty()) {
+                headers.remove(el.header.getNumber());
+            }
+        }
+
+        // adjust maxNum
+        if (head.header.getNumber() == maxNum) {
+            Map<ByteArrayWrapper, HeaderElement> lastValidatedGen = headers.get(darkZoneNum);
+            assert lastValidatedGen.size() == 1;
+            long maxNotEmptyGen = lastValidatedGen.values().iterator().next().header.getNumber();
+
+            // find new maxNum after chain has been erased
+            for (long num = head.header.getNumber(); num >= darkZoneNum; num--) {
+                Map<ByteArrayWrapper, HeaderElement> gen = headers.get(num);
+                if (gen != null && !gen.isEmpty() && num > maxNotEmptyGen) {
+                    maxNotEmptyGen = num;
+                    break;
+                }
+            }
+            maxNum = maxNotEmptyGen;
+        }
+    }
+
+    @Override
     public synchronized int getHeadersCount() {
         return (int) (maxNum - minNum);
     }
@@ -436,6 +523,11 @@ public class SyncQueueImpl implements SyncQueueIfc {
 
     public synchronized List<Block> pollBlocks() {
         return null;
+    }
+
+    public SyncQueueImpl withParentHeaderValidator(DependentBlockHeaderRule validator) {
+        this.parentHeaderValidator = validator;
+        return this;
     }
 
 

@@ -31,14 +31,15 @@ import java.util.HashSet;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubBlockTest {
 
-    static String commitSHA = "7f638829311dfc1d341c1db85d8a891f57fa4da7";
-    static String treeSHA = "3f6a1117be5c0d6f801875118c7c580dc4200712"; // https://github.com/ethereum/tests/tree/develop/BlockchainTests/
+    static String commitSHA = "253e99861fe406c7b1daf3d6a0c40906e8a8fd8f";
+    static String treeSHA = "6c32ebcbce50112966427e18788069b9f7cbe285"; // https://github.com/ethereum/tests/tree/develop/BlockchainTests/
     static GitHubJSONTestSuite.Network[] targetNets = {
             GitHubJSONTestSuite.Network.Frontier,
             GitHubJSONTestSuite.Network.Homestead,
             GitHubJSONTestSuite.Network.EIP150,
             GitHubJSONTestSuite.Network.EIP158,
-            GitHubJSONTestSuite.Network.Byzantium
+            GitHubJSONTestSuite.Network.Byzantium,
+            GitHubJSONTestSuite.Network.Constantinople
     };
 
     static BlockchainTestSuite suite;
