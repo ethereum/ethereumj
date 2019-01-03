@@ -787,4 +787,13 @@ public class TransactionTest {
         Transaction copyTx = new Transaction(tx.getNonce(), tx.getGasPrice(), tx.getGasLimit(), tx.getReceiveAddress(), tx.getValue(), tx.getData(), tx.getChainId());
         assertArrayEquals(rlpUnsignedTx, copyTx.getEncoded());
     }
+
+    @Test
+    public void testGetKeyFromSignature() {
+        ECKey sender = new ECKey();
+        BlockchainImpl blockchain = ImportLightTest.createBlockchain(GenesisLoader.loadGenesis(
+                getClass().getResourceAsStream("/genesis/genesis-light.json")));
+        Transaction tx = createTx(blockchain, sender, new byte[32], new byte[0], 100);
+        Assert.assertNotNull(tx.getKey());
+    }
 }
