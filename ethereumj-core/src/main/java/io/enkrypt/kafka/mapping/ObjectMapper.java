@@ -9,6 +9,7 @@ import org.ethereum.vm.program.InternalTransaction;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -42,7 +43,8 @@ public class ObjectMapper implements ObjectMapping {
   }
 
   @Override
-  public <A, B> B convert(ObjectMapping mappers, Class<A> from, Class<B> to, A value) {
+  public <A, B> B convert(Context ctx, Class<A> from, Class<B> to, A value) {
+
     if(value == null) return null;
 
     final Key<A, B> key = new Key<>(from, to);
@@ -53,7 +55,53 @@ public class ObjectMapper implements ObjectMapping {
       String.format("A mapping was not found for %s => %s", from.getCanonicalName(), to.getCanonicalName())
     );
 
-    return mapping.convert(this, from, to, value);
+    return mapping.convert(ctx == null ? new ContextImpl() : ctx, from, to, value);
+  }
+
+  private final class ContextImpl implements Context {
+
+    private final Map<String, Object> map;
+
+    private ContextImpl() {
+      this.map = new HashMap<>();
+    }
+
+    private ContextImpl(Context other) {
+      this();
+      for (String key : other.keys()) {
+        this.map.put(key, other.get(key));
+      }
+    }
+
+    @Override
+    public Context copy() {
+      return new ContextImpl(this);
+    }
+
+    @Override
+    public ObjectMapping mappers() {
+      return ObjectMapper.this;
+    }
+
+    @Override
+    public Set<String> keys() {
+      return this.map.keySet();
+    }
+
+    @Override
+    public void set(String key, Object value) {
+      this.map.put(key, value);
+    }
+
+    @Override
+    public Object get(String key) {
+      return this.map.get(key);
+    }
+
+    @Override
+    public <T> T get(String key, Class<T> clazz) {
+      return clazz.cast(this.map.get(key));
+    }
   }
 
   private static final class Key<A, B> {

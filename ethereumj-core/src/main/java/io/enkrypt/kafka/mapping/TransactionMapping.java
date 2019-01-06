@@ -8,6 +8,8 @@ import io.enkrypt.avro.common.Data32;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 
+import java.nio.ByteBuffer;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.nio.ByteBuffer.wrap;
 
@@ -15,7 +17,7 @@ public class TransactionMapping implements ObjectMapping {
 
   @SuppressWarnings("Duplicates")
   @Override
-  public <A, B> B convert(ObjectMapping mappers, Class<A> from, Class<B> to, A value) {
+  public <A, B> B convert(Context ctx, Class<A> from, Class<B> to, A value) {
 
     checkArgument(Transaction.class == from);
     checkArgument(TransactionRecord.class == to);
@@ -24,7 +26,12 @@ public class TransactionMapping implements ObjectMapping {
 
     final ECKey.ECDSASignature signature = tx.getSignature();
 
+    final Data32 blockHash = ctx.get("blockHash", Data32.class);
+    final Integer index = ctx.get("index", Integer.class);
+
     final TransactionRecord.Builder builder = TransactionRecord.newBuilder()
+      .setBlockHash(blockHash)
+      .setTransactionIndex(index)
       .setHash(new Data32(tx.getHash()))
       .setNonce(wrap(tx.getNonce().clone()))
       .setFrom(new Data20(tx.getSender().clone()))

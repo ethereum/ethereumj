@@ -13,7 +13,7 @@ import static java.nio.ByteBuffer.wrap;
 public class LogInfoMapping implements ObjectMapping {
 
   @Override
-  public <A, B> B convert(ObjectMapping mappers, Class<A> from, Class<B> to, A value) {
+  public <A, B> B convert(Context ctx, Class<A> from, Class<B> to, A value) {
     checkArgument(LogInfo.class == from);
     checkArgument(LogRecord.class == to);
 

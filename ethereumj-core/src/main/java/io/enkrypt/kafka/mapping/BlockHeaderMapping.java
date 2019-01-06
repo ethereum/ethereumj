@@ -15,7 +15,7 @@ import static java.nio.ByteBuffer.wrap;
 public class BlockHeaderMapping implements ObjectMapping {
 
   @Override
-  public <A, B> B convert(ObjectMapping mappers, Class<A> from, Class<B> to, A value) {
+  public <A, B> B convert(Context ctx, Class<A> from, Class<B> to, A value) {
 
     checkArgument(BlockHeader.class == from);
     checkArgument(BlockHeaderRecord.class == to);
