@@ -54,6 +54,7 @@ public class BlockSummaryMapping implements ObjectMapping {
     for (Transaction tx : txs) {
 
       final Context txCtx = ctx.copy();
+      txCtx.set("timestamp", builder.getHeader().getTimestamp());
       txCtx.set("blockHash", builder.getHeader().getHash());
       txCtx.set("index", transactionIndex++);
 

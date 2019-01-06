@@ -26,10 +26,12 @@ public class TransactionMapping implements ObjectMapping {
 
     final ECKey.ECDSASignature signature = tx.getSignature();
 
+    final Long timestamp = ctx.get("timestamp", Long.class);
     final Data32 blockHash = ctx.get("blockHash", Data32.class);
     final Integer index = ctx.get("index", Integer.class);
 
     final TransactionRecord.Builder builder = TransactionRecord.newBuilder()
+      .setTimestamp(timestamp)
       .setBlockHash(blockHash)
       .setTransactionIndex(index)
       .setHash(new Data32(tx.getHash()))
