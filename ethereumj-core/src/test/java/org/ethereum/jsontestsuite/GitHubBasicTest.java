@@ -38,7 +38,7 @@ import static org.ethereum.jsontestsuite.GitHubJSONTestSuite.runDifficultyTest;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubBasicTest {
 
-    String commitSHA = "95a309203890e6244c6d4353ca411671973c13b5";
+    String commitSHA = "253e99861fe406c7b1daf3d6a0c40906e8a8fd8f";
 
     @Test
     public void btCrypto() throws IOException {
@@ -53,6 +53,11 @@ public class GitHubBasicTest {
     @Test
     public void btDifficultyByzantium() throws IOException, ParseException {
         runDifficultyTest(new ByzantiumConfig(new DaoHFConfig()), "BasicTests/difficultyByzantium.json", commitSHA);
+    }
+
+    @Test
+    public void btDifficultyConstantinople() throws IOException, ParseException {
+        runDifficultyTest(new ConstantinopleConfig(new DaoHFConfig()), "BasicTests/difficultyConstantinople.json", commitSHA);
     }
 
     @Test

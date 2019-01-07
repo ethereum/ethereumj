@@ -32,7 +32,7 @@ import static org.ethereum.jsontestsuite.GitHubJSONTestSuite.runABITest;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GithubABITest {
 
-    String commitSHA = "2d28e1f654bb4b6fe6aca2808b4b5c37e3fccdcc";
+    String commitSHA = "253e99861fe406c7b1daf3d6a0c40906e8a8fd8f";
 
     @Test
     public void basicAbiTests() throws IOException {

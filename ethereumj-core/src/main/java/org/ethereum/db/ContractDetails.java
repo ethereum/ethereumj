@@ -55,6 +55,9 @@ public interface ContractDetails {
 
     Set<DataWord> getStorageKeys();
 
+    // Removes all storage, key by key, if supported
+    void deleteStorage();
+
     Map<DataWord,DataWord> getStorage(@Nullable Collection<DataWord> keys);
 
     Map<DataWord, DataWord> getStorage();

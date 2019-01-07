@@ -316,6 +316,11 @@ public class RepositoryImpl implements Repository, org.ethereum.facade.Repositor
         }
 
         @Override
+        public void deleteStorage() {
+        // do nothing as getStorageKeys() is not supported
+        }
+
+        @Override
         public Map<DataWord, DataWord> getStorage(@Nullable Collection<DataWord> keys) {
             throw new RuntimeException("Not supported");
         }

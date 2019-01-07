@@ -289,19 +289,24 @@ public class TransactionExecutor {
             m_endGas = m_endGas.subtract(BigInteger.valueOf(basicTxCost));
             result.spendGas(basicTxCost);
         } else {
+            Repository originalRepo = track;
+            // Some TCK tests have storage only addresses (no code, zero nonce etc) - impossible situation in the real network
+            // So, we should clean up it before reuse, but as tx not always goes successful, state should be correctly
+            // reverted in that case too
+            if (cacheTrack.hasContractDetails(newContractAddress)) {
+                originalRepo = track.clone();
+                originalRepo.delete(newContractAddress);
+            }
             ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(tx, currentBlock,
-                    cacheTrack, track, blockStore);
+                    cacheTrack, originalRepo, blockStore);
 
             this.vm = new VM(config, vmHook);
             this.program = new Program(tx.getData(), programInvoke, tx, config, vmHook).withCommonConfig(commonConfig);
 
             // reset storage if the contract with the same address already exists
             // TCK test case only - normally this is near-impossible situation in the real network
-            // TODO make via Trie.clear() without keyset
-//            ContractDetails contractDetails = program.getStorage().getContractDetails(newContractAddress);
-//            for (DataWord key : contractDetails.getStorageKeys()) {
-//                program.storageSave(key, DataWord.ZERO);
-//            }
+            ContractDetails contractDetails = program.getStorage().getContractDetails(newContractAddress);
+            contractDetails.deleteStorage();
         }
 
         BigInteger endowment = toBI(tx.getValue());

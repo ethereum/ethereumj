@@ -29,14 +29,15 @@ import java.util.*;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubStateTest {
 
-    static String commitSHA = "7f638829311dfc1d341c1db85d8a891f57fa4da7";
-    static String treeSHA = "d1ece13ebfb2adb27061ae5a6155bd9ed9773d8f"; // https://github.com/ethereum/tests/tree/develop/GeneralStateTests/
+    static String commitSHA = "253e99861fe406c7b1daf3d6a0c40906e8a8fd8f";
+    static String treeSHA = "51fd8f9969ff488917f0832c57ece01f66516db2"; // https://github.com/ethereum/tests/tree/develop/GeneralStateTests/
     static GitHubJSONTestSuite.Network[] targetNets = {
             GitHubJSONTestSuite.Network.Frontier,
             GitHubJSONTestSuite.Network.Homestead,
             GitHubJSONTestSuite.Network.EIP150,
             GitHubJSONTestSuite.Network.EIP158,
-            GitHubJSONTestSuite.Network.Byzantium
+            GitHubJSONTestSuite.Network.Byzantium,
+            GitHubJSONTestSuite.Network.Constantinople
     };
 
     static GeneralStateTestSuite suite;
@@ -152,7 +153,6 @@ public class GitHubStateTest {
     }
 
     @Test
-    @Ignore
     public void stMemoryStressTest() throws IOException {
         Set<String> excluded = new HashSet<>();
         excluded.add("mload32bitBound_return2");// The test extends memory to 4Gb which can't be handled with Java arrays
@@ -162,7 +162,6 @@ public class GitHubStateTest {
     }
 
     @Test
-    @Ignore
     public void stMemoryTest() throws IOException {
         suite.runAll("stMemoryTest");
     }
@@ -304,65 +303,23 @@ public class GitHubStateTest {
 
 
     @Test
-    @Ignore("Fails on pre-configured commit, update after test is merged in develop of Github tests")
-    public void stExtCodeHashCallCode() throws IOException {
-        String commit = "10ab37c095bb87d2e781bcf112b6104912fccb44";
-        String filePath = "stExtCodeHash/extCodeHashCallCode.json";
-        GeneralStateTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Constantinople);
-        GeneralStateTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Byzantium);
+    public void stExtCodeHashTest() throws IOException {
+        suite.runAll("stExtCodeHash");
     }
 
     @Test
-    @Ignore("Fails on pre-configured commit, update after test is merged in develop of Github tests")
-    public void stExtCodeHashCall() throws IOException {
-        String commit = "10ab37c095bb87d2e781bcf112b6104912fccb44";
-        String filePath = "stExtCodeHash/extCodeHashCall.json";
-        GeneralStateTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Constantinople);
-        GeneralStateTestSuite.runSingle(filePath, commit, GitHubJSONTestSuite.Network.Byzantium);
-    }
-
-    @Test
-    @Ignore("Update after all tests could pass latest develop")
     public void stShiftTest() throws IOException {
         suite.runAll("stShift");
-// TODO: Update all, this one passes with following settings:
-//        String commit = "ad2184adca367c0b68c65b44519dba16e1d0b9e2";
-//        String treeSha = "4dd59a4f448dc06c3641bd5cb9c35cf6a099e438";
-//           targetNets += GitHubJSONTestSuite.Network.Constantinople
     }
 
     @Test
-    @Ignore("Update after all tests could pass latest develop")
     public void stCreate2Test() throws IOException {
-        suite.runAll("stCreate2", new HashSet<>(Arrays.asList(
-                "RevertInCreateInInit",   // Tests excluded because they test unreal prestate
-                "create2collisionStorage" // (nonce, balance 0, code empty, but some storage)
-        )));
-// TODO: Update all, this one passes with following settings:
-//        String commitSHA = "95a309203890e6244c6d4353ca411671973c13b5";
-//        String treeSHA = "700fdc4aa7d74957a12fbda38785ecc7b846bcc0";
-//           targetNets += GitHubJSONTestSuite.Network.Constantinople
+        suite.runAll("stCreate2");
     }
 
     @Test
-    @Ignore("Update after all tests could pass latest develop")
-    public void stSstoreRefundBug() throws IOException {
-        final String commit = "9ff64743f0347952903287b9074803607e5855e8";
-
-        GeneralStateTestSuite.runSingle("stSStoreTest/SstoreCallToSelfSubRefundBelowZero.json", commit,
-                GitHubJSONTestSuite.Network.Constantinople);
-
-        GeneralStateTestSuite.runSingle("stSStoreTest/sstore_0to0.json", commit,
-                GitHubJSONTestSuite.Network.Constantinople);
-
-        GeneralStateTestSuite.runSingle("stSStoreTest/sstore_Xto0.json", commit,
-                GitHubJSONTestSuite.Network.Constantinople);
-
-        GeneralStateTestSuite.runSingle("stSStoreTest/sstore_XtoX.json", commit,
-                GitHubJSONTestSuite.Network.Constantinople);
-
-        GeneralStateTestSuite.runSingle("stSStoreTest/sstore_XtoY.json", commit,
-                GitHubJSONTestSuite.Network.Constantinople);
+    public void stSstoreTest() throws IOException {
+        suite.runAll("stSStoreTest");
     }
 }
 

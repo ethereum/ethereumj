@@ -17,6 +17,7 @@
  */
 package org.ethereum.jsontestsuite.suite.runners;
 
+import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.config.net.MainNetConfig;
 import org.ethereum.core.*;
@@ -39,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -109,6 +111,21 @@ public class StateTestRunner {
         blockchain.setProgramInvokeFactory(invokeFactory);
 
         ProgramResult programResult = executeTransaction(transaction);
+
+        // Tests only case. When:
+        // - coinbase suicided or
+        // - tx is bad so coinbase get no tx fee
+        // we need to manually touch coinbase
+        repository.addBalance(block.getCoinbase(), BigInteger.ZERO);
+
+        // But ouch, our just touched coinbase could be subject to removal under EIP-161
+        BlockchainConfig config = SystemProperties.getDefault().getBlockchainConfig().getConfigForBlock(block.getNumber());
+        if (config.eip161()) {
+            AccountState state = repository.getAccountState(block.getCoinbase());
+            if (state != null && state.isEmpty()) {
+                repository.delete(block.getCoinbase());
+            }
+        }
 
         repository.commit();
 

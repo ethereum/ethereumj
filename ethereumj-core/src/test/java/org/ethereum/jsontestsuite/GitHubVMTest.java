@@ -29,8 +29,8 @@ import java.io.IOException;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubVMTest {
 
-    static String commitSHA = "7f638829311dfc1d341c1db85d8a891f57fa4da7";
-    static String treeSHA = "7429078cc0ae66034bbede7c9666c234dc76bc67";  // https://github.com/ethereum/tests/tree/develop/VMTests/
+    static String commitSHA = "253e99861fe406c7b1daf3d6a0c40906e8a8fd8f";
+    static String treeSHA = "d909a11b8315a81eaf610f457205025fb1284cc8";  // https://github.com/ethereum/tests/tree/develop/VMTests/
 
     static VMTestSuite suite;
 
@@ -42,12 +42,6 @@ public class GitHubVMTest {
     @After
     public void recover() {
         SystemProperties.getDefault().setBlockchainConfig(new MainNetConfig());
-    }
-
-    @Ignore
-    @Test
-    public void runSingle() throws ParseException, IOException {
-        VMTestSuite.runSingle(commitSHA, "vmArithmeticTest/add0.json");
     }
 
     @Test
