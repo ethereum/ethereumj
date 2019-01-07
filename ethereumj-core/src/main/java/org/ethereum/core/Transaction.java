@@ -374,7 +374,11 @@ public class Transaction {
 
     public ECKey getKey() {
         byte[] hash = getRawHash();
-        return ECKey.recoverFromSignature(0, signature, hash);
+        try {
+            return ECKey.signatureToKey(hash, getSignature());
+        }catch (SignatureException e){
+            return null;
+        }
     }
 
     public synchronized byte[] getSender() {
