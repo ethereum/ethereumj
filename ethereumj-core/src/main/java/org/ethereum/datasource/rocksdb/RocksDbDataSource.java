@@ -94,9 +94,9 @@ public class RocksDbDataSource implements DbSource<byte[]> {
 
     @Override
     public void init(DbSettings settings) {
-        this.settings = settings;
         resetDbLock.writeLock().lock();
         try {
+            this.settings = settings;
             logger.debug("~> RocksDbDataSource.init(): " + name);
 
             if (isAlive()) return;
