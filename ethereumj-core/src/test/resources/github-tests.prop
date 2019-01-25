@@ -2,4 +2,4 @@
 # to determinate commit of Ethereum tests repo https://github.com/ethereum/tests
 # which should be checked out in local repo directory
 # EthereumJ is tested with files from this commit
-GitHubTests.commit=253e99861fe406c7b1daf3d6a0c40906e8a8fd8f
+GitHubTests.commit=5cef36e2844d4cfdc6b52362ba09261f0a09b76e
