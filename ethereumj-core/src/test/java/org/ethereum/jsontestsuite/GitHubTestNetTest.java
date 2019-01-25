@@ -17,6 +17,7 @@
  */
 package org.ethereum.jsontestsuite;
 
+import org.ethereum.jsontestsuite.GitHubJSONTestSuite.Network;
 import org.ethereum.jsontestsuite.suite.BlockchainTestSuite;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
@@ -68,6 +69,6 @@ public class GitHubTestNetTest {
 
     @Test
     public void byzantiumToConstantinople() throws IOException {
-        suite.runAll("bcByzantiumToConstantinople", GitHubJSONTestSuite.Network.ByzantiumToConstantinopleAt5);
+        suite.runAll("bcByzantiumToConstantinople", GitHubJSONTestSuite.Network.ByzantiumToConstantinopleFixAt5);
     }
 }
