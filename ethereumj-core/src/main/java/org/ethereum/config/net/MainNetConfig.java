@@ -32,7 +32,6 @@ public class MainNetConfig extends BaseNetConfig {
         add(2_463_000, new Eip150HFConfig(new DaoHFConfig()));
         add(2_675_000, new Eip160HFConfig(new DaoHFConfig()));
         add(4_370_000, new ByzantiumConfig(new DaoHFConfig()));
-//        FIXME: Delayed until resolving of EIP-1283 bug
-//        add(7_080_000, new ConstantinopleConfig(new DaoHFConfig()));
+        add(7_280_000, new PetersburgConfig(new DaoHFConfig()));
     }
 }

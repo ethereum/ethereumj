@@ -4,6 +4,7 @@
     "eip158Block": 10,
     "byzantiumBlock": 1700000,
     "constantinopleBlock": 4230000,
+    "petersburgBlock": 4939394,
 
     "headerValidators": [
       {"number": 10,     "hash": "0xb3074f936815a0425e674890d7db7b5e94f3a06dca5b22d291b55dcd02dde93e"},

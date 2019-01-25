@@ -17,6 +17,7 @@
  */
 package org.ethereum.config.net;
 
+import com.google.common.base.MoreObjects;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.config.BlockchainConfig;
 import org.ethereum.config.blockchain.*;
@@ -107,6 +108,11 @@ public class JsonNetConfig extends BaseNetConfig {
                         public Integer getChainId() {
                             return chainId;
                         }
+
+                        @Override
+                        public String toString() {
+                            return Eip160HFConfig.class.getSimpleName();
+                        }
                     });
                 } else {
                     lastCandidate = Pair.of(block, new Eip160HFConfig(lastCandidate.getRight()));
@@ -128,6 +134,11 @@ public class JsonNetConfig extends BaseNetConfig {
                         @Override
                         public Integer getChainId() {
                             return chainId;
+                        }
+
+                        @Override
+                        public String toString() {
+                            return ByzantiumConfig.class.getSimpleName();
                         }
                     });
                 } else {
@@ -151,9 +162,41 @@ public class JsonNetConfig extends BaseNetConfig {
                         public Integer getChainId() {
                             return chainId;
                         }
+
+                        @Override
+                        public String toString() {
+                            return ConstantinopleConfig.class.getSimpleName();
+                        }
                     });
                 } else {
                     lastCandidate = Pair.of(config.constantinopleBlock, new ConstantinopleConfig(lastCandidate.getRight()));
+                }
+                if (logger.isDebugEnabled())
+                    logger.debug(logLine.toString());
+                candidates.add(lastCandidate);
+            }
+
+            if (config.petersburgBlock != null) {
+                StringBuilder logLine = new StringBuilder();
+                if (logger.isDebugEnabled())
+                    logLine.append("Block #").append(config.petersburgBlock).append(" => Petersburg");
+                if (config.chainId != null) {
+                    final int chainId = config.chainId;
+                    if (logger.isDebugEnabled())
+                        logLine.append(", chainId: ").append(chainId);
+                    lastCandidate = Pair.of(config.petersburgBlock, new PetersburgConfig(lastCandidate.getRight()) {
+                        @Override
+                        public Integer getChainId() {
+                            return chainId;
+                        }
+
+                        @Override
+                        public String toString() {
+                            return PetersburgConfig.class.getSimpleName();
+                        }
+                    });
+                } else {
+                    lastCandidate = Pair.of(config.petersburgBlock, new PetersburgConfig(lastCandidate.getRight()));
                 }
                 if (logger.isDebugEnabled())
                     logger.debug(logLine.toString());
