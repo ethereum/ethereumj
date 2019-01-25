@@ -364,8 +364,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
     @Override
 	public SolidityContract submitNewContract(ContractMetadata contractMetaData, Object... constructorArgs) {
-		SolidityContractImpl contract = new SolidityContractImpl(contractMetaData);
-		return submitNewContract(contract, constructorArgs);
+		SolidityContractImpl contract = createContract(contractMetaData);
+        return submitNewContract(contract, constructorArgs);
 	}
 
 	private SolidityContract submitNewContract(SolidityContractImpl contract, Object... constructorArgs) {
@@ -406,7 +406,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 	 */
 	private SolidityContractImpl createContract(String contractName, CompilationResult result) {
 		ContractMetadata cMetaData = result.getContract(contractName);
-		SolidityContractImpl contract = createContract(cMetaData);
+		SolidityContractImpl contract = new SolidityContractImpl(cMetaData);
 
 		for (CompilationResult.ContractMetadata metadata : result.getContracts()) {
 		    contract.addRelatedContract(metadata.abi);
@@ -416,6 +416,7 @@ public class StandaloneBlockchain implements LocalBlockchain {
 
 	private SolidityContractImpl createContract(ContractMetadata contractData) {
 		SolidityContractImpl contract = new SolidityContractImpl(contractData);
+        contract.addRelatedContract(contractData.abi);
 		return contract;
 	}
 
@@ -681,7 +682,10 @@ public class StandaloneBlockchain implements LocalBlockchain {
             for (LogInfo logInfo : getReceipt().getLogInfoList()) {
                 for (CallTransaction.Contract c : contract.relatedContracts) {
                     CallTransaction.Invocation event = c.parseEvent(logInfo);
-                    if (event != null) ret.add(event);
+                    if (event != null) {
+                        ret.add(event);
+                        break;
+                    }
                 }
             }
             return ret;
