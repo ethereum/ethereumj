@@ -19,6 +19,8 @@ package org.ethereum.util.blockchain;
 
 import org.ethereum.core.Block;
 
+import java.math.BigInteger;
+
 /**
  * Interface to Ethereum contract compiled with Solidity with
  * respect to language function signatures encoding and
@@ -56,7 +58,15 @@ public interface SolidityContract extends Contract {
      * Submits the transaction which invokes the specified contract function
      * with corresponding arguments and sends the specified value to the contract
      */
-    SolidityCallResult callFunction(long value, String functionName, Object ... args);
+    default SolidityCallResult callFunction(long value, String functionName, Object ... args) {
+        return callFunction(BigInteger.valueOf(value), functionName, args);
+    }
+
+    /**
+     * Submits the transaction which invokes the specified contract function
+     * with corresponding arguments and sends the specified value to the contract
+     */
+    SolidityCallResult callFunction(BigInteger value, String functionName, Object ... args);
 
     /**
      * Call the function without submitting a transaction and without

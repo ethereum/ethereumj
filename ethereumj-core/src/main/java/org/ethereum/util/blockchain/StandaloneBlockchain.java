@@ -581,11 +581,11 @@ public class StandaloneBlockchain implements LocalBlockchain {
         }
 
         @Override
-        public SolidityCallResult callFunction(long value, String functionName, Object... args) {
+        public SolidityCallResult callFunction(BigInteger value, String functionName, Object... args) {
             CallTransaction.Function function = contract.getByName(functionName);
             byte[] data = function.encode(convertArgs(args));
             SolidityCallResult res = new SolidityCallResultImpl(this, function);
-            submitNewTx(new PendingTx(null, BigInteger.valueOf(value), data, null, this, res));
+            submitNewTx(new PendingTx(null, value, data, null, this, res));
             return res;
         }
 
