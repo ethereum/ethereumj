@@ -17,8 +17,8 @@
  */
 package org.ethereum.sharding.processing.db;
 
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.NoDeleteSource;
-import org.ethereum.datasource.ObjectDataSource;
 import org.ethereum.datasource.Serializer;
 import org.ethereum.datasource.Source;
 import org.ethereum.datasource.SourceCodec;
@@ -62,8 +62,8 @@ public class TrieValidatorSet implements ValidatorSet {
     private Source<byte[], byte[]> indexSrc;
     private Source<byte[], byte[]> trieSrc;
     private Trie<byte[]> trie;
-    private Source<Integer, Validator> validators;
-    private Source<byte[], Integer> index;
+    private Source<byte[], Validator> index;
+    private Source<Integer, byte[]> validators;
     private int size;
 
     public TrieValidatorSet(Source<byte[], byte[]> src, Source<byte[], byte[]> indexSrc) {
@@ -76,27 +76,26 @@ public class TrieValidatorSet implements ValidatorSet {
         // trie deletes ghost nodes by default, force keeping them in the source
         this.trieSrc = new NoDeleteSource<>(underlyingSrc);
         this.trie = new TrieImpl(trieSrc, root == EMPTY_HASH ? null : root);
-        this.validators = new SourceCodec<>(trie, IndexSerializer, Validator.Serializer);
+        this.validators = new SourceCodec.KeyOnly<>(trie, IndexSerializer);
 
         // load size
         byte[] encodedSize = trie.get(SIZE_KEY);
         this.size = encodedSize == null ? 0 : RLP.decodeInt(encodedSize, 0);
 
         // index
-        this.index = new ObjectDataSource<>(this.indexSrc, IndexSerializer, 0);
+        this.index = new SourceCodec.ValueOnly<>(indexSrc, Validator.Serializer);
     }
 
     @Override
     public synchronized Validator get(Integer index) {
         rangeCheck(index);
-        return validators.get(index);
+        return this.index.get(HashUtil.blake2b(validators.get(index)));
     }
 
     @Nullable
     @Override
     public Validator getByPubKey(byte[] pubKey) {
-        Integer idx = index.get(pubKey);
-        return idx == null ? null : get(idx);
+        return this.index.get(HashUtil.blake2b(pubKey));
     }
 
     @Override
@@ -109,8 +108,8 @@ public class TrieValidatorSet implements ValidatorSet {
         int newIndex = size;
 
         validator = validator.withIndex(newIndex);
-        validators.put(validator.getIndex(), validator);
-        index.put(validator.getPubKey(), validator.getIndex());
+        validators.put(validator.getIndex(), validator.getPubKey());
+        index.put(HashUtil.blake2b(validator.getPubKey()), validator);
         setSize(validator.getIndex() + 1);
         return validator.getIndex();
     }
@@ -118,7 +117,9 @@ public class TrieValidatorSet implements ValidatorSet {
     @Override
     public synchronized void put(Integer index, Validator validator) {
         rangeCheck(index);
-        validators.put(index, validator);
+        validator = validator.withIndex(index);
+        validators.put(validator.getIndex(), validator.getPubKey());
+        this.index.put(HashUtil.blake2b(validator.getPubKey()), validator);
     }
 
     @Override
