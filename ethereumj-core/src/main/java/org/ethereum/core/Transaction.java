@@ -256,8 +256,8 @@ public class Transaction {
     public byte[] getHash() {
         if (!isEmpty(hash)) return hash;
         rlpParse();
-        byte[] plainMsg = getEncoded();
-        return hash = HashUtil.sha3(plainMsg);
+        getEncoded();
+        return hash;
     }
 
     public byte[] getRawHash() {
