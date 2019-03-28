@@ -473,7 +473,7 @@ public class Transaction {
         return rlpRaw;
     }
 
-    public byte[] getEncoded() {
+    public synchronized byte[] getEncoded() {
 
         if (rlpEncoded != null) return rlpEncoded;
 
