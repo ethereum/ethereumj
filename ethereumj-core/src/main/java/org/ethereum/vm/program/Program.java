@@ -552,20 +552,28 @@ public class Program {
         byte[] code = result.getHReturn();
 
         long storageCost = getLength(code) * getBlockchainConfig().getGasCost().getCREATE_DATA();
-        long afterSpend = programInvoke.getGas().longValue() - storageCost - result.getGasUsed();
-        if (afterSpend < 0) {
-            if (!blockchainConfig.getConstants().createEmptyContractOnOOG()) {
+        if (result.isRevert()) {
+            long afterSpend = programInvoke.getGas().longValue() - result.getGasUsed();
+            if (afterSpend < 0) {
                 result.setException(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
                         storageCost, this));
-            } else {
-                track.saveCode(newAddress, EMPTY_BYTE_ARRAY);
             }
-        } else if (getLength(code) > blockchainConfig.getConstants().getMAX_CONTRACT_SZIE()) {
-            result.setException(Program.Exception.notEnoughSpendingGas("Contract size too large: " + getLength(result.getHReturn()),
-                    storageCost, this));
-        } else if (!result.isRevert()){
-            result.spendGas(storageCost);
-            track.saveCode(newAddress, code);
+        } else {
+            long afterSpend = programInvoke.getGas().longValue() - result.getGasUsed() - storageCost;
+            if (afterSpend < 0) {
+                if (!blockchainConfig.getConstants().createEmptyContractOnOOG()) {
+                    result.setException(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
+                            storageCost, this));
+                } else {
+                    track.saveCode(newAddress, EMPTY_BYTE_ARRAY);
+                }
+            } else if (getLength(code) > blockchainConfig.getConstants().getMAX_CONTRACT_SZIE()) {
+                result.setException(Program.Exception.notEnoughSpendingGas("Contract size too large: " + getLength(result.getHReturn()),
+                        storageCost, this));
+            } else {
+                result.spendGas(storageCost);
+                track.saveCode(newAddress, code);
+            }
         }
 
         getResult().merge(result);
