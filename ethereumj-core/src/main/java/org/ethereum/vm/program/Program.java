@@ -549,16 +549,9 @@ public class Program {
         }
 
         // 4. CREATE THE CONTRACT OUT OF RETURN
-        byte[] code = result.getHReturn();
-
-        long storageCost = getLength(code) * getBlockchainConfig().getGasCost().getCREATE_DATA();
-        if (result.isRevert()) {
-            long afterSpend = programInvoke.getGas().longValue() - result.getGasUsed();
-            if (afterSpend < 0) {
-                result.setException(Program.Exception.notEnoughSpendingGas("No gas to return just created contract",
-                        storageCost, this));
-            }
-        } else {
+        if (!result.isRevert() && result.getException() == null) {
+            byte[] code = result.getHReturn();
+            long storageCost = getLength(code) * getBlockchainConfig().getGasCost().getCREATE_DATA();
             long afterSpend = programInvoke.getGas().longValue() - result.getGasUsed() - storageCost;
             if (afterSpend < 0) {
                 if (!blockchainConfig.getConstants().createEmptyContractOnOOG()) {
