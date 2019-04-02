@@ -19,5 +19,6 @@ public class PremineRawTest {
         PremineRaw pr = new PremineRaw(addr, BigInteger.ONE, Denomination.ETHER);
 
         assertTrue(pr.getDenomination() == Denomination.ETHER);
+        assertEquals(pr.value, BigInteger.ONE);
     }
 }
