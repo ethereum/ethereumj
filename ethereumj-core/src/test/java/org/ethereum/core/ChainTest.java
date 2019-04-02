@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 import java.math.BigInteger;
 
-import static org.ethereum.crypto.HashUtil.sha3;
 import static org.junit.Assert.*;
 
 /**

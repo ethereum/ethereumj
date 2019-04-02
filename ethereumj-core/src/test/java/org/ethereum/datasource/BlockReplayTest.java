@@ -5,7 +5,6 @@ import org.ethereum.core.Genesis;
 import org.ethereum.datasource.inmem.HashMapDB;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.db.TransactionStore;
-import org.ethereum.db.index.Index;
 import org.ethereum.listener.BlockReplay;
 import org.ethereum.listener.EthereumListener;
 import org.junit.Before;
@@ -25,10 +24,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.math.BigInteger.ZERO;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+/**
+ * @author alexbraz
+ * @since 29/03/2019
+ */
 public class BlockReplayTest {
     private static final Logger logger = LoggerFactory.getLogger("test");
 
@@ -123,15 +125,6 @@ public class BlockReplayTest {
 
         replay.onVMTraceCreated(anyString(), anyString());
         verify(listener, times(1)).onVMTraceCreated(anyString(), anyString());
-
-
-
-//
-//        kenanIntegracao = mock(KenanIntegracaoPacote.class);
-//
-//        when(kenanIntegracao.criarPacoteVenda(any())).thenReturn(pacoteVendaResponse);
-//
-//        verify(kenanIntegracao, times(1)).criarPacoteVenda(any());
 
     }
 
