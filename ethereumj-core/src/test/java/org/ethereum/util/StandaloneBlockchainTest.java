@@ -52,7 +52,7 @@ public class StandaloneBlockchainTest {
                 "contract A {" +
                         "  uint public a;" +
                         "  uint public b;" +
-                        "  function A(uint a_, uint b_) {a = a_; b = b_; }" +
+                        "  constructor (uint a_, uint b_) public {a = a_; b = b_; }" +
                         "}",
                 "A", 555, 777
         );
@@ -63,7 +63,7 @@ public class StandaloneBlockchainTest {
                 "contract A {" +
                         "  string public a;" +
                         "  uint public b;" +
-                        "  function A(string a_, uint b_) {a = a_; b = b_; }" +
+                        "  constructor (string memory a_, uint b_) public {a = a_; b = b_; }" +
                         "}",
                 "A", "This string is longer than 32 bytes...", 777
         );
@@ -81,7 +81,7 @@ public class StandaloneBlockchainTest {
                             "  uint public b;" +
                             "  address public c;" +
                             "  address public d;" +
-                            "  function f(uint[2] arr, address[2] arr2) {a = arr[0]; b = arr[1]; c = arr2[0]; d = arr2[1];}" +
+                            "  function f(uint[2] memory arr, address[2] memory arr2) public {a = arr[0]; b = arr[1]; c = arr2[0]; d = arr2[1];}" +
                             "}");
             ECKey addr1 = new ECKey();
             ECKey addr2 = new ECKey();
@@ -101,7 +101,7 @@ public class StandaloneBlockchainTest {
                             "  uint public b;" +
                             "  address public c;" +
                             "  address public d;" +
-                            "  function A(uint[2] arr, address a1, address a2) {a = arr[0]; b = arr[1]; c = a1; d = a2;}" +
+                            "  constructor (uint[2] memory arr, address a1, address a2) public {a = arr[0]; b = arr[1]; c = a1; d = a2;}" +
                             "}", "A",
                     new Integer[]{111, 222}, addr1.getAddress(), addr2.getAddress());
             Assert.assertEquals(BigInteger.valueOf(111), a.callConstFunction("a")[0]);
@@ -120,7 +120,7 @@ public class StandaloneBlockchainTest {
         SolidityContract a = sb.submitNewContract(
                 "contract A {" +
                         "  int public a;" +
-                        "  function f(int a_) {a = a_;}" +
+                        "  function f(int a_) public {a = a_;}" +
                         "}");
         a.callFunction("f", "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         BigInteger r = (BigInteger) a.callConstFunction("a")[0];
@@ -134,7 +134,7 @@ public class StandaloneBlockchainTest {
         SolidityContract a = sb.submitNewContract(
                 "contract A {" +
                        "  uint public a;" +
-                       "  function f(uint a_) {a = a_;}" +
+                       "  function f(uint a_) public {a = a_;}" +
                 "}");
         a.callFunction("f", "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         BigInteger r = (BigInteger) a.callConstFunction("a")[0];
@@ -182,7 +182,7 @@ public class StandaloneBlockchainTest {
     public void addContractWithMetadataEvent() throws Exception {
         String contract = "contract A {" +
                 "  event Event(uint aaa);" +
-                "  function f(uint a) {emit Event(a); }" +
+                "  function f(uint a) public {emit Event(a); }" +
                 "}";
         SolidityCompiler.Result result = SolidityCompiler.getInstance().compileSrc(
                 contract.getBytes(), false, true,
