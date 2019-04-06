@@ -530,10 +530,11 @@ public class ABITest {
     @Test
     public void staticArrayWithDynamicElementsSolidity() {
         String contract =
-                "pragma solidity ^0.4.3;\n" +
+                "pragma solidity ^0.5.0;\n" +
                 "pragma experimental ABIEncoderV2;\n"+
                 "contract A {" +
-                        "  function call(uint[][2] arr) public returns (uint) {" +
+                        "  uint[][2] a1;" +
+                        "  function call(uint[][2] memory arr) public returns (uint) {" +
                         "    if (arr.length != 2) return 2;" +
                         "    if (arr[0].length != 3) return 3;" +
                         "    if (arr[1].length != 2) return 4;" +
@@ -544,8 +545,7 @@ public class ABITest {
                         "    if (arr[1][1] != 14) return 9;" +
                         "    return 1;" +
                         "  }" +
-                        "  function ret() public returns (uint[][2]) {" +
-                        "    uint[][2] a1;" +
+                        "  function ret() public returns (uint[][2] memory) {" +
                         "    a1[0] = [uint(3),uint(4),uint(5)];" +
                         "    a1[1] = [uint(6),uint(7)];" +
                         "    return a1;" +

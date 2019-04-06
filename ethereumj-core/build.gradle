@@ -130,7 +130,7 @@ dependencies {
 
     compile "org.ethereum:rocksdbjni:5.9.2"                   // RocksDB Java API
 
-    compile "org.ethereum:solcJ-all:0.4.25"                  // Solidity Compiler win/mac/linux binaries
+    compile "org.ethereum:solcJ-all:0.5.6"                  // Solidity Compiler win/mac/linux binaries
 
     compile "com.google.guava:guava:24.1-jre"
 

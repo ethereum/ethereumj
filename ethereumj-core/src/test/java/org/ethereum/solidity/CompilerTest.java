@@ -52,7 +52,7 @@ public class CompilerTest {
     @Test
     public void simpleTest() throws IOException {
         String contract =
-            "pragma solidity ^0.4.7;\n" +
+            "pragma solidity ^0.5.0;\n" +
                     "\n" +
                     "contract a {\n" +
                     "\n" +
@@ -77,9 +77,11 @@ public class CompilerTest {
     @Test
     public void defaultFuncTest() throws IOException {
         String contractSrc =
-            "pragma solidity ^0.4.7;\n" +
+            "pragma solidity ^0.5.0;\n" +
                     "contract a {" +
-                    "        function() {throw;}" +
+                    "   function() external {" +
+                    "       revert();" +
+                    "   }" +
                     "}";
 
         SolidityCompiler.Result res = SolidityCompiler.compile(
