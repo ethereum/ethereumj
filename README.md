@@ -18,7 +18,7 @@ We keep EthereumJ as thin as possible. For [JSON-RPC](https://github.com/ethereu
    <dependency>
      <groupId>org.ethereum</groupId>
      <artifactId>ethereumj-core</artifactId>
-     <version>1.11.0-RELEASE</version>
+     <version>1.12.0-RELEASE</version>
    </dependency>
 ```
 
@@ -67,7 +67,7 @@ java -jar ethereumj-core/build/libs/ethereumj-core-*-all.jar
 Please, note, snapshots are not stable and are currently in development! If you still want to try it:
 
  - Add https://oss.jfrog.org/libs-snapshot/ as a repository to your build script
- - Add a dependency on `org.ethereum:ethereumj-core:${VERSION}`, where `${VERSION}` is of the form `1.11.0-SNAPSHOT`.
+ - Add a dependency on `org.ethereum:ethereumj-core:${VERSION}`, where `${VERSION}` is of the form `1.13.0-SNAPSHOT`.
 
 Example:
 
@@ -81,7 +81,7 @@ Example:
     <dependency>
        <groupId>org.ethereum</groupId>
        <artifactId>ethereumj-core</artifactId>
-       <version>1.11.0-SNAPSHOT</version>
+       <version>1.13.0-SNAPSHOT</version>
     </dependency>
 
 ##### Importing project to IntelliJ IDEA: 
