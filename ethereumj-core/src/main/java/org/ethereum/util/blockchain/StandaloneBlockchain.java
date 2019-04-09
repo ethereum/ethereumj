@@ -25,6 +25,7 @@ import org.ethereum.config.blockchain.DaoHFConfig;
 import org.ethereum.config.blockchain.DaoNoHFConfig;
 import org.ethereum.config.blockchain.FrontierConfig;
 import org.ethereum.config.blockchain.HomesteadConfig;
+import org.ethereum.config.blockchain.PetersburgConfig;
 import org.ethereum.core.*;
 import org.ethereum.core.genesis.GenesisLoader;
 import org.ethereum.crypto.ECKey;
@@ -765,8 +766,8 @@ public class StandaloneBlockchain implements LocalBlockchain {
     }
 
     // Override blockchain net config for fast mining
-    public static ByzantiumConfig getEasyMiningConfig() {
-        return new ByzantiumConfig(new DaoNoHFConfig(new HomesteadConfig(new HomesteadConfig.HomesteadConstants() {
+    public static PetersburgConfig getEasyMiningConfig() {
+        return new PetersburgConfig(new DaoNoHFConfig(new HomesteadConfig(new HomesteadConfig.HomesteadConstants() {
             @Override
             public BigInteger getMINIMUM_DIFFICULTY() {
                 return BigInteger.ONE;

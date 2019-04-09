@@ -562,7 +562,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     public synchronized BlockSummary addImpl(Repository repo, final Block block) {
 
         if (exitOn < block.getNumber()) {
-            System.out.print("Exiting after block.number: " + bestBlock.getNumber());
+            String msg = String.format("Exiting after block.number: %d", bestBlock.getNumber());
+            logger.info(msg);
+            System.out.println(msg);
             dbFlushManager.flushSync();
             System.exit(-1);
         }

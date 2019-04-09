@@ -117,7 +117,7 @@ public class NodeManager implements Consumer<DiscoveryEvent>{
         return pongTimer;
     }
 
-    void setBootNodes(List<Node> bootNodes) {
+    public void setBootNodes(List<Node> bootNodes) {
         this.bootNodes = bootNodes;
     }
 
