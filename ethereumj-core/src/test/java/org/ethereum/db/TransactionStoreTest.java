@@ -49,7 +49,7 @@ public class TransactionStoreTest {
     public void simpleTest() {
         String contractSrc =
                 "contract Adder {" +
-                "  function add(int a, int b) returns (int) {return a + b;}" +
+                "  function add(int a, int b) public returns (int) {return a + b;}" +
                 "}";
         HashMapDB<byte[]> txDb = new HashMapDB<>();
 
@@ -89,7 +89,7 @@ public class TransactionStoreTest {
         String contractSrc =
                 "contract Adder {" +
                 "  int public lastResult;" +
-                "  function add(int a, int b) returns (int) {lastResult = a + b; return lastResult; }" +
+                "  function add(int a, int b) public returns (int) {lastResult = a + b; return lastResult; }" +
                 "}";
         HashMapDB txDb = new HashMapDB();
 

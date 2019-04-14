@@ -236,7 +236,7 @@ public class PruneTest {
         SolidityContract contr = bc.submitNewContract(
                 "contract Simple {" +
                 "  uint public n;" +
-                "  function set(uint _n) { n = _n; } " +
+                "  function set(uint _n) public { n = _n; } " +
                 "}");
         bc.createBlock();
 
@@ -297,8 +297,8 @@ public class PruneTest {
         String src =
                 "contract Simple {" +
                 "  uint public n;" +
-                "  function set(uint _n) { n = _n; } " +
-                "  function inc() { n++; } " +
+                "  function set(uint _n) public { n = _n; } " +
+                "  function inc() public { n++; } " +
                 "}";
 
         StandaloneBlockchain bc = new StandaloneBlockchain();
@@ -395,7 +395,7 @@ public class PruneTest {
         SolidityContract contr = bc.submitNewContract(
                 "contract Simple {" +
                 "  uint public n;" +
-                "  function set(uint _n) { n = _n; } " +
+                "  function set(uint _n) public { n = _n; } " +
                 "}");
         Block b1 = bc.createBlock();
         contr.callFunction("set", 0xaaaaaaaaaaaaL);
@@ -432,8 +432,8 @@ public class PruneTest {
                 "contract Simple {" +
                         "  uint public n;" +
                         "  mapping(uint => uint) largeMap;" +
-                        "  function set(uint _n) { n = _n; } " +
-                        "  function put(uint k, uint v) { largeMap[k] = v; }" +
+                        "  function set(uint _n) public { n = _n; } " +
+                        "  function put(uint k, uint v) public { largeMap[k] = v; }" +
                         "}");
         Block b1 = bc.createBlock();
 

@@ -329,7 +329,7 @@ public class ImportLightTest {
         StandaloneBlockchain bc = new StandaloneBlockchain();
         SolidityContract parent = bc.submitNewContract("contract A {" +
                 "  uint public a;" +
-                "  function set(uint a_) { a = a_;}" +
+                "  function set(uint a_) public { a = a_;}" +
                 "}");
         bc.createBlock();
         parent.callFunction("set", 123);
@@ -453,14 +453,14 @@ public class ImportLightTest {
     public void contractCodeForkTest() throws IOException, InterruptedException {
         String contractA =
                 "contract A {" +
-                "  function call() returns (uint) {" +
+                "  function call() public returns (uint) {" +
                 "    return 111;" +
                 "  }" +
                 "}";
 
         String contractB =
                 "contract B {" +
-                "  function call() returns (uint) {" +
+                "  function call() public returns (uint) {" +
                 "    return 222222;" +
                 "  }" +
                 "}";
@@ -574,7 +574,7 @@ public class ImportLightTest {
         String contractA =
                 "contract A {" +
                 "  bytes32 public blockHash;" +
-                "  function a(){" +
+                "  function a() public {" +
                 "    blockHash = block.blockhash(block.number - 1);" +
                 "  }" +
                         "}";
@@ -828,7 +828,7 @@ public class ImportLightTest {
         // checks that ecrecover precompile contract rejects v > 255
         String contractA =
                 "contract A {" +
-                        "  function f (bytes32 hash, bytes32 v, bytes32 r, bytes32 s) returns (address) {" +
+                        "  function f (bytes32 hash, bytes32 v, bytes32 r, bytes32 s) returns (address) public {" +
                         "    assembly {" +
                         "      mstore(0x100, hash)" +
                         "      mstore(0x120, v)" +
