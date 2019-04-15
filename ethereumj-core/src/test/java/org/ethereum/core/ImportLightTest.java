@@ -354,18 +354,18 @@ public class ImportLightTest {
                 "  int a;" +
                 "  int b;" +
                 "  int public c;" +
-                "  function Child(int i) {" +
+                "  constructor (int i) public {" +
                 "    a = 333 + i;" +
                 "    b = 444 + i;" +
                 "  }" +
-                "  function sum() {" +
+                "  function sum() public {" +
                 "    c = a + b;" +
                 "  }" +
                 "}" +
                 "contract Parent {" +
                 "  address public child;" +
-                "  function createChild(int a) returns (address) {" +
-                "    child = new Child(a);" +
+                "  function createChild(int a) public returns (address) {" +
+                "    child = address(new Child(a));" +
                 "    return child;" +
                 "  }" +
                 "}";
@@ -391,13 +391,13 @@ public class ImportLightTest {
         String contractSrc =
                 "contract A {" +
                 "  int public a;" +
-                "  function A() {" +
+                "  constructor () public {" +
                 "    a = 333;" +
                 "  }" +
                 "}" +
                 "contract B {" +
                 "  int public a;" +
-                "  function B() {" +
+                "  constructor () public {" +
                 "    a = 111;" +
                 "  }" +
                 "}";
@@ -424,19 +424,19 @@ public class ImportLightTest {
     public void createValueTest() throws IOException, InterruptedException {
         // checks that correct msg.value is passed when contract internally created with value
         String contract =
-                "pragma solidity ^0.4.3;\n" +
+                "pragma solidity ^0.5.0;\n" +
                 "contract B {\n" +
                 "      uint public valReceived;\n" +
                 "      \n" +
-                "      function B() payable {\n" +
+                "      constructor () public payable {\n" +
                 "        valReceived = msg.value;\n" +
                 "      }\n" +
                 "}\n" +
                 "contract A {\n" +
-                "    function () payable { }\n" +
+                "    function () external payable { }\n" +
                 "    address public child;\n" +
-                "    function create() payable {\n" +
-                "        child = (new B).value(20)();\n" +
+                "    function create() public payable {\n" +
+                "        child = address((new B).value(20)());\n" +
                 "    }\n" +
                 "}";
         StandaloneBlockchain bc = new StandaloneBlockchain().withAutoblock(true);
@@ -484,14 +484,14 @@ public class ImportLightTest {
         // and the subsequent call to that non-existent address costs 25K gas
         byte[] addr = Hex.decode("0101010101010101010101010101010101010101");
         String contractA =
-                "pragma solidity ^0.4.3;" +
-                "contract B { function dummy() {}}" +
+                "pragma solidity ^0.5.0;" +
+                "contract B { function dummy() public {}}" +
                 "contract A {" +
-                "  function callBalance() returns (uint) {" +
+                "  function callBalance() public returns (uint) {" +
                 "    address addr = 0x" + Hex.toHexString(addr) + ";" +
                 "    uint bal = addr.balance;" +
                 "  }" +
-                "  function callMethod() returns (uint) {" +
+                "  function callMethod() public returns (uint) {" +
                 "    address addr = 0x" + Hex.toHexString(addr) + ";" +
                 "    B b = B(addr);" +
                 "    b.dummy();" +
@@ -575,7 +575,7 @@ public class ImportLightTest {
                 "contract A {" +
                 "  bytes32 public blockHash;" +
                 "  function a() public {" +
-                "    blockHash = block.blockhash(block.number - 1);" +
+                "    blockHash = blockhash(block.number - 1);" +
                 "  }" +
                         "}";
 
@@ -603,15 +603,15 @@ public class ImportLightTest {
                 "contract A {" +
                 "  uint public a;" +
                 "  uint public b;" +
-                "  function f() {" +
+                "  function f() public {" +
                 "    b = 1;" +
-                "    this.call.gas(10000)(bytes4(sha3('exception()')));" +
+                "    address(this).call.gas(10000)(abi.encode('exception()'));" +
                 "    a = 2;" +
                 "  }" +
 
-                "  function exception() {" +
+                "  function exception() public {" +
                 "    b = 2;" +
-                "    throw;" +
+                "    revert();" +
                 "  }" +
                 "}";
 
@@ -630,15 +630,15 @@ public class ImportLightTest {
     @Test()
     public void selfdestructAttack() throws Exception {
         String contractSrc = "" +
-                "pragma solidity ^0.4.3;" +
+                "pragma solidity ^0.5.0;" +
                 "contract B {" +
-                "  function suicide(address benefic) {" +
+                "  function suicide(address payable benefic) public {" +
                 "    selfdestruct(benefic);" +
                 "  }" +
                 "}" +
                 "contract A {" +
                 "  uint public a;" +
-                "  function f() {" +
+                "  function f() public {" +
                 "    B b = new B();" +
                 "    for (uint i = 0; i < 3500; i++) {" +
                 "      b.suicide.gas(10000)(address(i));" +
@@ -757,18 +757,18 @@ public class ImportLightTest {
         // the refund for this suicide is not added
         String contractA =
                         "contract B {" +
-                        "  function f(){" +
-                        "    suicide(msg.sender);" +
+                        "  function f() public {" +
+                        "    selfdestruct(msg.sender);" +
                         "  }" +
                         "}" +
                         "contract A {" +
-                        "  function f(){" +
-                        "    this.call(bytes4(sha3('bad()')));" +
+                        "  function f() public {" +
+                        "    address(this).call(abi.encode('bad()'));" +
                         "  }" +
-                        "  function bad() {" +
+                        "  function bad() public {" +
                         "    B b = new B();" +
-                        "    b.call(bytes4(sha3('f()')));" +
-                        "    throw;" +
+                        "    address(b).call(abi.encode('f()'));" +
+                        "    revert();" +
                         "  }" +
                         "}";
 
@@ -796,12 +796,12 @@ public class ImportLightTest {
         // the refund for this suicide is not added
         String contractA =
                         "contract A {" +
-                        "  function f(){" +
-                        "    this.call(bytes4(sha3('bad()')));" +
+                        "  function f() public {" +
+                        "    address(this).call(abi.encode('bad()'));" +
                         "  }" +
-                        "  function bad() {" +
-                        "    log0(1234);" +
-                        "    throw;" +
+                        "  function bad() public {" +
+                        "    log0(\"1234\");" +
+                        "    revert();" +
                         "  }" +
                         "}";
 
@@ -828,7 +828,7 @@ public class ImportLightTest {
         // checks that ecrecover precompile contract rejects v > 255
         String contractA =
                 "contract A {" +
-                        "  function f (bytes32 hash, bytes32 v, bytes32 r, bytes32 s) returns (address) public {" +
+                        "  function f (bytes32 hash, bytes32 v, bytes32 r, bytes32 s) public returns (address) {" +
                         "    assembly {" +
                         "      mstore(0x100, hash)" +
                         "      mstore(0x120, v)" +
@@ -873,7 +873,7 @@ public class ImportLightTest {
                         "  }" +
                         "  function fInc(int a) external returns (int) { return a + 1;}" +
                         "  function fDec(int a) external returns (int) { return a - 1;}" +
-                        "  function test() {" +
+                        "  function test() public {" +
                         "    res = this.calc.gas(100000)(111, this.fInc);" +
                         "  }" +
                         "}";

@@ -480,8 +480,8 @@ public class PendingStateTest {
         ECKey bob = new ECKey();
 
         SolidityContract contract = bc.submitNewContract("contract A {" +
-                "  function getPrevBlockHash() returns (bytes32) {" +
-                "    return block.blockhash(block.number - 1);" +
+                "  function getPrevBlockHash() public returns (bytes32) {" +
+                "    return blockhash(block.number - 1);" +
                 "  }" +
                 "}");
 
