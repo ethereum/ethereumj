@@ -555,13 +555,13 @@ public class TransactionTest {
     @Test
     public void multiSuicideTest() throws IOException, InterruptedException {
         String contract =
-                "pragma solidity ^0.4.3;" +
+                "pragma solidity ^0.5.0;" +
                 "contract PsychoKiller {" +
-                "    function () payable {}" +
-                "    function homicide() {" +
-                "        suicide(msg.sender);" +
+                "    function () external payable {}" +
+                "    function homicide() public {" +
+                "        selfdestruct(msg.sender);" +
                 "    }" +
-                "    function multipleHomocide() {" +
+                "    function multipleHomocide() public {" +
                 "        PsychoKiller k  = this;" +
                 "        k.homicide.gas(10000)();" +
                 "        k.homicide.gas(10000)();" +
@@ -657,9 +657,9 @@ public class TransactionTest {
         {
             String contract =
                     "contract GasConsumer {" +
-                    "    function GasConsumer() {" +
+                    "    constructor () public {" +
                     "        int i = 0;" +
-                    "        while(true) sha3(i++);" +
+                    "        while(true) abi.encode(i++);" +
                     "    }" +
                     "}";
             SolidityCompiler.Result res = SolidityCompiler.compile(
