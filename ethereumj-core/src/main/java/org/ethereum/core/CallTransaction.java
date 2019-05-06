@@ -109,6 +109,7 @@ public class CallTransaction {
         public Param[] outputs = new Param[0];
         public FunctionType type;
         public StateMutabilityType stateMutability;
+        public Long gas;
 
         private Function() {}
 
