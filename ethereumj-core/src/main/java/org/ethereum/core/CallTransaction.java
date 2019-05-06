@@ -233,7 +233,7 @@ public class CallTransaction {
     public static class Contract {
         public Contract(String jsonInterface) {
             try {
-                functions = new ObjectMapper().readValue(jsonInterface, Function[].class);
+                functions = DEFAULT_MAPPER.readValue(jsonInterface, Function[].class);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
