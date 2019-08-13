@@ -81,14 +81,15 @@ public class BlockHeader {
     /* A scalar value equal to the total gas used in transactions in this block */
     private long gasUsed;
 
-
+    /* A 256-bit hash which proves that a sufficient amount
+     * of computation has been carried out on this block */
     private byte[] mixHash;
 
     /* An arbitrary byte array containing data relevant to this block.
      * With the exception of the genesis block, this must be 32 bytes or fewer */
     private byte[] extraData;
-    /* A 256-bit hash which proves that a sufficient amount
-     * of computation has been carried out on this block */
+    /* A 64-bit value which, combined with the mix-hash, 
+     * proves that a sufficient amount of computation has been carried out on this block  */
     private byte[] nonce;
 
     private byte[] hashCache;
