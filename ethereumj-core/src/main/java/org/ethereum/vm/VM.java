@@ -1322,7 +1322,7 @@ public class VM {
                     DataWord value = op.callHasValue() ?
                             program.stackPop() : DataWord.ZERO;
 
-                    if (program.isStaticCall() && op == CALL && !value.isZero())
+                    if (program.isStaticCall() && (op == CALL || op == CALLCODE) && !value.isZero())
                         throw new Program.StaticCallModificationException();
 
                     if (!value.isZero()) {
