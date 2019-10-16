@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.*;
@@ -518,20 +517,6 @@ public class TrieImpl implements Trie<byte[]> {
         }
     }
 
-
-    public List<byte[]> prove(byte[] key) {
-        List<Node> nodes = proveNodes(key);
-        return nodes.stream()
-                .map(this::getEncoded)
-                .collect(Collectors.toList());
-    }
-
-    public List<Node> proveNodes(byte[] key) {
-        if (!hasRoot()) return null; // treating unknown root hash as empty trie
-        TrieKey k = TrieKey.fromNormal(key);
-        return proveNodes(root, k, new LinkedList<>());
-    }
-
     public byte[] getEncoded(Node n) {
         if (n.hash==null) {
             return n.rlp;
@@ -540,7 +525,25 @@ public class TrieImpl implements Trie<byte[]> {
         }
     }
 
-    private List<Node> proveNodes(Node n, TrieKey k, List<Node> proof) {
+    public List<byte[]> prove(byte[] key) {
+        List<Node> nodes = doProveNodes(key);
+        if (nodes==null) return null;
+        return nodes.stream()
+                .map(this::getEncoded)
+                .collect(Collectors.toList());
+    }
+
+    public List<Node>proveNodes(byte[] key) {
+        return doProveNodes(key);
+    }
+
+    private List<Node> doProveNodes(byte[] key) {
+        if (!hasRoot()) return null; // treating unknown root hash as empty trie
+        TrieKey k = TrieKey.fromNormal(key);
+        return doProveNodes(root, k, new LinkedList<>());
+    }
+
+    private List<Node> doProveNodes(Node n, TrieKey k, List<Node> proof) {
         if (n == null) return null;
 
         NodeType type = n.getType();
@@ -548,7 +551,7 @@ public class TrieImpl implements Trie<byte[]> {
             if (k.isEmpty()) return proof;
             Node childNode = n.branchNodeGetChild(k.getHex(0));
             proof.add(n);
-            return proveNodes(childNode, k.shift(1), proof);
+            return doProveNodes(childNode, k.shift(1), proof);
         } else {
             TrieKey k1 = k.matchAndShift(n.kvNodeGetKey());
             if (k1 == null) return proof;
@@ -561,7 +564,7 @@ public class TrieImpl implements Trie<byte[]> {
                 }
             } else {
                 proof.add(n);
-                return proveNodes(n.kvNodeGetChildNode(), k1, proof);
+                return doProveNodes(n.kvNodeGetChildNode(), k1, proof);
             }
         }
     }

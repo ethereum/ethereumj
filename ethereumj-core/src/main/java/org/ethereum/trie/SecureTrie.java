@@ -18,7 +18,6 @@
 package org.ethereum.trie;
 
 import org.ethereum.datasource.Source;
-import org.ethereum.util.Value;
 
 import java.util.List;
 
