@@ -22,16 +22,14 @@ import org.apache.commons.lang3.text.StrBuilder;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.Source;
 import org.ethereum.datasource.inmem.HashMapDB;
-import org.ethereum.datasource.inmem.HashMapDBSimple;
-import org.ethereum.net.swarm.Key;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
-import org.ethereum.util.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -71,7 +69,7 @@ public class TrieImpl implements Trie<byte[]> {
         private byte[] hash = null;
         private byte[] rlp = null;
         private RLP.LList parsedRlp = null;
-        private boolean dirty = false;
+        private boolean dirty = true;
 
         private Object[] children = null;
 
@@ -122,9 +120,9 @@ public class TrieImpl implements Trie<byte[]> {
             return encode(1, true);
         }
         private byte[] encode(final int depth, boolean forceHash) {
-            if (!dirty) {
-                return hash != null ? encodeElement(hash) : rlp;
-            } else {
+//            if (!dirty) {
+//                return hash != null ? encodeElement(hash) : rlp;
+//            } else {
                 NodeType type = getType();
                 byte[] ret;
                 if (type == NodeType.BranchNode) {
@@ -180,7 +178,7 @@ public class TrieImpl implements Trie<byte[]> {
                 if (hash != null) {
                     deleteHash(hash);
                 }
-                dirty = false;
+                //dirty = false;
                 if (ret.length < 32 && !forceHash) {
                     rlp = ret;
                     return ret;
@@ -189,7 +187,7 @@ public class TrieImpl implements Trie<byte[]> {
                     addHash(hash, ret);
                     return encodeElement(hash);
                 }
-            }
+//            }
         }
 
         @SafeVarargs
@@ -514,6 +512,46 @@ public class TrieImpl implements Trie<byte[]> {
                 return k1.isEmpty() ? n.kvNodeGetValue() : null;
             } else {
                 return get(n.kvNodeGetChildNode(), k1);
+            }
+        }
+    }
+
+    public List<Node> prove(byte[] key) {
+        if (!hasRoot()) return null; // treating unknown root hash as empty trie
+        TrieKey k = TrieKey.fromNormal(key);
+        return prove(root, k, new LinkedList<>());
+    }
+
+    public byte[] getEncoded(Node n) {
+        if (n.hash==null) {
+            return n.rlp;
+        } else {
+            return getCache().get(n.hash);
+        }
+    }
+
+    private List<Node> prove(Node n, TrieKey k, List<Node> proofNodes) {
+        if (n == null) return null;
+
+        NodeType type = n.getType();
+        if (type == NodeType.BranchNode) {
+            if (k.isEmpty()) return proofNodes;
+            Node childNode = n.branchNodeGetChild(k.getHex(0));
+            proofNodes.add(n);
+            return prove(childNode, k.shift(1), proofNodes);
+        } else {
+            TrieKey k1 = k.matchAndShift(n.kvNodeGetKey());
+            if (k1 == null) return proofNodes;
+            if (type == NodeType.KVNodeValue) {
+                if (k1.isEmpty()) {
+                    proofNodes.add(n);
+                    return proofNodes;
+                } else {
+                    throw new RuntimeException("key not found");
+                }
+            } else {
+                proofNodes.add(n);
+                return prove(n.kvNodeGetChildNode(), k1, proofNodes);
             }
         }
     }

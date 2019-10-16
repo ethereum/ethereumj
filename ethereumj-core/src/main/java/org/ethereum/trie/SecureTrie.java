@@ -20,6 +20,8 @@ package org.ethereum.trie;
 import org.ethereum.datasource.Source;
 import org.ethereum.util.Value;
 
+import java.util.List;
+
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
@@ -40,6 +42,11 @@ public class SecureTrie extends TrieImpl {
     @Override
     public byte[] get(byte[] key) {
         return super.get(sha3(key));
+    }
+
+    @Override
+    public List<Node> prove(byte[] key) {
+        return super.prove(sha3(key));
     }
 
     @Override
