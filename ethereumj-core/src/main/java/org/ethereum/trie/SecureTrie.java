@@ -45,7 +45,12 @@ public class SecureTrie extends TrieImpl {
     }
 
     @Override
-    public List<Node> prove(byte[] key) {
+    public List<Node> proveNodes(byte[] key) {
+        return super.proveNodes(sha3(key));
+    }
+
+    @Override
+    public List<byte[]> prove(byte[] key) {
         return super.prove(sha3(key));
     }
 
