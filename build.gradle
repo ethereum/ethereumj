@@ -24,7 +24,7 @@ subprojects {
 
     def config = new ConfigSlurper().parse(new File("$projectDir/src/main/resources/version.properties").toURI().toURL())
 
-    group = 'org.ethereum'
+    group = 'io.vouch'
 
     version = config.versionNumber + ("master" == gitCurBranch() ? "-RELEASE" : "-SNAPSHOT")
 
