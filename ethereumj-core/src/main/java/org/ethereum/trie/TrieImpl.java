@@ -22,18 +22,17 @@ import org.apache.commons.lang3.text.StrBuilder;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.Source;
 import org.ethereum.datasource.inmem.HashMapDB;
-import org.ethereum.datasource.inmem.HashMapDBSimple;
-import org.ethereum.net.swarm.Key;
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
-import org.ethereum.util.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.concurrent.ConcurrentUtils.constantFuture;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
@@ -71,7 +70,7 @@ public class TrieImpl implements Trie<byte[]> {
         private byte[] hash = null;
         private byte[] rlp = null;
         private RLP.LList parsedRlp = null;
-        private boolean dirty = false;
+        private boolean dirty = true;
 
         private Object[] children = null;
 
@@ -122,74 +121,74 @@ public class TrieImpl implements Trie<byte[]> {
             return encode(1, true);
         }
         private byte[] encode(final int depth, boolean forceHash) {
-            if (!dirty) {
-                return hash != null ? encodeElement(hash) : rlp;
-            } else {
-                NodeType type = getType();
-                byte[] ret;
-                if (type == NodeType.BranchNode) {
-                    if (depth == 1 && async) {
-                        // parallelize encode() on the first trie level only and if there are at least
-                        // MIN_BRANCHES_CONCURRENTLY branches are modified
-                        final Object[] encoded = new Object[17];
-                        int encodeCnt = 0;
-                        for (int i = 0; i < 16; i++) {
-                            final Node child = branchNodeGetChild(i);
-                            if (child == null) {
-                                encoded[i] = EMPTY_ELEMENT_RLP;
-                            } else if (!child.dirty) {
-                                encoded[i] = child.encode(depth + 1, false);
-                            } else {
-                                encodeCnt++;
-                            }
+//            if (!dirty) {
+//                return hash != null ? encodeElement(hash) : rlp;
+//            } else {
+            NodeType type = getType();
+            byte[] ret;
+            if (type == NodeType.BranchNode) {
+                if (depth == 1 && async) {
+                    // parallelize encode() on the first trie level only and if there are at least
+                    // MIN_BRANCHES_CONCURRENTLY branches are modified
+                    final Object[] encoded = new Object[17];
+                    int encodeCnt = 0;
+                    for (int i = 0; i < 16; i++) {
+                        final Node child = branchNodeGetChild(i);
+                        if (child == null) {
+                            encoded[i] = EMPTY_ELEMENT_RLP;
+                        } else if (!child.dirty) {
+                            encoded[i] = child.encode(depth + 1, false);
+                        } else {
+                            encodeCnt++;
                         }
-                        for (int i = 0; i < 16; i++) {
-                            if (encoded[i] == null) {
-                                final Node child = branchNodeGetChild(i);
-                                if (encodeCnt >= MIN_BRANCHES_CONCURRENTLY) {
-                                    encoded[i] = getExecutor().submit(() -> child.encode(depth + 1, false));
-                                } else {
-                                    encoded[i] = child.encode(depth + 1, false);
-                                }
-                            }
-                        }
-                        byte[] value = branchNodeGetValue();
-                        encoded[16] = constantFuture(encodeElement(value));
-                        try {
-                            ret = encodeRlpListFutures(encoded);
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    } else {
-                        byte[][] encoded = new byte[17][];
-                        for (int i = 0; i < 16; i++) {
-                            Node child = branchNodeGetChild(i);
-                            encoded[i] = child == null ? EMPTY_ELEMENT_RLP : child.encode(depth + 1, false);
-                        }
-                        byte[] value = branchNodeGetValue();
-                        encoded[16] = encodeElement(value);
-                        ret = encodeList(encoded);
                     }
-                } else if (type == NodeType.KVNodeNode) {
-                    ret = encodeList(encodeElement(kvNodeGetKey().toPacked()), kvNodeGetChildNode().encode(depth + 1, false));
+                    for (int i = 0; i < 16; i++) {
+                        if (encoded[i] == null) {
+                            final Node child = branchNodeGetChild(i);
+                            if (encodeCnt >= MIN_BRANCHES_CONCURRENTLY) {
+                                encoded[i] = getExecutor().submit(() -> child.encode(depth + 1, false));
+                            } else {
+                                encoded[i] = child.encode(depth + 1, false);
+                            }
+                        }
+                    }
+                    byte[] value = branchNodeGetValue();
+                    encoded[16] = constantFuture(encodeElement(value));
+                    try {
+                        ret = encodeRlpListFutures(encoded);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 } else {
-                    byte[] value = kvNodeGetValue();
-                    ret = encodeList(encodeElement(kvNodeGetKey().toPacked()),
-                                    encodeElement(value == null ? EMPTY_BYTE_ARRAY : value));
+                    byte[][] encoded = new byte[17][];
+                    for (int i = 0; i < 16; i++) {
+                        Node child = branchNodeGetChild(i);
+                        encoded[i] = child == null ? EMPTY_ELEMENT_RLP : child.encode(depth + 1, false);
+                    }
+                    byte[] value = branchNodeGetValue();
+                    encoded[16] = encodeElement(value);
+                    ret = encodeList(encoded);
                 }
-                if (hash != null) {
-                    deleteHash(hash);
-                }
-                dirty = false;
-                if (ret.length < 32 && !forceHash) {
-                    rlp = ret;
-                    return ret;
-                } else {
-                    hash = HashUtil.sha3(ret);
-                    addHash(hash, ret);
-                    return encodeElement(hash);
-                }
+            } else if (type == NodeType.KVNodeNode) {
+                ret = encodeList(encodeElement(kvNodeGetKey().toPacked()), kvNodeGetChildNode().encode(depth + 1, false));
+            } else {
+                byte[] value = kvNodeGetValue();
+                ret = encodeList(encodeElement(kvNodeGetKey().toPacked()),
+                        encodeElement(value == null ? EMPTY_BYTE_ARRAY : value));
             }
+            if (hash != null) {
+                deleteHash(hash);
+            }
+            //dirty = false;
+            if (ret.length < 32 && !forceHash) {
+                rlp = ret;
+                return ret;
+            } else {
+                hash = HashUtil.sha3(ret);
+                addHash(hash, ret);
+                return encodeElement(hash);
+            }
+//            }
         }
 
         @SafeVarargs
@@ -514,6 +513,58 @@ public class TrieImpl implements Trie<byte[]> {
                 return k1.isEmpty() ? n.kvNodeGetValue() : null;
             } else {
                 return get(n.kvNodeGetChildNode(), k1);
+            }
+        }
+    }
+
+    public byte[] getEncoded(Node n) {
+        if (n.hash==null) {
+            return n.rlp;
+        } else {
+            return getCache().get(n.hash);
+        }
+    }
+
+    public List<byte[]> prove(byte[] key) {
+        List<Node> nodes = doProveNodes(key);
+        if (nodes==null) return null;
+        return nodes.stream()
+                .map(this::getEncoded)
+                .collect(Collectors.toList());
+    }
+
+    public List<Node>proveNodes(byte[] key) {
+        return doProveNodes(key);
+    }
+
+    private List<Node> doProveNodes(byte[] key) {
+        if (!hasRoot()) return null; // treating unknown root hash as empty trie
+        TrieKey k = TrieKey.fromNormal(key);
+        return doProveNodes(root, k, new LinkedList<>());
+    }
+
+    private List<Node> doProveNodes(Node n, TrieKey k, List<Node> proof) {
+        if (n == null) return null;
+
+        NodeType type = n.getType();
+        if (type == NodeType.BranchNode) {
+            if (k.isEmpty()) return proof;
+            Node childNode = n.branchNodeGetChild(k.getHex(0));
+            proof.add(n);
+            return doProveNodes(childNode, k.shift(1), proof);
+        } else {
+            TrieKey k1 = k.matchAndShift(n.kvNodeGetKey());
+            if (k1 == null) return proof;
+            if (type == NodeType.KVNodeValue) {
+                if (k1.isEmpty()) {
+                    proof.add(n);
+                    return proof;
+                } else {
+                    throw new RuntimeException("key not found");
+                }
+            } else {
+                proof.add(n);
+                return doProveNodes(n.kvNodeGetChildNode(), k1, proof);
             }
         }
     }
