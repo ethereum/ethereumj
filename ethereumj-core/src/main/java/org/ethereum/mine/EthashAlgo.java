@@ -216,7 +216,7 @@ public class EthashAlgo {
             nonce++;
             Pair<byte[], byte[]> pair = hashimotoFull(fullSize, dataset, blockHeaderTruncHash, longToBytes(nonce));
             BigInteger h = new BigInteger(1, pair.getRight() /* ?? */);
-            if (h.compareTo(target) < 0) break;
+            if (h.compareTo(target) <= 0) break;
         }
         return nonce;
     }
@@ -236,7 +236,7 @@ public class EthashAlgo {
             nonce++;
             Pair<byte[], byte[]> pair = hashimotoLight(fullSize, cache, blockHeaderTruncHash, longToBytes(nonce));
             BigInteger h = new BigInteger(1, pair.getRight() /* ?? */);
-            if (h.compareTo(target) < 0) break;
+            if (h.compareTo(target) <= 0) break;
         }
         return nonce;
     }
