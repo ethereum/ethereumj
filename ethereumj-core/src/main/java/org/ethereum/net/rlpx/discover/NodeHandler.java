@@ -198,6 +198,7 @@ public class NodeHandler {
                     replaceCandidate.changeState(State.Active);
                 } else if (oldState == State.Alive) {
                     // ok the old node was better, nothing to do here
+                    nodeManager.table.touchNode(node);
                 } else {
                     // wrong state transition
                 }
@@ -209,7 +210,10 @@ public class NodeHandler {
             sendPing();
         }
         state = newState;
-        stateChanged(oldState, newState);
+        if (newState == State.Active) {
+            stateChanged(oldState, newState);
+        }
+
     }
 
     protected void stateChanged(State oldState, State newState) {
